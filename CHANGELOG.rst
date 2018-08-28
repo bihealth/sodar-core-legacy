@@ -1,0 +1,15 @@
+SODAR Projectroles Changelog
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Changelog for the SODAR Projectroles Django app package. Loosely follows the
+`Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
+
+
+Unreleased
+==========
+
+Added
+-----
+
+- Create app package for Projectroles based on SODAR release v0.3.1
+
