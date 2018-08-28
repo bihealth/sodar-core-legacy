@@ -30,6 +30,7 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
+EXAMPLE_APP_NAME = 'example_project_app'
 
 
 class ProjectMixin:
@@ -529,7 +530,7 @@ class TestProjectManager(TestCase, ProjectMixin, RoleAssignmentMixin):
 class TestProjectSetting(
         TestCase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
     """Tests for model.ProjectSetting"""
-    # NOTE: This assumes the filesfolders app is available!
+    # NOTE: This assumes an example app is available
     def setUp(self):
         # Init project
         self.project = self._make_project(
@@ -548,7 +549,7 @@ class TestProjectSetting(
 
         # Init test setting
         self.setting_str = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='str_setting',
             setting_type='STRING',
@@ -556,7 +557,7 @@ class TestProjectSetting(
 
         # Init integer setting
         self.setting_int = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='int_setting',
             setting_type='INTEGER',
@@ -564,7 +565,7 @@ class TestProjectSetting(
 
         # Init boolean setting
         self.setting_bool = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='bool_setting',
             setting_type='BOOLEAN',
@@ -573,7 +574,7 @@ class TestProjectSetting(
     def test_initialization(self):
         expected = {
             'id': self.setting_str.pk,
-            'app_plugin': get_app_plugin('filesfolders').get_model().pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': self.project.pk,
             'name': 'str_setting',
             'type': 'STRING',
@@ -585,7 +586,7 @@ class TestProjectSetting(
         """Test initialization with integer value"""
         expected = {
             'id': self.setting_int.pk,
-            'app_plugin': get_app_plugin('filesfolders').get_model().pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
             'project': self.project.pk,
             'name': 'int_setting',
             'type': 'INTEGER',
@@ -594,12 +595,12 @@ class TestProjectSetting(
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
-        expected = 'TestProject: filesfolders / str_setting'
+        expected = 'TestProject: {} / str_setting'.format(EXAMPLE_APP_NAME)
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
-        expected = "ProjectSetting('TestProject', 'filesfolders', " \
-            "'str_setting')"
+        expected = "ProjectSetting('TestProject', '{}', " \
+            "'str_setting')".format(EXAMPLE_APP_NAME)
         self.assertEqual(repr(self.setting_str), expected)
 
     def test_get_value_str(self):

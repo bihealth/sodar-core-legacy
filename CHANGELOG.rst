@@ -12,4 +12,11 @@ Added
 -----
 
 - Create app package for Projectroles based on SODAR release v0.3.1
+- ``example_project_app`` to aid testing and work as a minimal example
+
+
+Fixed
+-----
+
+- Tests referring to the ``filesfolders`` app not included in this project
 

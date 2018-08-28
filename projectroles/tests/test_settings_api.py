@@ -23,13 +23,15 @@ SUBMIT_STATUS_PENDING_TASKFLOW = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
 
 
 # Local settings
-EXISTING_SETTING = 'allow_public_links'
+EXISTING_SETTING = 'example_setting'
+EXAMPLE_APP_NAME = 'example_project_app'
 
 
 class TestProjectSettingAPI(
         TestCase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
     """Tests for the ProjectSetting API"""
-    # NOTE: This assumes the filesfolders app is available!
+    # NOTE: This assumes an example app is available
+
     def setUp(self):
         # Init project
         self.project = self._make_project(
@@ -48,7 +50,7 @@ class TestProjectSettingAPI(
 
         # Init test setting
         self.setting_str = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='str_setting',
             setting_type='STRING',
@@ -56,7 +58,7 @@ class TestProjectSettingAPI(
 
         # Init integer setting
         self.setting_int = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='int_setting',
             setting_type='INTEGER',
@@ -64,7 +66,7 @@ class TestProjectSettingAPI(
 
         # Init boolean setting
         self.setting_bool = self._make_setting(
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             project=self.project,
             name='bool_setting',
             setting_type='BOOLEAN',
@@ -74,18 +76,18 @@ class TestProjectSettingAPI(
         """Test get_project_setting()"""
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting')
         self.assertEqual(self.setting_str.value, val)
 
     def test_get_project_setting_default(self):
         """Test get_project_setting() with default value for existing setting"""
-        app_plugin = get_app_plugin('filesfolders')
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         default_val = app_plugin.project_settings[EXISTING_SETTING]['default']
 
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING)
 
         self.assertEqual(val, default_val)
@@ -95,7 +97,7 @@ class TestProjectSettingAPI(
         with self.assertRaises(KeyError):
             get_project_setting(
                 project=self.project,
-                app_name='filesfolders',
+                app_name=EXAMPLE_APP_NAME,
                 setting_name='NON-EXISTING SETTING')
 
     def test_set_project_setting(self):
@@ -104,13 +106,13 @@ class TestProjectSettingAPI(
         # Assert postcondition
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting')
         self.assertEqual('test', val)
 
         ret = set_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting',
             value='updated')
 
@@ -119,7 +121,7 @@ class TestProjectSettingAPI(
         # Assert postcondition
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting')
         self.assertEqual('updated', val)
 
@@ -129,13 +131,13 @@ class TestProjectSettingAPI(
         # Assert postcondition
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting')
         self.assertEqual('test', val)
 
         ret = set_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting',
             value='test')
 
@@ -144,7 +146,7 @@ class TestProjectSettingAPI(
         # Assert postcondition
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting')
         self.assertEqual('test', val)
 
@@ -154,26 +156,26 @@ class TestProjectSettingAPI(
         # Assert precondition
         with self.assertRaises(ProjectSetting.DoesNotExist):
             ProjectSetting.objects.get(
-                app_plugin=get_app_plugin('filesfolders').get_model(),
+                app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
                 project=self.project,
                 name=EXISTING_SETTING)
 
         ret = set_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
             value=True)
 
         # Asset postconditions
-        self.assertEquals(ret, True)
+        self.assertEqual(ret, True)
         val = get_project_setting(
             project=self.project,
-            app_name='filesfolders',
+            app_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING)
         self.assertEqual(True, val)
 
         setting = ProjectSetting.objects.get(
-            app_plugin=get_app_plugin('filesfolders').get_model(),
+            app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
             name=EXISTING_SETTING)
         self.assertIsInstance(setting, ProjectSetting)
@@ -183,7 +185,7 @@ class TestProjectSettingAPI(
         with self.assertRaises(KeyError):
             set_project_setting(
                 project=self.project,
-                app_name='filesfolders',
+                app_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
                 value='new')
 

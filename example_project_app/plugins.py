@@ -23,8 +23,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Project settings definition
     project_settings = {
         'example_setting': {
-            'type': 'STRING',
-            'default': 'example',
+            'type': 'BOOLEAN',
+            'default': False,
             'description': 'Example setting'
         }
     }
