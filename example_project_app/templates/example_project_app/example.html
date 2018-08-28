@@ -1,0 +1,26 @@
+{# Projectroles dependency #}
+{% extends 'projectroles/project_base.html' %}
+{% load projectroles_common_tags %}
+
+{% load rules %}
+
+{% block title %}
+  Example App Page Title
+{% endblock title %}
+
+{% block projectroles_extend %}
+
+<div class="row omics-subtitle-container">
+    <h3><i class="fa fa-rocket"></i> Example Project App</h3>
+    {% if can_add_data %}
+      {% include 'filesfolders/_list_buttons.html' with project=project folder=folder up=False %}
+    {% endif %}
+  </div>
+
+<div class="container-fluid omics-page-container">
+  <div class="alert alert-info">
+    This is an example and the entry point for <code>example_project_app</code>.
+  </div>
+</div>
+
+{% endblock projectroles_extend %}
