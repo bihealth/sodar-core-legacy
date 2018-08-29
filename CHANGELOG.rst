@@ -15,6 +15,12 @@ Added
 - ``example_project_app`` to aid testing and work as a minimal example
 
 
+Changed
+-------
+
+- Move custom modal into ``projectroles/_modal.html``
+
+
 Fixed
 -----
 
