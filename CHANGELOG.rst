@@ -19,4 +19,4 @@ Fixed
 -----
 
 - Tests referring to the ``filesfolders`` app not included in this project
-
+- ``TestHomeView.test_render()`` assumed extra SODAR system user was present (see omics_data_mgmt#367)
