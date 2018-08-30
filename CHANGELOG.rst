@@ -20,6 +20,7 @@ Changed
 - Move custom modal into ``projectroles/_modal.html``
 - Check for user.name in user dropdown
 - Move content block structure and sidebar inside ``projectroles/base.html``
+- Move search form into ``projectroles/_search_form.html``
 
 
 Fixed
