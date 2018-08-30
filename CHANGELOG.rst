@@ -27,6 +27,7 @@ Changed
 - Move site title bar into optional include template ``projectroles/_site_titlebar.html``
 - Title bar CSS and layout tweaks
 - Move ``search.js`` under projectroles
+- Move projectroles specific javascript into ``projectroles.js``
 
 Fixed
 -----
@@ -34,3 +35,8 @@ Fixed
 - Tests referring to the ``filesfolders`` app not included in this project
 - ``TestHomeView.test_render()`` assumed extra SODAR system user was present (see omics_data_mgmt#367)
 - Tour link setup placing
+
+Removed
+-------
+
+- Deprecated Javascript variables ``popupWaitHtml`` and ``popupNoFilesHtml``

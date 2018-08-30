@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load rules %}
 {% load projectroles_tags %}
 
@@ -105,6 +106,9 @@
 
 {% block javascript %}
   {{ block.super }}
+
+  <!-- Projectroles Javascript -->
+  <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
   {# Add javascript from enabled backend plugins #}
   {% get_backend_plugins as backend_plugins %}
