@@ -8,10 +8,18 @@ from django.contrib.staticfiles import finders
 from django.urls import reverse
 from django.utils.http import urlquote
 
+# import omics_data_mgmt    # TODO: Get version from site
+
 from projectroles.plugins import get_backend_api
 
 
 register = template.Library()
+
+
+@register.simple_tag
+def site_version():
+    return '0.1.0'
+    # return omics_data_mgmt.__version__    # TODO: Get version from site
 
 
 @register.simple_tag

@@ -28,6 +28,8 @@ Changed
 - Title bar CSS and layout tweaks
 - Move ``search.js`` under projectroles
 - Move projectroles specific javascript into ``projectroles.js``
+- Move ``site_version()`` into common template tags
+- Move footer content into ``include/_footer.html``
 
 Fixed
 -----
