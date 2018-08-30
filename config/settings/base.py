@@ -357,17 +357,19 @@ def set_logging(debug):
 LOGGING = set_logging(DEBUG)
 
 
+# General site settings
+# ------------------------------------------------------------------------------
+
+SITE_TITLE = 'SODAR Projectroles Example Site'
+SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
+
+
 # Local App Settings
 # ------------------------------------------------------------------------------
 
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
-
-
-# General site settings
-SITE_SUBTITLE = env.str('SITE_SUBTITLE', None)
-
 
 # General API settings
 SODAR_API_DEFAULT_VERSION = '0.1'

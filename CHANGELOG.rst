@@ -13,6 +13,8 @@ Added
 
 - Create app package for Projectroles based on SODAR release v0.3.1
 - ``example_project_app`` to aid testing and work as a minimal example
+- ``static_file_exists()`` helper in common template tags
+- ``SITE_TITLE`` setting
 
 Changed
 -------
@@ -20,7 +22,9 @@ Changed
 - Move custom modal into ``projectroles/_modal.html``
 - Check for user.name in user dropdown
 - Move content block structure and sidebar inside ``projectroles/base.html``
-- Move search form into ``projectroles/_search_form.html``
+- Move search form into optional include template ``projectroles/_search_form.html``
+- Move site title bar into optional include template ``projectroles/_site_titlebar.html``
+- Title bar CSS and layout tweaks
 
 
 Fixed
