@@ -26,7 +26,6 @@ Changed
 - Move site title bar into optional include template ``projectroles/_site_titlebar.html``
 - Title bar CSS and layout tweaks
 
-
 Fixed
 -----
 

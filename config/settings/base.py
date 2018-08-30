@@ -66,8 +66,11 @@ LOCAL_APPS = [
     # Projectroles itself
     'projectroles.apps.ProjectrolesConfig',
 
-    # Example app
-    'example_project_app.apps.ExampleProjectAppConfig'
+    # Example project app
+    'example_project_app.apps.ExampleProjectAppConfig',
+
+    # Example site app
+    'example_site_app.apps.ExampleSiteAppConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
