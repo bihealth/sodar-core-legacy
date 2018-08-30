@@ -67,6 +67,7 @@
   </head>
 
   <body>
+
     <div class="omics-base-container">
 
       <div class="omics-top-container">
@@ -74,45 +75,24 @@
         {% include 'projectroles/_site_titlebar.html' %}
       </div> <!-- /omics-top-container -->
 
-      {% block content %}
-        <p>Use this document as a way to quick start any new project.</p>
-      {% endblock content %}
+      <div class="omics-content-container">
+        {% block content %}
+          <p>Use this document as a way to quick start any new project.</p>
+        {% endblock content %}
+      </div> <!-- /omics-content-container -->
 
-    {# Custom template for Bootstrap4 modal #}
-    {% block modal %}
-      {% include 'projectroles/_modal.html' %}
-    {% endblock modal %}
+      {# Custom template for Bootstrap4 modal #}
+      {% block modal %}
+        {% include 'projectroles/_modal.html' %}
+      {% endblock modal %}
 
-    <!-- Project specific Javascript -->
-    {% block javascript %}
-      <script src="{% static 'js/project.js' %}"></script>
-
-      <script type="text/javascript">
-        tour.addStep('tour_intro', {
-            title: 'Welcome to the Tour Help!',
-            text: 'The tour help describes key elements on the currently opened ' +
-                  'page and aids you in using available features. Advance on ' +
-                  'the tour by clicking "Next".',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-      </script>
-    {% endblock javascript %}
-
-    {# Set up Tour link #}
-
-    <script type="text/javascript">
-        if (tourEnabled == false) {
-            $('#site-help-link').addClass(
-                'disabled').removeClass('text-warning');
-        }
-
-        $('#site-help-link').click(function() {
-            tour.start();
-        });
-    </script>
+      <!-- Project specific Javascript -->
+      {% block javascript %}
+        <script src="{% static 'js/project.js' %}"></script>
+      {% endblock javascript %}
 
     </div> <!-- /omics-base-container -->
 
   </body>
+
 </html>

@@ -50,12 +50,23 @@ var popupNoFilesHtml = '<span class="text-muted"><em>No files found</em></span>'
 
 // Initialize Shepherd Tour
 var tourEnabled = false;  // Needs to set true if there is content
-    tour = new Shepherd.Tour({
-        defaults: {
+tour = new Shepherd.Tour({
+    defaults: {
             classes: 'shepherd-theme-default'
         }
-    });
+});
 
+// Set up tour link
+$(document).ready(function() {
+    if (tourEnabled === false) {
+        $('#site-help-link').addClass(
+            'disabled').removeClass('text-warning');
+    }
+
+    $('#site-help-link').click(function() {
+        tour.start();
+    });
+});
 
 // Set up Bootstrap popover
 $('[data-toggle="popover"]').popover({

@@ -15,6 +15,7 @@ Added
 - ``example_project_app`` to aid testing and work as a minimal example
 - ``static_file_exists()`` helper in common template tags
 - ``SITE_TITLE`` setting
+- ``example_site_app`` for demonstrating site apps
 
 Changed
 -------
@@ -31,3 +32,4 @@ Fixed
 
 - Tests referring to the ``filesfolders`` app not included in this project
 - ``TestHomeView.test_render()`` assumed extra SODAR system user was present (see omics_data_mgmt#367)
+- Tour link setup placing
