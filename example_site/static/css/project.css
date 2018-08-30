@@ -663,6 +663,7 @@ pre {
   .omics-navbar-search {
     width: 250px;
     padding-top: 10px;
+    padding-bottom: 5px;
   }
 }
 
