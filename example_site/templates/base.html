@@ -4,11 +4,18 @@
 {% load projectroles_common_tags %}
 {% load rules %}
 
+{# Local variables #}
+{% get_setting 'SITE_TITLE' as site_title %}
+{% get_setting 'SITE_SUBTITLE' as site_subtitle %}
+
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Projectroles Example{% if site_subtitle %} {{ site_subtitle }}{% endif %}: {% block title %}Page Title{% endblock title %}</title>
+    <title>
+      {{ site_title }}{% if site_subtitle %} {{ site_subtitle }}{% endif %}:
+      {% block title %}Page Title{% endblock title %}
+    </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -86,8 +93,9 @@
         {% include 'projectroles/_modal.html' %}
       {% endblock modal %}
 
-      <!-- Project specific Javascript -->
+      {# Javascript includes #}
       {% block javascript %}
+        <!-- General project Javascript -->
         <script src="{% static 'js/project.js' %}"></script>
       {% endblock javascript %}
 
