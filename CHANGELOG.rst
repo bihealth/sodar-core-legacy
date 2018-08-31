@@ -31,6 +31,7 @@ Changed
 - Move ``site_version()`` into common template tags
 - Move footer content into ``include/_footer.html``
 - Move title bar admin and site app links to user dropdown (omics_data_mgmt#342)
+- Move project specific CSS into optionally includable ``projectroles.css``
 
 Fixed
 -----
