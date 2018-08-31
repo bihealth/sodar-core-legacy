@@ -104,6 +104,7 @@ def print_not_found_alert(project_results, app_search_data, search_type):
 
     return ''
 
+
 @register.simple_tag
 def omics_constant(value):
     """Get value from OMICS_CONSTANTS in settings"""

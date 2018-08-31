@@ -30,6 +30,7 @@ Changed
 - Move projectroles specific javascript into ``projectroles.js``
 - Move ``site_version()`` into common template tags
 - Move footer content into ``include/_footer.html``
+- Move title bar admin and site app links to user dropdown (omics_data_mgmt#342)
 
 Fixed
 -----
