@@ -20,7 +20,8 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <!-- Javascript includes -->
+    <!-- Critical Javascript includes -->
+    {# NOTE: The rest are included under the "javascript" block at the end #}
 
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -31,13 +32,6 @@
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"></script>
     <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-
-    <!-- Shepherd -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/js/tether.js"></script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/shepherd/1.8.1/js/shepherd.min.js"></script>
-
-    <!-- Clipboard helper -->
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
 
     {% block css %}
 
@@ -55,19 +49,23 @@
       </style>
 
       <!-- Local Font Awesome Icons -->
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+      <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
 
       <!-- Bootstrap 4 CSS -->
-      <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" />
+      <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" />
 
       <!-- Shepherd theme -->
-      <link rel="stylesheet" href="{% static 'css/shepherd-theme-omics.css' %}" />
+      <link rel="stylesheet" type="text/css" href="{% static 'css/shepherd-theme-omics.css' %}" />
+
+      <!-- DataTables -->
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/ju/dt-1.10.18/b-1.5.2/fc-3.2.5/fh-3.1.4/kt-2.4.0/datatables.min.css" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/plug-ins/1.10.16/integration/font-awesome/dataTables.fontAwesome.css" />
 
       <!-- Project CSS -->
-      <link href="{% static 'css/project.css' %}" rel="stylesheet" />
+      <link rel="stylesheet" type="text/css" href="{% static 'css/project.css' %}" rel="stylesheet" />
 
       <!-- Projectroles custom CSS -->
-      <link href="{% static 'projectroles/css/projectroles.css' %}" rel="stylesheet" />
+      <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/projectroles.css' %}" />
 
     {% endblock css %}
 
@@ -91,18 +89,29 @@
         {% endblock content %}
       </div> <!-- /omics-content-container -->
 
-      {# Custom template for Bootstrap4 modal #}
-      {% block modal %}
-        {% include 'projectroles/_modal.html' %}
-      {% endblock modal %}
-
-      {# Javascript includes #}
-      {% block javascript %}
-        <!-- General project Javascript -->
-        <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
-      {% endblock javascript %}
-
     </div> <!-- /omics-base-container -->
+
+    {# Custom template for Bootstrap4 modal #}
+    {% block modal %}
+      {% include 'projectroles/_modal.html' %}
+    {% endblock modal %}
+
+    <!-- Standard Javascript includes -->
+    {# Include your Javascript here #}
+    {% block javascript %}
+      <!-- Shepherd -->
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/js/tether.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/shepherd/1.8.1/js/shepherd.min.js"></script>
+
+      <!-- Clipboard helper -->
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.0/clipboard.min.js"></script>
+
+      <!-- DataTables -->
+      <script type="text/javascript" src="https://cdn.datatables.net/v/ju/dt-1.10.18/b-1.5.2/fc-3.2.5/fh-3.1.4/kt-2.4.0/datatables.min.js"></script>
+
+      <!-- General project Javascript -->
+      <script type="text/javascript" src="{% static 'js/project.js' %}"></script>
+    {% endblock javascript %}
 
   </body>
 
