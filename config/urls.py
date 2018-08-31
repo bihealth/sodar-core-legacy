@@ -30,8 +30,11 @@ urlpatterns = [
     # Projectroles URLs
     url(r'^project/', include('projectroles.urls')),
 
-    # Example app URLs
-    url(r'^example/', include('example_project_app.urls')),
+    # Example project app URLs
+    url(r'^app_example/', include('example_project_app.urls')),
+
+    # Example site app URLs
+    url(r'^site_example/', include('example_site_app.urls')),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

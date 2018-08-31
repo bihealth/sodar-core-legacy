@@ -1,40 +1,62 @@
 {% extends 'base.html' %}
+{% load static %}
 {% load rules %}
 {% load projectroles_tags %}
 
-{# Sidebar #}
-{% block sidebar %}
-  {% include 'projectroles/_project_sidebar.html' %}
-{% endblock sidebar %}
-
 {% block content %}
 
-  {# Project breadcrumb #}
-  {% if project %}
-    <div class="omics-sub-navbar-container">
-      <div class="row bg-secondary omics-pr-navbar" id="omics-pr-navbar">
-        <ol id="omics-pr-breadcrumb" class="breadcrumb omics-pr-breadcrumb">
-          <li><i class="fa fa-angle-right"></i></li>
-          {% if project.get_parents %}
-            {% for p in project.get_parents %}
-              <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.omics_uuid %}">{{ p.title }}</a></li>
-            {% endfor %}
-          {% endif %}
-          {% if project %}
-            {% if request.resolver_match.url_name == 'project_detail' %}
-              <li class="breadcrumb-item active">{{ project.title }}</li>
-            {% else %}
-                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.omics_uuid %}">{{ project.title }}</a></li>
-            {% endif %}
-          {% endif %}
-        </ol>
-      </div>
+  {# Sidebar #}
+  <div class="omics-content-left">
+
+    <div class="col h-100 bg-dark text-center omics-pr-sidebar" id="omics-pr-sidebar">
+      <nav class="nav navbar-expand-lg navbar-dark bg-dark omics-pr-sidebar-nav">
+        <div class="collapse navbar-collapse" id="omics-pr-sidebar-navbar">
+          <ul class="navbar-nav flex-column omics-pr-sidebar-nav-ul">
+            <li id="omics-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+              <a class="nav-link"
+                 href="{% url 'home' %}"
+                 id="omics-pr-nav-home-link">
+                <i class="fa fa-home"></i><br />Home
+              </a>
+            </li>
+            {% block sidebar %} {# Actual sidebar content #}
+              {% include 'projectroles/_project_sidebar.html' %}
+            {% endblock sidebar %}
+          </ul>
+        </div>
+      </nav>
     </div>
-  {% endif %}
 
-  <div class="omics-app-container">
+  </div> <!-- /omics-content-left -->
 
-    {# Django messages / site app messages #}
+  <div class="omics-content-right">
+
+    {# Project breadcrumb #}
+    {% if project %}
+      <div class="omics-sub-navbar-container">
+        <div class="row bg-secondary omics-pr-navbar" id="omics-pr-navbar">
+          <ol id="omics-pr-breadcrumb" class="breadcrumb omics-pr-breadcrumb">
+            <li><i class="fa fa-angle-right"></i></li>
+            {% if project.get_parents %}
+              {% for p in project.get_parents %}
+                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.omics_uuid %}">{{ p.title }}</a></li>
+              {% endfor %}
+            {% endif %}
+            {% if project %}
+              {% if request.resolver_match.url_name == 'project_detail' %}
+                <li class="breadcrumb-item active">{{ project.title }}</li>
+              {% else %}
+                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.omics_uuid %}">{{ project.title }}</a></li>
+              {% endif %}
+            {% endif %}
+          </ol>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="omics-app-container">
+
+      {# Django messages / site app messages #}
       {% get_site_app_messages as site_app_messages %}
 
       {% if messages or site_app_messages %}
@@ -51,8 +73,7 @@
             </div>
           </div>
         {% endfor %}
-
-        {# Regular Django messages #}
+         {# Regular Django messages #}
         {% for message in messages %}
           <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} omics-alert-top">
             <div class="omics-alert-top-content">
@@ -61,7 +82,8 @@
             </div>
           </div>
         {% endfor %}
-        </div>
+
+         </div>
       {% endif %}
 
       {# Actual content #}
@@ -70,17 +92,23 @@
           Projectroles app content here
         {% endblock projectroles %}
       </div>
-      <footer class="omics-footer">
-        <div class="text-sm-center">Developed by BIH CUBI. For support and feedback, please contact <a href="mailto:mikko.nieminen@bihealth.de">Mikko Nieminen</a>. v{% site_version %}</div>
-      </footer>
-    </div>
 
-  </div>
+      {# Footer #}
+      <footer class="omics-footer">
+        {% include 'include/_footer.html' %}
+      </footer>
+
+     </div> <!-- /omics-app-container -->
+
+  </div>  <!-- /omics-content-right -->
 
 {% endblock content %}
 
 {% block javascript %}
   {{ block.super }}
+
+  <!-- Projectroles Javascript -->
+  <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
   {# Add javascript from enabled backend plugins #}
   {% get_backend_plugins as backend_plugins %}
@@ -90,5 +118,16 @@
       <script type="text/javascript" src="{{ plugin.javascript_url }}"></script>
     {% endif %}
   {% endfor %}
+
+  <script type="text/javascript">
+      tour.addStep('tour_intro', {
+          title: 'Welcome to the Tour Help!',
+          text: 'The tour help describes key elements on the currently ' +
+                'opened page and aids you in using available features. ' +
+                'Advance on the tour by clicking "Next".',
+          advanceOn: '.docs-link click',
+          showCancelLink: true
+      });
+  </script>
 
 {% endblock javascript %}

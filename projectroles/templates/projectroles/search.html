@@ -14,10 +14,6 @@
 {% block css %}
   {{ block.super }}
 
-  <!-- DataTables -->
-  <link rel="stylesheet" type="text/css" href="{% static 'datatables/datatables.min.css' %}"/>
-  <link rel="stylesheet" type="text/css" href="{% static 'datatables/DataTables-1.10.16/integration/dataTables.fontAwesome.css' %}"/>
-
   <style type="text/css">
     div.omics-search-card {
         display: none;  /* Will be enabled after DataTables init */
@@ -164,10 +160,7 @@
   </script>
 
   <!-- Project search JQuery -->
-  <script type="text/javascript" src="{% static 'js/search.js' %}"></script>
-
-  <!-- DataTables -->
-  <script type="text/javascript" src="{% static 'datatables/datatables.min.js'%}"></script>
+  <script type="text/javascript" src="{% static 'projectroles/js/search.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">

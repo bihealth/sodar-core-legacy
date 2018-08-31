@@ -2,7 +2,6 @@ from django import template
 from django.conf import settings
 from django.utils import timezone
 
-# import omics_data_mgmt    # TODO: Get version from site
 from ..models import Project, RoleAssignment, OMICS_CONSTANTS, \
     PROJECT_TAG_STARRED
 from ..plugins import get_active_plugins
@@ -104,6 +103,7 @@ def print_not_found_alert(project_results, app_search_data, search_type):
         return ret
 
     return ''
+
 
 @register.simple_tag
 def omics_constant(value):
@@ -231,9 +231,3 @@ def get_role_import_action(source_as, dest_project):
 
     except RoleAssignment.DoesNotExist:
         return 'Import'
-
-
-@register.simple_tag
-def site_version():
-    return '0.1.0'
-    # return omics_data_mgmt.__version__    # TODO: Get version from site

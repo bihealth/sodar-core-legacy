@@ -1,0 +1,162 @@
+{# Site title bar for use with projectroles #}
+
+{% load static %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+{% load rules %}
+
+{# Local variables #}
+{% get_setting 'SITE_TITLE' as site_title %}
+{% get_setting 'SITE_SUBTITLE' as site_subtitle %}
+{% static_file_exists 'images/logo_navbar.png' as logo_exists %}
+
+<div class="m-b-1 omics-titlebar-container">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark omics-base-navbar" id="omics-base-navbar">
+
+    {# Site title #}
+    <a class="navbar-brand" id="omics-base-navbar-brand" href="/">
+      {% if logo_exists %}
+        <img class="omics-navbar-logo" src="{% static 'images/logo_navbar.png' %}" />
+      {% endif %}
+      {{ site_title }}
+      {% if site_subtitle %}<span class="text-warning">{{ site_subtitle }}</span>{% endif %}
+    </a>
+
+    {# Navbar responsive collapse toggle #}
+    <button class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    {# Navbar content #}
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto" id="omics-base-navbar-nav">
+
+        {# Search #}
+        {% if request.user.is_authenticated %}
+          <li class="nav-item">
+            {% include 'projectroles/_search_form.html' %}
+          </li>
+        {% endif %}
+
+        {# TODO: Add optional template for external links #}
+        {% comment TODO %}
+          {# Manual link #}
+          <li class="nav-item">
+            <a href="/manual/" class="nav-link" id="site-manual-link" target="_blank"><i class="fa fa-fw fa-map-o"></i> Manual</a>
+          </li>
+        {% endcomment %}
+
+        {# Help link #}
+        <li class="nav-item">
+          <a class="nav-link {% get_help_highlight request.user %}"
+             id="site-help-link"><i class="fa fa-fw fa-info-circle"></i> Help</a>
+        </li>
+
+        {# Responsive replacement for user dopdown #}
+
+        {# Admin link #}
+        {% if request.user.is_superuser %}
+          <li class="nav-item omics-navbar-alt-item">
+            <a class="nav-link" href="{% url 'admin:index' %}"
+               id="omics-navbar-link-admin" target="_blank">
+              <i class="fa fa-fw fa-gears"></i> Admin
+            </a>
+          </li>
+        {% endif %}
+
+        {# Site-wide apps #}
+        {% get_site_apps as site_apps %}
+        {% for plugin in site_apps %}
+          {% has_perm plugin.app_permission request.user as can_view_app %}
+          {% if not plugin.app_permission or can_view_app %}
+            <li class="nav-item omics-navbar-alt-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
+              <a class="nav-link"
+                 href="{% url plugin.entry_point_url_id %}"
+                 id="omics-navbar-siteapp-link-{{ plugin.name }}">
+                <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}</a>
+            </li>
+          {% endif %}
+        {% endfor %}
+
+        {# User profile and sign out links #}
+        {% if request.user.is_authenticated %}
+          <li class="nav-item omics-navbar-alt-item {% if request.path == request.user.get_absolute_url %}active{% endif %}">
+            <a class="nav-link"
+               href="{{ request.user.get_absolute_url }}"
+               id="omics-alt-navbar-link-user-details">
+              <i class="fa fa-fw fa-user-circle-o"></i> User Profile
+            </a>
+          </li>
+          <li class="nav-item omics-navbar-alt-item">
+            <a class="nav-link text-danger"
+               href="{% url 'account_logout' %}"
+               id="omics-alt-nav-link-sign-out">
+              <i class="fa fa-fw fa-sign-out"></i> Sign Out
+            </a>
+          </li>
+        {% endif %}
+
+        {# Actual user dropdown #}
+
+        <li class="nav-item omics-navbar-user-dropdown">
+          <a class="nav-link omics-nav-link-last dropdown-toggle {% if not request.user.is_authenticated %}disabled{% endif %}"
+             id="omics-navbar-user-dropdown{% if not request.user.is_authenticated %}-disabled{% endif %}"
+             data-toggle="dropdown">
+            <i class="fa fa-fw fa-user"></i>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right omics-navbar-user-dropdown">
+            <div class="dropdown-header">
+              {% if request.user.name %}
+                {{ request.user.name }}<br />
+              {% endif %}
+              {{ request.user.username }}</div>
+
+            <div class="dropdown-divider"></div>
+
+            {# Site-wide apps #}
+            {% if site_apps|length > 0 %}
+              {% for plugin in site_apps %}
+                {% has_perm plugin.app_permission request.user as can_view_app %}
+                {% if not plugin.app_permission or can_view_app %}
+                  <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
+                     href="{% url plugin.entry_point_url_id %}"
+                     id="omics-navbar-siteapp-link-{{ plugin.name }}">
+                    <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}
+                  </a>
+                {% endif %}
+              {% endfor %}
+
+              <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {# Admin link #}
+            {% if request.user.is_superuser %}
+              <a class="dropdown-item" href="{% url 'admin:index' %}"
+                 id="omics-navbar-link-admin" target="_blank">
+                <i class="fa fa-fw fa-gears"></i> Admin
+              </a>
+
+              <div class="dropdown-divider"></div>
+            {% endif %}
+
+            {# User profile and sign out links #}
+            <a class="dropdown-item {% if request.path == request.user.get_absolute_url %}active{% endif %}"
+               href="{{ request.user.get_absolute_url }}"
+               id="omics-navbar-link-user-details">
+              <i class="fa fa-fw fa-user-circle-o"></i> User Profile
+            </a>
+            <a class="dropdown-item text-danger"
+               href="{% url 'account_logout' %}"
+               id="omics-navbar-link-logout">
+              <i class="fa fa-fw fa-sign-out"></i> Sign Out
+            </a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+  </nav>
+</div>

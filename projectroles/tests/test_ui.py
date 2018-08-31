@@ -315,10 +315,10 @@ class TestBaseTemplate(TestUIBase):
         url = reverse('home')
 
         self.assert_element_exists(
-            expected_true, url, 'omics-navbar-admin-link', True)
+            expected_true, url, 'omics-navbar-link-admin', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-navbar-admin-link', False)
+            expected_false, url, 'omics-navbar-link-admin', False)
 
 
 class TestProjectList(TestUIBase):

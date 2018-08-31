@@ -4,13 +4,22 @@ import mistune
 
 from django import template
 from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.urls import reverse
 from django.utils.http import urlquote
+
+# import omics_data_mgmt    # TODO: Get version from site
 
 from projectroles.plugins import get_backend_api
 
 
 register = template.Library()
+
+
+@register.simple_tag
+def site_version():
+    return '0.1.0'
+    # return omics_data_mgmt.__version__    # TODO: Get version from site
 
 
 @register.simple_tag
@@ -119,3 +128,9 @@ def check_backend(name):
 def get_setting(name):
     """Return value of Django setting by name or None if it is not found"""
     return getattr(settings, name) if hasattr(settings, name) else None
+
+
+@register.simple_tag
+def static_file_exists(path):
+    """Return True/False based on whether a static file exists"""
+    return True if finders.find(path) else False
