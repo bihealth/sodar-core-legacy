@@ -178,11 +178,11 @@ h2.omics-pr-content-title {
   line-height: 40px;
 }
 
-h3 {
+.omics-subtitle-container h3 {
   margin-top: 3px;
 }
 
-h4 {
+.card-header h4 {
   margin-bottom: 0;
 }
 
@@ -190,7 +190,7 @@ h4 {
 /* Cards -------------------------------------------------------------------- */
 
 
-div.card {
+div.omics-card {
   padding-left: 0;
   padding-right: 0;
   margin-left: 0;
