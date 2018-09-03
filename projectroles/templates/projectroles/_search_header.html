@@ -1,4 +1,4 @@
-<div class="card omics-card omics-search-card">
+<div class="card omics-search-card">
   <div class="card-header">
     <h4>
       <i class="fa fa-{% if icon %}{{ icon }}{% else %}{{ plugin.icon }}{% endif %}"></i>
@@ -13,7 +13,7 @@
     </h4>
   </div>
   {% if result_count >= result_limit %}
-    <div class="card-body omics-card-body omics-card-body-info">
+    <div class="card-body omics-card-body-info">
       <i class="fa fa-warning"></i> Some results may be omitted, please narrow down your search
     </div>
   {% endif %}
