@@ -16,6 +16,7 @@ Added
 - ``static_file_exists()`` helper in common template tags
 - ``SITE_TITLE`` setting
 - ``example_site_app`` for demonstrating site apps
+- ``get_full_name()`` in User model
 
 Changed
 -------
@@ -41,6 +42,7 @@ Fixed
 - Tests referring to the ``filesfolders`` app not included in this project
 - ``TestHomeView.test_render()`` assumed extra SODAR system user was present (see omics_data_mgmt#367)
 - Tour link setup placing
+- Missing user name if ``name`` field not filled in ``user_detail.html``
 
 Removed
 -------

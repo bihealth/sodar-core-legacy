@@ -78,13 +78,9 @@ def get_project_title_html(project):
 @register.simple_tag
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
-
-    # In case full name has not been added for a user
-    full_name = user.name if user.name else user.username
-
     return '<a title="{}" href="mailto:{}" data-toggle="tooltip" ' \
            'data-placement="top">{}</a>'.format(
-                full_name, user.email, user.username)
+                user.get_full_name(), user.email, user.username)
 
 
 @register.simple_tag

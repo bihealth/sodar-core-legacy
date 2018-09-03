@@ -31,6 +31,17 @@ class User(AbstractUser):
     def get_absolute_url(self):
         return reverse('users:user_detail', kwargs={'username': self.username})
 
+    def get_full_name(self):
+        """Return full name or username if not set"""
+
+        if hasattr(self, 'name') and self.name:
+            return self.name
+
+        elif self.first_name and self.last_name:
+            return '{} {}'.format(self.first_name, self.last_name)
+
+        return self.username
+
 
 def handle_ldap_login(sender, user, **kwargs):
     """Handle LDAP logins here as needed"""
