@@ -33,6 +33,7 @@ Changed
 - Move title bar admin and site app links to user dropdown (omics_data_mgmt#342)
 - Move project specific CSS into optionally includable ``projectroles.css``
 - Refactor and cleanup CSS
+- Move template ``user_detail.html`` into projectroles
 
 Fixed
 -----
@@ -46,3 +47,4 @@ Removed
 
 - Deprecated Javascript variables ``popupWaitHtml`` and ``popupNoFilesHtml``
 - Unused template ``irods_info.html``
+- Unused list view and template from example users app
