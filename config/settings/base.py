@@ -370,6 +370,8 @@ LOGGING = set_logging(DEBUG)
 
 SITE_TITLE = 'SODAR Projectroles Example Site'
 SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
+SITE_INSTANCE_TITLE = env.str(
+    'SITE_INSTANCE_TITLE', 'SODAR Projectroles Example')
 
 
 # Local App Settings

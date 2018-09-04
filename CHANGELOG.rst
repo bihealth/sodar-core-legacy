@@ -14,7 +14,7 @@ Added
 - Create app package for Projectroles based on SODAR release v0.3.1
 - ``example_project_app`` to aid testing and work as a minimal example
 - ``static_file_exists()`` helper in common template tags
-- ``SITE_TITLE`` setting
+- ``SITE_TITLE`` and ``SITE_INSTANCE_TITLE`` settings
 - ``example_site_app`` for demonstrating site apps
 - ``get_full_name()`` in User model
 - Abstract ``OmicsUser`` model
@@ -42,6 +42,7 @@ Changed
 - Copy improved multi LDAP backend setup from flowcelltool (omics_data_mgmt#132)
 - Move LDAP authentication backends into projectroles (omics_data_mgmt#132)
 - Move ``login.html`` into projectroles
+- Display ``SITE_INSTANCE_TITLE`` in email instead of a hardcoded string
 
 Fixed
 -----

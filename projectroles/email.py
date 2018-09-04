@@ -18,6 +18,7 @@ User = auth.get_user_model()
 SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX
 EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
+SITE_TITLE = settings.SITE_INSTANCE_TITLE
 
 
 logger = logging.getLogger(__name__)
@@ -29,20 +30,18 @@ logger = logging.getLogger(__name__)
 MESSAGE_HEADER = r'''
 Dear {recipient},
 
-This email has been automatically sent to you by the
-CUBI SODAR system.
+This email has been automatically sent to you by {site_title}.
 
 '''.lstrip()
 
 MESSAGE_HEADER_NO_RECIPIENT = r'''
-This email has been automatically sent to you by the
-CUBI SODAR system.
+This email has been automatically sent to you by {site_title}.
 '''.lstrip()
 
 MESSAGE_FOOTER = r'''
 
-For support and reporting issues regarding the CUBI SODAR
-system, contact Mikko Nieminen (mikko.nieminen@bihealth.de).
+For support and reporting issues regarding {site_title},
+contact Mikko Nieminen (mikko.nieminen@bihealth.de).
 '''
 
 
@@ -57,7 +56,7 @@ MESSAGE_ROLE_CREATE = r'''
 {issuer_name} ({issuer_email}) has granted you the membership
 in project "{project}" with the role of "{role}".
 
-To access the project in the CUBI SODAR system, please click on
+To access the project in {site_title}, please click on
 the following link:
 {project_url}
 '''.lstrip()
@@ -66,7 +65,7 @@ MESSAGE_ROLE_UPDATE = r'''
 {issuer_name} ({issuer_email}) has changed your membership
 role in project "{project}" into "{role}".
 
-To access the project in the CUBI SODAR system, please click on
+To access the project in {site_title}, please click on
 the following link:
 {project_url}
 '''.lstrip()
@@ -87,8 +86,8 @@ You have been invited by {issuer_name} ({issuer_email})
 to share data in the project "{project}" with the
 role of "{role}".
 
-To accept the invitation and access the project in the
-CUBI SODAR system, please click on the following link:
+To accept the invitation and access the project in {site_title},
+please click on the following link:
 {invite_url}
 
 This invitation will expire on {date_expire}.
@@ -145,7 +144,7 @@ def get_invite_body(
     :param message: Optional user message as string
     :return: string
     """
-    body = MESSAGE_HEADER_NO_RECIPIENT
+    body = MESSAGE_HEADER_NO_RECIPIENT.format(site_title=SITE_TITLE)
 
     body += MESSAGE_INVITE_BODY.format(
         issuer_name=issuer.name,
@@ -153,7 +152,8 @@ def get_invite_body(
         project=project.title,
         role=role_name,
         invite_url=invite_url,
-        date_expire=date_expire_str)
+        date_expire=date_expire_str,
+        site_title=SITE_TITLE)
 
     return body
 
@@ -175,7 +175,7 @@ def get_email_footer():
     Return the invite content footer.
     :return: string
     """
-    return MESSAGE_FOOTER
+    return MESSAGE_FOOTER.format(site_title=SITE_TITLE)
 
 
 def get_invite_subject(project):
@@ -220,7 +220,9 @@ def get_role_change_body(
     :param project_url: URL for the project
     :return: String
     """
-    body = MESSAGE_HEADER.format(recipient=user_name)
+    body = MESSAGE_HEADER.format(
+        recipient=user_name,
+        site_title=SITE_TITLE)
 
     if change_type == 'create':
         body += MESSAGE_ROLE_CREATE.format(
@@ -228,7 +230,8 @@ def get_role_change_body(
             issuer_email=issuer.email,
             role=role_name,
             project=project.title,
-            project_url=project_url)
+            project_url=project_url,
+            site_title=SITE_TITLE)
 
     elif change_type == 'update':
         body += MESSAGE_ROLE_UPDATE.format(
@@ -236,7 +239,8 @@ def get_role_change_body(
             issuer_email=issuer.email,
             role=role_name,
             project=project.title,
-            project_url=project_url)
+            project_url=project_url,
+            site_title=SITE_TITLE)
 
     elif change_type == 'delete':
         body += MESSAGE_ROLE_DELETE.format(
@@ -244,7 +248,7 @@ def get_role_change_body(
             issuer_email=issuer.email,
             project=project.title)
 
-    body += MESSAGE_FOOTER
+    body += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
     return body
 
 
@@ -347,13 +351,15 @@ def send_accept_note(invite, request):
         project=invite.project.title)
 
     message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.name)
+        recipient=invite.issuer.name,
+        site_title=SITE_TITLE)
     message += MESSAGE_ACCEPT_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
         user_name=request.user.name,
-        user_email=request.user.email)
-    message += MESSAGE_FOOTER
+        user_email=request.user.email,
+        site_title=SITE_TITLE)
+    message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
 
     return send_mail(subject, message, [invite.issuer.email], request)
 
@@ -371,14 +377,16 @@ def send_expiry_note(invite, request):
         project=invite.project.title)
 
     message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.name)
+        recipient=invite.issuer.name,
+        site_title=SITE_TITLE)
     message += MESSAGE_EXPIRY_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
         user_name=request.user.name,
         user_email=request.user.email,
-        date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'))
-    message += MESSAGE_FOOTER
+        date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
+        site_title=SITE_TITLE)
+    message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
 
     return send_mail(subject, message, [invite.issuer.email], request)
 
@@ -405,9 +413,11 @@ def send_generic_mail(subject_body, message_body, recipient_list, request):
             recp_name = 'recipient'
             recp_email = recipient
 
-        message = MESSAGE_HEADER.format(recipient=recp_name)
+        message = MESSAGE_HEADER.format(
+            recipient=recp_name,
+            site_title=SITE_TITLE)
         message += message_body
-        message += MESSAGE_FOOTER
+        message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
 
         ret += send_mail(subject, message, [recp_email], request)
 
