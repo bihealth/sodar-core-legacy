@@ -19,6 +19,7 @@ SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX
 EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
+ADMIN_RECIPIENT = settings.ADMINS[0]
 
 
 logger = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ This email has been automatically sent to you by {site_title}.
 MESSAGE_FOOTER = r'''
 
 For support and reporting issues regarding {site_title},
-contact Mikko Nieminen (mikko.nieminen@bihealth.de).
+contact {admin_name} ({admin_email}).
 '''
 
 
@@ -175,7 +176,10 @@ def get_email_footer():
     Return the invite content footer.
     :return: string
     """
-    return MESSAGE_FOOTER.format(site_title=SITE_TITLE)
+    return MESSAGE_FOOTER.format(
+        site_title=SITE_TITLE,
+        admin_name=ADMIN_RECIPIENT[0],
+        admin_email=ADMIN_RECIPIENT[1])
 
 
 def get_invite_subject(project):
@@ -248,7 +252,7 @@ def get_role_change_body(
             issuer_email=issuer.email,
             project=project.title)
 
-    body += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
+    body += get_email_footer()
     return body
 
 
@@ -359,7 +363,7 @@ def send_accept_note(invite, request):
         user_name=request.user.name,
         user_email=request.user.email,
         site_title=SITE_TITLE)
-    message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
+    message += get_email_footers()
 
     return send_mail(subject, message, [invite.issuer.email], request)
 
@@ -386,7 +390,7 @@ def send_expiry_note(invite, request):
         user_email=request.user.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
         site_title=SITE_TITLE)
-    message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
+    message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
 
@@ -417,7 +421,7 @@ def send_generic_mail(subject_body, message_body, recipient_list, request):
             recipient=recp_name,
             site_title=SITE_TITLE)
         message += message_body
-        message += MESSAGE_FOOTER.format(site_title=SITE_TITLE)
+        message += get_email_footer()
 
         ret += send_mail(subject, message, [recp_email], request)
 

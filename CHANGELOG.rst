@@ -43,6 +43,7 @@ Changed
 - Move LDAP authentication backends into projectroles (omics_data_mgmt#132)
 - Move ``login.html`` into projectroles
 - Display ``SITE_INSTANCE_TITLE`` in email instead of a hardcoded string
+- Display the first contact in ``settings.ADMINS`` in email footer
 
 Fixed
 -----
