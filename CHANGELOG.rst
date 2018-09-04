@@ -17,6 +17,7 @@ Added
 - ``SITE_TITLE`` setting
 - ``example_site_app`` for demonstrating site apps
 - ``get_full_name()`` in User model
+- Abstract ``OmicsUser`` model
 
 Changed
 -------
@@ -35,6 +36,8 @@ Changed
 - Move project specific CSS into optionally includable ``projectroles.css``
 - Refactor and cleanup CSS
 - Move template ``user_detail.html`` into projectroles
+- Move ``set_user_group()`` into ``projectroles.utils``
+- Move ``syncgroups`` management command into projectroles
 
 Fixed
 -----
