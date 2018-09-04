@@ -2,7 +2,7 @@ from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from example_site.users.utils import set_user_group
+from projectroles.utils import set_user_group
 
 
 User = auth.get_user_model()

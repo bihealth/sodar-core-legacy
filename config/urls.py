@@ -21,7 +21,8 @@ urlpatterns = [
     url(r'^users/', include('example_site.users.urls', namespace='users')),
 
     # Login and logout
-    url(r'^login/$', auth_views.login, name='account_login'),
+    url(r'^login/$', auth_views.LoginView.as_view(
+        template_name='projectroles/login.html'), name='account_login'),
     url(r'^logout/$', auth_views.logout_then_login, name='account_logout'),
 
     # Auth

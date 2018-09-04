@@ -14,4 +14,4 @@ class TestUser(TestCase):
     def test_get_absolute_url(self):
         self.assertEqual(
             self.user.get_absolute_url(),
-            '/users/testuser/')
+            '/users/testuser')

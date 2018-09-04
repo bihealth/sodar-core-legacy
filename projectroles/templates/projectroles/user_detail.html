@@ -1,10 +1,11 @@
 {% extends "projectroles/base.html" %}
 
-{% block title %}User Profile for {{ object.name }}{% endblock %}
+
+{% block title %}User Profile for {{ object.get_full_name }}{% endblock %}
 
 {% block projectroles %}
 <div class="row omics-pr-content-title">
-  <h2 class="omics-pr-content-title">{{ object.name }}</h2>
+  <h2 class="omics-pr-content-title">{{ object.get_full_name }}</h2>
   <div class="omics-pr-content-title-secondary text-muted">
     User Profile
   </div>
@@ -18,14 +19,16 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        <dt class="col-md-2">Full Name</dt>
-        <dd class="col-md-10">{{ object.name }}</dd>
+        {% if object.get_full_name != object.username %}
+          <dt class="col-md-2">Full Name</dt>
+          <dd class="col-md-10">{{ object.get_full_name }}</dd>
+        {% endif %}
         <dt class="col-md-2">Username</dt>
         <dd class="col-md-10">{{ object.username }}</dd>
         <dt class="col-md-2">Email</dt>
         <dd class="col-md-10"><a href="mailto:{{ object.email }}">{{ object.email }}</a></dd>
         <dt class="col-md-2">Date Joined</dt>
-        <dd class="col-md-10">{{ object.date_joined|date:'Y-m-d H:i' }}</dd>
+        <dd class="col-md-10">{{ object.date_joined | date:'Y-m-d H:i' }}</dd>
       </dl>
     </div>
   </div>
