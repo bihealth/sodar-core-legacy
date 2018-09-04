@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login{% endblock title %}
 
@@ -31,6 +32,9 @@
 
 {% block javascript %}
   {{ block.super }}
+
+  <!-- Projectroles Javascript -->
+  <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">
