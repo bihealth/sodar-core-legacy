@@ -19,7 +19,7 @@ import sys
 from django.core.wsgi import get_wsgi_application
 
 # This allows easy placement of apps within the interior
-# example_site commands.
+# example_site directory.
 app_path = os.path.dirname(os.path.abspath(__file__)).replace('/config', '')
 sys.path.append(os.path.join(app_path, 'example_site'))
 application = get_wsgi_application()
