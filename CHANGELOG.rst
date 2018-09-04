@@ -44,6 +44,7 @@ Changed
 - Move ``login.html`` into projectroles
 - Display ``SITE_INSTANCE_TITLE`` in email instead of a hardcoded string
 - Display the first contact in ``settings.ADMINS`` in email footer
+- Use ``get_full_name()`` in email sending
 
 Fixed
 -----
