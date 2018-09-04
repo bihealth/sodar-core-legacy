@@ -41,6 +41,7 @@ Changed
 - Move ``syncgroups`` management command into projectroles
 - Copy improved multi LDAP backend setup from flowcelltool (omics_data_mgmt#132)
 - Move LDAP authentication backends into projectroles (omics_data_mgmt#132)
+- Move ``login.html`` into projectroles
 
 Fixed
 -----

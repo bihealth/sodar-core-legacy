@@ -188,7 +188,7 @@ class TestUIBase(
         field_pass.send_keys('password')
 
         self.selenium.find_element_by_xpath(
-            '//button[contains(., "Sign In")]').click()
+            '//button[contains(., "Login")]').click()
 
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
