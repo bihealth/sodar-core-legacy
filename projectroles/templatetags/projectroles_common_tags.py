@@ -1,13 +1,14 @@
 """Template tags provided by projectroles for use in other apps"""
 
+from importlib import import_module
 import mistune
 
 from django import template
 from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.urls import reverse
-from django.utils.http import urlquote
 
+site = import_module(settings.SITE_MODULE)
 # import omics_data_mgmt    # TODO: Get version from site
 
 from projectroles.plugins import get_backend_api
@@ -18,8 +19,7 @@ register = template.Library()
 
 @register.simple_tag
 def site_version():
-    return '0.1.0'
-    # return omics_data_mgmt.__version__    # TODO: Get version from site
+    return site.__version__
 
 
 @register.simple_tag

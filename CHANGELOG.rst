@@ -19,6 +19,7 @@ Added
 - ``get_full_name()`` in User model
 - Abstract ``OmicsUser`` model
 - ``user_backends.py`` file for LDAP backends (omics_data_mgmt#132)
+- ``SITE_MODULE`` setting for explicitly declaring site path for code
 
 Changed
 -------
@@ -45,6 +46,8 @@ Changed
 - Display ``SITE_INSTANCE_TITLE`` in email instead of a hardcoded string
 - Display the first contact in ``settings.ADMINS`` in email footer
 - Use ``get_full_name()`` in email sending
+- Get site version using ``SITE_MODULE``
+
 
 Fixed
 -----
