@@ -9,7 +9,7 @@ from django.contrib.staticfiles import finders
 from django.urls import reverse
 
 site = import_module(settings.SITE_MODULE)
-# import omics_data_mgmt    # TODO: Get version from site
+import projectroles
 
 from projectroles.plugins import get_backend_api
 
@@ -20,6 +20,11 @@ register = template.Library()
 @register.simple_tag
 def site_version():
     return site.__version__
+
+
+@register.simple_tag
+def projectroles_version():
+    return projectroles.__version__
 
 
 @register.simple_tag

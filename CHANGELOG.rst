@@ -20,6 +20,8 @@ Added
 - Abstract ``OmicsUser`` model
 - ``user_backends.py`` file for LDAP backends (omics_data_mgmt#132)
 - ``SITE_MODULE`` setting for explicitly declaring site path for code
+- Versioneer versioning for projectroles
+- ``projectroles_version()`` in common template tags
 
 Changed
 -------

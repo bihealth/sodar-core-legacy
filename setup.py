@@ -6,21 +6,12 @@ Package metadata for projectroles.
 """
 import os
 import re
-
 from setuptools import setup
 
+import versioneer
 
-def get_version(*file_paths):
-    """
-    Extract the version string from the file at the given relative path fragments.
-    """
-    filename = os.path.join(os.path.dirname(__file__), *file_paths)
-    version_file = open(filename).read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
-    raise RuntimeError('Unable to find version string.')
+# allow setup.py to be run from any path
+os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 
 def load_requirements(*requirements_paths):
@@ -54,15 +45,13 @@ def is_requirement(line):
         line.startswith('git+')
     )
 
-
-VERSION = get_version('projectroles', '__init__.py')
-
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')).read()
 
 setup(
     name='sodar_projectroles',
-    version=VERSION,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     description="""SODAR project and role management""",
     long_description=README + '\n\n' + CHANGELOG,
     author='Mikko Nieminen',
