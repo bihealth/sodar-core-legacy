@@ -43,8 +43,8 @@ sphinx-rtd-theme==0.4.0
 # Project app imports
 ######################
 
-# django-auth-ldap==1.2.8   # TODO: Needed?
-# pyldap==2.4.25.1          # TODO: Needed?
+django-auth-ldap==1.2.8
+pyldap==2.4.25.1
 
 # Django-plugins (with self-made Django 1.10 support)
 -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins

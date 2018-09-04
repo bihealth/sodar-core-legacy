@@ -18,6 +18,7 @@ Added
 - ``example_site_app`` for demonstrating site apps
 - ``get_full_name()`` in User model
 - Abstract ``OmicsUser`` model
+- ``user_backends.py`` file for LDAP backends (omics_data_mgmt#132)
 
 Changed
 -------
@@ -38,6 +39,8 @@ Changed
 - Move template ``user_detail.html`` into projectroles
 - Move ``set_user_group()`` into ``projectroles.utils``
 - Move ``syncgroups`` management command into projectroles
+- Copy improved multi LDAP backend setup from flowcelltool (omics_data_mgmt#132)
+- Move LDAP authentication backends into projectroles (omics_data_mgmt#132)
 
 Fixed
 -----
