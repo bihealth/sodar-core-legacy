@@ -48,7 +48,7 @@ Changed
 - Display ``SITE_INSTANCE_TITLE`` in email instead of a hardcoded string
 - Display the first contact in ``settings.ADMINS`` in email footer
 - Use ``get_full_name()`` in email sending
-- Get site version using ``SITE_MODULE``
+- Get site version using ``SITE_PACKAGE``
 
 
 Fixed

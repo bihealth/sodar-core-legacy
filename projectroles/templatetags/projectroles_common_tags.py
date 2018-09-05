@@ -8,11 +8,10 @@ from django.conf import settings
 from django.contrib.staticfiles import finders
 from django.urls import reverse
 
-site = import_module(settings.SITE_MODULE)
 import projectroles
-
 from projectroles.plugins import get_backend_api
 
+site = import_module(settings.PACKAGE)
 
 register = template.Library()
 
