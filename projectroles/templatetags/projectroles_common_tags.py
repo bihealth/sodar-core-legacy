@@ -11,7 +11,7 @@ from django.urls import reverse
 import projectroles
 from projectroles.plugins import get_backend_api
 
-site = import_module(settings.PACKAGE)
+site = import_module(settings.SITE_PACKAGE)
 
 register = template.Library()
 
