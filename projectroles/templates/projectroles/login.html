@@ -21,7 +21,7 @@
     <h2 class="omics-pr-content-title">Login</h2>
 
     <p>Please log in using your Charité or MDC account. Enter your user name
-       as <code>username@CHARITE</code> or <code>username@MDC-BERLIN</code>.</p>
+        as <code>username@CHARITE</code> or <code>username@MDC-BERLIN</code>.</p>
 
     <form class="form-signin" method="post" id="omics-form-signin">
       {% csrf_token %}
@@ -46,7 +46,7 @@
     tour.addStep('login_username1', {
         title: 'Log in to {{ site_title }}',
         text: 'To use {{ site_title }}, you must log in. For ' +
-              'this you need to use an existing account.',
+              'this, you need to use an existing Charité or MDC account.',
         attachTo: '#omics-signin-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
@@ -55,7 +55,8 @@
     tour.addStep('login_username2', {
         title: 'User Name and Domain',
         text: 'The user name must be supplied in the format ' +
-              '"username@DOMAIN" depending on the account used.',
+              '"username@CHARITE" or "username@MDC-BERLIN", depending on the ' +
+              'account used.',
         attachTo: '#omics-signin-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
@@ -63,8 +64,8 @@
 
     tour.addStep('login_username2', {
         title: 'Note on Multiple Accounts',
-        text: 'IMPORTANT: if you have user accounts for both supported ' +
-              'domains, note that these user accounts will not be connected. ' +
+        text: 'IMPORTANT: if you have user accounts for both Charité and ' +
+              'MDC, note that these user accounts will not be connected. ' +
               'Please choose one of your accounts and always use the same ' +
               'one to log in to {{ site_title }}. Also note ' +
               'that you will receive email notifications to the address ' +
