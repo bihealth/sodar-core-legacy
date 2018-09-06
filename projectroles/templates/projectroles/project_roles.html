@@ -5,27 +5,27 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    table#omics-pr-role-list-table tbody td:nth-child(5) {
+    table#sodar-pr-role-list-table tbody td:nth-child(5) {
       width: 3em;
     }
 
     /* Responsive modifications */
     @media screen and (max-width: 800px) {
-      .table#omics-pr-role-list-table thead tr th:nth-child(3) {
+      .table#sodar-pr-role-list-table thead tr th:nth-child(3) {
         display: none;
       }
 
-      .table#omics-pr-role-list-table tbody tr td:nth-child(3) {
+      .table#sodar-pr-role-list-table tbody tr td:nth-child(3) {
         display: none;
       }
     }
 
     @media screen and (max-width: 550px) {
-      .table#omics-pr-role-list-table thead tr th:nth-child(1) {
+      .table#sodar-pr-role-list-table thead tr th:nth-child(1) {
         display: none;
       }
 
-      .table#omics-pr-role-list-table tbody tr td:nth-child(1) {
+      .table#sodar-pr-role-list-table tbody tr td:nth-child(1) {
         display: none;
       }
     }
@@ -39,7 +39,7 @@
 {% has_perm 'projectroles.invite_users' request.user project as can_invite %}
 {% has_perm 'projectroles.import_roles' request.user project as can_import %}
 
-<div class="row omics-subtitle-container bg-white sticky-top">
+<div class="row sodar-subtitle-container bg-white sticky-top">
   <h3>
     <i class="fa fa-users"></i> Project Members
   </h3>
@@ -48,10 +48,10 @@
   {% endif %}
 </div>
 
-<div class="container-fluid omics-page-container">
-  <div class="card" id="omics-pr-role-list">
+<div class="container-fluid sodar-page-container">
+  <div class="card" id="sodar-pr-role-list">
     <div class="card-body p-0">
-     <table class="table table-striped omics-card-table" id="omics-pr-role-list-table">
+     <table class="table table-striped sodar-card-table" id="sodar-pr-role-list-table">
        <thead>
          <tr>
            <th>User</th>
@@ -114,17 +114,17 @@
     tour.addStep('role_list', {
         title: 'Members List',
         text: 'List of users given access for this project can be seen here.',
-        attachTo: '#omics-pr-role-list top',
+        attachTo: '#sodar-pr-role-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
 
-    if ($('#omics-pr-btn-role-list').length) {
+    if ($('#sodar-pr-btn-role-list').length) {
         tour.addStep('role_actions', {
             title: 'Member Operations Menu',
             text: 'Use this menu to add members, send invites or view existing ' +
             'invites.',
-            attachTo: '#omics-pr-btn-role-list left',
+            attachTo: '#sodar-pr-btn-role-list left',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
@@ -135,7 +135,7 @@
             title: 'Member Editing Menu',
             text: 'Individual memberships can be updated or removed from these ' +
                   'menues.',
-            attachTo: 'div.omics-pr-btn-grp-role left',
+            attachTo: 'div.sodar-pr-btn-grp-role left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
             scrollTo: true

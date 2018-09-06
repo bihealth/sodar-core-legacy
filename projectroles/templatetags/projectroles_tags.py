@@ -93,7 +93,7 @@ def print_not_found_alert(project_results, app_search_data, search_type):
 
     if not_found:
         ret = '<div class="alert alert-info pb-0 d-none" ' \
-              'id="omics-search-not-found-alert">\n' \
+              'id="sodar-search-not-found-alert">\n' \
               'No results found:\n<ul>\n' \
 
         for n in not_found:
@@ -166,7 +166,7 @@ def get_star(project, user):
     """Return HTML for project star tag state if it is set"""
     if (user.has_perm('projectroles.view_project', project) and
             get_tag_state(project, user, PROJECT_TAG_STARRED)):
-        return '<i class="fa fa-star text-warning omics-tag-starred"></i>'
+        return '<i class="fa fa-star text-warning sodar-tag-starred"></i>'
     return ''
 
 

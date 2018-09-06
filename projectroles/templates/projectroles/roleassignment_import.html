@@ -8,7 +8,7 @@
 
 {% block projectroles_extend %}
 
-<div class="row omics-subtitle-container bg-white sticky-top">
+<div class="row sodar-subtitle-container bg-white sticky-top">
   <h3>
     Import Members
     {% if source_project %}
@@ -17,7 +17,7 @@
   </h3>
 </div>
 
-<div class="container-fluid omics-page-container">
+<div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
 
@@ -30,17 +30,17 @@
     {% elif not source_project %}
       {# Project selection #}
       <div class="form-group">
-        <label for="omics-pr-role-import-mode">Import mode</label>
+        <label for="sodar-pr-role-import-mode">Import mode</label>
         <select class="form-control"
-                id="omics-pr-role-import-mode" name="import-mode">
+                id="sodar-pr-role-import-mode" name="import-mode">
           <option value="append">Append</option>
           <option value="replace">Replace</option>
         </select>
       </div>
       <div class="form-group">
-        <label for="omics-pr-role-import-project">Source project</label>
+        <label for="sodar-pr-role-import-project">Source project</label>
         <select class="form-control"
-                id="omics-pr-role-import-project" name="source-project">
+                id="sodar-pr-role-import-project" name="source-project">
           {% for p in owned_projects %}
             <option value="{{ p.omics_uuid }}">{{ p.get_full_title }}</option>
           {% endfor %}
@@ -60,9 +60,9 @@
       <input type="hidden" name="import-confirmed" value="1" />
       <input type="hidden" name="source-project" value="{{ source_project.omics_uuid }}" />
 
-      <div class="card" id="omics-pr-role-list">
+      <div class="card" id="sodar-pr-role-list">
       <div class="card-body p-0">
-        <table class="table table-striped omics-card-table" id="omics-pr-role-import-table">
+        <table class="table table-striped sodar-card-table" id="sodar-pr-role-import-table">
           <thead>
             <tr>
               <th>User</th>

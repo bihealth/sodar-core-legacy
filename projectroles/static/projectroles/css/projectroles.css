@@ -17,20 +17,20 @@ body {
 
 body,
 html,
-.omics-base-container {
+.sodar-base-container {
   height: 100%;
 }
 
-.omics-base-container,
-.omics-content-container {
+.sodar-base-container,
+.sodar-content-container {
   display: flex;
 }
 
-.omics-base-container {
+.sodar-base-container {
   flex-direction: column;
 }
 
-.omics-content-container
+.sodar-content-container
 {
   height: 100%;
   overflow-y: hidden;
@@ -40,32 +40,32 @@ html,
   flex-direction: column;
 }
 
-.omics-titlebar-container {
+.sodar-titlebar-container {
   width: 100%;
   min-height: 20px;
   flex: 1;
 }
 
-.omics-content-left {
+.sodar-content-left {
   height: 100%;
   flex: 0 0 90px;
   overflow: hidden;
 }
 
-.omics-content-right {
+.sodar-content-right {
   width: 100%;
   display: flex;
   flex-direction: column;
   overflow-y: hidden;
 }
 
-.omics-sub-navbar-container {
+.sodar-sub-navbar-container {
   width: 100%;
   min-height: 20px;
   flex: 0 0 auto;
 }
 
-.omics-app-container {
+.sodar-app-container {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -73,7 +73,7 @@ html,
   flex: auto;
 }
 
-.omics-app-content {
+.sodar-app-content {
   padding: 28px;
   max-width: 1500px;
   flex: auto;
@@ -93,38 +93,38 @@ html,
   padding-right: 0;
 }
 
-nav.omics-base-navbar {
+nav.sodar-base-navbar {
   padding-left: 28px;
   padding-right: 38px;
 }
 
-nav.omics-base-navbar ul li.nav-item {
+nav.sodar-base-navbar ul li.nav-item {
   white-space: nowrap;
 }
 
-.omics-navbar-search {
+.sodar-navbar-search {
   padding-right: 24px;
 }
 
-.omics-navbar-user-dropdown {
+.sodar-navbar-user-dropdown {
   z-index: 1100;
 }
 
-div.omics-alert-container {
+div.sodar-alert-container {
   margin-bottom: 0;
 }
 
-div.omics-subtitle-container {
+div.sodar-subtitle-container {
   padding-top: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid #dfdfdf;
 }
 
-div.omics-subtitle-shadow {
+div.sodar-subtitle-shadow {
   box-shadow: 0 6px 6px -6px #909090;
 }
 
-.omics-pr-navbar {
+.sodar-pr-navbar {
   padding-left: 28px;
   padding-right: 38px;
   border-radius: 0;
@@ -133,12 +133,12 @@ div.omics-subtitle-shadow {
   min-height: 50px;
 }
 
-.omics-pr-navbar i {
+.sodar-pr-navbar i {
   min-width: 15px;
   display: inline-block;
 }
 
-.omics-pr-sidebar {
+.sodar-pr-sidebar {
   width: 90px;
   max-width: 90px;
   padding-top: 2px;
@@ -146,17 +146,17 @@ div.omics-subtitle-shadow {
   padding-right: 8px;
 }
 
-div.omics-pr-content-title {
+div.sodar-pr-content-title {
   vertical-align: bottom;
   margin-bottom: 6px;
   border-bottom: 1px solid #dfdfdf;
 }
 
-div.omics-page-container {
+div.sodar-page-container {
   padding-top: 24px;
 }
 
-.omics-footer {
+.sodar-footer {
   width: 100%;
   height: 36px;
   line-height: 36px;
@@ -168,17 +168,17 @@ div.omics-page-container {
 /* Titles ------------------------------------------------------------------- */
 
 
-h2.omics-pr-content-title {
+h2.sodar-pr-content-title {
   font-weight: bold;
   line-height: 30px;
   margin-right: 12px;
 }
 
-.omics-pr-content-title-secondary {
+.sodar-pr-content-title-secondary {
   line-height: 40px;
 }
 
-.omics-subtitle-container h3 {
+.sodar-subtitle-container h3 {
   margin-top: 3px;
 }
 
@@ -206,13 +206,13 @@ div.card-body {
   padding: 12px 12px 0;
 }
 
-div.omics-card-body-info {
+div.sodar-card-body-info {
   padding: 8px 12px;
   color: #000000;
   background-color: #FFFFE0;
 }
 
-div.omics-pr-app-search-container {
+div.sodar-pr-app-search-container {
   max-height: 400px;
 }
 
@@ -226,62 +226,62 @@ table {
 
 /* Standard card table */
 
-table.omics-card-table thead tr th {
+table.sodar-card-table thead tr th {
   border-top: 0 !important;
   border-bottom: 1px solid #dfdfdf;
 }
 
-table.omics-card-table thead tr th {
+table.sodar-card-table thead tr th {
   border-top: 0 !important;
 }
 
 /* Borderless table */
 
-table.omics-card-table-borderless tbody tr:hover {
+table.sodar-card-table-borderless tbody tr:hover {
   background-color: #f2f2f2;
 }
 
-table.omics-card-table-borderless tbody td {
+table.sodar-card-table-borderless tbody td {
   border: 0;
 }
 
 /* Bordered table */
 
-table.omics-card-table-bordered thead tr th {
+table.sodar-card-table-bordered thead tr th {
   border-top: 0;
   border-bottom: 0;
 }
 
-table.omics-card-table-bordered thead tr th:first-child {
+table.sodar-card-table-bordered thead tr th:first-child {
   border-left: 0;
 }
 
-table.omics-card-table-bordered thead tr th:last-child {
+table.sodar-card-table-bordered thead tr th:last-child {
   border-right: 0;
 }
 
-table.omics-card-table-bordered tbody tr td {
+table.sodar-card-table-bordered tbody tr td {
   border: 1px solid #dfdfdf;
 }
 
-table.omics-card-table-bordered tbody tr td:first-child {
+table.sodar-card-table-bordered tbody tr td:first-child {
   border-left: 0;
 }
 
-table.omics-card-table-bordered tbody tr td:last-child {
+table.sodar-card-table-bordered tbody tr td:last-child {
   border-right: 0;
 }
 
-table.omics-card-table-bordered tbody tr:first-child td {
+table.sodar-card-table-bordered tbody tr:first-child td {
   border-top: 0;
 }
 
-table.omics-card-table-bordered tbody tr:last-child td {
+table.sodar-card-table-bordered tbody tr:last-child td {
   border-bottom: 0;
 }
 
 /* Container for overflowing table data */
-.omics-overflow-container {
+.sodar-overflow-container {
   display: inline-block;
   position: relative;
   width: 100%;
@@ -293,7 +293,7 @@ table.omics-card-table-bordered tbody tr:last-child td {
   margin-bottom: -5px;  /* HACK for expanding table cell */
 }
 
-.omics-overflow-hover:hover {
+.sodar-overflow-hover:hover {
   z-index: 1100;
   width: auto;
   background-color: #ffffe0;
@@ -305,24 +305,24 @@ table.omics-card-table-bordered tbody tr:last-child td {
 /* Project list table ------------------------------------------------------- */
 
 
-table.omics-pr-project-list-table {
+table.sodar-pr-project-list-table {
   table-layout: fixed;
 }
 
-tr.omics-pr-project-list-header th:nth-child(1) {
+tr.sodar-pr-project-list-header th:nth-child(1) {
   width: 40%;
 }
 
-tr.omics-pr-project-list-header th:nth-child(3) {
+tr.sodar-pr-project-list-header th:nth-child(3) {
   width: 120px;
 }
 
-tr.omics-pr-project-list-item td:nth-child(1) {
+tr.sodar-pr-project-list-item td:nth-child(1) {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-tr.omics-pr-project-list-item td:nth-child(2) {
+tr.sodar-pr-project-list-item td:nth-child(2) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -334,29 +334,29 @@ tr.omics-pr-project-list-item td:nth-child(2) {
 /* TODO: Move this into the irodsbackend app in SODAR */
 
 /* Size column */
-table.omics-irods-obj-table thead tr th:nth-child(2) {
+table.sodar-irods-obj-table thead tr th:nth-child(2) {
   min-width: 60px;
   text-align: right;
 }
 
-table.omics-irods-obj-table tbody tr td:nth-child(2) {
+table.sodar-irods-obj-table tbody tr td:nth-child(2) {
   text-align: right;
   white-space: nowrap;
 }
 
 /* Date column */
-table.omics-irods-obj-table tbody tr td:nth-child(3) {
+table.sodar-irods-obj-table tbody tr td:nth-child(3) {
   width: 5%;
   white-space: nowrap;
 }
 
 /* MD5 column */
-table.omics-irods-obj-table thead tr th:nth-child(4) {
+table.sodar-irods-obj-table thead tr th:nth-child(4) {
   width: 40px;
   text-align: center;
 }
 
-table.omics-irods-obj-table tbody tr td:nth-child(4) {
+table.sodar-irods-obj-table tbody tr td:nth-child(4) {
   text-align: center;
 }
 
@@ -368,7 +368,7 @@ table.omics-irods-obj-table tbody tr td:nth-child(4) {
   max-width: 600px;
 }
 
-.omics-popup-overlay {
+.sodar-popup-overlay {
   background: transparent;
   min-width: 50%;
   max-width: 85%;
@@ -411,24 +411,24 @@ dl dd {
   height: 2.35em;
 }
 
-.omics-edit-button-group {
+.sodar-edit-button-group {
   height: 1.75em;
 }
 
-.omics-list-btn {
+.sodar-list-btn {
   padding-top: 0.5px !important;
   padding-left: 5px !important;
   padding-right: 5px !important;
   height: 1.65em;
 }
 
-.omics-pr-btn-star {
+.sodar-pr-btn-star {
   height: 30px;
   margin-right: 12px;
   padding: 0;
 }
 
-.omics-sidebar-alt-btn {
+.sodar-sidebar-alt-btn {
   height: 100%;
   margin-right: 12px;
   display: none;
@@ -436,30 +436,30 @@ dl dd {
   z-index: 1100;
 }
 
-.omics-sidebar-alt-btn a {
+.sodar-sidebar-alt-btn a {
   line-height: 24px;
 }
 
-.omics-edit-dropdown {
+.sodar-edit-dropdown {
   height: 2.0em !important;
   margin-bottom: 0;
   padding-top: 2px;
 }
 
-.omics-details-app-button {
+.sodar-details-app-button {
   padding-top: 4px;
   padding-right: 0;
 }
 
-.omics-pr-sidebar-nav {
+.sodar-pr-sidebar-nav {
   width: 100%;
 }
 
-.omics-pr-sidebar-nav-ul {
+.sodar-pr-sidebar-nav-ul {
   width: 100%;
 }
 
-.omics-pr-sidebar-nav-ul li {
+.sodar-pr-sidebar-nav-ul li {
   width: 100%;
   font-size: 75%;
   line-height: normal;
@@ -491,7 +491,7 @@ dl dd {
 }
 
 /* Notch visualizaton for sidebar */
-.omics-pr-sidebar-nav-ul li.active:after {
+.sodar-pr-sidebar-nav-ul li.active:after {
     content: "";
     position: absolute;
     right: -10px;
@@ -503,45 +503,45 @@ dl dd {
     border-bottom: 12px solid transparent;
 }
 
-.omics-pr-sidebar-nav-ul li i {
+.sodar-pr-sidebar-nav-ul li i {
   padding-bottom: 4px;
   font-size: 32px;
 }
 
-a.omics-nav-link-last {
+a.sodar-nav-link-last {
   padding-right: 0 !important;
 }
 
-.omics-input-group {
+.sodar-input-group {
   white-space: nowrap;
 }
 
-.omics-header-input-group {
+.sodar-header-input-group {
   white-space: nowrap;
   padding-right: 0;
   max-width: 300px;
 }
 
-.omics-header-input-group button {
+.sodar-header-input-group button {
   height: 32px;
   padding-top: 3px;
 }
 
-.omics-header-input-group a {
+.sodar-header-input-group a {
   height: 32px;
   padding-top: 3px;
 }
 
-.omics-header-input-group input.form-control {
+.sodar-header-input-group input.form-control {
   height: 32px;
 }
 
-.omics-horizontal-radio {
+.sodar-horizontal-radio {
   padding-right: 18px;
 }
 
 /* HACK for Bootstrap4 not properly supporting <select> with input-group */
-.omics-select-append {
+.sodar-select-append {
   border-left: 0;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
@@ -559,13 +559,13 @@ a.omics-nav-link-last {
 /* Misc --------------------------------------------------------------------- */
 
 
-img.omics-navbar-logo {
+img.sodar-navbar-logo {
   height: 36px;
   padding-bottom: 8px;
   padding-right: 3px;
 }
 
-.omics-alert-top {
+.sodar-alert-top {
   padding-left: 28px;
   padding-right: 28px;
   border-radius: 0;
@@ -573,12 +573,12 @@ img.omics-navbar-logo {
   min-height: 50px;
 }
 
-.omics-alert-top-content {
+.sodar-alert-top-content {
   width: 100%;
   display: inline-block;
 }
 
-.omics-alert-close-link {
+.sodar-alert-close-link {
   padding-left: 16px;
 }
 
@@ -587,7 +587,7 @@ img.omics-navbar-logo {
   max-width: 75%;
 }
 
-.omics-breadcrumb-table {
+.sodar-breadcrumb-table {
   padding: 12px;
   margin: 0;
   background: none;
@@ -595,7 +595,7 @@ img.omics-navbar-logo {
   border-radius: 0;
 }
 
-.omics-pr-breadcrumb {
+.sodar-pr-breadcrumb {
   padding: 12px 0;
   margin: 0;
   background: none;
@@ -603,27 +603,27 @@ img.omics-navbar-logo {
   color: #ffffff;
 }
 
-.omics-pr-breadcrumb a {
+.sodar-pr-breadcrumb a {
   color: #ffffff;
 }
 
-.omics-pr-navbar-right a {
+.sodar-pr-navbar-right a {
   color: #ffffff;
 }
 
-.omics-pr-breadcrumb li.breadcrumb-item.active {
+.sodar-pr-breadcrumb li.breadcrumb-item.active {
   color: #dfdfdf;
 }
 
-.omics-pr-breadcrumb li.breadcrumb-item:before {
+.sodar-pr-breadcrumb li.breadcrumb-item:before {
   color: #dfdfdf;
 }
 
-.omics-search-highlight {
+.sodar-search-highlight {
   font-weight: bold;
 }
 
-.omics-checkbox {
+.sodar-checkbox {
   vertical-align: middle;
 }
 
@@ -631,7 +631,7 @@ pre {
   font-size: 85%;
 }
 
-.omics-code-input {
+.sodar-code-input {
   font-family: monospace;
   font-size: 85%;
 }
@@ -645,21 +645,21 @@ pre {
  */
 
 
-.omics-navbar-alt-item {
+.sodar-navbar-alt-item {
   display: none;
 }
 
 /* Navbar (width) */
 @media screen and (max-width: 990px) {
-  .omics-navbar-user-dropdown {
+  .sodar-navbar-user-dropdown {
     display: none;
   }
 
-  .omics-navbar-alt-item {
+  .sodar-navbar-alt-item {
     display: inherit;
   }
 
-  .omics-navbar-search {
+  .sodar-navbar-search {
     width: 250px;
     padding-top: 10px;
     padding-bottom: 5px;
@@ -668,22 +668,22 @@ pre {
 
 /* Sidebar */
 @media screen and (max-width: 1000px) {
-  .omics-content-left {
+  .sodar-content-left {
     display: none !important;
   }
 
-  .omics-sidebar-alt-btn {
+  .sodar-sidebar-alt-btn {
     display: inherit !important;
   }
 }
 
 /* Sidebar (height) */
 @media screen and (max-height: 650px) {
-  .omics-content-left {
+  .sodar-content-left {
     display: none !important;
   }
 
-  .omics-sidebar-alt-btn {
+  .sodar-sidebar-alt-btn {
     display: inherit !important;
   }
 }
@@ -691,21 +691,21 @@ pre {
 /* Project list */
 
 @media screen and (max-width: 1000px) {
-  .table.omics-pr-project-list-table tr th:nth-child(3) {
+  .table.sodar-pr-project-list-table tr th:nth-child(3) {
     display: none;
   }
 
-  .table.omics-pr-project-list-table tr td:nth-child(3) {
+  .table.sodar-pr-project-list-table tr td:nth-child(3) {
     display: none;
   }
 }
 
 @media screen and (max-width: 800px) {
-  .table.omics-pr-project-list-table tr th:nth-child(2) {
+  .table.sodar-pr-project-list-table tr th:nth-child(2) {
     display: none;
   }
 
-  .table.omics-pr-project-list-table tr td:nth-child(2) {
+  .table.sodar-pr-project-list-table tr td:nth-child(2) {
     display: none;
   }
 }

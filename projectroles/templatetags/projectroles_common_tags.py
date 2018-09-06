@@ -56,7 +56,7 @@ def highlight_search_term(item, term):
             return item     # Nothing to highlight
 
         ret = item[:pos]
-        ret += '<span class="omics-search-highlight">' + \
+        ret += '<span class="sodar-search-highlight">' + \
                item[pos:pos + tl] + '</span>'
 
         if len(item[pos + tl:]) > 0:

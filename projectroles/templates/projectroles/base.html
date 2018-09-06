@@ -6,16 +6,16 @@
 {% block content %}
 
   {# Sidebar #}
-  <div class="omics-content-left">
+  <div class="sodar-content-left">
 
-    <div class="col h-100 bg-dark text-center omics-pr-sidebar" id="omics-pr-sidebar">
-      <nav class="nav navbar-expand-lg navbar-dark bg-dark omics-pr-sidebar-nav">
-        <div class="collapse navbar-collapse" id="omics-pr-sidebar-navbar">
-          <ul class="navbar-nav flex-column omics-pr-sidebar-nav-ul">
-            <li id="omics-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+    <div class="col h-100 bg-dark text-center sodar-pr-sidebar" id="sodar-pr-sidebar">
+      <nav class="nav navbar-expand-lg navbar-dark bg-dark sodar-pr-sidebar-nav">
+        <div class="collapse navbar-collapse" id="sodar-pr-sidebar-navbar">
+          <ul class="navbar-nav flex-column sodar-pr-sidebar-nav-ul">
+            <li id="sodar-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
               <a class="nav-link"
                  href="{% url 'home' %}"
-                 id="omics-pr-nav-home-link">
+                 id="sodar-pr-nav-home-link">
                 <i class="fa fa-home"></i><br />Home
               </a>
             </li>
@@ -27,15 +27,15 @@
       </nav>
     </div>
 
-  </div> <!-- /omics-content-left -->
+  </div> <!-- /sodar-content-left -->
 
-  <div class="omics-content-right">
+  <div class="sodar-content-right">
 
     {# Project breadcrumb #}
     {% if project %}
-      <div class="omics-sub-navbar-container">
-        <div class="row bg-secondary omics-pr-navbar" id="omics-pr-navbar">
-          <ol id="omics-pr-breadcrumb" class="breadcrumb omics-pr-breadcrumb">
+      <div class="sodar-sub-navbar-container">
+        <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
+          <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
             <li><i class="fa fa-angle-right"></i></li>
             {% if project.get_parents %}
               {% for p in project.get_parents %}
@@ -54,20 +54,20 @@
       </div>
     {% endif %}
 
-    <div class="omics-app-container">
+    <div class="sodar-app-container">
 
       {# Django messages / site app messages #}
       {% get_site_app_messages as site_app_messages %}
 
       {% if messages or site_app_messages %}
-        <div class="container-fluid omics-alert-container">
+        <div class="container-fluid sodar-alert-container">
 
         {# Site app messages #}
         {% for message in site_app_messages %}
-          <div class="alert alert-{{ message.color }} omics-alert-top omics-alert-site-app">
-            <div class="omics-alert-top-content">
+          <div class="alert alert-{{ message.color }} sodar-alert-top sodar-alert-site-app">
+            <div class="sodar-alert-top-content">
               {% if message.dismissable %}
-                <a href="#" class="pull-right omics-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+                <a href="#" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
               {% endif %}
               {{ message.content | safe }}
             </div>
@@ -75,10 +75,10 @@
         {% endfor %}
          {# Regular Django messages #}
         {% for message in messages %}
-          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} omics-alert-top">
-            <div class="omics-alert-top-content">
+          <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} sodar-alert-top">
+            <div class="sodar-alert-top-content">
               {{ message }}
-              <a href="#" class="pull-right omics-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+              <a href="#" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
             </div>
           </div>
         {% endfor %}
@@ -87,20 +87,20 @@
       {% endif %}
 
       {# Actual content #}
-      <div class="omics-app-content" id="omics-app-content">
+      <div class="sodar-app-content" id="sodar-app-content">
         {% block projectroles %}
           Projectroles app content here
         {% endblock projectroles %}
       </div>
 
       {# Footer #}
-      <footer class="omics-footer">
+      <footer class="sodar-footer">
         {% include 'include/_footer.html' %}
       </footer>
 
-     </div> <!-- /omics-app-container -->
+     </div> <!-- /sodar-app-container -->
 
-  </div>  <!-- /omics-content-right -->
+  </div>  <!-- /sodar-content-right -->
 
 {% endblock content %}
 

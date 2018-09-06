@@ -12,7 +12,7 @@
 
 {% block projectroles_extend %}
 
-<div class="row omics-subtitle-container bg-white sticky-top">
+<div class="row sodar-subtitle-container bg-white sticky-top">
   {% if object.pk %}
     <h3>Update Member {{ object.user.username }}</h3>
   {% else %}
@@ -20,7 +20,7 @@
   {% endif %}
 </div>
 
-<div class="container-fluid omics-page-container">
+<div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
     {{ form | crispy }}
@@ -31,8 +31,8 @@
           <i class="fa fa-arrow-circle-left"></i> Cancel
         </a>
         <a role="button" class="btn btn-primary text-light"
-           id="omics-pr-email-preview-link"
-           data-toggle="modal" data-target="#omics-modal">
+           id="sodar-pr-email-preview-link"
+           data-toggle="modal" data-target="#sodar-modal">
           <i class="fa fa-eye"></i> Preview
         </a>
         <button type="submit" class="btn btn-primary">
@@ -48,7 +48,7 @@
   </form>
 </div>
 
-<span class="omics-popup-overlay" id="omics-pr-email-preview-popup"></span>
+<span class="sodar-popup-overlay" id="sodar-pr-email-preview-popup"></span>
 
 {% endblock projectroles_extend %}
 
@@ -56,7 +56,7 @@
   {{ block.super }}
   <script type="text/javascript">
       $(document).ready(function() {
-          $('#omics-pr-email-preview-link').click(function () {
+          $('#sodar-pr-email-preview-link').click(function () {
               $('.modal-title').text('Email Preview');
 
               var body = '{{ preview_body }}';
@@ -68,7 +68,7 @@
 
               var htmlData = '<strong>Subject:</strong><pre>{{ preview_subject }}</pre>';
               htmlData += '<strong>Body:</strong>';
-              htmlData += '<pre id="omics-email-body">' + body;
+              htmlData += '<pre id="sodar-email-body">' + body;
               htmlData += '</pre>';
 
               $('.modal-body').html(htmlData);
