@@ -231,3 +231,28 @@ def get_role_import_action(source_as, dest_project):
 
     except RoleAssignment.DoesNotExist:
         return 'Import'
+
+
+@register.simple_tag
+def get_login_info():
+    """Return HTML info for the login page"""
+    ret = '<p>Please log in'
+
+    if settings.ENABLE_LDAP:
+        ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
+
+        if (settings.ENABLE_LDAP_SECONDARY and
+                settings.AUTH_LDAP2_DOMAIN_PRINTABLE):
+            ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
+
+        ret += ' account. Enter your user name as ' \
+               '<code>username@{}</code>'.format(
+                settings.AUTH_LDAP_USERNAME_DOMAIN)
+
+        if (settings.ENABLE_LDAP_SECONDARY and
+                settings.AUTH_LDAP2_USERNAME_DOMAIN):
+            ret += ' or <code>username@{}</code>'.format(
+                settings.AUTH_LDAP2_USERNAME_DOMAIN)
+
+    ret += '.</p>'
+    return ret

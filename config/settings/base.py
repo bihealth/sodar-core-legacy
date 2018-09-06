@@ -279,7 +279,10 @@ REST_FRAMEWORK = {
 # ------------------------------------------------------------------------------
 
 # Enable LDAP if configured
-if env.str('ENABLE_LDAP', None):
+ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
+ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
+
+if ENABLE_LDAP:
     import itertools
     import ldap
     from django_auth_ldap.config import LDAPSearch
@@ -304,6 +307,7 @@ if env.str('ENABLE_LDAP', None):
         ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
     AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
     AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
+    AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
 
     AUTHENTICATION_BACKENDS = tuple(itertools.chain(
         ('projectroles.user_backends.PrimaryLDAPBackend',),
@@ -312,8 +316,8 @@ if env.str('ENABLE_LDAP', None):
     # Secondary LDAP server (optional)
     AUTH_LDAP2_USERNAME_SUFFIX = None
 
-    if env.bool('ENABLE_LDAP_SECONDARY', None) is True:
-        # Primary LDAP server
+    if ENABLE_LDAP_SECONDARY:
+        # Secondary LDAP server
         AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
         AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
         AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
@@ -324,6 +328,8 @@ if env.str('ENABLE_LDAP', None):
             ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
         AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
         AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
+        AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
+            'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
 
         AUTHENTICATION_BACKENDS = tuple(itertools.chain(
             ('projectroles.user_backends.SecondaryLDAPBackend',),
