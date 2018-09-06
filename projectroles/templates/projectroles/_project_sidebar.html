@@ -11,11 +11,11 @@
   {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
 
   {# Overview #}
-  <li id="omics-pr-nav-project-detail"
+  <li id="sodar-pr-nav-project-detail"
       class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'detail' %}">
-    <a class="nav-link omics-pr-sidebar-nav-link"
+    <a class="nav-link sodar-pr-sidebar-nav-link"
        href="{% url 'projectroles:detail' project=project.omics_uuid %}"
-       id="omics-pr-link-project-detail">
+       id="sodar-pr-link-project-detail">
       {% if project.type == PROJECT_TYPE_CATEGORY %}
         <i class="fa fa-cubes"></i>
       {% else %}
@@ -30,11 +30,11 @@
     {% for plugin in app_plugins %}
       {% has_perm plugin.app_permission request.user project as can_view_app %}
       {% if can_view_app %}
-        <li id="omics-pr-nav-app-plugin-{{ plugin.name }}"
+        <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
             class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
           <a class="nav-link"
              href="{% url plugin.entry_point_url_id project=project.omics_uuid %}"
-             id="omics-pr-link-app-plugin-{{ plugin.name }}">
+             id="sodar-pr-link-app-plugin-{{ plugin.name }}">
             <i class="fa fa-{{ plugin.icon }}"></i><br />{{ plugin.title }}
           </a>
         </li>
@@ -44,21 +44,21 @@
 
   {# Role and project editing #}
   {% if project.type != PROJECT_TYPE_CATEGORY and can_view_roles %}
-    <li id="omics-pr-nav-project-roles"
+    <li id="sodar-pr-nav-project-roles"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}">
       <a class="nav-link"
          href="{% url 'projectroles:roles' project=project.omics_uuid %}"
-         id="omics-pr-link-project-roles">
+         id="sodar-pr-link-project-roles">
         <i class="fa fa-users"></i><br />Members
       </a>
     </li>
   {% endif %}
   {% if can_update_project %}
-    <li id="omics-pr-nav-project-update"
+    <li id="sodar-pr-nav-project-update"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}">
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.omics_uuid %}"
-         id="omics-pr-link-project-update">
+         id="sodar-pr-link-project-update">
         <i class="fa fa-pencil"></i><br />Update {% get_project_type_str project %}
       </a>
     </li>
@@ -71,11 +71,11 @@
 {% if project and project.type == 'CATEGORY' %}
   {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
   {% if can_create_project %}
-    <li id="omics-pr-nav-project-create"
+    <li id="sodar-pr-nav-project-create"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' project=project.omics_uuid %}"
-         id="omics-pr-link-project-create">
+         id="sodar-pr-link-project-create">
         <i class="fa fa-plus"></i><br />Create Project or Category
       </a>
     </li>
@@ -83,10 +83,10 @@
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if can_create_project %}
-    <li id="omics-pr-nav-project-create" class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
+    <li id="sodar-pr-nav-project-create" class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"
-         id="omics-pr-home-link-create">
+         id="sodar-pr-home-link-create">
         <i class="fa fa-plus"></i><br />Create Category
       </a>
     </li>

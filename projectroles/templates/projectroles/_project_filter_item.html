@@ -4,10 +4,10 @@
 
 {% has_star p request.user as is_starred %}
 
-<tr class="omics-pr-project-list-item omics-pr-home-display-filtered {% if is_starred %}omics-pr-home-display-starred{% endif %}"
-    id="omics-pr-project-search-item-{{ p.omics_uuid }}">
+<tr class="sodar-pr-project-list-item sodar-pr-home-display-filtered {% if is_starred %}sodar-pr-home-display-starred{% endif %}"
+    id="sodar-pr-project-search-item-{{ p.omics_uuid }}">
   <td orig-txt="{{ p.get_full_title }}">
-    <div class="omics-overflow-container">
+    <div class="sodar-overflow-container">
       {% if p.type == 'CATEGORY' %}
         <i class="fa fa-fw fa-cubes"></i>
       {% else %}

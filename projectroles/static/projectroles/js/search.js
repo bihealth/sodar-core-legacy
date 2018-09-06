@@ -5,9 +5,9 @@ $(document).ready(function() {
      *****************/
 
     $.fn.dataTable.ext.classes.sPageButton =
-        'btn btn-secondary omics-list-btn ml-1 omics-paginate-button';
+        'btn btn-secondary sodar-list-btn ml-1 sodar-paginate-button';
 
-    $('.omics-search-table').each(function() {
+    $('.sodar-search-table').each(function() {
         $(this).DataTable({
             scrollX: false,
             paging: true,
@@ -25,7 +25,7 @@ $(document).ready(function() {
                 // Highlight pagination
                 var currentPage = $(this).DataTable().page.info().page;
 
-                $(this).closest('.card-body').find('.omics-paginate-button').each(function() {
+                $(this).closest('.card-body').find('.sodar-paginate-button').each(function() {
                     var btnPage = $(this).text();
 
                     if (btnPage == currentPage + 1) {
@@ -44,11 +44,11 @@ $(document).ready(function() {
         }
 
         // Display card once table has been initialized
-        $(this).closest('div.omics-search-card').show();
+        $(this).closest('div.sodar-search-card').show();
     });
 
     // Display not found once all DataTables have been initialized
-    $('div#omics-search-not-found-alert').removeClass('d-none');
+    $('div#sodar-search-not-found-alert').removeClass('d-none');
 
     // Update overflow status
     modifyCellOverflow();
@@ -57,8 +57,8 @@ $(document).ready(function() {
      Filtering
      *********/
 
-    $('.omics-search-filter').keyup(function () {
-        var dt = $(this).closest('.omics-search-card').find('table').dataTable();
+    $('.sodar-search-filter').keyup(function () {
+        var dt = $(this).closest('.sodar-search-card').find('table').dataTable();
         var v = $(this).val();
         dt.fnFilter(v);
     });

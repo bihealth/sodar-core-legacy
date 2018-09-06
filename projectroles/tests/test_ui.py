@@ -30,10 +30,10 @@ PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 PROJECT_LINK_IDS = [
-    'omics-pr-link-project-roles',
-    'omics-pr-link-project-update',
-    'omics-pr-link-project-create',
-    'omics-pr-link-project-star']
+    'sodar-pr-link-project-roles',
+    'sodar-pr-link-project-update',
+    'sodar-pr-link-project-create',
+    'sodar-pr-link-project-star']
 
 
 User = auth.get_user_model()
@@ -148,24 +148,24 @@ class TestUIBase(
 
         try:
             user_button = self.selenium.find_element_by_id(
-                'omics-navbar-user-dropdown')
+                'sodar-navbar-user-dropdown')
 
             user_button.click()
 
             # Wait for element to be visible
             WebDriverWait(self.selenium, self.wait_time).until(
                 ec.presence_of_element_located(
-                    (By.ID, 'omics-navbar-link-logout')))
+                    (By.ID, 'sodar-navbar-link-logout')))
 
             try:
                 signout_button = self.selenium.find_element_by_id(
-                    'omics-navbar-link-logout')
+                    'sodar-navbar-link-logout')
                 signout_button.click()
 
                 # Wait for redirect
                 WebDriverWait(self.selenium, self.wait_time).until(
                     ec.presence_of_element_located(
-                        (By.ID, 'omics-form-signin')))
+                        (By.ID, 'sodar-form-signin')))
 
             except NoSuchElementException:
                 pass
@@ -180,11 +180,11 @@ class TestUIBase(
         self.selenium.get(self.build_selenium_url(url))
 
         # Submit user data into form
-        field_user = self.selenium.find_element_by_id('omics-signin-username')
+        field_user = self.selenium.find_element_by_id('sodar-signin-username')
         # field_user.send_keys(user.username)
         field_user.send_keys(user.username)
 
-        field_pass = self.selenium.find_element_by_id('omics-signin-password')
+        field_pass = self.selenium.find_element_by_id('sodar-signin-password')
         field_pass.send_keys('password')
 
         self.selenium.find_element_by_xpath(
@@ -193,7 +193,7 @@ class TestUIBase(
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
-                (By.ID, 'omics-navbar-user-dropdown')))
+                (By.ID, 'sodar-navbar-user-dropdown')))
 
     def assert_element_exists(self, users, url, element_id, exists):
         """
@@ -315,10 +315,10 @@ class TestBaseTemplate(TestUIBase):
         url = reverse('home')
 
         self.assert_element_exists(
-            expected_true, url, 'omics-navbar-link-admin', True)
+            expected_true, url, 'sodar-navbar-link-admin', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-navbar-link-admin', False)
+            expected_false, url, 'sodar-navbar-link-admin', False)
 
 
 class TestProjectList(TestUIBase):
@@ -339,10 +339,10 @@ class TestProjectList(TestUIBase):
         url = reverse('home')
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-home-link-create', True)
+            expected_true, url, 'sodar-pr-home-link-create', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-pr-home-link-create', False)
+            expected_false, url, 'sodar-pr-home-link-create', False)
 
 
 class TestProjectDetail(TestUIBase):
@@ -353,23 +353,23 @@ class TestProjectDetail(TestUIBase):
         permissions"""
         expected = [
             (self.superuser, [
-                'omics-pr-link-project-roles',
-                'omics-pr-link-project-update',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-roles',
+                'sodar-pr-link-project-update',
+                'sodar-pr-link-project-star']),
             (self.as_owner.user, [
-                'omics-pr-link-project-roles',
-                'omics-pr-link-project-update',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-roles',
+                'sodar-pr-link-project-update',
+                'sodar-pr-link-project-star']),
             (self.as_delegate.user, [
-                'omics-pr-link-project-roles',
-                'omics-pr-link-project-update',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-roles',
+                'sodar-pr-link-project-update',
+                'sodar-pr-link-project-star']),
             (self.as_contributor.user, [
-                'omics-pr-link-project-roles',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-roles',
+                'sodar-pr-link-project-star']),
             (self.as_guest.user, [
-                'omics-pr-link-project-roles',
-                'omics-pr-link-project-star'])]
+                'sodar-pr-link-project-roles',
+                'sodar-pr-link-project-star'])]
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.omics_uuid})
@@ -387,15 +387,15 @@ class TestProjectDetail(TestUIBase):
 
         expected = [
             (self.superuser, [
-                'omics-pr-link-project-update',
-                'omics-pr-link-project-create',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-update',
+                'sodar-pr-link-project-create',
+                'sodar-pr-link-project-star']),
             (self.as_owner.user, [
-                'omics-pr-link-project-update',
-                'omics-pr-link-project-create',
-                'omics-pr-link-project-star']),
+                'sodar-pr-link-project-update',
+                'sodar-pr-link-project-create',
+                'sodar-pr-link-project-star']),
             (sub_user, [
-                'omics-pr-link-project-star'])]
+                'sodar-pr-link-project-star'])]
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.category.omics_uuid})
@@ -421,10 +421,10 @@ class TestProjectRoles(TestUIBase):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list', True)
+            expected_true, url, 'sodar-pr-btn-role-list', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-pr-btn-role-list', False)
+            expected_false, url, 'sodar-pr-btn-role-list', False)
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user
@@ -441,10 +441,10 @@ class TestProjectRoles(TestUIBase):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list-invite', True)
+            expected_true, url, 'sodar-pr-btn-role-list-invite', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-pr-btn-role-list-invite', False)
+            expected_false, url, 'sodar-pr-btn-role-list-invite', False)
 
     def test_role_list_add_button(self):
         """Test visibility of role invite button according to user
@@ -461,10 +461,10 @@ class TestProjectRoles(TestUIBase):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list-create', True)
+            expected_true, url, 'sodar-pr-btn-role-list-create', True)
 
         self.assert_element_exists(
-            expected_false, url, 'omics-pr-btn-role-list-create', False)
+            expected_false, url, 'sodar-pr-btn-role-list-create', False)
 
     def test_role_buttons(self):
         """Test visibility of role management buttons according to user
@@ -478,7 +478,7 @@ class TestProjectRoles(TestUIBase):
         url = reverse(
             'projectroles:roles',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-pr-btn-grp-role')
+        self.assert_element_count(expected, url, 'sodar-pr-btn-grp-role')
 
     def test_role_preview(self):
         """Test visibility of role preview popup"""
@@ -487,14 +487,14 @@ class TestProjectRoles(TestUIBase):
             kwargs={'project': self.project.omics_uuid})
         self.login_and_redirect(self.as_owner.user, url)
 
-        button = self.selenium.find_element_by_id('omics-pr-email-preview-link')
+        button = self.selenium.find_element_by_id('sodar-pr-email-preview-link')
         button.click()
 
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, 'omics-email-body')))
+            ec.presence_of_element_located((By.ID, 'sodar-email-body')))
 
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('omics-email-body'))
+            self.selenium.find_element_by_id('sodar-email-body'))
 
     def test_invite_preview(self):
         """Test visibility of invite preview popup"""
@@ -504,14 +504,14 @@ class TestProjectRoles(TestUIBase):
         self.login_and_redirect(self.as_owner.user, url)
 
         button = self.selenium.find_element_by_id(
-            'omics-pr-invite-preview-link')
+            'sodar-pr-invite-preview-link')
         button.click()
 
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, 'omics-email-body')))
+            ec.presence_of_element_located((By.ID, 'sodar-email-body')))
 
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('omics-email-body'))
+            self.selenium.find_element_by_id('sodar-email-body'))
 
 
 class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
@@ -529,7 +529,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list', True)
+            expected_true, url, 'sodar-pr-btn-role-list', True)
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user
@@ -543,7 +543,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list-invite', True)
+            expected_true, url, 'sodar-pr-btn-role-list-invite', True)
 
     def test_role_list_add_button(self):
         """Test visibility of role invite button according to user
@@ -557,7 +557,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            expected_true, url, 'omics-pr-btn-role-list-create', True)
+            expected_true, url, 'sodar-pr-btn-role-list-create', True)
 
     def test_invite_buttons(self):
         """Test visibility of invite management buttons according to user
@@ -577,7 +577,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
         url = reverse(
             'projectroles:invites',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-pr-btn-grp-invite')
+        self.assert_element_count(expected, url, 'sodar-pr-btn-grp-invite')
 
 
 class TestPlugins(TestUIBase):
@@ -594,7 +594,7 @@ class TestPlugins(TestUIBase):
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-pr-link-app-plugin')
+        self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
 
     def test_plugin_cards(self):
         """Test visibility of app plugin cards"""
@@ -602,7 +602,7 @@ class TestPlugins(TestUIBase):
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-pr-app-item')
+        self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
 class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
@@ -612,13 +612,13 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
         super(TestProjectSidebar, self).setUp()
 
         self.sidebar_ids = [
-            'omics-pr-nav-project-detail',
-            'omics-pr-nav-project-roles',
-            'omics-pr-nav-project-update']
+            'sodar-pr-nav-project-detail',
+            'sodar-pr-nav-project-roles',
+            'sodar-pr-nav-project-update']
 
         # Add app plugin navs
         for p in get_active_plugins():
-            self.sidebar_ids.append('omics-pr-nav-app-plugin-{}'.format(p.name))
+            self.sidebar_ids.append('sodar-pr-nav-app-plugin-{}'.format(p.name))
 
     def test_render_detail(self):
         """Test visibility of sidebar in the project_detail view"""
@@ -627,14 +627,14 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_exists(
-            [self.superuser], url, 'omics-pr-sidebar', True)
+            [self.superuser], url, 'sodar-pr-sidebar', True)
 
     def test_render_home(self):
         """Test visibility of sidebar in the home view"""
         url = reverse('home')
 
         self.assert_element_exists(
-            [self.superuser], url, 'omics-pr-sidebar', True)
+            [self.superuser], url, 'sodar-pr-sidebar', True)
 
     def test_app_links(self):
         """Test visibility of app links"""
@@ -644,7 +644,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
         expected = [(self.superuser, len(get_active_plugins()))]
 
         self.assert_element_count(
-            expected, url, 'omics-pr-nav-app-plugin')
+            expected, url, 'sodar-pr-nav-app-plugin')
 
     def test_link_active_detail(self):
         """Test active status of link on the project_detail page"""
@@ -653,13 +653,13 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-detail',
+            self.superuser, 'sodar-pr-nav-project-detail',
             self.sidebar_ids, url)
 
     def test_link_active_role_list(self):
         """Test active status of link on the project roles page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:roles',
                 kwargs={'project': self.project.omics_uuid}))
@@ -667,7 +667,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
     def test_link_active_role_create(self):
         """Test active status of link on the role creation page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_create',
                 kwargs={'project': self.project.omics_uuid}))
@@ -675,7 +675,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
     def test_link_active_role_update(self):
         """Test active status of link on the role update page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_update',
                 kwargs={'roleassignment': self.as_contributor.omics_uuid}))
@@ -683,7 +683,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
     def test_link_active_role_delete(self):
         """Test active status of link on the role deletion page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_delete',
                 kwargs={'roleassignment': self.as_contributor.omics_uuid}))
@@ -691,7 +691,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
     def test_link_active_role_invites(self):
         """Test active status of link on the invites page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invites',
                 kwargs={'project': self.project.omics_uuid}))
@@ -699,7 +699,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
     def test_link_active_role_invite_create(self):
         """Test active status of link on the invite create page"""
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_create',
                 kwargs={'project': self.project.omics_uuid}))
@@ -714,7 +714,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             message='')
 
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_resend',
                 kwargs={'projectinvite': invite.omics_uuid}))
@@ -729,7 +729,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             message='')
 
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_revoke',
                 kwargs={'projectinvite': invite.omics_uuid}))
@@ -741,7 +741,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             kwargs={'project': self.project.omics_uuid})
 
         self.assert_element_active(
-            self.superuser, 'omics-pr-nav-project-update',
+            self.superuser, 'sodar-pr-nav-project-update',
             self.sidebar_ids, url)
 
 
@@ -758,7 +758,7 @@ class TestProjectSearch(TestUIBase):
             (self.as_guest.user, 1),
             (self.user_no_roles, 0)]
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
-        self.assert_element_count(expected, url, 'omics-pr-project-search-item')
+        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_project(self):
         """Test project search items visibility with 'project' type"""
@@ -771,7 +771,7 @@ class TestProjectSearch(TestUIBase):
             (self.user_no_roles, 0)]
         url = reverse('projectroles:search') + '?' + urlencode(
             {'s': 'test type:project'})
-        self.assert_element_count(expected, url, 'omics-pr-project-search-item')
+        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_nonexisting(self):
         """Test project search items visibility with a nonexisting type"""
@@ -784,4 +784,4 @@ class TestProjectSearch(TestUIBase):
             (self.user_no_roles, 0)]
         url = reverse('projectroles:search') + '?' + urlencode(
             {'s': 'test type:Jaix1au'})
-        self.assert_element_count(expected, url, 'omics-pr-project-search-item')
+        self.assert_element_count(expected, url, 'sodar-pr-project-search-item')

@@ -1,8 +1,8 @@
 {% load projectroles_tags %}
 {% load rules %}
 
-<div class="btn-group omics-sidebar-alt-btn pull-left" role="group" id="omics-pr-sidebar-alt-btn">
-  <button class="btn btn-dark dropdown-toggle btn-sm omics-edit-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<div class="btn-group sodar-sidebar-alt-btn pull-left" role="group" id="sodar-pr-sidebar-alt-btn">
+  <button class="btn btn-dark dropdown-toggle btn-sm sodar-edit-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-bars"></i>
   </button>
   <div class="dropdown-menu">
@@ -11,7 +11,7 @@
     <a class="dropdown-item{% if request.resolver_match.url_name == 'home' %} active{% endif %}"
         href="{% url 'home' %}"
         title="Home"
-        id="omics-pr-alt-link-home">
+        id="sodar-pr-alt-link-home">
       <i class="fa fa-fw fa-home"></i> Home
     </a>
 
@@ -22,7 +22,7 @@
       <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'detail' %}"
           href="{% url 'projectroles:detail' project=project.omics_uuid %}"
           title="Overview"
-          id="omics-pr-alt-link-overview">
+          id="sodar-pr-alt-link-overview">
         <i class="fa fa-fw fa-cube{% if project.type == PROJECT_TYPE_CATEGORY %}s{% endif %}"></i> Overview
       </a>
 
@@ -34,7 +34,7 @@
             <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
                href="{% url plugin.entry_point_url_id project=project.omics_uuid %}"
                title="{{ plugin.title }}"
-               id="omics-pr-alt-link-app-plugin-{{ plugin.name }}">
+               id="sodar-pr-alt-link-app-plugin-{{ plugin.name }}">
                <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
               {{ plugin.title }}
             </a>
@@ -47,7 +47,7 @@
         <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}"
            href="{% url 'projectroles:roles' project=project.omics_uuid %}"
            title="Members"
-           id="omics-pr-alt-link-project-roles">
+           id="sodar-pr-alt-link-project-roles">
           <i class="fa fa-fw fa-users"></i> Members
         </a>
       {% endif %}
@@ -55,7 +55,7 @@
         <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}"
            href="{% url 'projectroles:update' project=project.omics_uuid %}"
            title="Update Project"
-           id="omics-pr-alt-link-project-update">
+           id="sodar-pr-alt-link-project-update">
           <i class="fa fa-fw fa-pencil"></i> Update {% get_project_type_str project %}
         </a>
      {% endif %}
@@ -69,7 +69,7 @@
       {% if can_create_project %}
          <a class="dropdown-item"
             href="{% url 'projectroles:create' project=project.omics_uuid %}"
-            id="omics-pr-alt-link-project-create">
+            id="sodar-pr-alt-link-project-create">
            <i class="fa fa-fw fa-plus"></i> Create Project or Category
          </a>
       {% endif %}
@@ -78,7 +78,7 @@
       {% if can_create_project %}
         <a class="dropdown-item"
            href="{% url 'projectroles:create' %}"
-           id="omics-pr-alt-link-home-create">
+           id="sodar-pr-alt-link-home-create">
           <i class="fa fa-fw fa-plus"></i> Create Category
         </a>
       {% endif %}

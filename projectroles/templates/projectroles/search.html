@@ -15,16 +15,16 @@
   {{ block.super }}
 
   <style type="text/css">
-    div.omics-search-card {
+    div.sodar-search-card {
         display: none;  /* Will be enabled after DataTables init */
     }
 
-    div.omics-search-card-body {
+    div.sodar-search-card-body {
         padding: 0;
         overflow-x: hidden; /* Fix possible overflow when resizing window */
     }
 
-    table.omics-search-table {
+    table.sodar-search-table {
       display: inline-table;
       min-width: 100%;
       max-width: 100%;
@@ -33,18 +33,18 @@
 
     }
 
-    .table.omics-search-table thead tr th {
+    .table.sodar-search-table thead tr th {
       padding: 12px !important;
       padding-right: 22px !important; /* Avoid covering sort icons */
       max-width: 250px !important;
     }
 
-    .table.omics-search-table tbody tr td {
+    .table.sodar-search-table tbody tr td {
       padding: 12px !important;
       max-width: 250px !important;
     }
 
-    .omics-header-input-group-search {
+    .sodar-header-input-group-search {
         max-width: 200px;
     }
 
@@ -77,7 +77,7 @@
     /* Responsive modifications */
 
     @media screen and (max-width: 1000px) {
-    .omics-header-input-group-search {
+    .sodar-header-input-group-search {
       display: none;
     }
   }
@@ -89,9 +89,9 @@
 
 {% has_perm 'projectroles.create_project' request.user as can_create_project %}
 
-<div class="row omics-pr-content-title">
-  <h2 class="omics-pr-content-title">Search Results</h2>
-    <div class="omics-pr-content-title-secondary text-muted">
+<div class="row sodar-pr-content-title">
+  <h2 class="sodar-pr-content-title">Search Results</h2>
+    <div class="sodar-pr-content-title-secondary text-muted">
       for "{{ search_term }}"
       {% if search_type %}
         (type:{{ search_type }})
@@ -99,7 +99,7 @@
     </div>
 </div>
 
-<div class="container-fluid omics-page-container">
+<div class="container-fluid sodar-page-container">
   {% if search_type and search_type != 'project' and app_search_data|length == 0 %}
     <div class="alert alert-danger" role="alert">
       <strong>Error:</strong> Search type "{{ search_type }}" not recognized!
@@ -113,7 +113,7 @@
       {% if project_results|length > 0 %}
         {% include 'projectroles/_search_header.html' with search_title='Projects' result_count=project_results|length icon='cube' %}
 
-        <table class="table table-striped omics-card-table omics-search-table" id="omics-pr-search-table">
+        <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-pr-search-table">
           <thead>
             <tr>
               <th>Project</th>
@@ -167,7 +167,7 @@
     tourEnabled = true;
 
     $(document).ready(function() {
-        if ($('.omics-search-card').length) {
+        if ($('.sodar-search-card').length) {
             tour.addStep('search_card', {
                 title: 'Matching Items',
                 text: 'Matching projects and items are listed in cards separated ' +
@@ -177,33 +177,33 @@
             });
         }
 
-        if ($('.omics-search-highlight').length) {
+        if ($('.sodar-search-highlight').length) {
             tour.addStep('search_highlight', {
                 title: 'Search Highlight',
                 text: 'Search terms are highlighted for each matching object.',
-                attachTo: '.omics-search-highlight right',
+                attachTo: '.sodar-search-highlight right',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });
         }
 
-        if ($('.omics-paginate-button').length) {
+        if ($('.sodar-paginate-button').length) {
             tour.addStep('search_paginate', {
                 title: 'Search Pagination',
                 text: 'In case of a large number of results, they can be browsed ' +
                       'using this sub-page navigation.',
-                attachTo: '.omics-paginate-button left',
+                attachTo: '.sodar-paginate-button left',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });
         }
 
-        if ($('#omics-search-not-found-alert').length) {
+        if ($('#sodar-search-not-found-alert').length) {
             tour.addStep('search_not_found', {
                 title: 'Data Not Found',
                 text: 'Data types in which we could not find anything are ' +
                       'listed here.',
-                attachTo: '#omics-search-not-found-alert top',
+                attachTo: '#sodar-search-not-found-alert top',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });

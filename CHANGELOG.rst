@@ -49,7 +49,8 @@ Changed
 - Display the first contact in ``settings.ADMINS`` in email footer
 - Use ``get_full_name()`` in email sending
 - Get site version using ``SITE_PACKAGE``
-
+- Get LDAP domain names to login template from settings
+- Rename custom CSS classes and HTML IDs from ``omics-*`` into ``sodar-*`` (omics_data_mgmt#166)
 
 Fixed
 -----

@@ -14,11 +14,11 @@
 {% if can_view_project %}
   {% include 'projectroles/_project_header.html' %}
 
-  <div class="container-fluid omics-page-container">
+  <div class="container-fluid sodar-page-container">
 
     {# README #}
 
-    <div class="card" id="omics-pr-details-card-readme">
+    <div class="card" id="sodar-pr-details-card-readme">
       <div class="card-header">
         <h4><i class="fa fa-book"></i> ReadMe</h4>
       </div>
@@ -44,7 +44,7 @@
       {% for plugin in app_plugins %}
         {% has_perm plugin.app_permission request.user object as can_view_app %}
         {% if can_view_app %}
-          <div class="card omics-pr-app-card" id="omics-pr-app-item-{{ plugin.name }}">
+          <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
             <div class="card-header">
               <h4>
                 <i class="fa fa-{{ plugin.icon }}"></i>
@@ -55,7 +55,7 @@
                 {% endif %}
               </h4>
             </div>
-            <div class="card-body omics-card-body-info">
+            <div class="card-body sodar-card-body-info">
                 <i class="fa fa-info-circle"></i> {{ plugin.description }}
             </div>
             {% if plugin.details_template %}
@@ -81,7 +81,7 @@
           <h4><i class="fa fa-globe"></i> Subprojects</h4>
         </div>
         <div class="card-body p-0">
-          <table class="table table-hover omics-card-table omics-card-table-borderless omics-pr-project-list-table" id="omics-pr-project-list-table">
+          <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
            <thead>
              {% include 'projectroles/_project_list_header.html' %}
            </thead>
@@ -123,27 +123,27 @@
         title: 'Project Sidebar',
         text: 'From this sidebar you can access apps and actions of the ' +
               'currently selected project.',
-        attachTo: '#omics-pr-sidebar right',
+        attachTo: '#sodar-pr-sidebar right',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
 
-    if ($('.omics-pr-app-card').length) {
+    if ($('.sodar-pr-app-card').length) {
         tour.addStep('project_app_cards', {
             title: 'Project App Overviews',
             text: 'Overviews of project apps and data are presented here.',
-            attachTo: '.omics-pr-app-card top',
+            attachTo: '.sodar-pr-app-card top',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
     }
 
-    if ($('.omics-pr-app-details-link').length) {
+    if ($('.sodar-pr-app-details-link').length) {
         tour.addStep('project_app_details', {
             title: 'View Details of Project App',
             text: 'In addition to the sidebar, project apps can also ' +
                   'be accessed using the "View Details" buttons.',
-            attachTo: '.omics-pr-app-details-link left',
+            attachTo: '.sodar-pr-app-details-link left',
             advanceOn: '.docs-link click',
             showCancelLink: true
         });
@@ -155,7 +155,7 @@
               'favourites. Starred projects are highlighted and can be ' +
               'listed on the home page with a shortcut. To "unstar" a ' +
               'project, click on the same link again.',
-        attachTo: '#omics-pr-link-project-star bottom',
+        attachTo: '#sodar-pr-link-project-star bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });

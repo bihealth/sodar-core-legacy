@@ -35,7 +35,7 @@
     {% include 'projectroles/_project_header.html' %}
   {% endif %}
 
-<div class="row omics-subtitle-container">
+<div class="row sodar-subtitle-container">
   {% if object.pk %}
     <h3>Update {% get_project_type_str object %}</h3>
   {% elif parent.pk %}
@@ -45,7 +45,7 @@
   {% endif %}
 </div>
 
-<div class="container-fluid omics-page-container">
+<div class="container-fluid sodar-page-container">
   <form method="post">
     {% csrf_token %}
     {{ form | crispy }}

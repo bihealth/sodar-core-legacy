@@ -1,4 +1,4 @@
-<div class="card omics-search-card">
+<div class="card sodar-search-card">
   <div class="card-header">
     <h4>
       <i class="fa fa-{% if icon %}{{ icon }}{% else %}{{ plugin.icon }}{% endif %}"></i>
@@ -6,15 +6,15 @@
       {% if result_count %}
        ({{ result_count }})
       {% endif %}
-      <div class="input-group omics-header-input-group omics-header-input-group-search pull-right" table-id="">
-        <input class="form-control omics-search-filter"
+      <div class="input-group sodar-header-input-group sodar-header-input-group-search pull-right" table-id="">
+        <input class="form-control sodar-search-filter"
            type="text" placeholder="Filter" aria-label="Filter {{ search_title }}" />
       </div>
     </h4>
   </div>
   {% if result_count >= result_limit %}
-    <div class="card-body omics-card-body-info">
+    <div class="card-body sodar-card-body-info">
       <i class="fa fa-warning"></i> Some results may be omitted, please narrow down your search
     </div>
   {% endif %}
-  <div class="card-body omics-search-card-body">
+  <div class="card-body sodar-search-card-body">

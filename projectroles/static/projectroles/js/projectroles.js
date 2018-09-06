@@ -53,20 +53,20 @@ $(document).ready(function() {
 // Disable nav project search until 3+ characters have been input
 // (not counting keyword)
 function modifySearch() {
-    var v = $('#omics-nav-search-input').val();
+    var v = $('#sodar-nav-search-input').val();
 
     if(v.length > 2) {
-       $('#omics-nav-search-submit').attr('disabled', false);
+       $('#sodar-nav-search-submit').attr('disabled', false);
     }
 
     else {
-       $('#omics-nav-search-submit').attr('disabled', true);
+       $('#sodar-nav-search-submit').attr('disabled', true);
     }
 }
 
 $(document).ready(function() {
-     $('#omics-nav-search-submit').attr('disabled', 'disabled');
-     $('#omics-nav-search-input').keyup(function() {
+     $('#sodar-nav-search-submit').attr('disabled', 'disabled');
+     $('#sodar-nav-search-input').keyup(function() {
         modifySearch();
      }).on('input', function() {
         modifySearch();
@@ -78,7 +78,7 @@ $(document).ready(function() {
 
 
 function modifyCellOverflow() {
-  $('.omics-overflow-container').each(function() {
+  $('.sodar-overflow-container').each(function() {
       var parentWidth = $(this).closest('td').width();
       var lastVisibleTd = false;
 
@@ -87,16 +87,16 @@ function modifyCellOverflow() {
           lastVisibleTd = true;
       }
 
-      if ($(this).hasClass('omics-overflow-hover') && (
+      if ($(this).hasClass('sodar-overflow-hover') && (
             lastVisibleTd === true || $(this).prop('scrollWidth') <= parentWidth)) {
-          $(this).removeClass('omics-overflow-hover');
+          $(this).removeClass('sodar-overflow-hover');
       }
 
       else if ($(this).prop('scrollWidth') > parentWidth &&
-              !$(this).hasClass('omics-overflow-hover') &&
-              !$(this).hasClass('omics-overflow-hover-disable') &&
+              !$(this).hasClass('sodar-overflow-hover') &&
+              !$(this).hasClass('sodar-overflow-hover-disable') &&
               lastVisibleTd === false) {
-          $(this).addClass('omics-overflow-hover');
+          $(this).addClass('sodar-overflow-hover');
       }
   });
 }
@@ -120,22 +120,22 @@ $(window).resize(function() {
 
 // TODO: Refactor or implement with DataTables
 $(document).ready(function() {
-    $('.omics-pr-home-display-filtered').hide();
-    $('.omics-pr-home-display-notfound').hide();
-    $('.omics-pr-home-display-nostars').hide();
+    $('.sodar-pr-home-display-filtered').hide();
+    $('.sodar-pr-home-display-notfound').hide();
+    $('.sodar-pr-home-display-nostars').hide();
 
     // Filter input
-    $('#omics-pr-project-list-filter').keyup(function () {
+    $('#sodar-pr-project-list-filter').keyup(function () {
         v = $(this).val().toLowerCase();
         var valFound = false;
-        $('.omics-pr-home-display-nostars').hide();
+        $('.sodar-pr-home-display-nostars').hide();
 
         if (v.length > 2) {
-            $('.omics-pr-home-display-default').hide();
-            $('#omics-pr-project-list-filter').removeClass('text-danger').addClass('text-success');
-            $('#omics-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
+            $('.sodar-pr-home-display-default').hide();
+            $('#sodar-pr-project-list-filter').removeClass('text-danger').addClass('text-success');
+            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
 
-            $('.omics-pr-home-display-filtered').each(function () {
+            $('.sodar-pr-home-display-filtered').each(function () {
                 var titleTxt = $(this).find('td:nth-child(1)').attr('orig-txt');
                 var descTxt = $(this).find('td:nth-child(2)').attr('orig-txt');
 
@@ -152,17 +152,17 @@ $(document).ready(function() {
 
                     if (titlePos !== -1) {
                         var titleVal = titleTxt.substring(titlePos, titlePos + v.length);
-                        $(this).find('td:nth-child(1) div a').html(titleTxt.replace(pattern, '<span class="omics-search-highlight">' + titleVal + '</span>'));
+                        $(this).find('td:nth-child(1) div a').html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
                     }
 
                     if (descPos !== -1) {
                         var descVal = descTxt.substring(descPos, descPos + v.length);
-                        $(this).find('td:nth-child(2)').html(descTxt.replace(pattern, '<span class="omics-search-highlight">' + descVal + '</span>'));
+                        $(this).find('td:nth-child(2)').html(descTxt.replace(pattern, '<span class="sodar-search-highlight">' + descVal + '</span>'));
                     }
 
                     $(this).show();
                     valFound = true;
-                    $('.omics-pr-home-display-notfound').hide();
+                    $('.sodar-pr-home-display-notfound').hide();
                 }
 
                 else {
@@ -171,16 +171,16 @@ $(document).ready(function() {
             });
 
             if (valFound === false) {
-                $('.omics-pr-home-display-notfound').show();
+                $('.sodar-pr-home-display-notfound').show();
             }
         }
 
         else {
-            $('.omics-pr-home-display-default').show();
-            $('.omics-pr-home-display-filtered').hide();
-            $('.omics-pr-home-display-notfound').hide();
-            $('#omics-pr-project-list-filter').addClass('text-danger').removeClass('text-success');
-            $('#omics-pr-project-list-link-star').attr('filter-mode', '0');
+            $('.sodar-pr-home-display-default').show();
+            $('.sodar-pr-home-display-filtered').hide();
+            $('.sodar-pr-home-display-notfound').hide();
+            $('#sodar-pr-project-list-filter').addClass('text-danger').removeClass('text-success');
+            $('#sodar-pr-project-list-link-star').attr('filter-mode', '0');
         }
 
         // Update overflow status
@@ -188,35 +188,35 @@ $(document).ready(function() {
     });
 
     // Filter by starred
-    $('#omics-pr-project-list-link-star').click(function () {
-        $('.omics-pr-home-display-notfound').hide();
+    $('#sodar-pr-project-list-link-star').click(function () {
+        $('.sodar-pr-home-display-notfound').hide();
 
         // Reset search terms
-        $('.omics-pr-home-display-filtered').each(function () {
+        $('.sodar-pr-home-display-filtered').each(function () {
             // Reset filter highlights and value
             var titleTxt = $(this).find('td:nth-child(1)').attr('orig-txt');
             var descTxt = $(this).find('td:nth-child(2)').attr('orig-txt');
             $(this).find('td:nth-child(1) a').html(titleTxt);
             $(this).find('td:nth-child(2)').html(descTxt);
             $(this).hide();
-            $('#omics-pr-project-list-filter').val('');
+            $('#sodar-pr-project-list-filter').val('');
         });
 
         if ($(this).attr('filter-mode') === '0') {
-            $('.omics-pr-home-display-default').hide();
-            $('.omics-pr-home-display-starred').show();
-            $('#omics-pr-project-list-link-star').html('<i class="fa fa-star"></i> Starred');
+            $('.sodar-pr-home-display-default').hide();
+            $('.sodar-pr-home-display-starred').show();
+            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star"></i> Starred');
             $(this).attr('filter-mode', '1');
 
-            if ($('.omics-pr-home-display-starred').length === 0) {
-                $('.omics-pr-home-display-nostars').show();
+            if ($('.sodar-pr-home-display-starred').length === 0) {
+                $('.sodar-pr-home-display-nostars').show();
             }
         }
 
         else if ($(this).attr('filter-mode') === '1') {
-            $('.omics-pr-home-display-nostars').hide();
-            $('.omics-pr-home-display-default').show();
-            $('#omics-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
+            $('.sodar-pr-home-display-nostars').hide();
+            $('.sodar-pr-home-display-default').show();
+            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
             $(this).attr('filter-mode', '0');
         }
 
@@ -230,7 +230,7 @@ $(document).ready(function() {
 
 
 $(document).ready(function() {
-    $('#omics-pr-link-project-star').click(function () {
+    $('#sodar-pr-link-project-star').click(function () {
         $.post({
             url: $(this).attr('star-url'),
             method: 'POST',
@@ -241,16 +241,16 @@ $(document).ready(function() {
         }).done(function (data) {
             console.log('Star clicked: ' + data);  // DEBUG
             if (data === 1) {
-                 $('#omics-pr-btn-star-icon').removeClass(
+                 $('#sodar-pr-btn-star-icon').removeClass(
                      'text-muted').addClass('text-warning').removeClass(
                          'fa-star-o').addClass('fa-star');
-                 $('#omics-pr-link-project-star').attr('data-original-title', 'Unstar');
+                 $('#sodar-pr-link-project-star').attr('data-original-title', 'Unstar');
             }
             else {
-                $('#omics-pr-btn-star-icon').removeClass(
+                $('#sodar-pr-btn-star-icon').removeClass(
                      'text-warning').addClass('text-muted').removeClass(
                          'fa-star').addClass('fa-star-o');
-                $('#omics-pr-link-project-star').attr('data-original-title', 'Star');
+                $('#sodar-pr-link-project-star').attr('data-original-title', 'Star');
             }
         }).fail(function() {
             alert('Error: unable to set project star!');
@@ -262,8 +262,8 @@ $(document).ready(function() {
 // Make alerts removable -------------------------------------------------------
 
 
-$('.omics-alert-close-link').click(function () {
-    $(this).closest('.omics-alert-top').fadeOut('fast');
+$('.sodar-alert-close-link').click(function () {
+    $(this).closest('.sodar-alert-top').fadeOut('fast');
 });
 
 
@@ -272,11 +272,11 @@ $('.omics-alert-close-link').click(function () {
 
 $(window).on('resize', function() {
     if ($(this).width() < 750) {
-        $('#omics-base-navbar-nav').removeClass('ml-auto').addClass('mr-auto');
+        $('#sodar-base-navbar-nav').removeClass('ml-auto').addClass('mr-auto');
     }
 
     else {
-        $('#omics-base-navbar-nav').removeClass('mr-auto').addClass('ml-auto');
+        $('#sodar-base-navbar-nav').removeClass('mr-auto').addClass('ml-auto');
     }
 });
 
@@ -285,17 +285,17 @@ $(window).on('resize', function() {
 
 
 $(document).ready(function() {
-    $('.omics-app-container').scroll(function() {
-        var container = $('.omics-subtitle-container');
-        var scroll = $('.omics-app-container').scrollTop();
+    $('.sodar-app-container').scroll(function() {
+        var container = $('.sodar-subtitle-container');
+        var scroll = $('.sodar-app-container').scrollTop();
 
         if (container != null && container.hasClass('sticky-top')) {
             if (scroll >= 80) {
-                container.addClass('omics-subtitle-shadow');
+                container.addClass('sodar-subtitle-shadow');
             }
 
             else {
-                container.removeClass('omics-subtitle-shadow');
+                container.removeClass('sodar-subtitle-shadow');
             }
         }
     });
