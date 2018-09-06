@@ -252,12 +252,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-
 ACCOUNT_ALLOW_REGISTRATION = False
-ACCOUNT_ADAPTER = 'example_site.users.adapters.AccountAdapter'
-SOCIALACCOUNT_ADAPTER = 'example_site.users.adapters.SocialAccountAdapter'
 
 # Custom user app defaults
 AUTH_USER_MODEL = 'users.User'
