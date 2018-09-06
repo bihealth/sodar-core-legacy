@@ -3,7 +3,7 @@
  */
 
 
-// Print out human readable file size ------------------------------------------
+/* Print out human readable file size --------------------------------------- */
 
 
 // From: https://stackoverflow.com/a/14919494
@@ -24,7 +24,27 @@ function humanFileSize(bytes, si) {
 }
 
 
-// Shepherd tour ---------------------------------------------------------------
+/* Bootstrap popover and tooltip setup -------------------------------------- */
+
+
+// Bootstrap popover
+$('[data-toggle="popover"]').popover({
+    container: 'body'
+});
+
+// Bootstrap tooltip
+$(function(){
+    // For cases where data-toggle is also needed for another functionality
+    $('[data-tooltip="tooltip"]').tooltip({
+        trigger : 'hover'
+    });
+    $('[data-toggle="tooltip"]').tooltip({
+        trigger : 'hover'
+    });
+});
+
+
+/* Shepherd tour ------------------------------------------------------------ */
 
 
 var tourEnabled = false;  // Needs to set true if there is content
@@ -47,7 +67,7 @@ $(document).ready(function() {
 });
 
 
-// Search form setup -----------------------------------------------------------
+/* Search form setup -------------------------------------------------------- */
 
 
 // Disable nav project search until 3+ characters have been input
@@ -74,7 +94,7 @@ $(document).ready(function() {
  });
 
 
-// Table cell overflow handling ------------------------------------------------
+/* Table cell overflow handling --------------------------------------------- */
 
 
 function modifyCellOverflow() {
@@ -115,7 +135,7 @@ $(window).resize(function() {
 });
 
 
-// Project list filtering ------------------------------------------------------
+/* Project list filtering --------------------------------------------------- */
 
 
 // TODO: Refactor or implement with DataTables
@@ -179,7 +199,8 @@ $(document).ready(function() {
             $('.sodar-pr-home-display-default').show();
             $('.sodar-pr-home-display-filtered').hide();
             $('.sodar-pr-home-display-notfound').hide();
-            $('#sodar-pr-project-list-filter').addClass('text-danger').removeClass('text-success');
+            $('#sodar-pr-project-list-filter').addClass(
+                'text-danger').removeClass('text-success');
             $('#sodar-pr-project-list-link-star').attr('filter-mode', '0');
         }
 
@@ -205,7 +226,8 @@ $(document).ready(function() {
         if ($(this).attr('filter-mode') === '0') {
             $('.sodar-pr-home-display-default').hide();
             $('.sodar-pr-home-display-starred').show();
-            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star"></i> Starred');
+            $('#sodar-pr-project-list-link-star').html(
+                '<i class="fa fa-star"></i> Starred');
             $(this).attr('filter-mode', '1');
 
             if ($('.sodar-pr-home-display-starred').length === 0) {
@@ -216,7 +238,8 @@ $(document).ready(function() {
         else if ($(this).attr('filter-mode') === '1') {
             $('.sodar-pr-home-display-nostars').hide();
             $('.sodar-pr-home-display-default').show();
-            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
+            $('#sodar-pr-project-list-link-star').html(
+                '<i class="fa fa-star-o"></i> Starred');
             $(this).attr('filter-mode', '0');
         }
 
@@ -226,7 +249,7 @@ $(document).ready(function() {
 });
 
 
-// Star/unstar project ---------------------------------------------------------
+/* Star/unstar project ------------------------------------------------------ */
 
 
 $(document).ready(function() {
@@ -244,13 +267,15 @@ $(document).ready(function() {
                  $('#sodar-pr-btn-star-icon').removeClass(
                      'text-muted').addClass('text-warning').removeClass(
                          'fa-star-o').addClass('fa-star');
-                 $('#sodar-pr-link-project-star').attr('data-original-title', 'Unstar');
+                 $('#sodar-pr-link-project-star').attr(
+                     'data-original-title', 'Unstar');
             }
             else {
                 $('#sodar-pr-btn-star-icon').removeClass(
                      'text-warning').addClass('text-muted').removeClass(
                          'fa-star').addClass('fa-star-o');
-                $('#sodar-pr-link-project-star').attr('data-original-title', 'Star');
+                $('#sodar-pr-link-project-star').attr(
+                    'data-original-title', 'Star');
             }
         }).fail(function() {
             alert('Error: unable to set project star!');
@@ -259,7 +284,7 @@ $(document).ready(function() {
 });
 
 
-// Make alerts removable -------------------------------------------------------
+/* Make alerts removable ---------------------------------------------------- */
 
 
 $('.sodar-alert-close-link').click(function () {
@@ -267,7 +292,7 @@ $('.sodar-alert-close-link').click(function () {
 });
 
 
-// Improve the responsiveness of the title bar ---------------------------------
+/* Improve the responsiveness of the title bar ------------------------------ */
 
 
 $(window).on('resize', function() {
@@ -281,7 +306,7 @@ $(window).on('resize', function() {
 });
 
 
-// Enable/disable sticky subtitle container shadow when scrolling --------------
+/* Toggle sticky subtitle container shadow when scrolling ------------------- */
 
 
 $(document).ready(function() {
@@ -300,3 +325,64 @@ $(document).ready(function() {
         }
     });
 });
+
+
+/* Autofill domain in login username ---------------------------------------- */
+
+
+$(document).ready(function() {
+     $('#sodar-signin-username').keyup(function(event) {
+        var maxLength = 255;
+        v = $(this).val();
+
+        // Fill domain
+        if (event.keyCode !== 8 && v.length > 3 &&
+            v.indexOf('@') > 0 && v.indexOf('@') < v.length - 1) {
+            var domainName = null;
+
+            if (v.charAt(v.indexOf('@') + 1).toUpperCase() === 'C') {
+                $(this).removeClass('text-danger');
+                $('#sodar-signin-submit').removeClass('disabled');
+                domainName = 'CHARITE';
+            }
+
+            else if (v.charAt(v.indexOf('@') + 1).toUpperCase() === 'M') {
+                $(this).removeClass('text-danger');
+                $('#sodar-signin-submit').removeClass('disabled');
+                domainName = 'MDC-BERLIN';
+            }
+
+            // Gently inform the user of an invalid domain :)
+            else {
+                $(this).addClass('text-danger');
+                $('#sodar-signin-submit').addClass('disabled');
+            }
+
+            if (domainName !== null) {
+                $(this).val(v.substring(0, v.indexOf('@') + 1) + domainName);
+                $(this).attr('maxlength', $(this).val().length);
+            }
+         }
+
+        // Erase domain if backspace is pressed
+        else if (event.keyCode === 8 && v.indexOf('@') > 0) {
+            $(this).val(v.substring(0, v.indexOf('@') + 1));
+            $(this).addClass('text-danger');
+            $('#sodar-signin-submit').addClass('disabled');
+            $(this).attr('maxlength', maxLength);
+        }
+
+        // Don't allow login if there is an empty domain
+        if (v.indexOf('@') === v.length - 1) {
+            $(this).addClass('text-danger');
+            $('#sodar-signin-submit').addClass('disabled');
+        }
+
+        // User without domain is OK (only for local admin/test users)
+        else if (v.indexOf('@') === -1) {
+            $(this).removeClass('text-danger');
+            $('#sodar-signin-submit').removeClass('disabled');
+            $(this).attr('maxlength', maxLength);
+        }
+     });
+ });
