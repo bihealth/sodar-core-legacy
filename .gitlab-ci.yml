@@ -4,10 +4,10 @@ services:
   - postgres:9.4
 
 variables:
-  POSTGRES_DB: omics_projectroles
-  POSTGRES_USER: omics_projectroles
-  POSTGRES_PASSWORD: omics_projectroles
-  DATABASE_URL: postgres://omics_projectroles:omics_projectroles@postgres/omics_projectroles
+  POSTGRES_DB: sodar_projectroles
+  POSTGRES_USER: sodar_projectroles
+  POSTGRES_PASSWORD: sodar_projectroles
+  DATABASE_URL: postgres://sodar_projectroles:sodar_projectroles@postgres/sodar_projectroles
 
 before_script:
   # SSH setup taken from https://gitlab.com/gitlab-examples/ssh-private-key
