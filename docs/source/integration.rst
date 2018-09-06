@@ -7,7 +7,9 @@ Integration Guide
 This document provides instructions and guidelines for integrating the SODAR
 Projectroles app into your Django site.
 
-**TODO**
+**NOTE:** the display of this document in Gitlab is incomplete and all listings
+will be missing. Please click "display source" if you want to read this in
+Gitlab.
 
 
 Django Site Guidelines
