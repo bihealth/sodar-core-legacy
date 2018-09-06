@@ -1,5 +1,5 @@
 ### Documentation ###
-/docs_*/build/
+/docs*/build/
 
 ### Virtualenv ###
 .venv/

@@ -22,6 +22,7 @@ Added
 - ``SITE_MODULE`` setting for explicitly declaring site path for code
 - Versioneer versioning for projectroles
 - ``projectroles_version()`` in common template tags
+- Usage and development documentation
 
 Changed
 -------
