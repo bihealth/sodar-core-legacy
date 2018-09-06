@@ -226,13 +226,69 @@ documentation.
 .. code-block::
    ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
-LDAP/AD Configuration (Optional)
---------------------------------
+LDAP/AD Configuration
+---------------------
 
-If you want to utilize LDAP/AD user logins as configured by projectroles, add
-the following:
+If you want to utilize LDAP/AD user logins as configured by projectroles, you
+can add the following configuration. Please make sure to add the related env
+variables to your configuration.
 
-**TODO** (include from file?)
+The following lines are **mandatory** in the configuration file:
+
+.. code-block::
+   ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
+   ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
+
+The following lines are **optional**. If only using one LDAP/AD server, you can
+leave the "secondary LDAP server" values unset.
+
+.. code-block::
+   if ENABLE_LDAP:
+       import itertools
+       import ldap
+       from django_auth_ldap.config import LDAPSearch
+
+       # Default values
+       LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
+       LDAP_DEFAULT_FILTERSTR = '(sAMAccountName=%(user)s)'
+       LDAP_DEFAULT_ATTR_MAP = {
+           'first_name': 'givenName', 'last_name': 'sn', 'email': 'mail'}
+
+       # Primary LDAP server
+       AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
+       AUTH_LDAP_BIND_DN = env.str('AUTH_LDAP_BIND_DN', None)
+       AUTH_LDAP_BIND_PASSWORD = env.str('AUTH_LDAP_BIND_PASSWORD', None)
+       AUTH_LDAP_CONNECTION_OPTIONS = LDAP_DEFAULT_CONN_OPTIONS
+
+       AUTH_LDAP_USER_SEARCH = LDAPSearch(
+           env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
+           ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
+       AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
+       AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
+       AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
+
+       AUTHENTICATION_BACKENDS = tuple(itertools.chain(
+           ('sodar_projectroles.projectroles.user_backends.PrimaryLDAPBackend',),
+           AUTHENTICATION_BACKENDS,))
+
+       # Secondary LDAP server
+       if ENABLE_LDAP_SECONDARY:
+           AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
+           AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
+           AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
+           AUTH_LDAP2_CONNECTION_OPTIONS = LDAP_DEFAULT_CONN_OPTIONS
+
+           AUTH_LDAP2_USER_SEARCH = LDAPSearch(
+               env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
+               ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
+           AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
+           AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
+           AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
+               'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
+
+           AUTHENTICATION_BACKENDS = tuple(itertools.chain(
+               ('sodar_projectroles.projectroles.user_backends.SecondaryLDAPBackend',),
+               AUTHENTICATION_BACKENDS,))
 
 Logging (Optional)
 ------------------
