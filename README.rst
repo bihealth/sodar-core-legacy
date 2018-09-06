@@ -13,4 +13,4 @@ Overview
 This project provides the ``projectroles`` Django app to be included in a Django
 site which wants to make use of SODAR compatible project and access management.
 
-**TODO**: Actual docs
+See ``docs`` for documentation on use, integration and development of the app.

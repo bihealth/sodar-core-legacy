@@ -11,7 +11,7 @@ This documentation provides instructions and guidelines for integration, usage
 and development of the SODAR Projectroles Django app.
 
 NB: the display of this document in Gitlab is incomplete and all listings will
-be missing. Please rather click "view source" if you want to read this in
+be missing. Please rather click "display source" if you want to read this in
 Gitlab.
 
 .. toctree::
