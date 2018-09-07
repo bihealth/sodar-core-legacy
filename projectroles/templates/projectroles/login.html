@@ -27,9 +27,9 @@
 
     <form class="form-signin" method="post" id="sodar-form-login">
       {% csrf_token %}
-      <input type="text" name="username" id="sodar-signin-username" class="form-control" placeholder="username@DOMAIN" required autofocus>
-      <input type="password" name="password" id="sodar-signin-password" class="form-control my-sm-2 mb-sm-2" placeholder="Password" required>
-      <button class="btn btn-md btn-primary btn-block" type="submit" id="sodar-signin-submit"><i class="fa fa-sign-in"></i> Log In</button>
+      <input type="text" name="username" id="sodar-login-username" class="form-control" placeholder="username@DOMAIN" required autofocus>
+      <input type="password" name="password" id="sodar-login-password" class="form-control my-sm-2 mb-sm-2" placeholder="Password" required>
+      <button class="btn btn-md btn-primary btn-block" type="submit" id="sodar-login-submit"><i class="fa fa-sign-in"></i> Log In</button>
     </form>
   </div>
 </div>
@@ -49,7 +49,7 @@
         title: 'Log in to {{ site_title }}',
         text: 'To use {{ site_title }}, you must log in. For ' +
               'this, you need to use an existing account.',
-        attachTo: '#sodar-signin-username bottom',
+        attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
@@ -58,7 +58,7 @@
         title: 'User Name and Domain',
         text: 'The user name must be supplied in the format ' +
               '"username@DOMAIN" depending on the account used.',
-        attachTo: '#sodar-signin-username bottom',
+        attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
@@ -71,7 +71,7 @@
               'use the same one to log in to {{ site_title }}. Also note ' +
               'that you will receive email notifications to the address ' +
               'specified for the account used.',
-        attachTo: '#sodar-signin-username bottom',
+        attachTo: '#sodar-login-username bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });

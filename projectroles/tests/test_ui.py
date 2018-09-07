@@ -180,11 +180,11 @@ class TestUIBase(
         self.selenium.get(self.build_selenium_url(url))
 
         # Submit user data into form
-        field_user = self.selenium.find_element_by_id('sodar-signin-username')
+        field_user = self.selenium.find_element_by_id('sodar-login-username')
         # field_user.send_keys(user.username)
         field_user.send_keys(user.username)
 
-        field_pass = self.selenium.find_element_by_id('sodar-signin-password')
+        field_pass = self.selenium.find_element_by_id('sodar-login-password')
         field_pass.send_keys('password')
 
         self.selenium.find_element_by_xpath(
