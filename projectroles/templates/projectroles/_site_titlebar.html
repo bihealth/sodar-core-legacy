@@ -81,7 +81,7 @@
           {% endif %}
         {% endfor %}
 
-        {# User profile and sign out links #}
+        {# User profile and log out links #}
         {% if request.user.is_authenticated %}
           <li class="nav-item sodar-navbar-alt-item {% if request.path == request.user.get_absolute_url %}active{% endif %}">
             <a class="nav-link"
@@ -92,9 +92,9 @@
           </li>
           <li class="nav-item sodar-navbar-alt-item">
             <a class="nav-link text-danger"
-               href="{% url 'account_logout' %}"
+               href="{% url 'logout' %}"
                id="sodar-alt-nav-link-sign-out">
-              <i class="fa fa-fw fa-sign-out"></i> Sign Out
+              <i class="fa fa-fw fa-sign-out"></i> Log Out
             </a>
           </li>
         {% endif %}
@@ -142,16 +142,16 @@
               <div class="dropdown-divider"></div>
             {% endif %}
 
-            {# User profile and sign out links #}
+            {# User profile and log out links #}
             <a class="dropdown-item {% if request.path == request.user.get_absolute_url %}active{% endif %}"
                href="{{ request.user.get_absolute_url }}"
                id="sodar-navbar-link-user-details">
               <i class="fa fa-fw fa-user-circle-o"></i> User Profile
             </a>
             <a class="dropdown-item text-danger"
-               href="{% url 'account_logout' %}"
+               href="{% url 'logout' %}"
                id="sodar-navbar-link-logout">
-              <i class="fa fa-fw fa-sign-out"></i> Sign Out
+              <i class="fa fa-fw fa-sign-out"></i> Log Out
             </a>
           </div>
         </li>

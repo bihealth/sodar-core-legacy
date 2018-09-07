@@ -72,7 +72,7 @@ class TestPermissionBase(TestCase):
 
             else:   # Anonymous
                 redirect_url = redirect_anon if redirect_anon else \
-                    reverse('account_login') + '?next=' + url
+                    reverse('login') + '?next=' + url
 
                 response = make_request(url, method)
 
@@ -110,7 +110,7 @@ class TestPermissionBase(TestCase):
 
             else:   # Anonymous
                 redirect_url = redirect_anon if redirect_anon else \
-                    reverse('account_login') + '?next=' + url
+                    reverse('login') + '?next=' + url
 
                 response = make_request(url, method)
 
@@ -217,7 +217,7 @@ class TestBaseViews(TestProjectPermissionBase):
         self.assert_redirect(reverse('home'), bad_users)
 
     def test_login(self):
-        url = reverse('account_login')
+        url = reverse('login')
         good_users = [
             self.anonymous,
             self.superuser,
@@ -230,7 +230,7 @@ class TestBaseViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
 
     def test_logout(self):
-        url = reverse('account_logout')
+        url = reverse('logout')
         good_users = [
             self.superuser,
             self.as_owner.user,

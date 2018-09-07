@@ -165,7 +165,7 @@ class TestUIBase(
                 # Wait for redirect
                 WebDriverWait(self.selenium, self.wait_time).until(
                     ec.presence_of_element_located(
-                        (By.ID, 'sodar-form-signin')))
+                        (By.ID, 'sodar-form-login')))
 
             except NoSuchElementException:
                 pass
@@ -188,7 +188,7 @@ class TestUIBase(
         field_pass.send_keys('password')
 
         self.selenium.find_element_by_xpath(
-            '//button[contains(., "Login")]').click()
+            '//button[contains(., "Log In")]').click()
 
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(

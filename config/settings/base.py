@@ -251,13 +251,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_ALLOW_REGISTRATION = False
-
 # Custom user app defaults
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = 'home'
-LOGIN_URL = 'account_login'
+LOGIN_URL = 'login'
 
 # SLUGLIFIER
 AUTOSLUG_SLUGIFY_FUNCTION = 'slugify.slugify'
@@ -398,5 +395,5 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 
 # Settings for HTTP AuthBasic
-BASICAUTH_REALM = 'Login with user@CHARITE or user@MDC-BERLIN and your password.'
+BASICAUTH_REALM = 'Log in with user@CHARITE or user@MDC-BERLIN and your password.'
 BASICAUTH_DISABLE = False

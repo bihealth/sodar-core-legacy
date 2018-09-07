@@ -22,8 +22,8 @@ urlpatterns = [
 
     # Login and logout
     url(r'^login/$', auth_views.LoginView.as_view(
-        template_name='users/login.html'), name='account_login'),
-    url(r'^logout/$', auth_views.logout_then_login, name='account_logout'),
+        template_name='users/login.html'), name='login'),
+    url(r'^logout/$', auth_views.logout_then_login, name='logout'),
 
     # Auth
     url(r'api/auth/', include('knox.urls')),
