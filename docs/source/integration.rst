@@ -113,7 +113,7 @@ following lines need to be included in the list:
        'markupfield',
        'rest_framework',
        'knox',
-       'sodar_projectroles.projectroles.apps.ProjectrolesConfig'
+       'projectroles.apps.ProjectrolesConfig'
    ]
 
 Database
@@ -134,7 +134,7 @@ Templates
 Under ``TEMPLATES['OPTIONS']['context_processors']``, add the line:
 
 .. code-block::
-   'sodar_projectroles.projectroles.context_processors.urls_processor',
+   'projectroles.context_processors.urls_processor',
 
 Email
 -----
@@ -272,7 +272,7 @@ leave the "secondary LDAP server" values unset.
        AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
 
        AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-           ('sodar_projectroles.projectroles.user_backends.PrimaryLDAPBackend',),
+           ('projectroles.auth_backends.PrimaryLDAPBackend',),
            AUTHENTICATION_BACKENDS,))
 
        # Secondary LDAP server
@@ -291,7 +291,7 @@ leave the "secondary LDAP server" values unset.
                'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
 
            AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-               ('sodar_projectroles.projectroles.user_backends.SecondaryLDAPBackend',),
+               ('projectroles.auth_backends.SecondaryLDAPBackend',),
                AUTHENTICATION_BACKENDS,))
 
 
@@ -324,7 +324,7 @@ After updating the user model, make sure to create and run database migrations.
 
 .. code-block::
    $ ./manage.py makemigrations
-   $ .manage.py migrate
+   $ ./manage.py migrate
 
 Note that you probably will need to edit the default unit tests under
 ``SITE_NAME/users/tests/`` for them to work. Again, you can see an example in
