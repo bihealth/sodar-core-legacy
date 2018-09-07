@@ -5,7 +5,6 @@
 Package metadata for projectroles.
 """
 import os
-import re
 from setuptools import setup
 
 import versioneer
@@ -45,11 +44,13 @@ def is_requirement(line):
         line.startswith('git+')
     )
 
+
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
-CHANGELOG = open(os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')).read()
+CHANGELOG = open(
+    os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')).read()
 
 setup(
-    name='sodar_projectroles',
+    name='django-sodar-projectroles',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="""SODAR project and role management""",

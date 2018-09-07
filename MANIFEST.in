@@ -1,2 +1,7 @@
+include LICENSE
+include README.rst
+recursive-include projectroles/static *
+recursive-include projectroles/templates *
+
 include versioneer.py
 include projectroles/_version.py
