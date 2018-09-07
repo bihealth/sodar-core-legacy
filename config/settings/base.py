@@ -310,7 +310,7 @@ if ENABLE_LDAP:
     AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
 
     AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-        ('projectroles.user_backends.PrimaryLDAPBackend',),
+        ('projectroles.auth_backends.PrimaryLDAPBackend',),
         AUTHENTICATION_BACKENDS,))
 
     # Secondary LDAP server (optional)
@@ -332,7 +332,7 @@ if ENABLE_LDAP:
             'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
 
         AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-            ('projectroles.user_backends.SecondaryLDAPBackend',),
+            ('projectroles.auth_backends.SecondaryLDAPBackend',),
             AUTHENTICATION_BACKENDS,))
 
 

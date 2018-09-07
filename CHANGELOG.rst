@@ -18,7 +18,7 @@ Added
 - ``example_site_app`` for demonstrating site apps
 - ``get_full_name()`` in User model
 - Abstract ``OmicsUser`` model
-- ``user_backends.py`` file for LDAP backends (omics_data_mgmt#132)
+- ``auth_backends.py`` file for LDAP backends (omics_data_mgmt#132)
 - ``SITE_MODULE`` setting for explicitly declaring site path for code
 - Versioneer versioning for projectroles
 - ``projectroles_version()`` in common template tags
