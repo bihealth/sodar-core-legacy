@@ -238,10 +238,11 @@ def get_login_info():
     """Return HTML info for the login page"""
     ret = '<p>Please log in'
 
-    if settings.ENABLE_LDAP:
+    if hasattr(settings, 'ENABLE_LDAP') and settings.ENABLE_LDAP:
         ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
 
-        if (settings.ENABLE_LDAP_SECONDARY and
+        if (hasattr(settings, 'ENABLE_LDAP_SECONDARY') and
+                settings.ENABLE_LDAP_SECONDARY and
                 settings.AUTH_LDAP2_DOMAIN_PRINTABLE):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
 
