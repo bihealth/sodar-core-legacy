@@ -350,6 +350,10 @@ To set up groups for existing users, run the ``syncgroups`` management command.
 .. code-block::
    ./manage.py syncgroups
 
+User Detail URL
+---------------
+
+**TODO**
 
 Add Login Template
 ------------------
@@ -404,8 +408,9 @@ remove any default allauth URLs if you're not using it.
        url(r'^logout/$', auth_views.logout_then_login, name='logout'),
    ]
 
-Base Template
-=============
+
+Base Template for Your Django Site
+==================================
 
 In order to make use of Projectroles views and templates, you should set the
 base template of your site accordingly in ``SITE_NAME/templates/base.html``.
