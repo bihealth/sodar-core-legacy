@@ -285,8 +285,7 @@ if ENABLE_LDAP:
     from django_auth_ldap.config import LDAPSearch
 
     # Default values
-    LDAP_DEFAULT_CONN_OPTIONS = {
-        ldap.OPT_REFERRALS: 0}
+    LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
     LDAP_DEFAULT_FILTERSTR = '(sAMAccountName=%(user)s)'
     LDAP_DEFAULT_ATTR_MAP = {
         'first_name': 'givenName',
@@ -311,10 +310,7 @@ if ENABLE_LDAP:
         AUTHENTICATION_BACKENDS,))
 
     # Secondary LDAP server (optional)
-    AUTH_LDAP2_USERNAME_SUFFIX = None
-
     if ENABLE_LDAP_SECONDARY:
-        # Secondary LDAP server
         AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
         AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
         AUTH_LDAP2_BIND_PASSWORD = env.str('AUTH_LDAP2_BIND_PASSWORD', None)
