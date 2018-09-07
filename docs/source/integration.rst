@@ -226,23 +226,27 @@ documentation.
 .. code-block::
    ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
-LDAP/AD Configuration
----------------------
+Logging
+-------
+
+It is also recommended to add "projectroles" under ``LOGGING['loggers']``. For
+production, INFO debug level is recommended.
+
+
+LDAP/AD Configuration (optional)
+--------------------------------
 
 If you want to utilize LDAP/AD user logins as configured by projectroles, you
-can add the following configuration. Please make sure to add the related env
+can add the following configuration. Make sure to also add the related env
 variables to your configuration.
-
-The following lines are **mandatory** in the configuration file:
-
-.. code-block::
-   ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
-   ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
 
 The following lines are **optional**. If only using one LDAP/AD server, you can
 leave the "secondary LDAP server" values unset.
 
 .. code-block::
+   ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
+   ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
+
    if ENABLE_LDAP:
        import itertools
        import ldap
@@ -290,7 +294,47 @@ leave the "secondary LDAP server" values unset.
                ('sodar_projectroles.projectroles.user_backends.SecondaryLDAPBackend',),
                AUTHENTICATION_BACKENDS,))
 
-Logging (Optional)
-------------------
 
-**TODO**
+User Configuration
+==================
+
+In order for projectroles to work, you need to extend the default user model.
+
+Extending the User Model
+------------------------
+
+In a cookiecutter-django project, an extended user model should already exist
+in ``SITE_NAME/users/models.py``. The abstract model provided by projectroles
+provides the same model with critical additions, most notably the ``omics_uuid``
+field used as an unique identifier for SODAR objects including users.
+
+If you have not added any of your own modifications to the model, you can simply
+replace the existing model extension with the following code:
+
+.. code-block::
+   from projectroles.models import OmicsUser
+
+   class User(OmicsUser):
+      pass
+
+If you need to add your own extra fields or functions (or have existing ones
+already), you can add them in this model.
+
+After updating the user model, make sure to create and run database migrations.
+
+.. code-block::
+   $ ./manage.py makemigrations
+   $ .manage.py migrate
+
+Note that you probably will need to edit the default unit tests under
+``SITE_NAME/users/tests/`` for them to work. Again, you can see an example in
+the ``example_site`` package of the projectroles repository.
+
+Populating UUIDs for Existing Users
+-----------------------------------
+
+When integrating projectroles into an existing site with existing users, the
+``omics_uuid`` field needs to be populated. See
+`instructions in the official Django documentation<https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+on how to create migrations for this.
+
