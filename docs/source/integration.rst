@@ -23,10 +23,12 @@ recommended to use `cookiecutter-django <https://github.com/pydanny/cookiecutter
 to set up your Django site.
 
 .. warning::
-   Currently, SODAR Projectroles only supports Django 1.11.x, while Cookiecutter
-   sets up Django 2.0.x by default. It is strongly recommended to use Django
-   1.11 LTS for time being. Compatibility with 2.0 and upwards is not
-   guaranteed!
+   Currently, SODAR Projectroles only supports Django 1.11.x, while the latest
+   versions of Cookiecutter set up Django 2.0.x by default. It is strongly
+   recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
+   upwards is not guaranteed! Integration into a
+   `1.11 release<https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
+   of cookiecutter-django has been tested and verified to be working.
 
 Make sure to set up a virtual Python environment for development with required
 packages.
@@ -48,15 +50,17 @@ requirements clash between projectroles and your site.
 Installation
 ============
 
-First, add the projectroles package requirement to your
+First, add the projectroles and djangoplugins package requirements into your
 ``requirements/base.txt`` file.
 
-At the time of writing the package is in development, so it is recommended to
-clone a specific commit before we reach a stable 0.1.0 release. Example of a
-row to add to your ``base.txt`` file:
+At the time of writing the projectroles package is in development, so it is
+recommended to clone a specific commit before we reach a stable 0.1.0 release.
+
+Add the following rows into your ``base.txt`` file:
 
 .. code-block::
-   -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_projectroles.git@91986edb2b82af26310606e582db3e34165ae834#egg=sodar-projectroles
+   -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
+   -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_projectroles.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-projectroles
 
 Install the requirements now containing the projectroles package:
 
@@ -139,7 +143,7 @@ Under ``TEMPLATES['OPTIONS']['context_processors']``, add the line:
 Email
 -----
 
-Under ``EMAIL`` or ``EMAIL_CONFIGURATION``, add the following lines:
+Under ``EMAIL_CONFIGURATION``, add the following lines:
 
 .. code-block::
    EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@example.com')
@@ -315,12 +319,12 @@ replace the existing model extension with the following code:
    from projectroles.models import OmicsUser
 
    class User(OmicsUser):
-      pass
+       pass
 
 If you need to add your own extra fields or functions (or have existing ones
 already), you can add them in this model.
 
-After updating the user model, make sure to create and run database migrations.
+After updating the user model, create and run database migrations.
 
 .. code-block::
    $ ./manage.py makemigrations
@@ -336,5 +340,123 @@ Populating UUIDs for Existing Users
 When integrating projectroles into an existing site with existing users, the
 ``omics_uuid`` field needs to be populated. See
 `instructions in the official Django documentation<https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
-on how to create migrations for this.
+on how to create the required migrations.
 
+Synchronizing User Groups for Existing Users
+--------------------------------------------
+
+To set up groups for existing users, run the ``syncgroups`` management command.
+
+.. code-block::
+   ./manage.py syncgroups
+
+
+Add Login Template
+------------------
+
+You should add a login template to ``SITE_NAME/templates/users/login.html``. If
+you're OK with using the Projectroles login template, the file can consist of
+the following line:
+
+.. code-block::
+   {% extends 'projectroles/login.html' %}
+
+If you intend to use projectroles templates for user management, you can delete
+other existing files within the directory.
+
+
+URL Configuration
+=================
+
+In the Django URL configuration file, usually found in ``config/urls.py``, add
+the following lines under ``urlpatterns`` to include projectroles URLs in your
+site.
+
+.. code-block::
+   urlpatterns = [
+       # ...
+       url(r'api/auth/', include('knox.urls')),
+       url(r'^project/', include('projectroles.urls')),
+   ]
+
+If you intend to use projectroles views and templates as the basis of your site
+layout and navigation (which is recommended), also make sure to set the site's
+home view accordingly:
+
+.. code-block::
+   from projectroles.views import HomeView
+
+   urlpatterns = [
+       # ...
+       url(r'^$', HomeView.as_view(), name='home'),
+   ]
+
+Finally, make sure your login and logout links are correctly linked. You can
+remove any default allauth URLs if you're not using it.
+
+.. code-block::
+   from django.contrib.auth import views as auth_views
+
+   urlpatterns = [
+       # ...
+       url(r'^login/$', auth_views.LoginView.as_view(
+           template_name='users/login.html'), name='login'),
+       url(r'^logout/$', auth_views.logout_then_login, name='logout'),
+   ]
+
+Base Template
+=============
+
+In order to make use of Projectroles views and templates, you should set the
+base template of your site accordingly in ``SITE_NAME/templates/base.html``.
+
+For a minimal example, see ``example_site/templates/base.html`` in the
+projectroles repository. It is strongly recommended to copy and use this as the
+base template for your site.
+
+.. note::
+   CSS and Javascript includes in the example base.html are **mandatory** for
+   the Projectroles views and functionalities.
+
+.. note::
+   The container structure defined in the example base.html, along with
+   including the ``STATIC/projectroles/css/project.css`` are **mandatory** for
+   the Projectroles views to work without modifications.
+
+
+Customizing Your Site
+=====================
+
+Here you can find some hints for customizing your site.
+
+Project CSS
+-----------
+
+While it is strongly recommended to use the Projectroles layout and styles,
+there are of course many possibilities for customization.
+
+If some of the CSS definitions in ``STATIC/projectroles/css/project.css`` do not
+suit your purposes, it is of course possible to override them in your own
+includes. It is still recommended to include the *"Flexbox page setup"* section
+as is.
+
+Title Bar
+---------
+
+You can implement your own title bar by replacing the default base.html include
+of ``projectroles/_site_titlebar.html`` with your own HTML or include. It is
+still possible to include the search form to your title bar from
+``projectroles/_search_form.html``.
+
+**TODO:** Make user dropdown similarly includeable.
+
+Site Icon
+---------
+
+An optional site icon can be placed into ``STATIC/images/logo_navbar.png`` to be
+displayed in the default Projectroles title bar.
+
+Footer
+------
+
+Footer content can be specified in ``SITE_NAME/templates/include/_footer.html``.
