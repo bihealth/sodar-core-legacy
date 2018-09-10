@@ -6,7 +6,7 @@ app_name = 'user_profile'
 
 urlpatterns = [
     url(
-        regex=r'^$',
+        regex=r'^profile$',
         view=views.UserDetailView.as_view(),
         name='detail'
     ),
