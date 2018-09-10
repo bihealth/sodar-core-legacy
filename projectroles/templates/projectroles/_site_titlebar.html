@@ -37,7 +37,7 @@
         {# Search #}
         {% if request.user.is_authenticated %}
           <li class="nav-item">
-            {% include 'projectroles/_search_form.html' %}
+            {% include 'projectroles/_site_titlebar_search.html' %}
           </li>
         {% endif %}
 
@@ -55,94 +55,9 @@
              id="site-help-link"><i class="fa fa-fw fa-info-circle"></i> Help</a>
         </li>
 
-        {# Responsive replacement for user dopdown #}
+        {# User dropdown menu #}
+        {% include 'projectroles/_site_titlebar_dropdown.html' %}
 
-        {# Admin link #}
-        {% if request.user.is_superuser %}
-          <li class="nav-item sodar-navbar-alt-item">
-            <a class="nav-link" href="{% url 'admin:index' %}"
-               id="sodar-navbar-link-admin" target="_blank">
-              <i class="fa fa-fw fa-gears"></i> Admin
-            </a>
-          </li>
-        {% endif %}
-
-        {# Site-wide apps #}
-        {% get_site_apps as site_apps %}
-        {% for plugin in site_apps %}
-          {% has_perm plugin.app_permission request.user as can_view_app %}
-          {% if not plugin.app_permission or can_view_app %}
-            <li class="nav-item sodar-navbar-alt-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
-              <a class="nav-link"
-                 href="{% url plugin.entry_point_url_id %}"
-                 id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-                <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}</a>
-            </li>
-          {% endif %}
-        {% endfor %}
-
-        {# Log out link #}
-        {% if request.user.is_authenticated %}
-          <li class="nav-item sodar-navbar-alt-item">
-            <a class="nav-link text-danger"
-               href="{% url 'logout' %}"
-               id="sodar-alt-nav-link-sign-out">
-              <i class="fa fa-fw fa-sign-out"></i> Log Out
-            </a>
-          </li>
-        {% endif %}
-
-        {# Actual user dropdown #}
-
-        <li class="nav-item sodar-navbar-user-dropdown">
-          <a class="nav-link sodar-nav-link-last dropdown-toggle {% if not request.user.is_authenticated %}disabled{% endif %}"
-             id="sodar-navbar-user-dropdown{% if not request.user.is_authenticated %}-disabled{% endif %}"
-             data-toggle="dropdown">
-            <i class="fa fa-fw fa-user"></i>
-          </a>
-          <div class="dropdown-menu dropdown-menu-right sodar-navbar-user-dropdown">
-            <div class="dropdown-header">
-              {% if request.user.name %}
-                {{ request.user.name }}<br />
-              {% endif %}
-              {{ request.user.username }}</div>
-
-            <div class="dropdown-divider"></div>
-
-            {# Site-wide apps #}
-            {% if site_apps|length > 0 %}
-              {% for plugin in site_apps %}
-                {% has_perm plugin.app_permission request.user as can_view_app %}
-                {% if not plugin.app_permission or can_view_app %}
-                  <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
-                     href="{% url plugin.entry_point_url_id %}"
-                     id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-                    <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}
-                  </a>
-                {% endif %}
-              {% endfor %}
-
-              <div class="dropdown-divider"></div>
-            {% endif %}
-
-            {# Admin link #}
-            {% if request.user.is_superuser %}
-              <a class="dropdown-item" href="{% url 'admin:index' %}"
-                 id="sodar-navbar-link-admin" target="_blank">
-                <i class="fa fa-fw fa-gears"></i> Admin
-              </a>
-
-              <div class="dropdown-divider"></div>
-            {% endif %}
-
-            {# Log out link #}
-            <a class="dropdown-item text-danger"
-               href="{% url 'logout' %}"
-               id="sodar-navbar-link-logout">
-              <i class="fa fa-fw fa-sign-out"></i> Log Out
-            </a>
-          </div>
-        </li>
       </ul>
     </div>
 

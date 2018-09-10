@@ -355,7 +355,9 @@ User Profile Site App
 ---------------------
 
 The ``user_profile`` site app package is installed together with projectroles.
-It adds a user profile page in the user dropdown.
+It adds a user profile page in the user dropdown. Use of the app is not
+mandatory but recommended, unless you are already using some other user profile
+app.
 
 Add Login Template
 ------------------
@@ -452,11 +454,16 @@ Title Bar
 ---------
 
 You can implement your own title bar by replacing the default base.html include
-of ``projectroles/_site_titlebar.html`` with your own HTML or include. It is
-still possible to include the search form to your title bar from
-``projectroles/_search_form.html``.
+of ``projectroles/_site_titlebar.html`` with your own HTML or include.
 
-**TODO:** Make user dropdown similarly includeable.
+When doing this, it is possible to include elements from the default title bar
+separately:
+
+- Search form: ``projectroles/_site_titlebar_search.html``
+- Site app and user operation dropdown: ``projectroles/_site_titlebar_dropdown.html``
+
+See the templates themselves for further instructions.
+
 
 Site Icon
 ---------

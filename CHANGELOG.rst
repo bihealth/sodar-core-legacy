@@ -32,8 +32,9 @@ Changed
 - Move custom modal into ``projectroles/_modal.html``
 - Check for user.name in user dropdown
 - Move content block structure and sidebar inside ``projectroles/base.html``
-- Move search form into optional include template ``projectroles/_search_form.html``
 - Move site title bar into optional include template ``projectroles/_site_titlebar.html``
+- Move search form into optional include template ``projectroles/_site_titlebar_search.html``
+- Make title bar dropdown inclueable as ``_site_titlebar_dropdown.html``
 - Title bar CSS and layout tweaks
 - Move ``search.js`` under projectroles
 - Move projectroles specific javascript into ``projectroles.js``
