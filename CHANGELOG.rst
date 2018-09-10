@@ -53,6 +53,7 @@ Changed
 - Get site version using ``SITE_PACKAGE``
 - Get LDAP domain names to login template from settings
 - Rename custom CSS classes and HTML IDs from ``omics-*`` into ``sodar-*`` (omics_data_mgmt#166)
+- Move Shepherd theme CSS files into projectroles
 
 Fixed
 -----
