@@ -674,9 +674,6 @@ class OmicsUser(AbstractUser):
     def __str__(self):
         return self.username
 
-    def get_absolute_url(self):
-        return reverse('users:user_detail', kwargs={'username': self.username})
-
     def get_full_name(self):
         """Return full name or username if not set"""
 

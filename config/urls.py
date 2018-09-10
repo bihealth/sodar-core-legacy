@@ -17,9 +17,6 @@ urlpatterns = [
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
 
-    # User management
-    url(r'^users/', include('example_site.users.urls', namespace='users')),
-
     # Login and logout
     url(r'^login/$', auth_views.LoginView.as_view(
         template_name='users/login.html'), name='login'),
@@ -30,6 +27,9 @@ urlpatterns = [
 
     # Projectroles URLs
     url(r'^project/', include('projectroles.urls')),
+
+    # User Profile URLs
+    url(r'^user/', include('user_profile.urls')),
 
     # Example project app URLs
     url(r'^app_example/', include('example_project_app.urls')),

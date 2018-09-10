@@ -16,7 +16,7 @@ import rules
 # Permissions ------------------------------------------------------------
 
 
-# Allow viewing data
+# Allow viewing user detail
 rules.add_perm(
-    'example_site_app.view_data',
+    'user_profile.view_detail',
     rules.is_authenticated)

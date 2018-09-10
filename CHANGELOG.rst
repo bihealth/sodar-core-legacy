@@ -23,6 +23,7 @@ Added
 - Versioneer versioning for projectroles
 - ``projectroles_version()`` in common template tags
 - Usage and development documentation
+- Site app ``user_profile`` with user details
 
 Changed
 -------
@@ -40,7 +41,6 @@ Changed
 - Move title bar admin and site app links to user dropdown (omics_data_mgmt#342)
 - Move project specific CSS into optionally includable ``projectroles.css``
 - Refactor and cleanup CSS
-- Move template ``user_detail.html`` into projectroles
 - Move ``set_user_group()`` into ``projectroles.utils``
 - Move ``syncgroups`` management command into projectroles
 - Copy improved multi LDAP backend setup from flowcelltool (omics_data_mgmt#132)

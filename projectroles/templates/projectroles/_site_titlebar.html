@@ -83,6 +83,7 @@
 
         {# User profile and log out links #}
         {% if request.user.is_authenticated %}
+          {% comment %}
           <li class="nav-item sodar-navbar-alt-item {% if request.path == request.user.get_absolute_url %}active{% endif %}">
             <a class="nav-link"
                href="{{ request.user.get_absolute_url }}"
@@ -90,6 +91,7 @@
               <i class="fa fa-fw fa-user-circle-o"></i> User Profile
             </a>
           </li>
+          {% endcomment %}
           <li class="nav-item sodar-navbar-alt-item">
             <a class="nav-link text-danger"
                href="{% url 'logout' %}"
@@ -143,11 +145,13 @@
             {% endif %}
 
             {# User profile and log out links #}
+            {% comment %}
             <a class="dropdown-item {% if request.path == request.user.get_absolute_url %}active{% endif %}"
                href="{{ request.user.get_absolute_url }}"
                id="sodar-navbar-link-user-details">
               <i class="fa fa-fw fa-user-circle-o"></i> User Profile
             </a>
+            {% endcomment %}
             <a class="dropdown-item text-danger"
                href="{% url 'logout' %}"
                id="sodar-navbar-link-logout">

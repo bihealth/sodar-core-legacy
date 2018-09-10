@@ -1,10 +1,10 @@
 {% extends "projectroles/base.html" %}
 
-{% block title %}User Profile for {{ object.get_full_name }}{% endblock %}
+{% block title %}User Profile for {{ request.user.get_full_name }}{% endblock %}
 
 {% block projectroles %}
 <div class="row sodar-pr-content-title">
-  <h2 class="sodar-pr-content-title">{{ object.get_full_name }}</h2>
+  <h2 class="sodar-pr-content-title">{{ request.user.get_full_name }}</h2>
   <div class="sodar-pr-content-title-secondary text-muted">
     User Profile
   </div>
@@ -18,16 +18,18 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        {% if object.get_full_name != object.username %}
+        {% if request.user.get_full_name != request.user.username %}
           <dt class="col-md-2">Full Name</dt>
-          <dd class="col-md-10">{{ object.get_full_name }}</dd>
+          <dd class="col-md-10">{{ request.user.get_full_name }}</dd>
         {% endif %}
         <dt class="col-md-2">Username</dt>
-        <dd class="col-md-10">{{ object.username }}</dd>
+        <dd class="col-md-10">{{ request.user.username }}</dd>
         <dt class="col-md-2">Email</dt>
-        <dd class="col-md-10"><a href="mailto:{{ object.email }}">{{ object.email }}</a></dd>
+        <dd class="col-md-10"><a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a></dd>
+        <dt class="col-md-2">UUID</dt>
+        <dd class="col-md-10">{{ request.user.omics_uuid }}</dd>
         <dt class="col-md-2">Date Joined</dt>
-        <dd class="col-md-10">{{ object.date_joined | date:'Y-m-d H:i' }}</dd>
+        <dd class="col-md-10">{{ request.user.date_joined | date:'Y-m-d H:i' }}</dd>
       </dl>
     </div>
   </div>
