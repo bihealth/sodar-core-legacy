@@ -117,7 +117,8 @@ following lines need to be included in the list:
        'markupfield',
        'rest_framework',
        'knox',
-       'projectroles.apps.ProjectrolesConfig'
+       'projectroles.apps.ProjectrolesConfig',
+       'user_profile.apps.UserprofileConfig',
    ]
 
 Database
@@ -350,10 +351,11 @@ To set up groups for existing users, run the ``syncgroups`` management command.
 .. code-block::
    ./manage.py syncgroups
 
-User Detail URL
----------------
+User Profile Site App
+---------------------
 
-**TODO**
+The ``user_profile`` site app package is installed together with projectroles.
+It adds a user profile page in the user dropdown.
 
 Add Login Template
 ------------------
@@ -381,6 +383,7 @@ site.
        # ...
        url(r'api/auth/', include('knox.urls')),
        url(r'^project/', include('projectroles.urls')),
+       url(r'^user/', include('user_profile.urls')),
    ]
 
 If you intend to use projectroles views and templates as the basis of your site

@@ -17,6 +17,7 @@ The following packages are included in the ``sodar_projectroles`` repository:
 - **example_site_app**: Example Projectroles-enabled general Django app
 - **projectroles**: The projectroles app itself
 - **requirements**: Requirements for the projectroles app and development
+- **user_profile**: User profile app (installed with projectroles)
 - **utility**: Setup scripts for development
 
 
