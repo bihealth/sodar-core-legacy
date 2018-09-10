@@ -13,7 +13,7 @@ Added
 
 - Create app package for Projectroles based on SODAR release v0.3.1
 - ``example_project_app`` to aid testing and work as a minimal example
-- ``static_file_exists()`` helper in common template tags
+- ``static_file_exists()`` and ``template_exists()`` helpers in common template tags
 - ``SITE_TITLE`` and ``SITE_INSTANCE_TITLE`` settings
 - ``example_site_app`` for demonstrating site apps
 - ``get_full_name()`` in User model

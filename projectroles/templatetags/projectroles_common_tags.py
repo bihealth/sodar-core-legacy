@@ -6,6 +6,7 @@ import mistune
 from django import template
 from django.conf import settings
 from django.contrib.staticfiles import finders
+from django.template.loader import get_template
 from django.urls import reverse
 
 import projectroles
@@ -134,3 +135,14 @@ def get_setting(name):
 def static_file_exists(path):
     """Return True/False based on whether a static file exists"""
     return True if finders.find(path) else False
+
+
+@register.simple_tag
+def template_exists(path):
+    """Return True/False based on whether a template exists"""
+    try:
+        get_template(path)
+        return True
+
+    except template.TemplateDoesNotExist:
+        return False

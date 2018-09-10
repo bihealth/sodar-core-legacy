@@ -2,6 +2,7 @@
 {% load static %}
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% block content %}
 
@@ -94,9 +95,12 @@
       </div>
 
       {# Footer #}
-      <footer class="sodar-footer">
-        {% include 'include/_footer.html' %}
-      </footer>
+      {% template_exists 'include/_footer.html' as footer_exists %}
+      {% if footer_exists %}
+        <footer class="sodar-footer">
+          {% include 'include/_footer.html' %}
+        </footer>
+      {% endif %}
 
      </div> <!-- /sodar-app-container -->
 
