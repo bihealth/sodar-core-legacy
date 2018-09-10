@@ -93,11 +93,11 @@ Site Package and Paths
 ----------------------
 
 Modify the definitions at the start of the configuration as
-follows (substitute "SITE_NAME" with the name of your site package).
+follows (substitute {SITE_NAME} with the name of your site package).
 
 .. code-block::
    import environ
-   SITE_PACKAGE = 'SITE_NAME'
+   SITE_PACKAGE = '{SITE_NAME}'
    ROOT_DIR = environ.Path(__file__) - 3
    APPS_DIR = ROOT_DIR.path(SITE_PACKAGE)
 
@@ -309,7 +309,7 @@ Extending the User Model
 ------------------------
 
 In a cookiecutter-django project, an extended user model should already exist
-in ``SITE_NAME/users/models.py``. The abstract model provided by projectroles
+in ``{SITE_NAME}/users/models.py``. The abstract model provided by projectroles
 provides the same model with critical additions, most notably the ``omics_uuid``
 field used as an unique identifier for SODAR objects including users.
 
@@ -332,7 +332,7 @@ After updating the user model, create and run database migrations.
    $ ./manage.py migrate
 
 Note that you probably will need to edit the default unit tests under
-``SITE_NAME/users/tests/`` for them to work. Again, you can see an example in
+``{SITE_NAME}/users/tests/`` for them to work. Again, you can see an example in
 the ``example_site`` package of the projectroles repository.
 
 Populating UUIDs for Existing Users
@@ -362,7 +362,7 @@ app.
 Add Login Template
 ------------------
 
-You should add a login template to ``SITE_NAME/templates/users/login.html``. If
+You should add a login template to ``{SITE_NAME}/templates/users/login.html``. If
 you're OK with using the Projectroles login template, the file can consist of
 the following line:
 
@@ -418,7 +418,7 @@ Base Template for Your Django Site
 ==================================
 
 In order to make use of Projectroles views and templates, you should set the
-base template of your site accordingly in ``SITE_NAME/templates/base.html``.
+base template of your site accordingly in ``{SITE_NAME}/templates/base.html``.
 
 For a minimal example, see ``example_site/templates/base.html`` in the
 projectroles repository. It is strongly recommended to copy and use this as the
@@ -474,4 +474,4 @@ displayed in the default Projectroles title bar.
 Footer
 ------
 
-Footer content can be specified in ``SITE_NAME/templates/include/_footer.html``.
+Footer content can be specified in ``{SITE_NAME}/templates/include/_footer.html``.

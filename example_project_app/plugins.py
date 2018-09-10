@@ -9,7 +9,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties required by django-plugins ------------------------------
 
-    #: Name (slug-safe, used in URLs)
+    #: Name (slug-safe)
     name = 'example_project_app'
 
     #: Title (used in templates)
