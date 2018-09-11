@@ -429,9 +429,10 @@ Base Template for Your Django Site
 In order to make use of Projectroles views and templates, you should set the
 base template of your site accordingly in ``{SITE_NAME}/templates/base.html``.
 
-For a minimal example, see ``example_site/templates/base.html`` in the
-projectroles repository. It is strongly recommended to copy and use this as the
-base template for your site.
+For a supported example, see ``templates/projectroles/base_site.html`` in the
+projectroles package. It is strongly recommended to use this as the base
+template for your site, either by extending it or copying the content into
+``{SITE_NAME}/templates/base.html`` and modifying it to suit your needs.
 
 .. note::
    CSS and Javascript includes in the example base.html are **mandatory** for
