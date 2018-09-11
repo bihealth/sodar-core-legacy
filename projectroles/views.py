@@ -109,12 +109,6 @@ class ProjectAccessMixin:
             return None
 
 
-class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
-    """Mixin for providing a Project object for permission checking"""
-    def get_permission_object(self):
-        return self._get_project(self.request, self.kwargs)
-
-
 class LoggedInPermissionMixin(PermissionRequiredMixin):
     """Mixin for handling redirection for both unlogged users and authenticated
     users without permissions"""
@@ -129,6 +123,12 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         else:
             messages.error(self.request, 'Please log in')
             return redirect_to_login(self.request.get_full_path())
+
+
+class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
+    """Mixin for providing a Project object for permission checking"""
+    def get_permission_object(self):
+        return self._get_project(self.request, self.kwargs)
 
 
 class RolePermissionMixin(LoggedInPermissionMixin, ProjectAccessMixin):

@@ -17,15 +17,15 @@ Gitlab.
 Project App Basics
 ==================
 
-Project apps in a nutshell:
+Characteristics of a project app:
 
-- Provide a functionality related to a project
-- Are dynamically included in project views by Projectroles using plugins
-- Use the project-based role and access control provided by Projectroles
-- Are included in the projectroles search
-- Provide an includeable element (e.g. content overview) for the project details
-  page
-- Appear in the project menu sidebar in the default Projectroles templates
+- Provides a functionality related to a project
+- Is dynamically included in project views by Projectroles using plugins
+- Uses the project-based role and access control provided by Projectroles
+- Is included in the projectroles search
+- Provides a dynamically included element (e.g. content overview) for the
+  project details page
+- Appears in the project menu sidebar in the default Projectroles templates
 
 Requirements for setting up a project app:
 
@@ -106,82 +106,8 @@ Below is an example of a projectroles-compatible Django model:
            help_text='SomeModel Omics UUID')
 
 
-Views
-=====
-
-Certain guidelines must be followed in developing views to utilize the
-projectroles framework.
-
-URL Keyword Arguments
----------------------
-
-In order to link a view to project and check user permissions using mixins,
-the URL keyword arguments **must** include an argument which matches *one of
-the following conditions*:
-
-- Contains a kwarg ``project`` which corresponds to the ``omics_uuid``
-  member value of a ``projectroles.models.Project`` object
-- Contains a kwarg corresponding to the ``omics_uuid`` of another Django
-  model, which must contain a member field ``project`` which is a foreign key
-  for a ``Projectroles.models.Project`` object. The kwarg **must** be named
-  after the Django model of the referred object (in lowercase).
-- Same as above, but corresponding to a Django model which provides a
-  ``get_project()`` function which returns a ``Projectroles.models.Project``
-  object.
-
-Examples:
-
-.. code-block::
-   urlpatterns = [
-       # Direct reference to a Project object
-       url(
-           regex=r'^(?P<project>[0-9a-f-]+)$',
-           view=views.ProjectDetailView.as_view(),
-           name='detail',
-       ),
-       # RoleAssignment has a "project" member
-       url(
-           regex=r'^members/update/(?P<roleassignment>[0-9a-f-]+)$',
-           view=views.RoleAssignmentUpdateView.as_view(),
-           name='role_update',
-       ),
-   ]
-
-Mixins
-------
-
-The ``projectroles.views`` module provides several useful mixins for augmenting
-your views to add projectroles functionality.
-
-**TODO: List**
-
-
-Templates
-=========
-
-General Template Structure
---------------------------
-
-**TODO**
-
-Specific Views to be Implemented
---------------------------------
-
-**TODO**
-
-Rules
------
-
-**TODO**
-
-Template Tags
--------------
-
-**TODO**
-
-
-Rules
-=====
+Rules File
+==========
 
 Create a file ``rules.py`` in your app directory. You should declare at least
 one basic rule for enabling a user to view the app data for the project. This
@@ -224,8 +150,8 @@ The following variables and functions are **mandatory**:
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually from the app's ``urls.py`` file)
 - ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
-- ``entry_point_url_id``: Template path for the app entry point (**NOTE:** Must
-  take the project ``omics_uuid`` as a kwarg named ``project``)
+- ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
+  Must take the project ``omics_uuid`` as a kwarg named ``project``)
 - ``description``: Verbose description of app
 - ``app_permission``: Basic permission for viewing app data in project (see
   above)
@@ -236,7 +162,6 @@ The following variables and functions are **mandatory**:
   for the app details template
 - ``plugin_ordering``: Number to define the ordering of the app on the project
   menu sidebar and the details page
-
 
 Implementing the following is **optional**:
 
@@ -263,3 +188,259 @@ registered:
 
 .. code-block::
    Registering Plugin for {APP_NAME}.plugins.ProjectAppPlugin
+
+For info on how to implement the specific required views/templates, see the end
+of this document.
+
+
+Views
+=====
+
+Certain guidelines must be followed in developing views to utilize the
+projectroles framework.
+
+URL Keyword Arguments
+---------------------
+
+In order to link a view to project and check user permissions using mixins,
+the URL keyword arguments **must** include an argument which matches *one of
+the following conditions*:
+
+- Contains a kwarg ``project`` which corresponds to the ``omics_uuid``
+  member value of a ``projectroles.models.Project`` object
+- Contains a kwarg corresponding to the ``omics_uuid`` of another Django
+  model, which must contain a member field ``project`` which is a foreign key
+  for a ``Projectroles.models.Project`` object. The kwarg **must** be named
+  after the Django model of the referred object (in lowercase).
+- Same as above, but corresponding to a Django model which provides a
+  ``get_project()`` function which returns a ``Projectroles.models.Project``
+  object.
+
+Examples:
+
+.. code-block::
+   urlpatterns = [
+       # Direct reference to the Project model
+       url(
+           regex=r'^(?P<project>[0-9a-f-]+)$',
+           view=views.ProjectDetailView.as_view(),
+           name='detail',
+       ),
+       # RoleAssignment model has a "project" member so that is OK
+       url(
+           regex=r'^members/update/(?P<roleassignment>[0-9a-f-]+)$',
+           view=views.RoleAssignmentUpdateView.as_view(),
+           name='role_update',
+       ),
+   ]
+
+Mixins
+------
+
+The ``projectroles.views`` module provides several useful mixins for augmenting
+your view classes to add projectroles functionality. These can be found in the
+``projectroles.views`` module.
+
+The most commonly used mixins:
+
+- ``LoggedInPermissionMixin``: Ensure correct redirection of users on no
+  permissions
+- ``ProjectPermissionMixin``: Provides a ``Project`` object for permission
+  checking based on URL kwargs
+- ``ProjectContextMixin``: Provides a ``Project`` object into the view context
+  based on URL kwargs
+
+See ``example_project_app.views.ExampleView`` for an example.
+
+**TODO:** Provide a proper auto-generated docstring reference?
+
+
+Templates
+=========
+
+Template Structure
+------------------
+
+It is strongly recommended to extend ``projectroles/project_base.html`` in your
+project app templates. Just start your template with the following line:
+
+.. code-block::
+   {% extends 'projectroles/project_base.html' %}
+
+The following **template blocks** are available for overriding or extending:
+
+- ``title``: Page title
+- ``css``: Custom CSS (extend with ``{{ block.super }}``)
+- ``projectroles_extend``: Your app content goes here!
+- ``javascript``: Custom Javascript (extend with ``{{ block.super }}``)
+- ``head_extend``: Optional block if you need something extra inside the HTML ``<head>`` element
+
+Recommended CSS classes for wrapping your page title and actual content:
+
+.. code-block::
+   <div class="row sodar-subtitle-container">
+     <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
+   </div>
+
+   <div class="container-fluid sodar-page-container">
+     <p>Content goes here!</p>
+   </div>
+
+See ``example_project_app/example.html`` for a minimal commented template example.
+
+.. hint::
+   If you include some controls on your ``sodar-subtitle-container`` class and
+   want it to remain sticky on top of the page while scrolling, add the
+   ``bg-white sticky-top`` classes to the element.
+
+Rules
+-----
+
+To control user access within a template, just do it as follows:
+
+.. code-block::
+   {% load rules %}
+   {% has_perm 'app.do_something' request.user project as can_do_something %}
+
+This checks if the current user from the HTTP request has permission for
+``app.do_something`` in the current project retrieved from the page context.
+
+Template Tags
+-------------
+
+General purpose template tags are available in
+``projectroles/templatetags/projectroles_common_tags.py``. Include them to your
+template as follows:
+
+.. code-block::
+   {% load projectroles_common_tags %}
+
+
+Specific Views and Templates
+============================
+
+A few specific views/templates are expected to be implemented.
+
+App Entry Point
+----------------
+
+As described in the Plugins chapter, an app entry point view is to be defined
+in the ``ProjectAppPlugin``. This is **mandatory**.
+
+The view **must** take a ``project`` URL kwarg which corresponds to a
+``Project.omics_uuid``.
+
+For an example, see ``example_project_app.views.ExampleView`` and the associated
+template.
+
+Project Details Element
+-----------------------
+
+A sub-template to be included in the project details page (the project's "front
+page" provided by projectroles, where e.g. overview of app content is shown).
+
+Traditionally these files are called ``_details_card.html``, but you can name
+them as you wish and point to the related template in the ``details_template``
+variable of your plugin.
+
+It is expected to have the content in a ``card-body`` container:
+
+.. code-block::
+   <div class="card-body">
+     {# Content goes here #}
+   </div>
+
+Project Search Function and Template
+====================================
+
+If you want to implement search in your project app, you need to implement the
+``search()`` function in your plugin as well as a template for displaying the
+results.
+
+.. hint::
+   Implementing search *can* be complex. If you have access to the main SODAR
+   repository, apps in that project might prove useful examples.
+
+The search() Function
+---------------------
+
+See the signature of ``search()`` in
+``projectroles.plugins.ProjectAppPluginPoint``. The arguments are as follows:
+
+- ``search_term``
+    - Term to be searched for (string). Should be self-explanatory.
+    - Multiple strings or separating multiple phrases with quotation marks not
+      yet supported.
+- ``user``
+    - User object for user initiating search
+- ``search_type``
+    - The type of object to search for (String, optional)
+    - Used to restrict search to specific types of objects
+    - You can specify supported types in the plugin's ``search_types`` list.
+    - Examples: ``file``, ``sample``..
+- ``keywords``
+    - Special search keywords
+    - **NOTE:** Currently not implemented
+
+.. note::
+   Within this function, you are expected to verify appropriate access of the
+   seaching user yourself!
+
+The return data is a dictionary, which is split by groups in case your app can
+return multiple different lists for data. This is useful where e.g. the same
+type of HTML list isn't suitable for all returnable types. If only returning one
+type of data, you can just use e.g. ``all`` as your only category. Example of
+the result:
+
+.. code-block::
+   return {
+       'all': {                     # 1-N categories to be included
+           'title': 'List title',   # Title of the result list to be displayed
+           'search_types': [],      # Object types included in this category
+           'items': []              # The actual objects returned
+           }
+       }
+
+**TODO:** Example of an implemented function
+
+Search Template
+----------------
+
+Projectroles will provide your template context the ``search_results`` object,
+which corresponds to the result dict of the aforementioned function. There are
+also includes for formatting the results list, which you are encouraged to use.
+
+Example of a simple results template, in case of a single ``all`` category:
+
+.. code-block::
+   {% if search_results.all.items|length > 0 %}
+
+     {# Include standard search list header here #}
+     {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
+
+     {# Set up a table with your results #}
+     <table class="table table-striped omics-card-table omics-search-table" id="omics-ff-search-table">
+       <thead>
+         <tr>
+           <th>Name</th>
+           <th>Some Other Field</th>
+         </tr>
+      </thead>
+      <tbody>
+        {% for item in search_results.all.items %}
+          <tr>
+            <td>
+              <a href="#link_to_somewhere_in your_app">{{ item.name }}</a>
+            </td>
+            <td>
+              {{ item.some_other_field }}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {# Include standard search list footer here #}
+    {% include 'projectroles/_search_footer.html' %}
+
+  {% endif %}

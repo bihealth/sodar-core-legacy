@@ -2,22 +2,47 @@
 {% extends 'projectroles/project_base.html' %}
 {% load projectroles_common_tags %}
 
+{# Access Django rules #}
 {% load rules %}
 
 {% block title %}
   Example App Page Title
 {% endblock title %}
 
+{% block head_extend %}
+  {# Add extra stuff under <head> here #}
+  {# This block can be left out if not used #}
+{% endblock head_extend %}
+
+{% block css %}
+  {{ block.super }}
+  {# Extend CSS here if needed #}
+  {# This block can be left out if not used #}
+{% endblock css %}
+
 {% block projectroles_extend %}
 
-<div class="row sodar-subtitle-container">
-  <h3><i class="fa fa-rocket"></i> Example Project App</h3>
-</div>
+  {# Actual app content goes here #}
 
-<div class="container-fluid sodar-page-container">
-  <div class="alert alert-info">
-    This is an example and the entry point for <code>example_project_app</code>.
+  {# Example of the page subtitle #}
+  {# Using the example CSS classes is recommended #}
+  <div class="container-fluid sodar-subtitle-container">
+    <h3><i class="fa fa-rocket"></i> Example Project App</h3>
   </div>
-</div>
+
+  {# Example of page content #}
+  {# Using the example CSS classes is recommended #}
+  <div class="container-fluid sodar-page-container">
+    <div class="alert alert-info">
+      This is an example and the entry point for <code>example_project_app</code>.
+      Project <strong>"{{ project.title }}"</strong> was found in the page context! Yay!
+    </div>
+  </div>
 
 {% endblock projectroles_extend %}
+
+{% block javascript %}
+  {{ block.super }}
+  {# Add more Javascript here if needed #}
+  {# This block can be left out if not used #}
+{% endblock javascript %}
