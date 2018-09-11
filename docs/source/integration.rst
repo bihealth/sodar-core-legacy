@@ -1,5 +1,7 @@
-Integration Guide
-^^^^^^^^^^^^^^^^^
+.. _integration:
+
+Integration
+^^^^^^^^^^^
 
 This document provides instructions and guidelines for integrating the
 Projectroles app and other SODAR Core apps into your Django site.
@@ -20,11 +22,12 @@ recommended to use `cookiecutter-django <https://github.com/pydanny/cookiecutter
 to set up your Django site.
 
 .. warning::
+
    Currently, SODAR Core only supports Django 1.11.x, while the latest versions
-   of Cookiecutter set up Django 2.0.x by default. It is strongly recommended to
-   use Django 1.11 LTS for time being. Compatibility with 2.0 and
+   of cookiecutter-django set up Django 2.0.x by default. It is strongly
+   recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
    upwards is not guaranteed! Integration into a
-   `1.11 release<https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
+   `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
    of cookiecutter-django has been tested and verified to be working.
 
 Make sure to set up a virtual Python environment for development with required
@@ -38,6 +41,7 @@ If integrating into an existing Django site, please see
 requirements clash between projectroles and your site.
 
 .. warning::
+
    The rest of this documentation assumes that the project has been set up using
    `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_. If
    your Django site has not been created with the cookiecutter, e.g. directory
@@ -51,29 +55,33 @@ First, add the django-sodar-core and djangoplugins package requirements into
 your ``requirements/base.txt`` file.
 
 .. note::
-   At the time of writing the SODAR Core package is in development, so it is
-   recommended to clone a specific commit before we reach a stable 0.1.0
-   release.
+
+    At the time of writing the SODAR Core package is in development, so it is
+    recommended to clone a specific commit before we reach a stable 0.1.0
+    release.
 
 Add the following rows into your ``base.txt`` file:
 
-.. code-block::
-   -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-   -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-core
+.. code-block:: shell
+
+    -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
+    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
-.. code-block::
-   $ pip -r requirements/base.txt
+.. code-block:: shell
+
+    $ pip -r requirements/base.txt
 
 SODAR Core apps and django-plugins should now be installed to be used with your
 Django site.
 
 .. hint::
-   You can always refer to ``example_site`` in the projectroles repository for
-   a working example of a Cookiecutter-based Django site integrating SODAR Core.
-   However, note that some aspects of the site configuration may vary depending
-   on the used cookiecutter-django version used on your site.
+
+    You can always refer to ``example_site`` in the projectroles repository for
+    a working example of a Cookiecutter-based Django site integrating SODAR Core.
+    However, note that some aspects of the site configuration may vary depending
+    on the used cookiecutter-django version used on your site.
 
 
 Django Settings
@@ -94,11 +102,12 @@ Site Package and Paths
 Modify the definitions at the beginning of ``base.py`` as follows (substitute
 {SITE_NAME} with the name of your site package).
 
-.. code-block::
-   import environ
-   SITE_PACKAGE = '{SITE_NAME}'
-   ROOT_DIR = environ.Path(__file__) - 3
-   APPS_DIR = ROOT_DIR.path(SITE_PACKAGE)
+.. code-block:: python
+
+    import environ
+    SITE_PACKAGE = '{SITE_NAME}'
+    ROOT_DIR = environ.Path(__file__) - 3
+    APPS_DIR = ROOT_DIR.path(SITE_PACKAGE)
 
 Apps
 ----
@@ -106,33 +115,37 @@ Apps
 Add projectroles and other required apps into ``THIRD_PARTY_APPS``. The
 following lines need to be included in the list:
 
-.. code-block::
-   THIRD_PARTY_APPS = [
-       # ...
-       'crispy_forms',
-       'rules.apps.AutodiscoverRulesConfig',
-       'djangoplugins',
-       'pagedown',
-       'markupfield',
-       'rest_framework',
-       'knox',
-       'projectroles.apps.ProjectrolesConfig',
-       'userprofile.apps.UserprofileConfig',
-   ]
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'crispy_forms',
+        'rules.apps.AutodiscoverRulesConfig',
+        'djangoplugins',
+        'pagedown',
+        'markupfield',
+        'rest_framework',
+        'knox',
+        'projectroles.apps.ProjectrolesConfig',
+        'userprofile.apps.UserprofileConfig',
+    ]
 
 Database
 --------
 
 Under ``DATABASES``, it is recommended to set the following value:
 
-.. code-block::
+.. code-block:: python
+
    DATABASES['default']['ATOMIC_REQUESTS'] = False
 
 .. note::
+
    If this conflicts with your existing set up, you can modify the code in your
    other apps to use e.g. ``@transaction.atomic``.
 
 .. note::
+
    This setting mostly is used for the ``sodar_taskflow`` transactions supported
    by projectroles but not commonly used, so having this setting as True *may*
    cause no issues. However, it is not officially supported at this time.
@@ -142,7 +155,8 @@ Templates
 
 Under ``TEMPLATES['OPTIONS']['context_processors']``, add the line:
 
-.. code-block::
+.. code-block:: python
+
    'projectroles.context_processors.urls_processor',
 
 Email
@@ -150,7 +164,8 @@ Email
 
 Under ``EMAIL_CONFIGURATION``, add the following lines:
 
-.. code-block::
+.. code-block:: python
+
    EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@example.com')
    EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
 
@@ -159,13 +174,15 @@ Authentication
 
 Modify ``AUTHENTICATION_BACKENDS`` to contain the following:
 
-.. code-block::
+.. code-block:: python
+
    AUTHENTICATION_BACKENDS = [
         'rules.permissions.ObjectPermissionBackend',
         'django.contrib.auth.backends.ModelBackend',
    ]
 
 .. note::
+
    The default setup by cookiecutter-django adds the ``allauth`` package. This
    can be left out of the project if not needed, as it mostly provides adapters
    for e.g. social media account logins. If removing allauth, you can also
@@ -175,7 +192,8 @@ It is also recommended to set the value of ``LOGIN_REDIRECT_URL`` as follows:
 
 **TODO:** This may have been deprecated, check.
 
-.. code-block::
+.. code-block:: python
+
    LOGIN_REDIRECT_URL = 'home'
 
 Django REST Framework
@@ -183,7 +201,8 @@ Django REST Framework
 
 Add the following structure to the configuration file:
 
-.. code-block::
+.. code-block:: python
+
    REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
             'rest_framework.authentication.BasicAuthentication',
@@ -198,7 +217,8 @@ General Site Settings
 For display in Projectroles based templates, set the following variables to
 relevant values.
 
-.. code-block::
+.. code-block:: python
+
    SITE_TITLE = 'Name of Your Project'
    SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
    SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'Deployment Instance Name')
@@ -220,7 +240,8 @@ explained below:
 
 Example:
 
-.. code-block::
+.. code-block:: python
+
    # Projectroles app settings
    PROJECTROLES_SECRET_LENGTH = 32
    PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
@@ -235,7 +256,8 @@ Add a variable to list enabled backend plugins implemented using
 ``BackendPluginPoint``. For developing backend apps, see the ``development``
 documentation.
 
-.. code-block::
+.. code-block:: python
+
    ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
 Logging
@@ -255,7 +277,8 @@ variables to your configuration.
 The following lines are **optional**. If only using one LDAP/AD server, you can
 leave the "secondary LDAP server" values unset.
 
-.. code-block::
+.. code-block:: python
+
    ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
    ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
 
@@ -325,7 +348,8 @@ including users.
 If you have not added any of your own modifications to the model, you can simply
 replace the existing model extension with the following code:
 
-.. code-block::
+.. code-block:: python
+
    from projectroles.models import OmicsUser
 
    class User(OmicsUser):
@@ -336,7 +360,8 @@ already), you can add them in this model.
 
 After updating the user model, create and run database migrations.
 
-.. code-block::
+.. code-block:: shell
+
    $ ./manage.py makemigrations
    $ ./manage.py migrate
 
@@ -349,7 +374,7 @@ Populating UUIDs for Existing Users
 
 When integrating projectroles into an existing site with existing users, the
 ``omics_uuid`` field needs to be populated. See
-`instructions in the official Django documentation<https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+`instructions in the official Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
 
 Synchronizing User Groups for Existing Users
@@ -358,8 +383,9 @@ Synchronizing User Groups for Existing Users
 To set up user groups for existing users, run the ``syncgroups`` management
 command.
 
-.. code-block::
-   ./manage.py syncgroups
+.. code-block:: shell
+
+   $ ./manage.py syncgroups
 
 User Profile Site App
 ---------------------
@@ -375,7 +401,8 @@ You should add a login template to ``{SITE_NAME}/templates/users/login.html``. I
 you're OK with using the Projectroles login template, the file can consist of
 the following line:
 
-.. code-block::
+.. code-block:: django
+
    {% extends 'projectroles/login.html' %}
 
 If you intend to use projectroles templates for user management, you can delete
@@ -389,7 +416,8 @@ In the Django URL configuration file, usually found in ``config/urls.py``, add
 the following lines under ``urlpatterns`` to include projectroles URLs in your
 site.
 
-.. code-block::
+.. code-block:: python
+
    urlpatterns = [
        # ...
        url(r'api/auth/', include('knox.urls')),
@@ -401,7 +429,8 @@ If you intend to use projectroles views and templates as the basis of your site
 layout and navigation (which is recommended), also make sure to set the site's
 home view accordingly:
 
-.. code-block::
+.. code-block:: python
+
    from projectroles.views import HomeView
 
    urlpatterns = [
@@ -412,7 +441,8 @@ home view accordingly:
 Finally, make sure your login and logout links are correctly linked. You can
 remove any default allauth URLs if you're not using it.
 
-.. code-block::
+.. code-block:: python
+
    from django.contrib.auth import views as auth_views
 
    urlpatterns = [
@@ -435,10 +465,12 @@ template for your site, either by extending it or copying the content into
 ``{SITE_NAME}/templates/base.html`` and modifying it to suit your needs.
 
 .. note::
+
    CSS and Javascript includes in the example base.html are **mandatory** for
    Projectroles-based views and functionalities.
 
 .. note::
+
    The container structure defined in the example base.html, along with
    including the ``{STATIC}/projectroles/css/project.css`` are **mandatory** for
    Projectroles-based views to work without modifications.

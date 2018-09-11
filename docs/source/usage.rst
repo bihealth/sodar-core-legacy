@@ -1,10 +1,13 @@
-Usage Guide
-^^^^^^^^^^^
+.. _usage:
+
+Usage
+^^^^^
 
 .. warning::
+
    Under construction!
 
-This document provides instructions for using the SODAR Projectroles app
-integrated in your Django site.
+This document provides instructions for using the SODAR Core apps which have
+been integrated in your Django site.
 
 **TODO**

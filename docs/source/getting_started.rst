@@ -1,3 +1,5 @@
+.. _getting_started:
+
 Getting Started
 ^^^^^^^^^^^^^^^
 
@@ -146,7 +148,7 @@ usage and development documentation for more details.
 The Userprofile App
 ===================
 
-The userprofile app is a site app, which currently provides a user profile view
+The ``userprofile`` app is a site app, which currently provides a user profile view
 for Projectroles-compatible Django users. It will later be expanded to cover
 user-specific settings for SODAR-based sites.
 

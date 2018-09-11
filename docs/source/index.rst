@@ -3,6 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _manual-main:
 
 Welcome to the SODAR Core documentation!
 ========================================
@@ -30,7 +31,9 @@ Gitlab.
    integration
    usage
    project_app_dev
-   development
+   site_app_dev
+   backend_app_dev
+   sodar_core_dev
 
 
 Indices and tables

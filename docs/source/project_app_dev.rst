@@ -1,15 +1,18 @@
+.. _project_app_dev:
+
 Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-This document details instructions and guidelines for developing Django project
-apps to be used with the Projectroles-based SODAR Core framework. This also
-applies for modifying existing apps into project apps.
+This document details instructions and guidelines for developing
+**project apps** to be used with the SODAR Core framework. This also applies for
+modifying existing apps into project apps.
 
 **NOTE:** the display of this document in Gitlab is incomplete and all listings
 will be missing. Please click "display source" if you want to read this in
 Gitlab.
 
 .. hint::
+
    The package ``example_project_app`` in the projectroles repository provides
    a concrete minimal example of a working project app.
 
@@ -48,8 +51,8 @@ previously existing app, or to set up a fresh app generated normally with
 ``./manage.py startapp``.
 
 It is also assumed that apps are more or less created according to best
-practices defined by `Two Scoops<https://www.twoscoopspress.com/>`_, with the
-use of `Class-Based Views<https://docs.djangoproject.com/en/1.11/topics/class-based-views/>`_
+practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the
+use of `Class-Based Views <https://docs.djangoproject.com/en/1.11/topics/class-based-views/>`_
 being a requirement.
 
 
@@ -73,14 +76,16 @@ To provide a unique identifier for your object in the SODAR context, add a
 ``UUIDField`` with the name of ``omics_uuid`` into your model.
 
 .. note::
+
    Projectroles links to objects in URLs, links and forms using UUIDs instead of
    database private keys. This is strongly recommended for all Django models in
    apps using the projectroles framework.
 
 .. note::
+
    When updating an existing Django model with an existing database, the
    ``omics_uuid`` field needs to be populated. See
-   `instructions in the official Django documentation<https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+   `instructions in the official Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
    on how to create the required migrations.
 
 Model Example
@@ -88,22 +93,23 @@ Model Example
 
 Below is an example of a projectroles-compatible Django model:
 
-.. code-block::
-   import uuid
-   from django.db import models
-   from projectroles.models import Project
+.. code-block:: python
 
-   class SomeModel(models.Model):
-       some_field = models.CharField(
-           help_text='Your own field')
-       project = models.ForeignKey(
-           Project,
-           related_name='some_objects',
-           help_text='Project in which this object belongs')
-       omics_uuid = models.UUIDField(
-           default=uuid.uuid4,
-           unique=True,
-           help_text='SomeModel Omics UUID')
+    import uuid
+    from django.db import models
+    from projectroles.models import Project
+
+    class SomeModel(models.Model):
+        some_field = models.CharField(
+            help_text='Your own field')
+        project = models.ForeignKey(
+            Project,
+            related_name='some_objects',
+            help_text='Project in which this object belongs')
+        omics_uuid = models.UUIDField(
+            default=uuid.uuid4,
+            unique=True,
+            help_text='SomeModel Omics UUID')
 
 
 Rules File
@@ -114,15 +120,16 @@ one basic rule for enabling a user to view the app data for the project. This
 can be named e.g. ``{APP_NAME}.view_data``. Predicates for the rules can be
 found in projectroles and they can be extended within your app if needed.
 
-.. code-block::
-   import rules
-   from projectroles import rules as pr_rules
+.. code-block:: python
 
-   rules.add_perm(
-       'example_project_app.view_data',
-       rules.is_superuser | pr_rules.is_project_owner |
-       pr_rules.is_project_delegate | pr_rules.is_project_contributor |
-       pr_rules.is_project_guest)
+    import rules
+    from projectroles import rules as pr_rules
+
+    rules.add_perm(
+        'example_project_app.view_data',
+        rules.is_superuser | pr_rules.is_project_owner |
+        pr_rules.is_project_delegate | pr_rules.is_project_contributor |
+        pr_rules.is_project_guest)
 
 
 ProjectAppPlugin
@@ -133,16 +140,17 @@ a ``ProjectAppPlugin`` class implementing
 ``projectroles.plugins.ProjectAppPluginPoint``. Within the class, implement
 member variables and functions as instructed in comments and docstrings.
 
-.. code-block::
-   from projectroles.plugins import ProjectAppPluginPoint
-   from .urls import urlpatterns
+.. code-block:: python
 
-   class ProjectAppPlugin(ProjectAppPluginPoint):
-       """Plugin for registering app with Projectroles"""
-       name = 'example_project_app'
-       title = 'Example Project App'
-       urls = urlpatterns
-       # ..
+    from projectroles.plugins import ProjectAppPluginPoint
+    from .urls import urlpatterns
+
+    class ProjectAppPlugin(ProjectAppPluginPoint):
+        """Plugin for registering app with Projectroles"""
+        name = 'example_project_app'
+        title = 'Example Project App'
+        urls = urlpatterns
+        # ..
 
 The following variables and functions are **mandatory**:
 
@@ -180,13 +188,15 @@ Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
 the project app plugin in the Django databse with the following command:
 
-.. code-block::
+.. code-block:: shell
+
    $ ./manage.py syncplugins
 
 You should see the following output to ensure the plugin was successfully
 registered:
 
-.. code-block::
+.. code-block:: shell
+
    Registering Plugin for {APP_NAME}.plugins.ProjectAppPlugin
 
 For info on how to implement the specific required views/templates, see the end
@@ -218,7 +228,8 @@ the following conditions*:
 
 Examples:
 
-.. code-block::
+.. code-block:: python
+
    urlpatterns = [
        # Direct reference to the Project model
        url(
@@ -264,7 +275,8 @@ Template Structure
 It is strongly recommended to extend ``projectroles/project_base.html`` in your
 project app templates. Just start your template with the following line:
 
-.. code-block::
+.. code-block:: django
+
    {% extends 'projectroles/project_base.html' %}
 
 The following **template blocks** are available for overriding or extending:
@@ -277,7 +289,8 @@ The following **template blocks** are available for overriding or extending:
 
 Recommended CSS classes for wrapping your page title and actual content:
 
-.. code-block::
+.. code-block:: django
+
    <div class="row sodar-subtitle-container">
      <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
    </div>
@@ -289,6 +302,7 @@ Recommended CSS classes for wrapping your page title and actual content:
 See ``example_project_app/example.html`` for a minimal commented template example.
 
 .. hint::
+
    If you include some controls on your ``sodar-subtitle-container`` class and
    want it to remain sticky on top of the page while scrolling, add the
    ``bg-white sticky-top`` classes to the element.
@@ -298,7 +312,8 @@ Rules
 
 To control user access within a template, just do it as follows:
 
-.. code-block::
+.. code-block:: django
+
    {% load rules %}
    {% has_perm 'app.do_something' request.user project as can_do_something %}
 
@@ -312,7 +327,8 @@ General purpose template tags are available in
 ``projectroles/templatetags/projectroles_common_tags.py``. Include them to your
 template as follows:
 
-.. code-block::
+.. code-block:: django
+
    {% load projectroles_common_tags %}
 
 
@@ -345,7 +361,8 @@ variable of your plugin.
 
 It is expected to have the content in a ``card-body`` container:
 
-.. code-block::
+.. code-block:: django
+
    <div class="card-body">
      {# Content goes here #}
    </div>
@@ -358,6 +375,7 @@ If you want to implement search in your project app, you need to implement the
 results.
 
 .. hint::
+
    Implementing search *can* be complex. If you have access to the main SODAR
    repository, apps in that project might prove useful examples.
 
@@ -383,6 +401,7 @@ See the signature of ``search()`` in
     - **NOTE:** Currently not implemented
 
 .. note::
+
    Within this function, you are expected to verify appropriate access of the
    seaching user yourself!
 
@@ -392,7 +411,8 @@ type of HTML list isn't suitable for all returnable types. If only returning one
 type of data, you can just use e.g. ``all`` as your only category. Example of
 the result:
 
-.. code-block::
+.. code-block:: python
+
    return {
        'all': {                     # 1-N categories to be included
            'title': 'List title',   # Title of the result list to be displayed
@@ -412,7 +432,8 @@ also includes for formatting the results list, which you are encouraged to use.
 
 Example of a simple results template, in case of a single ``all`` category:
 
-.. code-block::
+.. code-block:: django
+
    {% if search_results.all.items|length > 0 %}
 
      {# Include standard search list header here #}
