@@ -27,7 +27,7 @@
         <dt class="col-md-2">Email</dt>
         <dd class="col-md-10"><a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a></dd>
         <dt class="col-md-2">UUID</dt>
-        <dd class="col-md-10">{{ request.user.omics_uuid }}</dd>
+        <dd class="col-md-10"><code>{{ request.user.omics_uuid }}</code></dd>
         <dt class="col-md-2">Date Joined</dt>
         <dd class="col-md-10">{{ request.user.date_joined | date:'Y-m-d H:i' }}</dd>
       </dl>
