@@ -19,11 +19,14 @@ register = template.Library()
 
 @register.simple_tag
 def site_version():
-    return site.__version__
+    if hasattr(site, '__version__'):
+        return site.__version__
+
+    return '[UNKNOWN]'
 
 
 @register.simple_tag
-def projectroles_version():
+def core_version():
     return projectroles.__version__
 
 

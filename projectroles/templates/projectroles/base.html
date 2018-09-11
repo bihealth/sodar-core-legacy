@@ -96,11 +96,13 @@
 
       {# Footer #}
       {% template_exists 'include/_footer.html' as footer_exists %}
-      {% if footer_exists %}
-        <footer class="sodar-footer">
+      <footer class="sodar-footer">
+        {% if footer_exists %}
           {% include 'include/_footer.html' %}
-        </footer>
-      {% endif %}
+        {% else %}
+          {% include 'projectroles/_footer.html' %}
+        {% endif %}
+      </footer>
 
      </div> <!-- /sodar-app-container -->
 
