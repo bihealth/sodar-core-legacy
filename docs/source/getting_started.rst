@@ -1,37 +1,55 @@
 Getting Started
 ^^^^^^^^^^^^^^^
 
-Basic concepts of SODAR Projectroles usage and/or development are detailed in
-this document.
+Basic concepts of SODAR Core apps are detailed in this document.
+
+**NOTE:** the display of this document in Gitlab is incomplete and all listings
+will be missing. Please click "display source" if you want to read this in
+Gitlab.
 
 
 Repository Contents
 ===================
 
-The following packages are included in the ``sodar_projectroles`` repository:
+The following packages will be installed when including ``django-sodar-core``
+in your project:
+
+- **projectroles**: The required base app for project access management and
+  dynamic project content inclusion
+- **userprofile**: User profile app (requires projectroles)
+
+The following packages are included in the repository for development and
+as examples:
 
 - **config**: Example Django site configuration
 - **docs**: Usage and development documentation
-- **example_project_app**: Example projectroles-enabled Django project app
+- **example_project_app**: Example SODAR Core compatible project app
 - **example_site**: Example/development Django site
-- **example_site_app**: Example Projectroles-enabled general Django app
-- **projectroles**: The projectroles app itself
-- **requirements**: Requirements for the projectroles app and development
-- **user_profile**: User profile app (installed with projectroles)
+- **example_site_app**: Example SODAR Core compatible site-wide app
+- **requirements**: Requirements for SODAR Core  and development
 - **utility**: Setup scripts for development
 
 
-Projectroles Basics
-===================
+The Projectroles App
+====================
 
-Projectroles provides the following functionalities for a Django-based web site.
+Projectroles provides critical functionalities for a SODAR-based Django web
+site, including project access management, dynamic content including with
+django-plugins, models and tools for building SODAR-compatible apps plus a
+default template and CSS layout.
+
+Other Django apps which intend to use the aforementioned functionalities depend
+on projectroles. While the Django app configuration can be dynamic, having
+projectroles installed is **mandatory** for working with the SODAR project and
+app structure.
 
 Projects
 --------
 
 The projectroles app groups project-specific data, user access roles and other
 features into **projects** and **categories**. These can be nested in a tree
-structure with the *category* type working as a container for sub-projects.
+structure with the *category* type working as a container for sub-projects with
+no project content of its own.
 
 User Roles in Projects
 ----------------------
@@ -125,13 +143,21 @@ templates and a base layout which can be used or adapted as needed. See the
 usage and development documentation for more details.
 
 
+The Userprofile App
+===================
+
+The userprofile app is a site app, which currently provides a user profile view
+for Projectroles-compatible Django users. It will later be expanded to cover
+user-specific settings for SODAR-based sites.
+
+
 Requirements
 ============
 
-Major requirements for integrating the projectroles app into your Django site
-and/or participating in development are listed below. For a complete requirement
-list, see the ``requirements`` and ``utility`` directories in the repository.
-Listed with minimum versions supported.
+Major requirements for integrating projectroles and other SODAR Core apps into
+your Django site and/or participating in development are listed below. For a
+complete requirement list, see the ``requirements`` and ``utility`` directories
+in the repository. Listed with minimum versions supported.
 
 - Python 3.5
 - Django 1.11.x (**NOTE:** 2.x not currently supported)
@@ -140,4 +166,5 @@ Listed with minimum versions supported.
 - JQuery 3.2.1
 - Shepherd 1.8.1 with Tether 1.4.4
 - Clipboard.js 2.0.0
-- DataTables 1.10.18 with JQuery UI, FixedColumns, FixedHeader, Buttons, KeyTables
+- DataTables 1.10.18 with JQuery UI, FixedColumns, FixedHeader, Buttons,
+  KeyTables

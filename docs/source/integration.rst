@@ -1,11 +1,8 @@
 Integration Guide
 ^^^^^^^^^^^^^^^^^
 
-.. warning::
-   Under construction!
-
-This document provides instructions and guidelines for integrating the SODAR
-Projectroles app into your Django site.
+This document provides instructions and guidelines for integrating the
+Projectroles app and other SODAR Core apps into your Django site.
 
 **NOTE:** the display of this document in Gitlab is incomplete and all listings
 will be missing. Please click "display source" if you want to read this in
@@ -23,9 +20,9 @@ recommended to use `cookiecutter-django <https://github.com/pydanny/cookiecutter
 to set up your Django site.
 
 .. warning::
-   Currently, SODAR Projectroles only supports Django 1.11.x, while the latest
-   versions of Cookiecutter set up Django 2.0.x by default. It is strongly
-   recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
+   Currently, SODAR Core only supports Django 1.11.x, while the latest versions
+   of Cookiecutter set up Django 2.0.x by default. It is strongly recommended to
+   use Django 1.11 LTS for time being. Compatibility with 2.0 and
    upwards is not guaranteed! Integration into a
    `1.11 release<https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
    of cookiecutter-django has been tested and verified to be working.
@@ -43,57 +40,59 @@ requirements clash between projectroles and your site.
 .. warning::
    The rest of this documentation assumes that the project has been set up using
    `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_. If
-   your Django site has not been created using it, file structures and settings
-   variables may differ.
+   your Django site has not been created with the cookiecutter, e.g. directory
+   structures and settings variables may differ.
 
 
 Installation
 ============
 
-First, add the projectroles and djangoplugins package requirements into your
-``requirements/base.txt`` file.
+First, add the django-sodar-core and djangoplugins package requirements into
+your ``requirements/base.txt`` file.
 
-At the time of writing the projectroles package is in development, so it is
-recommended to clone a specific commit before we reach a stable 0.1.0 release.
+.. note::
+   At the time of writing the SODAR Core package is in development, so it is
+   recommended to clone a specific commit before we reach a stable 0.1.0
+   release.
 
 Add the following rows into your ``base.txt`` file:
 
 .. code-block::
    -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-   -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_projectroles.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-projectroles
+   -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-core
 
-Install the requirements now containing the projectroles package:
+Install the requirements now containing the required packages:
 
 .. code-block::
    $ pip -r requirements/base.txt
 
-Projectroles should now be installed to be used with your Django site and we can
-move on to configure your Django site to run and support the projectroles app.
+SODAR Core apps and django-plugins should now be installed to be used with your
+Django site.
 
 .. hint::
    You can always refer to ``example_site`` in the projectroles repository for
-   a working example of a Cookiecutter-based Django site integrating
-   projectroles. However, note that some aspects of the site configuration may
-   vary depending on the used cookiecutter-django version.
+   a working example of a Cookiecutter-based Django site integrating SODAR Core.
+   However, note that some aspects of the site configuration may vary depending
+   on the used cookiecutter-django version used on your site.
 
 
 Django Settings
 ===============
 
 You need to modify your default Django settings file. Usually this is found
-within your site under ``config/settings/base.py``. For older sites the file
-name may also be ``common.py``. Naturally, you should make sure no settings in
-other configuration files conflict with ones set here.
+within your site under ``config/settings/base.py``. For sites created with an
+older cookiecutter-django version the file name may also be ``common.py``.
+Naturally, you should make sure no settings in other configuration files
+onflict with ones set here.
 
 For values retrieved from environment variables, make sure to configure your env
 accordingly.
 
-
 Site Package and Paths
 ----------------------
 
-Modify the definitions at the start of the configuration as
-follows (substitute {SITE_NAME} with the name of your site package).
+Modify the definitions at the beginning of ``base.py`` as follows (substitute
+{SITE_NAME} with the name of your site package).
 
 .. code-block::
    import environ
@@ -118,20 +117,25 @@ following lines need to be included in the list:
        'rest_framework',
        'knox',
        'projectroles.apps.ProjectrolesConfig',
-       'user_profile.apps.UserprofileConfig',
+       'userprofile.apps.UserprofileConfig',
    ]
 
 Database
 --------
 
-Under ``DATABASES``, set the following value:
+Under ``DATABASES``, it is recommended to set the following value:
 
 .. code-block::
    DATABASES['default']['ATOMIC_REQUESTS'] = False
 
 .. note::
    If this conflicts with your existing set up, you can modify the code in your
-   other apps to use e.g. ``@transaction.atomic``
+   other apps to use e.g. ``@transaction.atomic``.
+
+.. note::
+   This setting mostly is used for the ``sodar_taskflow`` transactions supported
+   by projectroles but not commonly used, so having this setting as True *may*
+   cause no issues. However, it is not officially supported at this time.
 
 Templates
 ---------
@@ -163,10 +167,13 @@ Modify ``AUTHENTICATION_BACKENDS`` to contain the following:
 
 .. note::
    The default setup by cookiecutter-django adds the ``allauth`` package. This
-   can be left out of the project as it mostly provides adapters for e.g.
-   social media account logins.
+   can be left out of the project if not needed, as it mostly provides adapters
+   for e.g. social media account logins. If removing allauth, you can also
+   remove unused settings variables starting with ``ACCOUNT_*``.
 
 It is also recommended to set the value of ``LOGIN_REDIRECT_URL`` as follows:
+
+**TODO:** This may have been deprecated, check.
 
 .. code-block::
    LOGIN_REDIRECT_URL = 'home'
@@ -303,15 +310,17 @@ leave the "secondary LDAP server" values unset.
 User Configuration
 ==================
 
-In order for projectroles to work, you need to extend the default user model.
+In order for SODAR Core apps to work on your Django site, you need to extend the
+default user model.
 
 Extending the User Model
 ------------------------
 
 In a cookiecutter-django project, an extended user model should already exist
-in ``{SITE_NAME}/users/models.py``. The abstract model provided by projectroles
-provides the same model with critical additions, most notably the ``omics_uuid``
-field used as an unique identifier for SODAR objects including users.
+in ``{SITE_NAME}/users/models.py``. The abstract model provided by the
+projectroles app provides the same model with critical additions, most notably
+the ``omics_uuid`` field used as an unique identifier for SODAR objects
+including users.
 
 If you have not added any of your own modifications to the model, you can simply
 replace the existing model extension with the following code:
@@ -346,7 +355,8 @@ on how to create the required migrations.
 Synchronizing User Groups for Existing Users
 --------------------------------------------
 
-To set up groups for existing users, run the ``syncgroups`` management command.
+To set up user groups for existing users, run the ``syncgroups`` management
+command.
 
 .. code-block::
    ./manage.py syncgroups
@@ -354,10 +364,9 @@ To set up groups for existing users, run the ``syncgroups`` management command.
 User Profile Site App
 ---------------------
 
-The ``user_profile`` site app package is installed together with projectroles.
-It adds a user profile page in the user dropdown. Use of the app is not
-mandatory but recommended, unless you are already using some other user profile
-app.
+The ``userprofile`` site app is installed with SODAR Core. It adds a user
+profile page in the user dropdown. Use of the app is not mandatory but
+recommended, unless you are already using some other user profile app.
 
 Add Login Template
 ------------------
@@ -385,7 +394,7 @@ site.
        # ...
        url(r'api/auth/', include('knox.urls')),
        url(r'^project/', include('projectroles.urls')),
-       url(r'^user/', include('user_profile.urls')),
+       url(r'^user/', include('userprofile.urls')),
    ]
 
 If you intend to use projectroles views and templates as the basis of your site
@@ -426,12 +435,12 @@ base template for your site.
 
 .. note::
    CSS and Javascript includes in the example base.html are **mandatory** for
-   the Projectroles views and functionalities.
+   Projectroles-based views and functionalities.
 
 .. note::
    The container structure defined in the example base.html, along with
-   including the ``STATIC/projectroles/css/project.css`` are **mandatory** for
-   the Projectroles views to work without modifications.
+   including the ``{STATIC}/projectroles/css/project.css`` are **mandatory** for
+   Projectroles-based views to work without modifications.
 
 
 Customizing Your Site
@@ -445,8 +454,8 @@ Project CSS
 While it is strongly recommended to use the Projectroles layout and styles,
 there are of course many possibilities for customization.
 
-If some of the CSS definitions in ``STATIC/projectroles/css/project.css`` do not
-suit your purposes, it is of course possible to override them in your own
+If some of the CSS definitions in ``{STATIC}/projectroles/css/project.css`` do
+not suit your purposes, it is of course possible to override them in your own
 includes. It is still recommended to include the *"Flexbox page setup"* section
 as is.
 
@@ -460,7 +469,8 @@ When doing this, it is possible to include elements from the default title bar
 separately:
 
 - Search form: ``projectroles/_site_titlebar_search.html``
-- Site app and user operation dropdown: ``projectroles/_site_titlebar_dropdown.html``
+- Site app and user operation dropdown:
+  ``projectroles/_site_titlebar_dropdown.html``
 
 See the templates themselves for further instructions.
 
@@ -468,10 +478,11 @@ See the templates themselves for further instructions.
 Site Icon
 ---------
 
-An optional site icon can be placed into ``STATIC/images/logo_navbar.png`` to be
-displayed in the default Projectroles title bar.
+An optional site icon can be placed into ``{STATIC}/images/logo_navbar.png`` to
+be displayed in the default Projectroles title bar.
 
 Footer
 ------
 
-Footer content can be specified in ``{SITE_NAME}/templates/include/_footer.html``.
+Footer content can be specified in the optional template file
+``{SITE_NAME}/templates/include/_footer.html``.

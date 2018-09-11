@@ -2,8 +2,8 @@ Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 This document details instructions and guidelines for developing Django project
-apps to be used with the Projectroles framework, as well as modifying existing
-apps into project apps.
+apps to be used with the Projectroles-based SODAR Core framework. This also
+applies for modifying existing apps into project apps.
 
 **NOTE:** the display of this document in Gitlab is incomplete and all listings
 will be missing. Please click "display source" if you want to read this in
@@ -159,6 +159,24 @@ your views to add projectroles functionality.
 Templates
 =========
 
+General Template Structure
+--------------------------
+
+**TODO**
+
+Specific Views to be Implemented
+--------------------------------
+
+**TODO**
+
+Rules
+-----
+
+**TODO**
+
+Template Tags
+-------------
+
 **TODO**
 
 
@@ -178,7 +196,6 @@ found in projectroles and they can be extended within your app if needed.
        'example_project_app.view_data',
        rules.is_superuser | pr_rules.is_project_owner |
        pr_rules.is_project_delegate | pr_rules.is_project_contributor |
-       pr_rules.is_project_guest)
        pr_rules.is_project_guest)
 
 

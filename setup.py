@@ -50,10 +50,10 @@ CHANGELOG = open(
     os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')).read()
 
 setup(
-    name='django-sodar-projectroles',
+    name='django-sodar-core',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="""SODAR project and role management""",
+    description="""SODAR project management and core tools""",
     long_description=README + '\n\n' + CHANGELOG,
     author='Mikko Nieminen',
     author_email='mikko.nieminen@bihealth.de',
@@ -74,6 +74,7 @@ setup(
         'Operating System :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',

@@ -1,5 +1,5 @@
 """
-Django settings for the SODAR Projectroles Example project.
+Django settings for the SODAR Core Example project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
@@ -65,7 +65,7 @@ LOCAL_APPS = [
     # Custom users app
     'example_site.users.apps.UsersConfig',
 
-    # Projectroles itself
+    # SODAR Projectroles app
     'projectroles.apps.ProjectrolesConfig',
 
     # User Profile site app
@@ -131,7 +131,7 @@ MANAGERS = ADMINS
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
 DATABASES = {
-    'default': env.db('DATABASE_URL', default='postgres:///sodar_projectroles'),
+    'default': env.db('DATABASE_URL', default='postgres:///sodar_core'),
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = False
 
@@ -367,10 +367,10 @@ LOGGING = set_logging(DEBUG)
 # General site settings
 # ------------------------------------------------------------------------------
 
-SITE_TITLE = 'SODAR Projectroles Example Site'
+SITE_TITLE = 'SODAR Core Example Site'
 SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
 SITE_INSTANCE_TITLE = env.str(
-    'SITE_INSTANCE_TITLE', 'SODAR Projectroles Example')
+    'SITE_INSTANCE_TITLE', 'SODAR Core Example')
 
 
 # Local App Settings
@@ -394,5 +394,5 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 
 # Settings for HTTP AuthBasic
-BASICAUTH_REALM = 'Log in with user@CHARITE or user@MDC-BERLIN and your password.'
+BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
 BASICAUTH_DISABLE = False
