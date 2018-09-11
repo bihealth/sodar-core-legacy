@@ -69,7 +69,7 @@ LOCAL_APPS = [
     'projectroles.apps.ProjectrolesConfig',
 
     # User Profile site app
-    'user_profile.apps.UserprofileConfig',
+    'userprofile.apps.UserprofileConfig',
 
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',

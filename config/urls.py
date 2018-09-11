@@ -29,7 +29,7 @@ urlpatterns = [
     url(r'^project/', include('projectroles.urls')),
 
     # User Profile URLs
-    url(r'^user/', include('user_profile.urls')),
+    url(r'^user/', include('userprofile.urls')),
 
     # Example project app URLs
     url(r'^app_example/', include('example_project_app.urls')),

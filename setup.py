@@ -60,7 +60,7 @@ setup(
     url='',
     packages=[
         'projectroles',
-        'user_profile'
+        'userprofile'
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.txt'),

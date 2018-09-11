@@ -2,7 +2,7 @@ from django.conf.urls import url
 
 from . import views
 
-app_name = 'user_profile'
+app_name = 'userprofile'
 
 urlpatterns = [
     url(

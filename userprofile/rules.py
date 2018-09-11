@@ -18,5 +18,5 @@ import rules
 
 # Allow viewing user detail
 rules.add_perm(
-    'user_profile.view_detail',
+    'userprofile.view_detail',
     rules.is_authenticated)

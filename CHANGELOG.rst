@@ -28,7 +28,7 @@ Added
     - ``projectroles_version()`` in common template tags
 
 - **Userprofile**
-    - Site app ``user_profile`` with user details
+    - Add site app ``userprofile`` with user details
     - Display user UUID in user profile
 
 Changed
