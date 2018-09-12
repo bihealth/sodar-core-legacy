@@ -282,7 +282,7 @@ project app templates. Just start your template with the following line:
 
 .. code-block:: django
 
-   {% extends 'projectroles/project_base.html' %}
+    {% extends 'projectroles/project_base.html' %}
 
 The following **template blocks** are available for overriding or extending:
 
@@ -296,21 +296,21 @@ Recommended CSS classes for wrapping your page title and actual content:
 
 .. code-block:: html
 
-   <div class="row sodar-subtitle-container">
-     <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
-   </div>
+    <div class="row sodar-subtitle-container">
+      <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
+    </div>
 
-   <div class="container-fluid sodar-page-container">
-     <p>Content goes here!</p>
-   </div>
+    <div class="container-fluid sodar-page-container">
+      <p>Content goes here!</p>
+    </div>
 
 See ``example_project_app/example.html`` for a minimal commented template example.
 
 .. hint::
 
-   If you include some controls on your ``sodar-subtitle-container`` class and
-   want it to remain sticky on top of the page while scrolling, add the
-   ``bg-white sticky-top`` classes to the element.
+    If you include some controls on your ``sodar-subtitle-container`` class and
+    want it to remain sticky on top of the page while scrolling, add the
+    ``bg-white sticky-top`` classes to the element.
 
 Rules
 -----
@@ -319,8 +319,8 @@ To control user access within a template, just do it as follows:
 
 .. code-block:: django
 
-   {% load rules %}
-   {% has_perm 'app.do_something' request.user project as can_do_something %}
+    {% load rules %}
+    {% has_perm 'app.do_something' request.user project as can_do_something %}
 
 This checks if the current user from the HTTP request has permission for
 ``app.do_something`` in the current project retrieved from the page context.
@@ -334,7 +334,7 @@ template as follows:
 
 .. code-block:: django
 
-   {% load projectroles_common_tags %}
+    {% load projectroles_common_tags %}
 
 
 Specific Views and Templates

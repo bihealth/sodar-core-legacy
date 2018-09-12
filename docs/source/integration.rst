@@ -60,14 +60,14 @@ into your ``requirements/base.txt`` file.
 
 Add the following rows into your ``base.txt`` file:
 
-.. code-block:: shell
+.. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
     -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
-.. code-block:: shell
+.. code-block:: console
 
     $ pip -r requirements/base.txt
 
@@ -356,7 +356,7 @@ already), you can add them in this model.
 
 After updating the user model, create and run database migrations.
 
-.. code-block:: shell
+.. code-block:: console
 
    $ ./manage.py makemigrations
    $ ./manage.py migrate
@@ -379,7 +379,7 @@ Synchronizing User Groups for Existing Users
 To set up user groups for existing users, run the ``syncgroups`` management
 command.
 
-.. code-block:: shell
+.. code-block:: console
 
    $ ./manage.py syncgroups
 
