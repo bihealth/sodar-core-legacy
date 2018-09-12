@@ -11,7 +11,7 @@ Welcome to the SODAR Core documentation!
 This documentation provides instructions for integration, usage and development
 of reusable SODAR Core apps for projects built on the Django web server.
 
-SODAR (System for Omics Data Access and Retrieval) is a specialized project for
+SODAR (System for Omics Data Access and Retrieval) is a specialized system for
 managing data in omics research projects.
 
 This repository containes reusable and non-domain-specific apps making up the
