@@ -10,8 +10,7 @@ Site App Development
 This document details instructions and guidelines for developing **site apps**
 to be used with the SODAR Core framework.
 
-**NOTE:** the display of this document in Gitlab is incomplete and all listings
-will be missing. Please click "display source" if you want to read this in
-Gitlab.
+**NOTE:** When viewing this document in GitLab critical content will by default
+be missing. Please click "display source" if you want to read this in GitLab.
 
 **TODO**

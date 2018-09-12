@@ -7,9 +7,8 @@ This document details instructions and guidelines for developing
 **project apps** to be used with the SODAR Core framework. This also applies for
 modifying existing apps into project apps.
 
-**NOTE:** the display of this document in Gitlab is incomplete and all listings
-will be missing. Please click "display source" if you want to read this in
-Gitlab.
+**NOTE:** When viewing this document in GitLab critical content will by default
+be missing. Please click "display source" if you want to read this in GitLab.
 
 .. hint::
 
@@ -20,17 +19,17 @@ Gitlab.
 Project App Basics
 ==================
 
-Characteristics of a project app:
+**Characteristics** of a project app:
 
 - Provides a functionality related to a project
-- Is dynamically included in project views by Projectroles using plugins
-- Uses the project-based role and access control provided by Projectroles
-- Is included in the projectroles search
+- Is dynamically included in project views by projectroles using plugins
+- Uses the project-based role and access control provided by projectroles
+- Is included in projectroles search (optionally)
 - Provides a dynamically included element (e.g. content overview) for the
   project details page
-- Appears in the project menu sidebar in the default Projectroles templates
+- Appears in the project menu sidebar in the default projectroles templates
 
-Requirements for setting up a project app:
+**Requirements** for setting up a project app:
 
 - Implement project relations and SODAR UUIDs in the app's Django models
 - Use provided mixins, keyword arguments and conventions in views
@@ -46,9 +45,9 @@ Prerequisites
 =============
 
 This documentation assumes you have a Django project with Projectroles set up
-(see ``integration.rst``). The instructions can be applied either to modify a
-previously existing app, or to set up a fresh app generated normally with
-``./manage.py startapp``.
+(see :ref:`integration`). The instructions can be applied either to modify a
+previously existing app, or to set up a fresh app generated in the standard way
+with ``./manage.py startapp``.
 
 It is also assumed that apps are more or less created according to best
 practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the
@@ -60,33 +59,39 @@ Models
 ======
 
 In order to hook up your Django models into projects, there are two
-requirements.
+requirements: implementing a **project foreign key** and a **UUID field**.
 
-Project ForeignKey
-------------------
+Project Foreign Key
+-------------------
 
 Add a ``ForeignKey`` field for the ``projectroles.models.Project`` model,
 either called ``project`` or accessible with a ``get_project()`` function
 implemented in your model.
 
-Object UUID
------------
+.. note::
 
-To provide a unique identifier for your object in the SODAR context, add a
+    If your app contains a complex model structure with e.g. nested models using
+    foreign keys, it's not necessary to add this to all your models, just the
+    topmost one(s) used e.g. in URL kwargs.
+
+Model UUID Field
+----------------
+
+To provide a unique identifier for objects in the SODAR context, add a
 ``UUIDField`` with the name of ``omics_uuid`` into your model.
 
 .. note::
 
-   Projectroles links to objects in URLs, links and forms using UUIDs instead of
-   database private keys. This is strongly recommended for all Django models in
-   apps using the projectroles framework.
+    Projectroles links to objects in URLs, links and forms using UUIDs instead
+    of database private keys. This is strongly recommended for all Django models
+    in apps using the projectroles framework.
 
 .. note::
 
-   When updating an existing Django model with an existing database, the
-   ``omics_uuid`` field needs to be populated. See
-   `instructions in the official Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
-   on how to create the required migrations.
+    When updating an existing Django model with an existing database, the
+    ``omics_uuid`` field needs to be populated. See
+    `instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+    on how to create the required migrations.
 
 Model Example
 -------------
@@ -115,7 +120,7 @@ Below is an example of a projectroles-compatible Django model:
 Rules File
 ==========
 
-Create a file ``rules.py`` in your app directory. You should declare at least
+Create a file ``rules.py`` in your app's directory. You should declare at least
 one basic rule for enabling a user to view the app data for the project. This
 can be named e.g. ``{APP_NAME}.view_data``. Predicates for the rules can be
 found in projectroles and they can be extended within your app if needed.
@@ -135,8 +140,8 @@ found in projectroles and they can be extended within your app if needed.
 ProjectAppPlugin
 ================
 
-Create a file ``plugins.py`` in your app directory. In the file, declare
-a ``ProjectAppPlugin`` class implementing
+Create a file ``plugins.py`` in your app's directory. In the file, declare a
+``ProjectAppPlugin`` class implementing
 ``projectroles.plugins.ProjectAppPluginPoint``. Within the class, implement
 member variables and functions as instructed in comments and docstrings.
 
@@ -150,16 +155,16 @@ member variables and functions as instructed in comments and docstrings.
         name = 'example_project_app'
         title = 'Example Project App'
         urls = urlpatterns
-        # ..
+        # ...
 
 The following variables and functions are **mandatory**:
 
 - ``name``: App name (ideally should correspond to the app package name)
 - ``title``: Printable app title
-- ``urls``: Urlpatterns (usually from the app's ``urls.py`` file)
+- ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
 - ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
 - ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
-  Must take the project ``omics_uuid`` as a kwarg named ``project``)
+  **must** take the project ``omics_uuid`` as a kwarg named ``project``)
 - ``description``: Verbose description of app
 - ``app_permission``: Basic permission for viewing app data in project (see
   above)
@@ -188,16 +193,16 @@ Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
 the project app plugin in the Django databse with the following command:
 
-.. code-block:: shell
+.. code-block:: console
 
-   $ ./manage.py syncplugins
+    $ ./manage.py syncplugins
 
 You should see the following output to ensure the plugin was successfully
 registered:
 
-.. code-block:: shell
+.. code-block:: console
 
-   Registering Plugin for {APP_NAME}.plugins.ProjectAppPlugin
+    Registering Plugin for {APP_NAME}.plugins.ProjectAppPlugin
 
 For info on how to implement the specific required views/templates, see the end
 of this document.
@@ -206,8 +211,8 @@ of this document.
 Views
 =====
 
-Certain guidelines must be followed in developing views to utilize the
-projectroles framework.
+Certain guidelines must be followed in developing views for them to be
+successfully used by projectroles.
 
 URL Keyword Arguments
 ---------------------
@@ -222,9 +227,9 @@ the following conditions*:
   model, which must contain a member field ``project`` which is a foreign key
   for a ``Projectroles.models.Project`` object. The kwarg **must** be named
   after the Django model of the referred object (in lowercase).
-- Same as above, but corresponding to a Django model which provides a
-  ``get_project()`` function which returns a ``Projectroles.models.Project``
-  object.
+- Same as above, but the Django model provides a
+  ``get_project()`` function which returns (you guessed it) a
+  ``Projectroles.models.Project`` object.
 
 Examples:
 
@@ -237,7 +242,7 @@ Examples:
            view=views.ProjectDetailView.as_view(),
            name='detail',
        ),
-       # RoleAssignment model has a "project" member so that is OK
+       # RoleAssignment model has a "project" member which is also OK
        url(
            regex=r'^members/update/(?P<roleassignment>[0-9a-f-]+)$',
            view=views.RoleAssignmentUpdateView.as_view(),
@@ -289,7 +294,7 @@ The following **template blocks** are available for overriding or extending:
 
 Recommended CSS classes for wrapping your page title and actual content:
 
-.. code-block:: django
+.. code-block:: html
 
    <div class="row sodar-subtitle-container">
      <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
@@ -392,12 +397,12 @@ See the signature of ``search()`` in
 - ``user``
     - User object for user initiating search
 - ``search_type``
-    - The type of object to search for (String, optional)
+    - The type of object to search for (string, optional)
     - Used to restrict search to specific types of objects
     - You can specify supported types in the plugin's ``search_types`` list.
     - Examples: ``file``, ``sample``..
 - ``keywords``
-    - Special search keywords
+    - Special search keywords, e.g. "exact"
     - **NOTE:** Currently not implemented
 
 .. note::
@@ -465,3 +470,11 @@ Example of a simple results template, in case of a single ``all`` category:
     {% include 'projectroles/_search_footer.html' %}
 
   {% endif %}
+
+
+TODO
+====
+
+- Naming conventions
+- Template design guidelines
+- Examples of common things (e.g. forms)

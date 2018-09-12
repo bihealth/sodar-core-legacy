@@ -5,19 +5,18 @@ Getting Started
 
 Basic concepts of SODAR Core apps are detailed in this document.
 
-**NOTE:** the display of this document in Gitlab is incomplete and all listings
-will be missing. Please click "display source" if you want to read this in
-Gitlab.
+**NOTE:** When viewing this document in GitLab critical content will by default
+be missing. Please click "display source" if you want to read this in GitLab.
 
 
 Repository Contents
 ===================
 
-The following packages will be installed when including ``django-sodar-core``
+The following Django apps will be installed when including ``django-sodar-core``
 in your project:
 
 - **projectroles**: The required base app for project access management and
-  dynamic project content inclusion
+  dynamic app content management
 - **userprofile**: User profile app (requires projectroles)
 
 The following packages are included in the repository for development and
@@ -35,13 +34,13 @@ as examples:
 The Projectroles App
 ====================
 
-Projectroles provides critical functionalities for a SODAR-based Django web
-site, including project access management, dynamic content including with
-django-plugins, models and tools for building SODAR-compatible apps plus a
+The ``projectroles`` app is the base app for building a SODAR Core based Django
+site. It provides a framework for project access management, dynamic content
+including with django-plugins, models and tools for SODAR-compatible apps plus a
 default template and CSS layout.
 
-Other Django apps which intend to use the aforementioned functionalities depend
-on projectroles. While the Django app configuration can be dynamic, having
+Other Django apps which intend to use aforementioned functionalities depend on
+projectroles. While the Django app configuration can be dynamic, having
 projectroles installed is **mandatory** for working with the SODAR project and
 app structure.
 
@@ -60,7 +59,7 @@ User access to projects is granted by per-project assigning of roles. In each
 project, a user can have one role at a time. New types of roles can be defined
 by extending the default model's database table.
 
-The current setup of role types used in SODAR sites:
+The default setup of role types used in SODAR sites:
 
 - **project owner**
     - Full read/write access to project data and roles
@@ -78,6 +77,9 @@ The current setup of role types used in SODAR sites:
 - **project guest**
     - Read only access to project data
 
+.. note::
+    A Django **superuser** status overrides project role access.
+
 The projectroles app provides the following features for managing user roles in
 projects:
 
@@ -86,17 +88,19 @@ projects:
 - Importing members from other projects (**NOTE:** disabled pending update)
 - Automated emailing of users regarding role changes
 - **TODO:** Mirroring user roles to/from an external projectroles-enabled site
+  (will be added in v0.3)
 
-**NOTE:** Currently, only site admins can assign owner roles for top-level
-projects.
+.. note::
+    Currently, only superusers can assign owner roles for top-level categories.
 
 Rule System
 -----------
 
-Projectroles uses rules to manage permissions for accessing data, apps and
-functionalities within projects based on the user role. Predicates for project
-roles are provided by the projectroles app and can be used and extended for
-developing rules for your other project-specific Django apps.
+Projectroles uses the `django-rules <https://github.com/dfunckt/django-rules>`_
+package to manage permissions for accessing data, apps and functionalities
+within projects based on the user role. Predicates for project roles are
+provided by the projectroles app and can be used and extended for developing
+rules for your other project-specific Django apps.
 
 Plugins
 -------
@@ -107,14 +111,14 @@ currently included:
 
 - **Project apps**: Apps tied to specific projects, making use of project roles,
   rules and other projectroles functionalities.
-- **Site apps**: Non-project-specific Django apps
-- **Backend apps**: Backend Django apps imported and used dynamically by
-  projectroles-enabled apps for e.g. connectivity to external resources or
-  accessing other Django apps' backend features.
+- **Site apps**: Site-wide Django apps which are not project-specific
+- **Backend apps**: Backend apps without GUI entry points or (usually) views,
+  imported and used dynamically by other SODAR-based apps for e.g. connectivity
+  to external resources.
 
 Existing apps can be modified to conform to the plugin structure by implementing
 certain variables, functions, views and templates within the app. For more
-details, see the development section.
+details, see the app development documents.
 
 Other Features
 --------------
@@ -135,6 +139,8 @@ Other features in the projectroles app:
   unless backend apps for Taskflow and Timeline are integrated in the Django
   site
 
+**TODO**: Describe these in :ref:`usage`.
+
 Templates and Styles
 --------------------
 
@@ -142,7 +148,7 @@ Projectoles provides views and templates for all GUI-related functionalities
 described above. The templates utilize the plugin framework to provide content
 under projects dynamically. The project also provides default CSS stylings, base
 templates and a base layout which can be used or adapted as needed. See the
-usage and development documentation for more details.
+usage and app development documentation for more details.
 
 
 The Userprofile App

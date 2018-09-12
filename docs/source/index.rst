@@ -8,20 +8,26 @@
 Welcome to the SODAR Core documentation!
 ========================================
 
-This documentation provides instructions and guidelines for integration, usage
-and development of SODAR Projectroles Django app as well as other reusable core
-SODAR-based apps.
+This documentation provides instructions for integration, usage and development
+of reusable SODAR Core apps for projects built on the Django web server.
 
 SODAR (System for Omics Data Access and Retrieval) is a specialized project for
 managing data in omics research projects.
 
-This repository contains the core reusable and non-domain-specific apps of the
-system. These apps can be used for any application which requires project-based
-access and dynamic app management on a Django web site.
+This repository containes reusable and non-domain-specific apps making up the
+core of the SODAR system. These apps can be used for any Django application
+which wants to make use of the following features:
 
-**NOTE:** the display of this document in Gitlab is incomplete and all listings
-will be missing. Please click "display source" if you want to read this in
-Gitlab.
+- Project-based user access control
+- Dynamic app content management
+- Advanced project activity logging *(coming soon)*
+
+**NOTE:** When viewing this document in GitLab critical content will by default
+be missing. Please click "display source" if you want to read this in GitLab.
+
+**NOTE:** To view this document in the rendered form during development, run
+``make html`` in the ``docs`` directory of the repository. You can find the
+rendered HTML in ``docs/build``.
 
 .. toctree::
    :maxdepth: 2

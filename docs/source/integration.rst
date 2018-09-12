@@ -4,11 +4,10 @@ Integration
 ^^^^^^^^^^^
 
 This document provides instructions and guidelines for integrating the
-Projectroles app and other SODAR Core apps into your Django site.
+projectroles and other SODAR Core apps into your Django site.
 
-**NOTE:** the display of this document in Gitlab is incomplete and all listings
-will be missing. Please click "display source" if you want to read this in
-Gitlab.
+**NOTE:** When viewing this document in GitLab critical content will by default
+be missing. Please click "display source" if you want to read this in GitLab.
 
 
 Django Site Guidelines
@@ -19,14 +18,14 @@ New Django Site
 
 If you are *not* integrating projectroles into an existing Django site, it is
 recommended to use `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_
-to set up your Django site.
+to set up your site.
 
 .. warning::
 
    Currently, SODAR Core only supports Django 1.11.x, while the latest versions
    of cookiecutter-django set up Django 2.0.x by default. It is strongly
    recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
-   upwards is not guaranteed! Integration into a
+   upwards is not guaranteed! Integration into the latest
    `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
    of cookiecutter-django has been tested and verified to be working.
 
@@ -44,21 +43,20 @@ requirements clash between projectroles and your site.
 
    The rest of this documentation assumes that the project has been set up using
    `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_. If
-   your Django site has not been created with the cookiecutter, e.g. directory
-   structures and settings variables may differ.
+   it hasn't, e.g. directory structures and settings variables may differ.
 
 
 Installation
 ============
 
-First, add the django-sodar-core and djangoplugins package requirements into
-your ``requirements/base.txt`` file.
+First, add the ``django-sodar-core`` and ``djangoplugins`` package requirements
+into your ``requirements/base.txt`` file.
 
 .. note::
 
-    At the time of writing the SODAR Core package is in development, so it is
-    recommended to clone a specific commit before we reach a stable 0.1.0
-    release.
+    At the time of writing the SODAR Core package is in development, so you'll
+    need to install it from our GitLab, either by a release tag or a specific
+    commit.
 
 Add the following rows into your ``base.txt`` file:
 
@@ -81,26 +79,26 @@ Django site.
     You can always refer to ``example_site`` in the projectroles repository for
     a working example of a Cookiecutter-based Django site integrating SODAR Core.
     However, note that some aspects of the site configuration may vary depending
-    on the used cookiecutter-django version used on your site.
+    on the cookiecutter-django version used on your site.
 
 
 Django Settings
 ===============
 
-You need to modify your default Django settings file. Usually this is found
-within your site under ``config/settings/base.py``. For sites created with an
-older cookiecutter-django version the file name may also be ``common.py``.
-Naturally, you should make sure no settings in other configuration files
-onflict with ones set here.
+Next you need to modify your default Django settings file, usually located in
+``config/settings/base.py``. For sites created with an older cookiecutter-django
+version the file name may also be ``common.py``. Naturally, you should make sure
+no settings in other configuration files conflict with ones set here.
 
-For values retrieved from environment variables, make sure to configure your env
-accordingly.
+For values retrieved from environment variables, make sure to configure your
+env accordingly. For development and testing, using ``READ_DOT_ENV_FILE`` is
+recommended.
 
 Site Package and Paths
 ----------------------
 
-Modify the definitions at the beginning of ``base.py`` as follows (substitute
-{SITE_NAME} with the name of your site package).
+Modify the definitions at the beginning of ``base.py`` as follows. Substitute
+{SITE_NAME} with the name of your site package.
 
 .. code-block:: python
 
@@ -113,7 +111,7 @@ Apps
 ----
 
 Add projectroles and other required apps into ``THIRD_PARTY_APPS``. The
-following lines need to be included in the list:
+following apps need to be included in the list:
 
 .. code-block:: python
 
@@ -137,7 +135,7 @@ Under ``DATABASES``, it is recommended to set the following value:
 
 .. code-block:: python
 
-   DATABASES['default']['ATOMIC_REQUESTS'] = False
+    DATABASES['default']['ATOMIC_REQUESTS'] = False
 
 .. note::
 
@@ -157,7 +155,7 @@ Under ``TEMPLATES['OPTIONS']['context_processors']``, add the line:
 
 .. code-block:: python
 
-   'projectroles.context_processors.urls_processor',
+    'projectroles.context_processors.urls_processor',
 
 Email
 -----
@@ -166,8 +164,8 @@ Under ``EMAIL_CONFIGURATION``, add the following lines:
 
 .. code-block:: python
 
-   EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@example.com')
-   EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
+    EMAIL_SENDER = env('EMAIL_SENDER', default='noreply@example.com')
+    EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
 
 Authentication
 --------------
@@ -190,8 +188,6 @@ Modify ``AUTHENTICATION_BACKENDS`` to contain the following:
 
 It is also recommended to set the value of ``LOGIN_REDIRECT_URL`` as follows:
 
-**TODO:** This may have been deprecated, check.
-
 .. code-block:: python
 
    LOGIN_REDIRECT_URL = 'home'
@@ -199,11 +195,12 @@ It is also recommended to set the value of ``LOGIN_REDIRECT_URL`` as follows:
 Django REST Framework
 ---------------------
 
-Add the following structure to the configuration file:
+To enable ``djangorestframework`` API views and ``knox`` authentication, add the
+following to the configuration file:
 
 .. code-block:: python
 
-   REST_FRAMEWORK = {
+    REST_FRAMEWORK = {
         'DEFAULT_AUTHENTICATION_CLASSES': (
             'rest_framework.authentication.BasicAuthentication',
             'rest_framework.authentication.SessionAuthentication',
@@ -214,29 +211,29 @@ Add the following structure to the configuration file:
 General Site Settings
 ---------------------
 
-For display in Projectroles based templates, set the following variables to
+For display in projectroles based templates, set the following variables to
 relevant values.
 
 .. code-block:: python
 
-   SITE_TITLE = 'Name of Your Project'
-   SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
-   SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'Deployment Instance Name')
+    SITE_TITLE = 'Name of Your Project'
+    SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
+    SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'Deployment Instance Name')
 
 Projectroles Settings
 ---------------------
 
-Fill out Projectroles settings to fit your site. The settings variables are
+Fill out projectroles app settings to fit your site. The settings variables are
 explained below:
 
 * ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
-  Projectroles
-* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
-* ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending
+  projectroles (int)
+* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire (int)
+* ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
 * ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
-  users
+  users (int)
 * ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
-  display on one page
+  display on one page (int)
 
 Example:
 
@@ -253,8 +250,7 @@ Backend App Settings
 --------------------
 
 Add a variable to list enabled backend plugins implemented using
-``BackendPluginPoint``. For developing backend apps, see the ``development``
-documentation.
+``BackendPluginPoint``. For more information see :ref:`backend_app_dev`.
 
 .. code-block:: python
 
@@ -274,8 +270,8 @@ If you want to utilize LDAP/AD user logins as configured by projectroles, you
 can add the following configuration. Make sure to also add the related env
 variables to your configuration.
 
-The following lines are **optional**. If only using one LDAP/AD server, you can
-leave the "secondary LDAP server" values unset.
+The following lines are **optional**. Furthermore, if only using one LDAP/AD
+server, you can leave the "secondary LDAP server" values unset.
 
 .. code-block:: python
 
@@ -346,7 +342,7 @@ the ``omics_uuid`` field used as an unique identifier for SODAR objects
 including users.
 
 If you have not added any of your own modifications to the model, you can simply
-replace the existing model extension with the following code:
+**replace** the existing model extension with the following code:
 
 .. code-block:: python
 
@@ -374,7 +370,7 @@ Populating UUIDs for Existing Users
 
 When integrating projectroles into an existing site with existing users, the
 ``omics_uuid`` field needs to be populated. See
-`instructions in the official Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+`instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
 
 Synchronizing User Groups for Existing Users
@@ -459,14 +455,14 @@ Base Template for Your Django Site
 In order to make use of Projectroles views and templates, you should set the
 base template of your site accordingly in ``{SITE_NAME}/templates/base.html``.
 
-For a supported example, see ``templates/projectroles/base_site.html`` in the
-projectroles package. It is strongly recommended to use this as the base
-template for your site, either by extending it or copying the content into
-``{SITE_NAME}/templates/base.html`` and modifying it to suit your needs.
+For a supported example, see ``projectroles/base_site.html``. It is strongly
+recommended to use this as the base template for your site, either by extending
+it or copying the content into ``{SITE_NAME}/templates/base.html`` and modifying
+it to suit your needs.
 
 .. note::
 
-   CSS and Javascript includes in the example base.html are **mandatory** for
+   CSS and Javascript includes in ``site_base.html`` are **mandatory** for
    Projectroles-based views and functionalities.
 
 .. note::
