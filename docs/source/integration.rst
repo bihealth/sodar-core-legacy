@@ -57,14 +57,16 @@ into your ``requirements/base.txt`` file.
 
     At the time of writing the SODAR Core package is in development, so you'll
     need to install it from our GitLab, either by a release tag or a specific
-    commit.
+    commit. It is recommended to use either the most recent tagged release in
+    the `master` branch for production and the latest commit from the `dev`
+    branch for development.
 
 Add the following rows into your ``base.txt`` file:
 
 .. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@7ce3241639618ddad133d9a08621b8fe2baf0d87#egg=django-sodar-core
+    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@3707c33f2a08f74bfe366a2169b01a1dba32e8d3#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
@@ -161,7 +163,7 @@ Under ``TEMPLATES['OPTIONS']['context_processors']``, add the line:
 Email
 -----
 
-Under ``EMAIL_CONFIGURATION``, add the following lines:
+Under ``EMAIL_CONFIGURATION`` or ``EMAIL``, add the following lines:
 
 .. code-block:: python
 
