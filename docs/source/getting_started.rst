@@ -167,6 +167,8 @@ your Django site and/or participating in development are listed below. For a
 complete requirement list, see the ``requirements`` and ``utility`` directories
 in the repository. Listed with minimum versions supported.
 
+- Ubuntu Linux
+- Library requirements (see utility package or your cookiecutter-django site)
 - Python 3.5
 - Django 1.11.x (**NOTE:** 2.x not currently supported)
 - PostgreSQL 9.4 and psycopg2

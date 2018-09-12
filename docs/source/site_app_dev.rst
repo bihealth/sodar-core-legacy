@@ -105,6 +105,13 @@ allowed to access a view are properly redirected. Example:
         permission_required = 'example_site_app.view_data'
         template_name = 'example_site_app/example.html'
 
+.. note::
+
+    The entry point URL is not expected to have any URL kwargs in the current
+    implementation. If you intend to use a view which makes use of URL kwargs,
+    you may need to modify it into also accepting a request without any
+    parameters (e.g. displaying default content for the view).
+
 
 Templates
 =========

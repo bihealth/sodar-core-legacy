@@ -27,10 +27,11 @@ to set up your site.
    recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
    upwards is not guaranteed! Integration into the latest
    `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-   of cookiecutter-django has been tested and verified to be working.
+   of cookiecutter-django has been tested and verified to be working. However,
+   it is recommended to upgrade the Django version to at least 1.11.15.
 
 Make sure to set up a virtual Python environment for development with required
-packages.
+dependencies.
 
 Existing Django Site
 --------------------
@@ -69,7 +70,7 @@ Install the requirements now containing the required packages:
 
 .. code-block:: console
 
-    $ pip -r requirements/base.txt
+    $ pip install -r requirements/base.txt
 
 SODAR Core apps and django-plugins should now be installed to be used with your
 Django site.
@@ -269,6 +270,11 @@ LDAP/AD Configuration (optional)
 If you want to utilize LDAP/AD user logins as configured by projectroles, you
 can add the following configuration. Make sure to also add the related env
 variables to your configuration.
+
+.. note::
+    In order to support LDAP, make sure you have installed the dependencies from
+    ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``! For
+    more information see :ref:`sodar_core_dev`.
 
 The following lines are **optional**. Furthermore, if only using one LDAP/AD
 server, you can leave the "secondary LDAP server" values unset.

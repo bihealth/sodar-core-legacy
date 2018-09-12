@@ -18,6 +18,7 @@ Added
     - ``SITE_TITLE`` and ``SITE_INSTANCE_TITLE`` settings
     - ``SITE_PACKAGE`` setting for explicitly declaring site path for code
     - Documentation for integration and development
+    - Separate LDAP config in ``install_ldap_dependencies.sh`` and ``requirements/ldap.txt``
 
 - **Projectroles**
     - ``static_file_exists()`` and ``template_exists()`` helpers in common template tags

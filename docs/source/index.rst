@@ -11,6 +11,9 @@ Welcome to the SODAR Core documentation!
 This documentation provides instructions for integration, usage and development
 of reusable SODAR Core apps for projects built on the Django web server.
 
+SODAR and SODAR Core
+--------------------
+
 SODAR (System for Omics Data Access and Retrieval) is a specialized system for
 managing data in omics research projects.
 
@@ -27,7 +30,8 @@ be missing. Please click "display source" if you want to read this in GitLab.
 
 **NOTE:** To view this document in the rendered form during development, run
 ``make html`` in the ``docs`` directory of the repository. You can find the
-rendered HTML in ``docs/build``.
+rendered HTML in ``docs/build``. You will have to install system and Python
+dependencies for this to work, see :ref:`sodar_core_dev`.
 
 .. toctree::
    :maxdepth: 2
