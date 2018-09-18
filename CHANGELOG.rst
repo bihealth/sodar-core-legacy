@@ -8,11 +8,23 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Timeline**
+    - Add timeline app based on SODAR v0.3.2 (#2)
+
 Changed
 -------
 
 - **General**
     - Update integration documentation (#1)
+
+Fixed
+-----
+
+- **Timeline**
+    - User model access in ``timeline.api``
 
 
 v0.1.0 (2018-09-12)

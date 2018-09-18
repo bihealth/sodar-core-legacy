@@ -69,7 +69,9 @@ LOGGING['handlers']['console']['level'] = 'ERROR'
 
 
 # Plugin settings
-ENABLED_BACKEND_PLUGINS = []
+ENABLED_BACKEND_PLUGINS = [
+    'timeline_backend',
+]
 
 # Projectroles app settings
 PROJECTROLES_SEND_EMAIL = True
