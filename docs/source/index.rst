@@ -23,7 +23,7 @@ which wants to make use of the following features:
 
 - Project-based user access control
 - Dynamic app content management
-- Advanced project activity logging *(coming soon)*
+- Advanced project activity logging
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.

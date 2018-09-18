@@ -10,7 +10,7 @@ application which wants to make use of the following features:
 
 - Project-based user access control
 - Dynamic app content management
-- Advanced project activity logging *(coming soon)*
+- Advanced project activity logging
 
 This repository provides the following installable Django apps:
 
