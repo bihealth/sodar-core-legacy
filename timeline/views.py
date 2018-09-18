@@ -18,8 +18,7 @@ class ProjectTimelineView(
         ProjectPermissionMixin, ListView):
     """View for displaying files and folders for a project"""
     permission_required = 'timeline.view_timeline'
-
-    template_name = 'timeline/project_timeline.html'
+    template_name = 'timeline/timeline.html'
     model = ProjectEvent
     paginate_by = settings.TIMELINE_PAGINATION
 

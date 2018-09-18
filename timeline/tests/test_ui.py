@@ -60,7 +60,7 @@ class TestListView(
             (self.as_guest.user, 1)]
 
         url = reverse(
-            'timeline:project_timeline',
+            'timeline:list_project',
             kwargs={'project': self.project.omics_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
@@ -86,7 +86,7 @@ class TestListView(
             (self.as_guest.user, 1)]
 
         url = reverse(
-            'timeline:object_timeline',
+            'timeline:list_object',
             kwargs={
                 'project': self.project.omics_uuid,
                 'object_model': self.ref_obj.object_model,

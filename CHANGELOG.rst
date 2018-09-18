@@ -21,6 +21,8 @@ Changed
     - Update integration documentation (#1)
 - **Timeline**
     - Update CSS classes and overrides
+    - Rename list views to ``list_project`` and ``list_objects``
+    - Rename list template to ``timeline.html``
 
 Fixed
 -----

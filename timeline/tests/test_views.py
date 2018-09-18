@@ -70,7 +70,7 @@ class TestProjectListView(TestViewsBase):
         with self.login(self.user):
             response = self.client.get(
                 reverse(
-                    'timeline:project_timeline',
+                    'timeline:list_project',
                     kwargs={'project': self.project.omics_uuid}))
             self.assertEqual(response.status_code, 200)
 
@@ -92,7 +92,7 @@ class TestObjectListView(TestViewsBase):
         with self.login(self.user):
             response = self.client.get(
                 reverse(
-                    'timeline:object_timeline',
+                    'timeline:list_object',
                     kwargs={
                         'project': self.project.omics_uuid,
                         'object_model': self.ref_obj.object_model,

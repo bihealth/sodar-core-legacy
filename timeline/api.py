@@ -123,7 +123,7 @@ class TimelineAPI:
                     label=r)
 
                 # Get history link
-                history_url = reverse('timeline:object_timeline', kwargs={
+                history_url = reverse('timeline:list_object', kwargs={
                     'project': event.project.omics_uuid,
                     'object_model': ref_obj.object_model,
                     'object_uuid': ref_obj.object_uuid})
@@ -202,7 +202,7 @@ class TimelineAPI:
         :param obj: Django postgres database object
         :return: String
         """
-        return reverse('timeline:object_timeline', kwargs={
+        return reverse('timeline:list_object', kwargs={
             'project': project_uuid,
             'object_model': obj.__class__.__name__,
             'object_uuid': obj.omics_uuid})

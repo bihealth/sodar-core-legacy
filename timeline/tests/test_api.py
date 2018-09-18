@@ -238,7 +238,7 @@ class TestTimelineAPI(
         """Test get_object_url()"""
 
         expected_url = reverse(
-            'timeline:object_timeline',
+            'timeline:list_object',
             kwargs={
                 'project': self.project.omics_uuid,
                 'object_model': self.user_owner.__class__.__name__,
@@ -252,7 +252,7 @@ class TestTimelineAPI(
         """Test get_object_link()"""
 
         expected_url = reverse(
-            'timeline:object_timeline',
+            'timeline:list_object',
             kwargs={
                 'project': self.project.omics_uuid,
                 'object_model': self.user_owner.__class__.__name__,
