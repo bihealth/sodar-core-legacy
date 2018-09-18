@@ -1,4 +1,4 @@
-.. _sodar_core_dev:
+.. _dev_sodar_core:
 
 SODAR Core Development
 ^^^^^^^^^^^^^^^^^^^^^^

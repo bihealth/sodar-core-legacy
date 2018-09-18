@@ -1,4 +1,4 @@
-.. _project_app_dev:
+.. _dev_project_app:
 
 Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^

@@ -281,7 +281,7 @@ Backend App Settings
 --------------------
 
 Add a variable to list enabled backend plugins implemented using
-``BackendPluginPoint``. For more information see :ref:`backend_app_dev`.
+``BackendPluginPoint``. For more information see :ref:`dev_backend_app`.
 
 .. code-block:: python
 
@@ -306,7 +306,7 @@ This part of the setup is **optional**.
 
     In order to support LDAP, make sure you have installed the dependencies from
     ``utility/install_ldap_dependencies.sh`` and ``requirements/ldap.txt``! For
-    more information see :ref:`sodar_core_dev`.
+    more information see :ref:`dev_sodar_core`.
 
 .. note::
 

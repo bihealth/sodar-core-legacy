@@ -19,6 +19,7 @@ Changed
 
 - **General**
     - Update integration documentation (#1)
+    - Update doc file names and IDs for clarity
 - **Timeline**
     - Update CSS classes and overrides
     - Rename list views to ``list_project`` and ``list_objects``
