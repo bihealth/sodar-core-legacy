@@ -115,82 +115,83 @@ class TimelineAPI:
                 return Truncator(label).chars(LABEL_MAX_WIDTH)
             return label
 
-        # TODO: Spaghetti much? Refactor
         for r in ref_ids:
+
+            # Get reference object or return an unknown label if not found
             try:
                 ref_obj = ProjectEventObjectRef.objects.get(
-                    event=event,
-                    label=r)
-
-                # Get history link
-                history_url = reverse('timeline:list_object', kwargs={
-                    'project': event.project.omics_uuid,
-                    'object_model': ref_obj.object_model,
-                    'object_uuid': ref_obj.object_uuid})
-                history_link = '<a href="{}" class="sodar-tl-object-link">' \
-                               '<i class="fa fa-clock-o"></i></a>'.format(
-                                history_url)
-
-                # Special case: User model
-                if ref_obj.object_model == 'User':
-                    try:
-                        user = User.objects.get(omics_uuid=ref_obj.object_uuid)
-                        refs[r] = '{} {}'.format(
-                            get_user_html(user), history_link)
-
-                    except User.DoesNotExist:
-                        refs[r] = unknown_label
-
-                # Special case: Project model
-                elif ref_obj.object_model == 'Project':
-                    try:
-                        project = Project.objects.get(
-                            omics_uuid=ref_obj.object_uuid)
-
-                        if request and request.user.has_perm(
-                                'projectroles.view_project', project):
-                            refs[r] = '<a href="{}">{}</a>'.format(
-                                reverse(
-                                    'projetroles:detail',
-                                    kwargs={'project': project.omics_uuid}),
-                                get_label(project.title))
-
-                        else:
-                            refs[r] = '<span class="text-danger">' \
-                                      '{}</span>'.format(
-                                get_label(project.title))
-
-                    except Project.DoesNotExist:
-                        refs[r] = ref_obj.name
-
-                # Special case: projectroles app
-                elif event.app == 'projectroles':
-                    refs[r] = not_found_label.format(
-                        get_label(ref_obj.name), history_link)
-
-                # Apps with plugins
-                else:
-                    app_plugin = ProjectAppPluginPoint.get_plugin(
-                        name=event.app)
-
-                    link_data = app_plugin.get_object_link(
-                        ref_obj.object_model, ref_obj.object_uuid)
-
-                    if link_data:
-                        refs[r] = '<a href="{}" {}>{}</a> {}'.format(
-                            link_data['url'],
-                            ('target="_blank"'
-                             if 'blank' in link_data and
-                                link_data['blank'] is True else ''),
-                            get_label(link_data['label']),
-                            history_link)
-
-                    else:
-                        refs[r] = not_found_label.format(
-                            get_label(ref_obj.name), history_link)
+                    event=event, label=r)
 
             except ProjectEventObjectRef.DoesNotExist:
                 refs[r] = unknown_label
+                continue
+
+            # Get history link
+            history_url = reverse('timeline:list_object', kwargs={
+                'project': event.project.omics_uuid,
+                'object_model': ref_obj.object_model,
+                'object_uuid': ref_obj.object_uuid})
+            history_link = '<a href="{}" class="sodar-tl-object-link">' \
+                           '<i class="fa fa-clock-o"></i></a>'.format(
+                            history_url)
+
+            # Special case: User model
+            if ref_obj.object_model == 'User':
+                try:
+                    user = User.objects.get(omics_uuid=ref_obj.object_uuid)
+                    refs[r] = '{} {}'.format(
+                        get_user_html(user), history_link)
+
+                except User.DoesNotExist:
+                    refs[r] = unknown_label
+
+            # Special case: Project model
+            elif ref_obj.object_model == 'Project':
+                try:
+                    project = Project.objects.get(
+                        omics_uuid=ref_obj.object_uuid)
+
+                    if request and request.user.has_perm(
+                            'projectroles.view_project', project):
+                        refs[r] = '<a href="{}">{}</a>'.format(
+                            reverse(
+                                'projetroles:detail',
+                                kwargs={'project': project.omics_uuid}),
+                            get_label(project.title))
+
+                    else:
+                        refs[r] = '<span class="text-danger">' \
+                                  '{}</span>'.format(
+                            get_label(project.title))
+
+                except Project.DoesNotExist:
+                    refs[r] = ref_obj.name
+
+            # Special case: projectroles app
+            elif event.app == 'projectroles':
+                refs[r] = not_found_label.format(
+                    get_label(ref_obj.name), history_link)
+
+            # Apps with plugins
+            else:
+                app_plugin = ProjectAppPluginPoint.get_plugin(
+                    name=event.app)
+
+                link_data = app_plugin.get_object_link(
+                    ref_obj.object_model, ref_obj.object_uuid)
+
+                if link_data:
+                    refs[r] = '<a href="{}" {}>{}</a> {}'.format(
+                        link_data['url'],
+                        ('target="_blank"'
+                         if 'blank' in link_data and
+                            link_data['blank'] is True else ''),
+                        get_label(link_data['label']),
+                        history_link)
+
+                else:
+                    refs[r] = not_found_label.format(
+                        get_label(ref_obj.name), history_link)
 
         return event.description.format(**refs)
 

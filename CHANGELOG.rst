@@ -23,6 +23,7 @@ Changed
     - Update CSS classes and overrides
     - Rename list views to ``list_project`` and ``list_objects``
     - Rename list template to ``timeline.html``
+    - Refactor ``api.get_event_description()``
 
 Fixed
 -----
