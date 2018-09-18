@@ -32,19 +32,17 @@ be missing. Please click "display source" if you want to read this in GitLab.
 ``make html`` in the ``docs`` directory of the repository. You can find the
 rendered HTML in ``docs/build``. You will have to install system and Python
 dependencies, including ones in ``requirements/local.txt`` for this to work. See
-:ref:`sodar_core_dev`.
+:ref:`dev_sodar_core`.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    getting_started
-   integration
-   usage
-   project_app_dev
-   site_app_dev
-   backend_app_dev
-   sodar_core_dev
+   app_projectroles
+   app_userprofile
+   app_timeline
+   development
 
 
 Indices and tables

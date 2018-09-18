@@ -1,0 +1,80 @@
+{% load timeline_tags %}
+{% load rules %}
+{% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
+{% has_perm 'timeline.view_classified_event' request.user project as can_view_classified %}
+
+<style type="text/css">
+  /* Main table */
+  table#sodar-tl-details-table tbody tr td:nth-child(1) {
+    white-space: nowrap;
+  }
+
+  table#sodar-tl-details-table tbody tr td:nth-child(5) {
+    width: 100%;
+  }
+
+  /* Responsive modifications */
+  @media screen and (max-width: 1200px) {
+    .table#sodar-tl-details-table thead tr th:nth-child(2) {
+      display: none;
+    }
+
+     .table#sodar-tl-details-table tbody tr td:nth-child(2) {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 1000px) {
+    .table#sodar-tl-details-table thead tr th:nth-child(3) {
+      display: none;
+    }
+
+    .table#sodar-tl-details-table tbody tr td:nth-child(3) {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 800px) {
+    .table#sodar-tl-details-table tbody tr td:nth-child(1) {
+      white-space: normal;
+    }
+
+    .table#sodar-tl-details-table thead tr th:nth-child(4) {
+      display: none;
+    }
+
+    .table#sodar-tl-details-table tbody tr td:nth-child(4) {
+      display: none;
+    }
+  }
+
+  @media screen and (max-width: 500px) {
+    .table#sodar-tl-details-table thead tr th:nth-child(6) {
+      display: none;
+    }
+
+    .table#sodar-tl-details-table tbody tr td:nth-child(6) {
+      display: none;
+    }
+  }
+</style>
+
+{% if can_view_timeline %}
+  <table class="table table-striped sodar-card-table" id="sodar-tl-details-table">
+    <thead>
+      {% include 'timeline/_list_header.html' with details_card_mode=True %}
+    </thead>
+    <tbody>
+      {% get_details_events project can_view_classified as events %}
+      {% if events|length > 0 %}
+        {% for event in events %}
+          {% include 'timeline/_list_item.html' with event=event details_card_mode=True %}
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td class="bg-faded font-italic text-center" colspan="6">No events</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+{% endif %}

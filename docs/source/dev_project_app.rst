@@ -1,4 +1,4 @@
-.. _project_app_dev:
+.. _dev_project_app:
 
 Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,7 +45,8 @@ Prerequisites
 =============
 
 This documentation assumes you have a Django project with Projectroles set up
-(see :ref:`integration`). The instructions can be applied either to modify a
+(see the :ref:`projectroles integration document <app_projectroles_integration>`).
+The instructions can be applied either to modify a
 previously existing app, or to set up a fresh app generated in the standard way
 with ``./manage.py startapp``.
 
