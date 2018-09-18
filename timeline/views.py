@@ -1,3 +1,5 @@
+"""Views for the timeline Django app"""
+
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
@@ -36,8 +38,8 @@ class ProjectTimelineView(
             'project__omics_uuid': self.kwargs['project']}
 
         if not self.request.user.has_perm(
-                    'timeline.view_classified_event',
-                    self.get_permission_object()):
+                'timeline.view_classified_event',
+                self.get_permission_object()):
             set_kwargs['classified'] = False
 
         return ProjectEvent.objects.filter(
@@ -73,10 +75,9 @@ class ObjectTimelineView(ProjectTimelineView):
         return queryset
 
 
-# Taskflow API Views -----------------------------------------------------
+# Taskflow API Views -----------------------------------------------------------
 
 
-# TODO: Modify once integrating Taskflow
 class TimelineEventStatusSetAPIView(APIView):
     def post(self, request):
         try:
