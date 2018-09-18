@@ -28,6 +28,7 @@ Fixed
 - **Timeline**
     - User model access in ``timeline.api``
     - Misaligned back button (#4)
+    - Deprecated CSS in main list
 
 
 v0.1.0 (2018-09-12)

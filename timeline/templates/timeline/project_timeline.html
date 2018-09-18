@@ -92,9 +92,10 @@
   {% endif %}
 </div>
 
-{% if object_list.count > 0 %}
-  <div class="container-fluid sodar-pr-main-container my-3">
-    <div class="card" id="sodar-tl-event-list">
+<div class="container-fluid sodar-page-container">
+
+  {% if object_list.count > 0 %}
+    <div class="card mb-3" id="sodar-tl-event-list">
       <div class="card-body p-0">
        <table class="table table-striped sodar-card-table" id="sodar-tl-table">
          <thead>
@@ -108,49 +109,42 @@
        </table>
       </div>
     </div>
-  </div>
 
-  {% if is_paginated %}
-    <div class="container-fluid">
-      <div class="btn-group ml-auto" id="sodar-tl-nav-buttons">
-        {% if page_obj.has_previous %}
-          <a role="button" class="btn btn-secondary"
-              href="?page={{ page_obj.previous_page_number }}">
-            <i class="fa fa-arrow-circle-left"></i>
-            Newer
-          </a>
-        {% else %}
-          <a role="button" class="btn btn-secondary disabled"
-              href="#">
-            <i class="fa fa-arrow-circle-left"></i>
-            Newer
-          </a>
-        {% endif %}
-        {% if page_obj.has_next %}
-          <a role="button" class="btn btn-secondary"
-              href="?page={{ page_obj.next_page_number }}">
-            <i class="fa fa-arrow-circle-right"></i>
-            Older
-          </a>
-        {% else %}
-          <a role="button" class="btn btn-secondary disabled"
-              href="#">
-            <i class="fa fa-arrow-circle-right"></i>
-            Older
-          </a>
-        {% endif %}
+    {% if is_paginated %}
+      <div class="container-fluid">
+        <div class="btn-group pull-right" id="sodar-tl-nav-buttons">
+          {% if page_obj.has_previous %}
+            <a role="button" class="btn btn-secondary"
+                href="?page={{ page_obj.previous_page_number }}">
+              <i class="fa fa-arrow-circle-left"></i> Newer
+            </a>
+          {% else %}
+            <a role="button" class="btn btn-secondary disabled" href="#">
+              <i class="fa fa-arrow-circle-left"></i> Newer
+            </a>
+          {% endif %}
+          {% if page_obj.has_next %}
+            <a role="button" class="btn btn-secondary"
+                href="?page={{ page_obj.next_page_number }}">
+              <i class="fa fa-arrow-circle-right"></i> Older
+            </a>
+          {% else %}
+            <a role="button" class="btn btn-secondary disabled" href="#">
+              <i class="fa fa-arrow-circle-right"></i> Older
+            </a>
+          {% endif %}
+        </div>
       </div>
-    </div>
-  {% endif %}
+    {% endif %}
 
-{% else %}
-  <div class="container-fluid">
-    <div class="alert alert-info my-3" role="alert">
+  {% else %}
+    <div class="alert alert-info" role="alert">
       No timeline events found for this
       {% if timeline_mode == 'project' %}project{% else %}object{% endif %}.
     </div>
-  </div>
-{% endif %}
+  {% endif %}
+
+</div> <!-- sodar-page-container -->
 
 {% endblock projectroles_extend %}
 

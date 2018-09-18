@@ -399,7 +399,7 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 
 # Timeline app settings
-TIMELINE_PAGINATION = 15
+TIMELINE_PAGINATION = 5
 
 
 # Settings for HTTP AuthBasic
