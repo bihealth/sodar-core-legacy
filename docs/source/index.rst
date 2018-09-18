@@ -31,7 +31,8 @@ be missing. Please click "display source" if you want to read this in GitLab.
 **NOTE:** To view this document in the rendered form during development, run
 ``make html`` in the ``docs`` directory of the repository. You can find the
 rendered HTML in ``docs/build``. You will have to install system and Python
-dependencies for this to work, see :ref:`sodar_core_dev`.
+dependencies, including ones in ``requirements/local.txt`` for this to work. See
+:ref:`sodar_core_dev`.
 
 .. toctree::
    :maxdepth: 2
