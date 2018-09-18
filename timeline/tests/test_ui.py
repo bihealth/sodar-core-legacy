@@ -4,12 +4,11 @@ from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import Role, OMICS_CONSTANTS
+from projectroles.models import OMICS_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
-from projectroles.tests.test_ui import TestUIBase, LiveUserMixin
+from projectroles.tests.test_ui import TestUIBase
 
-from .test_models import TestProjectEventBase, ProjectEventMixin,\
+from .test_models import ProjectEventMixin, \
     ProjectEventStatusMixin
 
 
@@ -63,7 +62,7 @@ class TestListView(
         url = reverse(
             'timeline:project_timeline',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-tl-list-event')
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_object_event_visibility(self):
         """Test visibility of object related events events in the timeline event list"""
@@ -92,7 +91,7 @@ class TestListView(
                 'project': self.project.omics_uuid,
                 'object_model': self.ref_obj.object_model,
                 'object_uuid': self.ref_obj.object_uuid})
-        self.assert_element_count(expected, url, 'omics-tl-list-event')
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_event_visibility_details(self):
         """Test visibility of events on the project details page"""
@@ -106,4 +105,4 @@ class TestListView(
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.project.omics_uuid})
-        self.assert_element_count(expected, url, 'omics-tl-list-event')
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')
