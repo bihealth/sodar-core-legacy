@@ -15,6 +15,10 @@ from projectroles.views import LoggedInPermissionMixin, \
 from .models import ProjectEvent
 
 
+# Local variables
+DEFAULT_PAGINATION = 15
+
+
 class ProjectTimelineView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
         ProjectPermissionMixin, ListView):
@@ -22,7 +26,8 @@ class ProjectTimelineView(
     permission_required = 'timeline.view_timeline'
     template_name = 'timeline/timeline.html'
     model = ProjectEvent
-    paginate_by = settings.TIMELINE_PAGINATION
+    paginate_by = settings.TIMELINE_PAGINATION if hasattr(
+        settings, 'TIMELINE_PAGINATION') else DEFAULT_PAGINATION
 
     def get_context_data(self, *args, **kwargs):
         context = super(
