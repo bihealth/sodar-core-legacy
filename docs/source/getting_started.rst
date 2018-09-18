@@ -20,7 +20,7 @@ in your project:
   dynamic app content management. All other apps require the integration of
   projectroles.
 - **timeline**: Project app for logging and viewing project-related activity
-- **userprofile**: Site app for viewing one's user profile
+- **userprofile**: Site app for viewing user profiles
 
 The following packages are included in the repository for development and
 as examples:

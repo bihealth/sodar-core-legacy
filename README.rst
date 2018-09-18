@@ -14,9 +14,11 @@ application which wants to make use of the following features:
 
 This repository provides the following installable Django apps:
 
-- **projectroles**: The required base app for project access management and
-  dynamic project content inclusion
-- **userprofile**: User profile app (requires projectroles)
+- **projectroles**: Base app for project access management and
+  dynamic app content management. All other apps require the integration of
+  projectroles.
+- **timeline**: Project app for logging and viewing project-related activity
+- **userprofile**: Site app for viewing user profiles
 
 Also included are resources and examples for developing SODAR compatible apps.
 
