@@ -13,13 +13,14 @@ Added
 
 - **Timeline**
     - Add timeline app based on SODAR v0.3.2 (#2)
+    - App documentation
 
 Changed
 -------
 
 - **General**
     - Update integration documentation (#1)
-    - Update doc file names and IDs for clarity
+    - Restructure documentation files and filenames for clarity
 - **Timeline**
     - Update CSS classes and overrides
     - Rename list views to ``list_project`` and ``list_objects``

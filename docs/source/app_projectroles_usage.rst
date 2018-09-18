@@ -1,13 +1,14 @@
-.. _usage:
+.. _app_projectroles_usage:
 
-Usage
-^^^^^
+
+Projectroles Usage
+^^^^^^^^^^^^^^^^^^
 
 .. warning::
 
    Under construction!
 
-This document provides instructions for using the SODAR Core apps which have
+This document provides instructions for using the Projectroles app which has
 been integrated into your Django site.
 
 **NOTE:** When viewing this document in GitLab critical content will by default

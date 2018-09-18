@@ -39,12 +39,10 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    :caption: Contents:
 
    getting_started
-   integration
-   usage
-   dev_project_app
-   dev_site_app
-   dev_backend_app
-   dev_sodar_core
+   app_projectroles
+   app_userprofile
+   app_timeline
+   development
 
 
 Indices and tables

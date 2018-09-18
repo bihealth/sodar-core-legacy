@@ -1,7 +1,7 @@
-.. _integration:
+.. _app_projectroles_integration:
 
-Integration
-^^^^^^^^^^^
+Projectroles Integration
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 This document provides instructions and guidelines for integrating the
 projectroles and other SODAR Core apps into your Django site.
@@ -12,8 +12,8 @@ be missing. Please click "display source" if you want to read this in GitLab.
 .. warning::
 
     In order to successfully set up Projectroles, you are expected to **follow
-    all the instructions here in the order they are presented**. Leaving out
-    steps may result in a non-working Django site.
+    all the instructions here in the order they are presented**. Please note
+    that leaving out steps may result in a non-working Django site!
 
 
 Django Site Guidelines
@@ -90,7 +90,7 @@ Add the following rows into your ``base.txt`` file:
 .. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@3707c33f2a08f74bfe366a2169b01a1dba32e8d3#egg=django-sodar-core
+    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@v0.2.0#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
@@ -152,7 +152,6 @@ following apps need to be included in the list:
         'rest_framework',
         'knox',
         'projectroles.apps.ProjectrolesConfig',
-        'userprofile.apps.UserprofileConfig',
     ]
 
 Database
@@ -428,7 +427,8 @@ User Profile Site App
 
 The ``userprofile`` site app is installed with SODAR Core. It adds a user
 profile page in the user dropdown. Use of the app is not mandatory but
-recommended, unless you are already using some other user profile app.
+recommended, unless you are already using some other user profile app. See
+the :ref:`userprofile app documentation <app_userprofile>` for instructions.
 
 Add Login Template
 ------------------
