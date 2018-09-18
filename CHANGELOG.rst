@@ -19,12 +19,15 @@ Changed
 
 - **General**
     - Update integration documentation (#1)
+- **Timeline**
+    - Update CSS classes and overrides
 
 Fixed
 -----
 
 - **Timeline**
     - User model access in ``timeline.api``
+    - Misaligned back button (#4)
 
 
 v0.1.0 (2018-09-12)

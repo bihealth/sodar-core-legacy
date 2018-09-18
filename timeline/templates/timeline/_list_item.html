@@ -3,9 +3,9 @@
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
-<tr id="omics-tl-list-event-{{ event.pk }}">
+<tr id="sodar-tl-list-event-{{ event.pk }}">
   <td>
-    <a class="omics-tl-detail-link" tabindex="0" data-toggle="popover"
+    <a class="sodar-tl-detail-link" tabindex="0" data-toggle="popover"
        data-trigger="focus" data-placement="right" data-html="true"
        data-content="{% get_event_details event %}">
       {% get_timestamp event %}

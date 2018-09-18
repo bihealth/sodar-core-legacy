@@ -9,65 +9,65 @@
   <style type="text/css">
 
     /* Main table */
-    table#omics-tl-table tr td:nth-child(1) {
+    table#sodar-tl-table tbody tr td:nth-child(1) {
       white-space: nowrap;
     }
 
-    table#omics-tl-table td:nth-child(5) {
+    table#sodar-tl-table tbody tr td:nth-child(5) {
       width: 100%;
     }
 
     /* Detail table */
-    table#omics-tl-table-detail tr td:nth-child(1) {
+    table#sodar-tl-table-detail tbody tr td:nth-child(1) {
         white-space: nowrap;
     }
 
-    table#omics-tl-table-detail tr td:nth-child(2) {
+    table#sodar-tl-table-detail tbody tr td:nth-child(2) {
         max-width: 300px;
         white-space: normal;
     }
 
     /* Responsive modifications */
     @media screen and (max-width: 1200px) {
-      .table#omics-tl-table tr th:nth-child(2) {
+      .table#sodar-tl-table thead tr th:nth-child(2) {
         display: none;
       }
 
-      .table#omics-tl-table tr td:nth-child(2) {
+      .table#sodar-tl-table tbody tr td:nth-child(2) {
         display: none;
       }
     }
 
     @media screen and (max-width: 1000px) {
-      .table#omics-tl-table tr th:nth-child(3) {
+      .table#sodar-tl-table thead tr th:nth-child(3) {
         display: none;
       }
 
-      .table#omics-tl-table tr td:nth-child(3) {
+      .table#sodar-tl-table tbody tr td:nth-child(3) {
         display: none;
       }
     }
 
     @media screen and (max-width: 800px) {
-      .table#omics-tl-table tr td:nth-child(1) {
+      .table#sodar-tl-table tbody tr td:nth-child(1) {
         white-space: normal;
       }
 
-      .table#omics-tl-table tr th:nth-child(4) {
+      .table#sodar-tl-table thead tr th:nth-child(4) {
         display: none;
       }
 
-      .table#omics-tl-table tr td:nth-child(4) {
+      .table#sodar-tl-table tbody tr td:nth-child(4) {
         display: none;
       }
     }
 
     @media screen and (max-width: 500px) {
-      .table#omics-tl-table tr th:nth-child(6) {
+      .table#sodar-tl-table thead tr th:nth-child(6) {
         display: none;
       }
 
-      .table#omics-tl-table tr td:nth-child(6) {
+      .table#sodar-tl-table tbody tr td:nth-child(6) {
         display: none;
       }
     }
@@ -79,10 +79,10 @@
 
 {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
 
-<div class="row omics-subtitle-container bg-white sticky-top">
+<div class="row sodar-subtitle-container bg-white sticky-top">
   <h3><i class="fa fa-clock-o"></i> {{ timeline_title }}</h3>
   {% if timeline_mode == 'object' %}
-    <div class="input-group omics-header-input-group ml-auto">
+    <div class="input-group sodar-header-input-group ml-auto mt-1">
       <a href="{% url 'timeline:project_timeline' project=project.omics_uuid %}"
          class="btn btn-secondary ml-auto"
          role="button">
@@ -93,10 +93,10 @@
 </div>
 
 {% if object_list.count > 0 %}
-  <div class="container-fluid omics-pr-main-container my-3">
-    <div class="card omics-card-single" id="omics-tl-event-list">
-      <div class="card-body omics-card-body-table">
-       <table class="table table-striped omics-card-table" id="omics-tl-table">
+  <div class="container-fluid sodar-pr-main-container my-3">
+    <div class="card" id="sodar-tl-event-list">
+      <div class="card-body p-0">
+       <table class="table table-striped sodar-card-table" id="sodar-tl-table">
          <thead>
            {% include 'timeline/_list_header.html' %}
          </thead>
@@ -111,8 +111,8 @@
   </div>
 
   {% if is_paginated %}
-    <div class="row">
-      <div class="btn-group ml-auto" id="omics-tl-nav-buttons">
+    <div class="container-fluid">
+      <div class="btn-group ml-auto" id="sodar-tl-nav-buttons">
         {% if page_obj.has_previous %}
           <a role="button" class="btn btn-secondary"
               href="?page={{ page_obj.previous_page_number }}">
@@ -165,7 +165,7 @@
         title: 'Event List',
         text: 'This is the list of events for the project, organized by ' +
               'newest first.',
-        attachTo: '#omics-tl-event-list top',
+        attachTo: '#sodar-tl-event-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
@@ -174,16 +174,16 @@
         title: 'Event Details',
         text: 'Click an event timestamp to open a popup with details ' +
               'regarding each event.',
-        attachTo: '#omics-tl-header-timestamp right',
+        attachTo: '#sodar-tl-header-timestamp right',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
 
-    if ($('#omics-tl-nav-buttons').length) {
+    if ($('#sodar-tl-nav-buttons').length) {
         tour.addStep('timeline_nav', {
             title: 'Timeline Navigation',
             text: 'Use these buttons to navigate through project events.',
-            attachTo: '#omics-tl-nav-buttons left',
+            attachTo: '#sodar-tl-nav-buttons left',
             advanceOn: '.docs-link click',
             showCancelLink: true,
             scrollTo: true

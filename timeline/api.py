@@ -127,7 +127,7 @@ class TimelineAPI:
                     'project': event.project.omics_uuid,
                     'object_model': ref_obj.object_model,
                     'object_uuid': ref_obj.object_uuid})
-                history_link = '<a href="{}" class="omics-tl-object-link">' \
+                history_link = '<a href="{}" class="sodar-tl-object-link">' \
                                '<i class="fa fa-clock-o"></i></a>'.format(
                                 history_url)
 
@@ -215,6 +215,6 @@ class TimelineAPI:
         :param obj: Django postgres database object
         :return: String
         """
-        return '<a href="{}" class="omics-tl-object-link">' \
+        return '<a href="{}" class="sodar-tl-object-link">' \
                '<i class="fa fa-clock-o"></i></a>'.format(
                 TimelineAPI.get_object_url(project_uuid, obj))

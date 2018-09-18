@@ -59,8 +59,8 @@ def get_event_description(event, request=None):
 @register.simple_tag
 def get_event_details(event):
     """Return HTML data for event detail popover"""
-    ret = '<table class="table table-striped omics-card-table ' \
-          'omics-tl-table-detail">\n' \
+    ret = '<table class="table table-striped sodar-card-table ' \
+          'sodar-tl-table-detail">\n' \
           '<thead>\n<th>Timestamp</th>\n<th>Description</th>\n' \
           '<th>Status</th>\n</thead>\n<tbody>'
 
