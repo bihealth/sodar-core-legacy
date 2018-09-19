@@ -5,7 +5,7 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-v0.2.0 (2018-0-19)
+v0.2.0 (2018-08-19)
 ==================
 
 Added
@@ -30,6 +30,7 @@ Changed
     - Rename list template to ``timeline.html``
     - Refactor ``api.get_event_description()``
     - Make ``TIMELINE_PAGINATION`` optional
+    - Improve exception messages in ``api.add_event()``
 
 Fixed
 -----

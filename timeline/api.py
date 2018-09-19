@@ -50,12 +50,15 @@ class TimelineAPI:
         :raise: ValueError if app_name or status_type is invalid
         """
         if app_name not in APP_NAMES:
-            raise ValueError('Unknown app name (active apps: {})'.format(
+            raise ValueError('Unknown app name "{}" (active apps: {})'.format(
+                app_name,
                 ', '.join(x for x in APP_NAMES)))
 
         if status_type and status_type not in EVENT_STATUS_TYPES:
-            raise ValueError('Unknown status type (valid types: {})'.format(
-                ', '.join(x for x in EVENT_STATUS_TYPES)))
+            raise ValueError(
+                'Unknown status type "{}" (valid types: {})'.format(
+                    status_type,
+                    ', '.join(x for x in EVENT_STATUS_TYPES)))
 
         event = ProjectEvent()
         event.project = project
