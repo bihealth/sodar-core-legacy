@@ -86,7 +86,7 @@ object ``user_obj``.
 
 .. note::
 
-    The given object **must** contain an ``omics_uuid`` field with an
+    The given object **must** contain an ``sodar_uuid`` field with an
     auto-generated UUID. For more information, see the
     :ref:`project app development document <dev_project_app>`.
 

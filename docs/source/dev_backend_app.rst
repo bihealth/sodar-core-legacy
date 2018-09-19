@@ -31,7 +31,7 @@ Models
 ======
 
 No specific model implementation is required. However, it is strongly to refer
-to objects using ``omics_uuid`` fields instead of the database private key.
+to objects using ``sodar_uuid`` fields instead of the database private key.
 
 
 BackendAppPlugin
