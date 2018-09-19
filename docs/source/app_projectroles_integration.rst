@@ -386,9 +386,9 @@ If you have not added any of your own modifications to the model, you can simply
 
 .. code-block:: python
 
-    from projectroles.models import OmicsUser
+    from projectroles.models import SODARUser
 
-    class User(OmicsUser):
+    class User(SODARUser):
         pass
 
 If you need to add your own extra fields or functions (or have existing ones

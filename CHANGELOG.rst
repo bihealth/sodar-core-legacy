@@ -12,7 +12,9 @@ Changed
 -------
 
 - **General**
-    - Changed ``omics_uuid`` field in all apps' models to ``sodar_uuid`` (omics_data_mgmt#166)
+    - Change ``omics_uuid`` field in all apps' models to ``sodar_uuid`` (omics_data_mgmt#166)
+- **Projectroles**
+    - Rename abstract ``OmicsUser`` model into ``SODARUser`` (omics_data_mgmt#166)
 
 
 v0.2.0 (2018-09-19)

@@ -1,8 +1,8 @@
 # Projectroles dependency
-from projectroles.models import OmicsUser
+from projectroles.models import SODARUser
 
 
-# The User model should be derived from the abstract OmicsUser model. Add custom
+# The User model should be derived from the abstract SODARUser model. Add custom
 # fields and functions as needed.
 
 # NOTE: If integrating projectroles with an existing project, you will have to
@@ -10,5 +10,5 @@ from projectroles.models import OmicsUser
 #
 
 
-class User(OmicsUser):
+class User(SODARUser):
     pass

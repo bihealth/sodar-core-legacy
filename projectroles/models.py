@@ -656,7 +656,7 @@ class ProjectUserTag(models.Model):
 # TODO: Use/extend this in your projectroles-based project
 
 
-class OmicsUser(AbstractUser):
+class SODARUser(AbstractUser):
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
