@@ -152,14 +152,7 @@ Git Branches
 Commits
 -------
 
-- Please refer to issues by their ids in comments, as it makes thins easier to
+- Please refer to issues by their ids in comments, as it makes things easier to
   track
 - SODAR Core issues should go to the ``sodar_core`` repo, omics apps specific
   issues to the ``sodar`` repo.
-
-General Guidelines
-------------------
-
-- Please follow `Two Scoops <https://www.twoscoopspress.com/>`_ best practices
-  where applicable
-- Code should comply with PEP8

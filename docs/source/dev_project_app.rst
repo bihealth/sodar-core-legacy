@@ -44,11 +44,12 @@ Fulfilling these requirements is detailed further in this document.
 Prerequisites
 =============
 
-This documentation assumes you have a Django project with Projectroles set up
-(see the :ref:`projectroles integration document <app_projectroles_integration>`).
-The instructions can be applied either to modify a
-previously existing app, or to set up a fresh app generated in the standard way
-with ``./manage.py startapp``.
+This documentation assumes you have a Django project with the ``projectroles``
+app set up (see the
+:ref:`projectroles integration document <app_projectroles_integration>`).
+The instructions can be applied either to modify a previously existing app, or
+to set up a fresh app generated in the standard way with
+``./manage.py startapp``.
 
 It is also assumed that apps are more or less created according to best
 practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the

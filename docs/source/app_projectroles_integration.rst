@@ -31,11 +31,11 @@ to set up your site.
     Currently, SODAR Core only supports Django 1.11.x, while the latest versions
     of cookiecutter-django set up Django 2.0.x by default. It is strongly
     recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
-    upwards is not guaranteed! Integration into the last official
+    upwards is not guaranteed! **Integration into the last official
     `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-    of cookiecutter-django has been tested and verified to be working. However,
-    from this install it is recommended to upgrade the Django version to the
-    latest 1.11 release (1.11.15 at the time of writing).
+    of cookiecutter-django has been tested and verified to be working.**
+    However, from this install it is recommended to upgrade the Django version
+    to the latest 1.11 release (1.11.15 at the time of writing).
 
 Make sure to set up a virtual Python environment for development with required
 dependencies.
@@ -66,9 +66,10 @@ requirements clash between projectroles and your site.
 
 .. warning::
 
-    The rest of this documentation assumes that the project has been set up
-    using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_.
-    If it hasn't, e.g. directory structures and settings variables may differ.
+    The rest of this documentation assumes that your Django project has been set
+    up using a `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+    Otherwise details such as directory structures and settings variables may
+    differ.
 
 
 Installation
@@ -82,7 +83,7 @@ into your ``requirements/base.txt`` file.
     At the time of writing the SODAR Core package is in development, so you'll
     need to install it from our GitLab, either by a release tag or a specific
     commit. It is recommended to use either the most recent tagged release in
-    the `master` branch for production and the latest commit from the `dev`
+    the ``master`` branch for production and the latest commit from the ``dev``
     branch for development.
 
 Add the following rows into your ``base.txt`` file:
@@ -400,9 +401,11 @@ After updating the user model, create and run database migrations.
     $ ./manage.py makemigrations
     $ ./manage.py migrate
 
-Note that you probably will need to edit the default unit tests under
-``{SITE_NAME}/users/tests/`` for them to work. Again, you can see an example in
-the ``example_site`` package of the projectroles repository.
+.. note::
+
+    You probably will need to edit the default unit tests under
+    ``{SITE_NAME}/users/tests/`` for them to work after making these changes.
+    See ``example_site.users.tests`` in this repository for an example.
 
 Populating UUIDs for Existing Users
 -----------------------------------
@@ -434,7 +437,7 @@ Add Login Template
 ------------------
 
 You should add a login template to ``{SITE_NAME}/templates/users/login.html``. If
-you're OK with using the Projectroles login template, the file can consist of
+you're OK with using the projectroles login template, the file can consist of
 the following line:
 
 .. code-block:: django
@@ -458,7 +461,6 @@ site.
         # ...
         url(r'api/auth/', include('knox.urls')),
         url(r'^project/', include('projectroles.urls')),
-        url(r'^user/', include('userprofile.urls')),
     ]
 
 If you intend to use projectroles views and templates as the basis of your site
@@ -499,6 +501,14 @@ For a supported example, see ``projectroles/base_site.html``. It is strongly
 recommended to use this as the base template for your site, either by extending
 it or copying the content into ``{SITE_NAME}/templates/base.html`` and modifying
 it to suit your needs.
+
+If you do not need to make any modifications, the most simple way is to replace
+the content of the ``{SITE_NAME}/templates/base.html`` file with the following
+line:
+
+.. code-block:: django
+
+    {% extends 'projectroles/base_site.html' %}
 
 .. note::
 

@@ -43,7 +43,7 @@ The default setup of role types used in SODAR sites:
     - Read only access to project data
 
 .. note::
-    A Django **superuser** status overrides project role access.
+    Django **superuser** status overrides project role access.
 
 The projectroles app provides the following features for managing user roles in
 projects:
@@ -53,7 +53,7 @@ projects:
 - Importing members from other projects (**NOTE:** disabled pending update)
 - Automated emailing of users regarding role changes
 - **TODO:** Mirroring user roles to/from an external projectroles-enabled site
-  (will be added in v0.3)
+  (will be added in SODAR Core v0.3)
 
 .. note::
     Currently, only superusers can assign owner roles for top-level categories.

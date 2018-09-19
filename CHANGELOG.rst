@@ -26,6 +26,7 @@ Changed
     - Rename list views to ``list_project`` and ``list_objects``
     - Rename list template to ``timeline.html``
     - Refactor ``api.get_event_description()``
+    - Make ``TIMELINE_PAGINATION`` optional
 
 Fixed
 -----
@@ -34,7 +35,6 @@ Fixed
     - User model access in ``timeline.api``
     - Misaligned back button (#4)
     - Deprecated CSS in main list
-    - Crash if ``TIMELINE_PAGINATION`` not in settings
 
 
 v0.1.0 (2018-09-12)

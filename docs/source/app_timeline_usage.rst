@@ -39,7 +39,7 @@ The API for logging events is located in ``timeline.api``.
     For the best in-depth instructions on how to use the API, see the docstrings
     in the API class code.
 
-**TODO:** Hook up a proper API doc here..
+**TODO:** Hook up the API doc here
 
 Invoking the API
 ----------------
@@ -60,7 +60,7 @@ Initialize the API using ``projectroles.plugins.get_backend_api()`` as follows:
     timeline = get_backend_api('timeline_backend')
 
     if timeline:    # Only proceed if the backend was successfully initialized
-        pass        # TODO: Save your events here
+        pass        # Save your events here..
 
 Adding an Event
 ---------------
@@ -84,8 +84,14 @@ Say you want to link a Django model object to the event for tracking its
 history? In this example, let's say it's a SODAR Core compatible ``User`` model
 object ``user_obj``.
 
-Add the event as above, but add a label ``target_user`` in the description.
-The name of the label is arbitrary:
+.. note::
+
+    The given object **must** contain an ``omics_uuid`` field with an
+    auto-generated UUID. For more information, see the
+    :ref:`project app development document <dev_project_app>`.
+
+Create the event as in the previous section, but add a label ``target_user`` in
+the description. The name of the label is arbitrary:
 
 .. code-block:: python
 

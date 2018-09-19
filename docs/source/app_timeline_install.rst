@@ -32,13 +32,17 @@ follows:
         'timeline.apps.TimelineConfig',
     ]
 
-To add timeline app settings, insert the following (change values where
-applicable):
+
+Optional Settings
+=================
+
+To alter default timeline app settings, insert the following **optional**
+variables with values of your choosing:
 
 .. code-block:: python
 
     # Timeline app settings
-    TIMELINE_PAGINATION = 15    # Number of events to be shown on one page
+    TIMELINE_PAGINATION = 15    # Number of events to be shown on one page (int)
 
 
 URL Configuration

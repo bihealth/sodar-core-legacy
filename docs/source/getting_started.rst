@@ -13,14 +13,14 @@ be missing. Please click "display source" if you want to read this in GitLab.
 Repository Contents
 ===================
 
-The following Django apps will be installed when including ``django-sodar-core``
-in your project:
+The following Django apps will be installed when installing the
+``django-sodar-core`` package:
 
 - **projectroles**: Base app for project access management and
   dynamic app content management. All other apps require the integration of
   projectroles.
-- **timeline**: Project app for logging and viewing project-related activity
-- **userprofile**: Site app for viewing user profiles
+- **timeline**: Project app for logging and viewing project-related activity.
+- **userprofile**: Site app for viewing user profiles.
 
 The following packages are included in the repository for development and
 as examples:
@@ -40,13 +40,14 @@ Requirements
 Major requirements for integrating projectroles and other SODAR Core apps into
 your Django site and/or participating in development are listed below. For a
 complete requirement list, see the ``requirements`` and ``utility`` directories
-in the repository. Listed with minimum versions supported.
+in the repository.
 
 - Ubuntu Linux
-- Library requirements (see utility package or your cookiecutter-django site)
-- Python 3.5
-- Django 1.11.x (**NOTE:** 2.x not currently supported)
-- PostgreSQL 9.4 and psycopg2
+- Library requirements (see the ``utility`` directory and/or your own Django
+  project)
+- Python 3.5/3.6
+- Django 1.11.15+ (**NOTE:** 2.x not currently supported)
+- PostgreSQL 9.4+ and psycopg2-binary
 - Bootstrap 4.1.1
 - JQuery 3.2.1
 - Shepherd 1.8.1 with Tether 1.4.4
@@ -62,8 +63,8 @@ Next Steps
 ==========
 
 To proceed with using the SODAR Core framework in your Django site, you must
-first install and integrated the ``projectroles`` app. See the
+first install and integrate the ``projectroles`` app. See the
 :ref:`projectroles app documentation <app_projectroles>` for instructions.
 
-Once projectroles has been integrated into your site, you may proceed in
-installing other apps as needed.
+Once projectroles has been integrated into your site, you may proceed to
+install other apps as needed.
