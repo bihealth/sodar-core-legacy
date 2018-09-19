@@ -5,6 +5,44 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.2.0 (2018-09-19)
+===================
+
+Added
+-----
+
+- **General**
+    - ``example_backend_app`` for a minimal backend app example
+    - Backend app usage example in ``example_project_app``
+- **Timeline**
+    - Add timeline app based on SODAR v0.3.2 (#2)
+    - App documentation
+
+Changed
+-------
+
+- **General**
+    - Update integration documentation (#1)
+    - Restructure documentation files and filenames for clarity
+- **Timeline**
+    - Update CSS classes and overrides
+    - Rename list views to ``list_project`` and ``list_objects``
+    - Rename list template to ``timeline.html``
+    - Refactor ``api.get_event_description()``
+    - Make ``TIMELINE_PAGINATION`` optional
+    - Improve exception messages in ``api.add_event()``
+
+Fixed
+-----
+
+- **Timeline**
+    - User model access in ``timeline.api``
+    - Misaligned back button (#4)
+    - Deprecated CSS in main list
+- **Projectroles**
+    - Third party apps not correctly recognized in ``get_app_names()``
+
+
 v0.1.0 (2018-09-12)
 ===================
 

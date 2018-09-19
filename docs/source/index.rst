@@ -23,7 +23,7 @@ which wants to make use of the following features:
 
 - Project-based user access control
 - Dynamic app content management
-- Advanced project activity logging *(coming soon)*
+- Advanced project activity logging
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -31,19 +31,18 @@ be missing. Please click "display source" if you want to read this in GitLab.
 **NOTE:** To view this document in the rendered form during development, run
 ``make html`` in the ``docs`` directory of the repository. You can find the
 rendered HTML in ``docs/build``. You will have to install system and Python
-dependencies for this to work, see :ref:`sodar_core_dev`.
+dependencies, including ones in ``requirements/local.txt`` for this to work. See
+:ref:`dev_sodar_core`.
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
    getting_started
-   integration
-   usage
-   project_app_dev
-   site_app_dev
-   backend_app_dev
-   sodar_core_dev
+   app_projectroles
+   app_userprofile
+   app_timeline
+   development
 
 
 Indices and tables

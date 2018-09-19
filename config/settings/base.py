@@ -68,6 +68,9 @@ LOCAL_APPS = [
     # SODAR Projectroles app
     'projectroles.apps.ProjectrolesConfig',
 
+    # SODAR Timeline app
+    'timeline.apps.TimelineConfig',
+
     # User Profile site app
     'userprofile.apps.UserprofileConfig',
 
@@ -76,6 +79,9 @@ LOCAL_APPS = [
 
     # Example site app
     'example_site_app.apps.ExampleSiteAppConfig',
+
+    # Example backend app
+    'example_backend_app.apps.ExampleBackendAppConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -378,7 +384,10 @@ SITE_INSTANCE_TITLE = env.str(
 
 
 # Plugin settings
-ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
+ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [
+    'timeline_backend',
+    'example_backend_app',
+])
 
 # General API settings
 SODAR_API_DEFAULT_VERSION = '0.1'
@@ -391,6 +400,10 @@ PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
 PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
 PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 PROJECTROLES_SEARCH_PAGINATION = 5
+
+
+# Timeline app settings
+TIMELINE_PAGINATION = 15
 
 
 # Settings for HTTP AuthBasic

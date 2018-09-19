@@ -28,6 +28,9 @@ urlpatterns = [
     # Projectroles URLs
     url(r'^project/', include('projectroles.urls')),
 
+    # Timeline URLs
+    url(r'^timeline/', include('timeline.urls')),
+
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
 

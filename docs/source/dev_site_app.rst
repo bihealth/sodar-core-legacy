@@ -1,4 +1,5 @@
-.. _site_app_dev:
+.. _dev_site_app:
+
 
 Site App Development
 ^^^^^^^^^^^^^^^^^^^^
@@ -6,7 +7,7 @@ Site App Development
 This document details instructions and guidelines for developing **site apps**
 to be used with the SODAR Core framework.
 
-It is recommended to read :ref:`project_app_dev` before this document.
+It is recommended to read :ref:`dev_project_app` before this document.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -28,14 +29,14 @@ site:
 Prerequisites
 =============
 
-See :ref:`project_app_dev`.
+See :ref:`dev_project_app`.
 
 
 Models
 ======
 
 No specific model implementation is required. However, it is strongly to refer
-to objects using ``uuid`` fields instead of the database private key.
+to objects using ``omics_uuid`` fields instead of the database private key.
 
 
 Rules File
@@ -65,7 +66,7 @@ member variables and functions as instructed in comments and docstrings.
     from .urls import urlpatterns
 
     class SiteAppPlugin(SiteAppPluginPoint):
-        """Plugin for registering a site-widw app"""
+        """Plugin for registering a site-wide app"""
         name = 'example_site_app'
         title = 'Example Site App'
         urls = urlpatterns
