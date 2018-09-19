@@ -39,6 +39,8 @@ Fixed
     - User model access in ``timeline.api``
     - Misaligned back button (#4)
     - Deprecated CSS in main list
+- **Projectroles**
+    - Third party apps not correctly recognized in ``get_app_names()``
 
 
 v0.1.0 (2018-09-12)
