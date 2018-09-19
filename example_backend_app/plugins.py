@@ -24,4 +24,5 @@ class BackendPlugin(BackendPluginPoint):
 
     def get_api(self):
         """Return API entry point object."""
+        print('get_api() called')   # DEBUG
         return ExampleAPI()

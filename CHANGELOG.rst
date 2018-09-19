@@ -13,6 +13,7 @@ Added
 
 - **General**
     - ``example_backend_app`` for a minimal backend app example
+    - Backend app usage example in ``example_project_app``
 - **Timeline**
     - Add timeline app based on SODAR v0.3.2 (#2)
     - App documentation

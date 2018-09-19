@@ -386,6 +386,7 @@ SITE_INSTANCE_TITLE = env.str(
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [
     'timeline_backend',
+    'example_backend_app',
 ])
 
 # General API settings

@@ -33,10 +33,18 @@
   {# Example of page content #}
   {# Using the example CSS classes is recommended #}
   <div class="container-fluid sodar-page-container">
+
     <div class="alert alert-info">
       This is an example and the entry point for <code>example_project_app</code>.
       Project <strong>"{{ project.title }}"</strong> was found in the page context! Yay!
     </div>
+
+    {# Backend API usage example, see related view #}
+    {% if backend_data %}
+      <div class="alert alert-success">
+        Data retrieved from example backend app plugin: <code>{{ backend_data }}</code>
+      </div>
+    {% endif %}
   </div>
 
 {% endblock projectroles_extend %}
