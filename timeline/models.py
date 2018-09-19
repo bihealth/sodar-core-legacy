@@ -37,7 +37,7 @@ class ProjectEventManager(models.Manager):
         Return events with object reference linked
         :param project: Project object
         :param object_model: Object model (string)
-        :param object_uuid: omics_uuid of the original object
+        :param object_uuid: sodar_uuid of the original object
         :param order_by: Ordering (default = pk descending)
         :return: Queryset
         """
@@ -89,10 +89,10 @@ class ProjectEvent(models.Model):
                   'specified in rules)')
 
     #: UUID for the event
-    omics_uuid = models.UUIDField(
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='Event omics UUID')
+        help_text='Event SODAR UUID')
 
     # Set manager for custom queries
     objects = ProjectEventManager()
@@ -138,7 +138,7 @@ class ProjectEvent(models.Model):
         ref.label = label
         ref.name = name
         ref.object_model = obj.__class__.__name__
-        ref.object_uuid = obj.omics_uuid
+        ref.object_uuid = obj.sodar_uuid
 
         if extra_data:
             ref.extra_data = extra_data
@@ -204,12 +204,12 @@ class ProjectEventObjectRef(models.Model):
         blank=False,
         help_text='Object model as string')
 
-    #: Object Omics UUID
+    #: Object SODAR UUID
     object_uuid = models.UUIDField(
         null=True,
         blank=True,
         unique=False,
-        help_text='Object Omics UUID')
+        help_text='Object SODAR UUID')
 
     #: Additional data related to the object as JSON
     extra_data = JSONField(

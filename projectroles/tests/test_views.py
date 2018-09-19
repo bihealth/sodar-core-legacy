@@ -252,7 +252,7 @@ class TestProjectDetailView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             response = self.client.get(
                 reverse(
                     'projectroles:detail',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['object'].pk, self.project.pk)
 
@@ -289,7 +289,7 @@ class TestProjectCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -302,7 +302,7 @@ class TestProjectCreateView(
         self.assertEqual(form.fields['parent'].widget.attrs['readonly'], True)
         self.assertEqual(
             form.fields['parent'].choices, [
-                (self.project.omics_uuid, self.project.title)])
+                (self.project.sodar_uuid, self.project.title)])
 
     def test_render_sub_project(self):
         """Test rendering of Project creation form if creating a subproject
@@ -319,7 +319,7 @@ class TestProjectCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 302)
 
@@ -334,7 +334,7 @@ class TestProjectCreateView(
             'title': 'TestProject',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'owner': self.user.omics_uuid,
+            'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description'}
 
@@ -358,7 +358,7 @@ class TestProjectCreateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
-            'omics_uuid': project.omics_uuid}
+            'sodar_uuid': project.sodar_uuid}
 
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
@@ -375,7 +375,7 @@ class TestProjectCreateView(
             'project': project.pk,
             'role': self.role_owner.pk,
             'user': self.user.pk,
-            'omics_uuid': owner_as.omics_uuid}
+            'sodar_uuid': owner_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(owner_as), expected)
 
@@ -384,7 +384,7 @@ class TestProjectCreateView(
             self.assertRedirects(
                 response, reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.omics_uuid}))
+                    kwargs={'project': project.sodar_uuid}))
 
 
 class TestProjectUpdateView(
@@ -408,7 +408,7 @@ class TestProjectUpdateView(
             response = self.client.get(
                 reverse(
                     'projectroles:update',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -428,7 +428,7 @@ class TestProjectUpdateView(
         values = model_to_dict(self.project)
         values['title'] = 'updated title'
         values['description'] = 'updated description'
-        values['owner'] = self.user.omics_uuid  # NOTE: Must add owner
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
         values.update(self._get_settings())
@@ -437,7 +437,7 @@ class TestProjectUpdateView(
             response = self.client.post(
                 reverse(
                     'projectroles:update',
-                    kwargs={'project': self.project.omics_uuid}),
+                    kwargs={'project': self.project.sodar_uuid}),
                 values)
 
         # Assert Project state after update
@@ -452,7 +452,7 @@ class TestProjectUpdateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
-            'omics_uuid': project.omics_uuid}
+            'sodar_uuid': project.sodar_uuid}
 
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
@@ -465,7 +465,7 @@ class TestProjectUpdateView(
             self.assertRedirects(
                 response, reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.omics_uuid}))
+                    kwargs={'project': project.sodar_uuid}))
 
 
 class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
@@ -496,7 +496,7 @@ class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             response = self.client.get(
                 reverse(
                     'projectroles:roles',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         # Assert page
         self.assertEqual(response.status_code, 200)
@@ -508,7 +508,7 @@ class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             'project': self.project.pk,
             'role': self.role_owner.pk,
             'user': self.user.pk,
-            'omics_uuid': self.owner_as.omics_uuid}
+            'sodar_uuid': self.owner_as.sodar_uuid}
 
         self.assertEqual(
             model_to_dict(response.context['owner']), expected)
@@ -519,7 +519,7 @@ class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             'project': self.project.pk,
             'role': self.role_delegate.pk,
             'user': self.user_delegate.pk,
-            'omics_uuid': self.delegate_as.omics_uuid}
+            'sodar_uuid': self.delegate_as.sodar_uuid}
 
         self.assertEqual(
             model_to_dict(response.context['delegate']), expected)
@@ -530,7 +530,7 @@ class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             'project': self.project.pk,
             'role': self.role_guest.pk,
             'user': self.user_new.pk,
-            'omics_uuid': self.guest_as.omics_uuid}
+            'sodar_uuid': self.guest_as.sodar_uuid}
 
         self.assertEqual(
             model_to_dict(response.context['members'][0]), expected)
@@ -557,7 +557,7 @@ class TestRoleAssignmentCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_create',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -567,10 +567,10 @@ class TestRoleAssignmentCreateView(
         self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
         self.assertEqual(
             form.fields['project'].choices, [
-                (self.project.omics_uuid, self.project.title)])
+                (self.project.sodar_uuid, self.project.title)])
         # Assert user with previously added role in project is not selectable
         self.assertNotIn([(
-            self.owner_as.user.omics_uuid,
+            self.owner_as.user.sodar_uuid,
             get_user_display_name(self.owner_as.user, True))],
             form.fields['user'].choices)
         # Assert owner role is not selectable
@@ -590,15 +590,15 @@ class TestRoleAssignmentCreateView(
 
         # Issue POST request
         values = {
-            'project': self.project.omics_uuid,
-            'user': self.user_new.omics_uuid,
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_create',
-                    kwargs={'project': self.project.omics_uuid}),
+                    kwargs={'project': self.project.sodar_uuid}),
                 values)
 
         # Assert RoleAssignment state after creation
@@ -612,7 +612,7 @@ class TestRoleAssignmentCreateView(
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_guest.pk,
-            'omics_uuid': role_as.omics_uuid}
+            'sodar_uuid': role_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(role_as), expected)
 
@@ -622,7 +622,7 @@ class TestRoleAssignmentCreateView(
                 response,
                 reverse(
                     'projectroles:roles',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentUpdateView(
@@ -648,7 +648,7 @@ class TestRoleAssignmentUpdateView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_update',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -657,11 +657,11 @@ class TestRoleAssignmentUpdateView(
         self.assertIsNotNone(form)
         self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
         self.assertEqual(form.fields['project'].choices, [
-            (self.project.omics_uuid, self.project.title)])
+            (self.project.sodar_uuid, self.project.title)])
         self.assertEqual(form.fields['user'].widget.attrs['readonly'], True)
         self.assertEqual(
             form.fields['user'].choices, [
-                (self.role_as.user.omics_uuid,
+                (self.role_as.user.sodar_uuid,
                  get_user_display_name(self.role_as.user, True))])
         # Assert owner role is not sectable
         self.assertNotIn([(
@@ -680,15 +680,15 @@ class TestRoleAssignmentUpdateView(
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
         values = {
-            'project': self.role_as.project.omics_uuid,
-            'user': self.role_as.user.omics_uuid,
+            'project': self.role_as.project.sodar_uuid,
+            'user': self.role_as.user.sodar_uuid,
             'role': self.role_contributor.pk}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_update',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}),
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}),
                 values)
 
         # Assert RoleAssignment state after update
@@ -702,7 +702,7 @@ class TestRoleAssignmentUpdateView(
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_contributor.pk,
-            'omics_uuid': role_as.omics_uuid}
+            'sodar_uuid': role_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(role_as), expected)
 
@@ -710,7 +710,7 @@ class TestRoleAssignmentUpdateView(
         with self.login(self.user):
             self.assertRedirects(response, reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentDeleteView(
@@ -736,7 +736,7 @@ class TestRoleAssignmentDeleteView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -750,7 +750,7 @@ class TestRoleAssignmentDeleteView(
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
 
         # Assert RoleAssignment state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
@@ -759,7 +759,7 @@ class TestRoleAssignmentDeleteView(
         with self.login(self.user):
             self.assertRedirects(response, reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentImportView(
@@ -797,7 +797,7 @@ class TestRoleAssignmentImportView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_import',
-                    kwargs={'project': self.project_new.omics_uuid}))
+                    kwargs={'project': self.project_new.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -812,7 +812,7 @@ class TestRoleAssignmentImportView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_import',
-                    kwargs={'project': self.project_new.omics_uuid}))
+                    kwargs={'project': self.project_new.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -829,16 +829,16 @@ class TestRoleAssignmentImportView(
 
         values = {
             'import-mode': 'append',
-            'source-project': self.project.omics_uuid,
+            'source-project': self.project.sodar_uuid,
             'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.omics_uuid): 1,
-            'import_field_{}'.format(self.guest_as.omics_uuid): 1}
+            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
+            'import_field_{}'.format(self.guest_as.sodar_uuid): 1}
 
         with self.login(self.user_owner):
             response = self.client.post(
                 reverse(
                     'projectroles:role_import',
-                    kwargs={'project': self.project_new.omics_uuid}),
+                    kwargs={'project': self.project_new.sodar_uuid}),
                 values)
 
         # Assert postcondition
@@ -858,17 +858,17 @@ class TestRoleAssignmentImportView(
 
         values = {
             'import-mode': 'replace',
-            'source-project': self.project.omics_uuid,
+            'source-project': self.project.sodar_uuid,
             'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.omics_uuid): 1,
-            'import_field_{}'.format(self.guest_as.omics_uuid): 1,
-            'delete_field_{}'.format(new_as.omics_uuid): 1}
+            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
+            'import_field_{}'.format(self.guest_as.sodar_uuid): 1,
+            'delete_field_{}'.format(new_as.sodar_uuid): 1}
 
         with self.login(self.user_owner):
             response = self.client.post(
                 reverse(
                     'projectroles:role_import',
-                    kwargs={'project': self.project_new.omics_uuid}),
+                    kwargs={'project': self.project_new.sodar_uuid}),
                 values)
 
         # Assert postcondition
@@ -890,16 +890,16 @@ class TestRoleAssignmentImportView(
 
         values = {
             'import-mode': 'replace',
-            'source-project': self.project.omics_uuid,
+            'source-project': self.project.sodar_uuid,
             'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.omics_uuid): 1,
-            'import_field_{}'.format(self.guest_as.omics_uuid): 1}
+            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
+            'import_field_{}'.format(self.guest_as.sodar_uuid): 1}
 
         with self.login(self.user_owner):
             response = self.client.post(
                 reverse(
                     'projectroles:role_import',
-                    kwargs={'project': self.project_new.omics_uuid}),
+                    kwargs={'project': self.project_new.sodar_uuid}),
                 values)
 
         # Assert postcondition
@@ -933,7 +933,7 @@ class TestProjectInviteCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:invite_create',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -967,7 +967,7 @@ class TestProjectInviteCreateView(
             response = self.client.post(
                 reverse(
                     'projectroles:invite_create',
-                    kwargs={'project': self.project.omics_uuid}),
+                    kwargs={'project': self.project.sodar_uuid}),
                 values)
 
         # Assert ProjectInvite state after creation
@@ -987,7 +987,7 @@ class TestProjectInviteCreateView(
             'date_expire': invite.date_expire,
             'secret': invite.secret,
             'active': True,
-            'omics_uuid': invite.omics_uuid}
+            'sodar_uuid': invite.sodar_uuid}
 
         self.assertEqual(model_to_dict(invite), expected)
 
@@ -997,7 +997,7 @@ class TestProjectInviteCreateView(
                 response,
                 reverse(
                     'projectroles:invites',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
     def test_accept_invite(self):
         """Test user accepting an invite"""
@@ -1025,7 +1025,7 @@ class TestProjectInviteCreateView(
 
             self.assertRedirects(response, reverse(
                 'projectroles:detail',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
             # Assert postconditions
             self.assertEqual(
@@ -1099,7 +1099,7 @@ class TestProjectInviteListView(
             response = self.client.get(
                 reverse(
                     'projectroles:invites',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -1130,7 +1130,7 @@ class TestProjectInviteRevokeView(
             response = self.client.get(
                 reverse(
                     'projectroles:invite_revoke',
-                    kwargs={'projectinvite': self.invite.omics_uuid}))
+                    kwargs={'projectinvite': self.invite.sodar_uuid}))
 
         self.assertEqual(response.status_code, 200)
 
@@ -1146,7 +1146,7 @@ class TestProjectInviteRevokeView(
             response = self.client.post(
                 reverse(
                     'projectroles:invite_revoke',
-                    kwargs={'projectinvite': self.invite.omics_uuid}))
+                    kwargs={'projectinvite': self.invite.sodar_uuid}))
 
         # Assert ProjectInvite state after creation
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
@@ -1176,7 +1176,7 @@ class TestProjectStarringAPIView(
             response = self.client.post(
                 reverse(
                     'projectroles:star',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         # Assert ProjectUserTag state after creation
         self.assertEqual(ProjectUserTag.objects.all().count(), 1)
@@ -1190,7 +1190,7 @@ class TestProjectStarringAPIView(
             'project': self.project.pk,
             'user': self.user.pk,
             'name': PROJECT_TAG_STARRED,
-            'omics_uuid': tag.omics_uuid}
+            'sodar_uuid': tag.sodar_uuid}
 
         self.assertEqual(model_to_dict(tag), expected)
 
@@ -1209,7 +1209,7 @@ class TestProjectStarringAPIView(
             response = self.client.post(
                 reverse(
                     'projectroles:star',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
         # Assert ProjectUserTag state after creation
         self.assertEqual(ProjectUserTag.objects.all().count(), 0)
@@ -1234,12 +1234,12 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(self.project.omics_uuid)})
+                'project_uuid': str(self.project.sodar_uuid)})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
-            'project_uuid': str(self.project.omics_uuid),
+            'project_uuid': str(self.project.sodar_uuid),
             'title': self.project.title,
             'description': self.project.description}
 
@@ -1256,7 +1256,7 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(pd_project.omics_uuid)})
+                'project_uuid': str(pd_project.sodar_uuid)})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1284,7 +1284,7 @@ class TestProjectUpdateAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_update'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
+                'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
                 'description': desc,
                 'readme': readme})
@@ -1314,15 +1314,15 @@ class TestRoleAssignmentGetAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_get'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
-                'user_uuid': str(self.user.omics_uuid)})
+                'project_uuid': str(self.project.sodar_uuid),
+                'user_uuid': str(self.user.sodar_uuid)})
         response = views.RoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
-            'assignment_uuid': str(self.owner_as.omics_uuid),
-            'project_uuid': str(self.project.omics_uuid),
-            'user_uuid': str(self.user.omics_uuid),
+            'assignment_uuid': str(self.owner_as.sodar_uuid),
+            'project_uuid': str(self.project.sodar_uuid),
+            'user_uuid': str(self.user.sodar_uuid),
             'role_pk': self.role_owner.pk,
             'role_name': self.role_owner.name}
         self.assertEqual(response.data, expected)
@@ -1350,8 +1350,8 @@ class TestRoleAssignmentSetAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_set'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
-                'user_uuid': str(new_user.omics_uuid),
+                'project_uuid': str(self.project.sodar_uuid),
+                'user_uuid': str(new_user.sodar_uuid),
                 'role_pk': self.role_contributor.pk})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
@@ -1372,8 +1372,8 @@ class TestRoleAssignmentSetAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_set'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
-                'user_uuid': str(new_user.omics_uuid),
+                'project_uuid': str(self.project.sodar_uuid),
+                'user_uuid': str(new_user.sodar_uuid),
                 'role_pk': self.role_contributor.pk})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
@@ -1407,8 +1407,8 @@ class TestRoleAssignmentDeleteAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_delete'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
-                'user_uuid': str(new_user.omics_uuid)})
+                'project_uuid': str(self.project.sodar_uuid),
+                'user_uuid': str(new_user.sodar_uuid)})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1424,8 +1424,8 @@ class TestRoleAssignmentDeleteAPIView(
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_delete'),
             data={
-                'project_uuid': str(self.project.omics_uuid),
-                'user_uuid': str(new_user.omics_uuid)})
+                'project_uuid': str(self.project.sodar_uuid),
+                'user_uuid': str(new_user.sodar_uuid)})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)

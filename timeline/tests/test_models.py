@@ -110,7 +110,7 @@ class TestProjectEvent(
             'description': 'description',
             'classified': False,
             'extra_data': {'test_key': 'test_val'},
-            'omics_uuid': self.event.omics_uuid}
+            'sodar_uuid': self.event.sodar_uuid}
 
         self.assertEqual(model_to_dict(self.event), expected)
 
@@ -144,7 +144,7 @@ class TestProjectEventObjectRef(
             obj=self.assignment_owner,
             label='test_label',
             name='test_name',
-            uuid=self.assignment_owner.omics_uuid,
+            uuid=self.assignment_owner.sodar_uuid,
             extra_data={'test_key': 'test_val'})
 
     def test_initialization(self):
@@ -154,7 +154,7 @@ class TestProjectEventObjectRef(
             'label': 'test_label',
             'name': 'test_name',
             'object_model': 'RoleAssignment',
-            'object_uuid': self.assignment_owner.omics_uuid,
+            'object_uuid': self.assignment_owner.sodar_uuid,
             'extra_data': {'test_key': 'test_val'}}
 
         self.assertEqual(model_to_dict(self.obj_ref), expected)
@@ -186,7 +186,7 @@ class TestProjectEventObjectRef(
             'event': self.event.pk,
             'label': 'new_label',
             'name': 'new_name',
-            'object_uuid': new_as.omics_uuid,
+            'object_uuid': new_as.sodar_uuid,
             'object_model': 'RoleAssignment',
             'extra_data': {}}
 

@@ -14,7 +14,7 @@
   <li id="sodar-pr-nav-project-detail"
       class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'detail' %}">
     <a class="nav-link sodar-pr-sidebar-nav-link"
-       href="{% url 'projectroles:detail' project=project.omics_uuid %}"
+       href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
        id="sodar-pr-link-project-detail">
       {% if project.type == PROJECT_TYPE_CATEGORY %}
         <i class="fa fa-cubes"></i>
@@ -33,7 +33,7 @@
         <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
             class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
           <a class="nav-link"
-             href="{% url plugin.entry_point_url_id project=project.omics_uuid %}"
+             href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
              id="sodar-pr-link-app-plugin-{{ plugin.name }}">
             <i class="fa fa-{{ plugin.icon }}"></i><br />{{ plugin.title }}
           </a>
@@ -47,7 +47,7 @@
     <li id="sodar-pr-nav-project-roles"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}">
       <a class="nav-link"
-         href="{% url 'projectroles:roles' project=project.omics_uuid %}"
+         href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-roles">
         <i class="fa fa-users"></i><br />Members
       </a>
@@ -57,7 +57,7 @@
     <li id="sodar-pr-nav-project-update"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}">
       <a class="nav-link"
-         href="{% url 'projectroles:update' project=project.omics_uuid %}"
+         href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
         <i class="fa fa-pencil"></i><br />Update {% get_project_type_str project %}
       </a>
@@ -74,7 +74,7 @@
     <li id="sodar-pr-nav-project-create"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
-         href="{% url 'projectroles:create' project=project.omics_uuid %}"
+         href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
         <i class="fa fa-plus"></i><br />Create Project or Category
       </a>

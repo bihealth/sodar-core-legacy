@@ -64,7 +64,7 @@
                <td>{{ invite.date_expire|date:'Y-m-d H:i' }}</td>
                <td>
                  {% if can_invite %}
-                   {% include 'projectroles/_project_invites_buttons.html' with project=project invite_uuid=invite.omics_uuid %}
+                   {% include 'projectroles/_project_invites_buttons.html' with project=project invite_uuid=invite.sodar_uuid %}
                  {% endif %}
                </td>
              </tr>

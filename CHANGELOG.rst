@@ -5,6 +5,16 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Changed ``omics_uuid`` field in all apps' models to ``sodar_uuid`` (omics_data_mgmt#166)
+
+
 v0.2.0 (2018-09-19)
 ===================
 

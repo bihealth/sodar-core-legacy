@@ -92,7 +92,7 @@ class ProjectManager(models.Manager):
 
 
 class Project(models.Model):
-    """An omics project. Can have one parent category in case of nested
+    """A SODAR project. Can have one parent category in case of nested
     projects. The project must be of a specific type, of which "CATEGORY" and
     "PROJECT" are currently implemented. "CATEGORY" projects are used as
     containers for other projects"""
@@ -137,11 +137,11 @@ class Project(models.Model):
         default=OMICS_CONSTANTS['SUBMIT_STATUS_OK'],
         help_text='Status of project creation')
 
-    #: Project Omics UUID
-    omics_uuid = models.UUIDField(
+    #: Project SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='Project Omics UUID')
+        help_text='Project SODAR UUID')
 
     # Set manager for custom queries
     objects = ProjectManager()
@@ -195,7 +195,7 @@ class Project(models.Model):
 
     def get_absolute_url(self):
         return reverse(
-            'projectroles:detail', kwargs={'project': self.omics_uuid})
+            'projectroles:detail', kwargs={'project': self.sodar_uuid})
 
     # Custom row-level functions
     def get_children(self):
@@ -332,11 +332,11 @@ class RoleAssignment(models.Model):
         related_name='assignments',
         help_text='Role to be assigned')
 
-    #: RoleAssignment Omics UUID
-    omics_uuid = models.UUIDField(
+    #: RoleAssignment SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='RoleAssignment Omics UUID')
+        help_text='RoleAssignment SODAR UUID')
 
     # Set manager for custom queries
     objects = RoleAssignmentManager()
@@ -467,11 +467,11 @@ class ProjectSetting(models.Model):
         blank=True,
         help_text='Value of the setting')
 
-    #: ProjectSetting Omics UUID
-    omics_uuid = models.UUIDField(
+    #: ProjectSetting SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='ProjectSetting Omics UUID')
+        help_text='ProjectSetting SODAR UUID')
 
     # Set manager for custom queries
     objects = ProjectSettingManager()
@@ -576,11 +576,11 @@ class ProjectInvite(models.Model):
         default=True,
         help_text='Status of the invite (False if claimed or revoked)')
 
-    #: ProjectInvite Omics UUID
-    omics_uuid = models.UUIDField(
+    #: ProjectInvite SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='ProjectInvite Omics UUID')
+        help_text='ProjectInvite SODAR UUID')
 
     class Meta:
         ordering = [
@@ -629,11 +629,11 @@ class ProjectUserTag(models.Model):
         default=PROJECT_TAG_STARRED,
         help_text='Name of tag to be assigned')
 
-    #: ProjectUserTag Omics UUID
-    omics_uuid = models.UUIDField(
+    #: ProjectUserTag SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='ProjectUserTag Omics UUID')
+        help_text='ProjectUserTag SODAR UUID')
 
     class Meta:
         ordering = [
@@ -662,11 +662,11 @@ class OmicsUser(AbstractUser):
     # around the globe.
     name = models.CharField(_('Name of User'), blank=True, max_length=255)
 
-    #: User Omics UUID
-    omics_uuid = models.UUIDField(
+    #: User SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='User Omics UUID')
+        help_text='User SODAR UUID')
 
     class Meta:
         abstract = True

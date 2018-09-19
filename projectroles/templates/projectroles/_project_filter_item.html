@@ -5,7 +5,7 @@
 {% has_star p request.user as is_starred %}
 
 <tr class="sodar-pr-project-list-item sodar-pr-home-display-filtered {% if is_starred %}sodar-pr-home-display-starred{% endif %}"
-    id="sodar-pr-project-search-item-{{ p.omics_uuid }}">
+    id="sodar-pr-project-search-item-{{ p.sodar_uuid }}">
   <td orig-txt="{{ p.get_full_title }}">
     <div class="sodar-overflow-container">
       {% if p.type == 'CATEGORY' %}
@@ -13,7 +13,7 @@
       {% else %}
         <i class="fa fa-fw fa-cube"></i>
       {% endif %}
-      <a href="{% url 'projectroles:detail' project=p.omics_uuid %}">
+      <a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">
         {% autoescape off %}
           {% get_project_title_html p %}
         {% endautoescape %}

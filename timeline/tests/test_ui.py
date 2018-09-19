@@ -61,7 +61,7 @@ class TestListView(
 
         url = reverse(
             'timeline:list_project',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_object_event_visibility(self):
@@ -88,7 +88,7 @@ class TestListView(
         url = reverse(
             'timeline:list_object',
             kwargs={
-                'project': self.project.omics_uuid,
+                'project': self.project.sodar_uuid,
                 'object_model': self.ref_obj.object_model,
                 'object_uuid': self.ref_obj.object_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
@@ -104,5 +104,5 @@ class TestListView(
 
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')

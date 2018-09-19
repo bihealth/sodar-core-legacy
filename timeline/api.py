@@ -131,7 +131,7 @@ class TimelineAPI:
 
             # Get history link
             history_url = reverse('timeline:list_object', kwargs={
-                'project': event.project.omics_uuid,
+                'project': event.project.sodar_uuid,
                 'object_model': ref_obj.object_model,
                 'object_uuid': ref_obj.object_uuid})
             history_link = '<a href="{}" class="sodar-tl-object-link">' \
@@ -141,7 +141,7 @@ class TimelineAPI:
             # Special case: User model
             if ref_obj.object_model == 'User':
                 try:
-                    user = User.objects.get(omics_uuid=ref_obj.object_uuid)
+                    user = User.objects.get(sodar_uuid=ref_obj.object_uuid)
                     refs[r] = '{} {}'.format(
                         get_user_html(user), history_link)
 
@@ -152,14 +152,14 @@ class TimelineAPI:
             elif ref_obj.object_model == 'Project':
                 try:
                     project = Project.objects.get(
-                        omics_uuid=ref_obj.object_uuid)
+                        sodar_uuid=ref_obj.object_uuid)
 
                     if request and request.user.has_perm(
                             'projectroles.view_project', project):
                         refs[r] = '<a href="{}">{}</a>'.format(
                             reverse(
                                 'projetroles:detail',
-                                kwargs={'project': project.omics_uuid}),
+                                kwargs={'project': project.sodar_uuid}),
                             get_label(project.title))
 
                     else:
@@ -209,7 +209,7 @@ class TimelineAPI:
         return reverse('timeline:list_object', kwargs={
             'project': project_uuid,
             'object_model': obj.__class__.__name__,
-            'object_uuid': obj.omics_uuid})
+            'object_uuid': obj.sodar_uuid})
 
     @staticmethod
     def get_object_link(project_uuid, obj):

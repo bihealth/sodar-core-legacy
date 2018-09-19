@@ -6,7 +6,7 @@ from projectroles.models import OmicsUser
 # fields and functions as needed.
 
 # NOTE: If integrating projectroles with an existing project, you will have to
-#       include migration scripts for populating the omics_uuid field. See:
+#       include migration scripts for populating the sodar_uuid field. See:
 #
 
 
