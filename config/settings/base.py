@@ -79,6 +79,9 @@ LOCAL_APPS = [
 
     # Example site app
     'example_site_app.apps.ExampleSiteAppConfig',
+
+    # Example backend app
+    'example_backend_app.apps.ExampleBackendAppConfig',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
