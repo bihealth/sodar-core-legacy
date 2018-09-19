@@ -5,8 +5,8 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
-v0.2.0 (2018-08-19)
-==================
+v0.2.0 (2018-09-19)
+===================
 
 Added
 -----
