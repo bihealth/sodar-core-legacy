@@ -448,7 +448,7 @@ Example of a simple results template, in case of a single ``all`` category:
      {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
 
      {# Set up a table with your results #}
-     <table class="table table-striped omics-card-table omics-search-table" id="omics-ff-search-table">
+     <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-ff-search-table">
        <thead>
          <tr>
            <th>Name</th>
