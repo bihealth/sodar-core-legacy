@@ -27,6 +27,7 @@ as examples:
 
 - **config**: Example Django site configuration
 - **docs**: Usage and development documentation
+- **example_backend_app**: Example SODAR Core compatible backend app
 - **example_project_app**: Example SODAR Core compatible project app
 - **example_site**: Example/development Django site
 - **example_site_app**: Example SODAR Core compatible site-wide app

@@ -1,5 +1,6 @@
 .. _dev_site_app:
 
+
 Site App Development
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -35,7 +36,7 @@ Models
 ======
 
 No specific model implementation is required. However, it is strongly to refer
-to objects using ``uuid`` fields instead of the database private key.
+to objects using ``omics_uuid`` fields instead of the database private key.
 
 
 Rules File
@@ -65,7 +66,7 @@ member variables and functions as instructed in comments and docstrings.
     from .urls import urlpatterns
 
     class SiteAppPlugin(SiteAppPluginPoint):
-        """Plugin for registering a site-widw app"""
+        """Plugin for registering a site-wide app"""
         name = 'example_site_app'
         title = 'Example Site App'
         urls = urlpatterns
