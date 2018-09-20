@@ -36,7 +36,7 @@ def get_app_url(event):
     # Projectroles is a special case
     if event.app == 'projectroles':
         return reverse(
-            'projectroles:detail', kwargs={'project': event.project.omics_uuid})
+            'projectroles:detail', kwargs={'project': event.project.sodar_uuid})
 
     else:
         app_plugin = ProjectAppPluginPoint.get_plugin(event.app)
@@ -44,7 +44,7 @@ def get_app_url(event):
         if app_plugin:
             return reverse(
                 app_plugin.entry_point_url_id,
-                kwargs={'project': event.project.omics_uuid})
+                kwargs={'project': event.project.sodar_uuid})
 
     return '#'
 

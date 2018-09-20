@@ -5,7 +5,7 @@
 {% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
 {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
 
-{% omics_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
+{% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 
 <div class="row sodar-pr-content-title">
 
@@ -17,7 +17,7 @@
   <div>
     <a role="link" class="btn btn-link sodar-pr-btn-star"
        href="#" id="sodar-pr-link-project-star"
-       star-url="{% url 'projectroles:star' project=project.omics_uuid %}"
+       star-url="{% url 'projectroles:star' project=project.sodar_uuid %}"
        csrf-token="{{ csrf_token }}"
        title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
        data-toggle="tooltip" data-placement="top">

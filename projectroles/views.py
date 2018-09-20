@@ -26,7 +26,7 @@ from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
     get_email_footer, get_role_change_body, get_role_change_subject
 from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    OMICS_CONSTANTS, PROJECT_TAG_STARRED
+    SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_settings import set_project_setting, get_project_setting, \
     get_all_settings
@@ -40,15 +40,15 @@ User = auth.get_user_model()
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 
-# Omics constants
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_CHOICES = OMICS_CONSTANTS['PROJECT_TYPE_CHOICES']
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-SUBMIT_STATUS_OK = OMICS_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = OMICS_CONSTANTS[
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_CHOICES = SODAR_CONSTANTS['PROJECT_TYPE_CHOICES']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
     'SUBMIT_STATUS_PENDING_TASKFLOW']
 
 # Local constants
@@ -67,7 +67,7 @@ class ProjectAccessMixin:
         # "project" kwarg is a special case
         if 'project' in kwargs:
             try:
-                return Project.objects.get(omics_uuid=kwargs['project'])
+                return Project.objects.get(sodar_uuid=kwargs['project'])
 
             except Project.DoesNotExist:
                 return None
@@ -95,7 +95,7 @@ class ProjectAccessMixin:
             return None
 
         try:
-            obj = model.objects.get(omics_uuid=kwargs[uuid_kwarg])
+            obj = model.objects.get(sodar_uuid=kwargs[uuid_kwarg])
 
             if hasattr(obj, 'project'):
                 return obj.project
@@ -138,7 +138,7 @@ class RolePermissionMixin(LoggedInPermissionMixin, ProjectAccessMixin):
         """Override has_permission to check perms depending on role"""
         try:
             obj = RoleAssignment.objects.get(
-                omics_uuid=self.kwargs['roleassignment'])
+                sodar_uuid=self.kwargs['roleassignment'])
 
             if obj.role.name == PROJECT_ROLE_OWNER:
                 # Modifying the project owner is not allowed in role views
@@ -280,7 +280,7 @@ class ProjectDetailView(
     permission_required = 'projectroles.view_project'
     model = Project
     slug_url_kwarg = 'project'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def get_context_data(self, *args, **kwargs):
         context = super(ProjectDetailView, self).get_context_data(
@@ -508,23 +508,23 @@ class ProjectModifyMixin(ModelFormMixin):
             flow_data = {
                 'project_title': project.title,
                 'project_description': project.description,
-                'parent_uuid': str(project.parent.omics_uuid) if
+                'parent_uuid': str(project.parent.sodar_uuid) if
                 project.parent else 0,
                 'owner_username': owner.username,
-                'owner_uuid': str(owner.omics_uuid),
+                'owner_uuid': str(owner.sodar_uuid),
                 'owner_role_pk': Role.objects.get(
                     name=PROJECT_ROLE_OWNER).pk,
                 'settings': project_settings}
 
             if form_action == 'update':
                 old_owner = project.get_owner().user
-                flow_data['old_owner_uuid'] = str(old_owner.omics_uuid)
+                flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
                 flow_data['old_owner_username'] = old_owner.username
                 flow_data['project_readme'] = project.readme.raw
 
             try:
                 taskflow.submit(
-                    project_uuid=str(project.omics_uuid),
+                    project_uuid=str(project.sodar_uuid),
                     flow_name='project_{}'.format(form_action),
                     flow_data=flow_data,
                     request=self.request)
@@ -546,7 +546,7 @@ class ProjectModifyMixin(ModelFormMixin):
                     if project.parent:
                         redirect_url = reverse(
                             'projectroles:detail',
-                            kwargs={'project': project.parent.omics_uuid})
+                            kwargs={'project': project.parent.sodar_uuid})
 
                     else:
                         redirect_url = reverse('home')
@@ -554,7 +554,7 @@ class ProjectModifyMixin(ModelFormMixin):
                 else:   # Update
                     redirect_url = reverse(
                         'projectroles:detail',
-                        kwargs={'project': project.omics_uuid})
+                        kwargs={'project': project.sodar_uuid})
 
                 return HttpResponseRedirect(redirect_url)
 
@@ -594,7 +594,7 @@ class ProjectModifyMixin(ModelFormMixin):
 
         messages.success(self.request, '{} {}d.'.format(type_str, form_action))
         return HttpResponseRedirect(reverse(
-            'projectroles:detail', kwargs={'project': project.omics_uuid}))
+            'projectroles:detail', kwargs={'project': project.sodar_uuid}))
 
 
 class ProjectCreateView(
@@ -611,7 +611,7 @@ class ProjectCreateView(
 
         if 'project' in self.kwargs:
             context['parent'] = Project.objects.get(
-                omics_uuid=self.kwargs['project'])
+                sodar_uuid=self.kwargs['project'])
 
         return context
 
@@ -625,7 +625,7 @@ class ProjectCreateView(
     def get(self, request, *args, **kwargs):
         """Override get() to limit project creation under other projects"""
         if 'project' in self.kwargs:
-            project = Project.objects.get(omics_uuid=self.kwargs['project'])
+            project = Project.objects.get(sodar_uuid=self.kwargs['project'])
 
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
@@ -633,7 +633,7 @@ class ProjectCreateView(
                     'Creating a project within a project is not allowed')
                 return HttpResponseRedirect(reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.omics_uuid}))
+                    kwargs={'project': project.sodar_uuid}))
 
         return super(ProjectCreateView, self).get(request, *args, **kwargs)
 
@@ -646,7 +646,7 @@ class ProjectUpdateView(
     model = Project
     form_class = ProjectForm
     slug_url_kwarg = 'project'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def get_form_kwargs(self):
         kwargs = super(ProjectUpdateView, self).get_form_kwargs()
@@ -694,7 +694,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
                 project_url=self.request.build_absolute_uri(reverse(
                     'projectroles:detail',
                     kwargs={
-                        'project': project.omics_uuid}))).replace('\n', '\\n')
+                        'project': project.sodar_uuid}))).replace('\n', '\\n')
 
         return context
 
@@ -738,12 +738,12 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
 
             flow_data = {
                 'username': user.username,
-                'user_uuid': str(user.omics_uuid),
+                'user_uuid': str(user.sodar_uuid),
                 'role_pk': role.pk}
 
             try:
                 taskflow.submit(
-                    project_uuid=project.omics_uuid,
+                    project_uuid=project.sodar_uuid,
                     flow_name='role_update',
                     flow_data=flow_data,
                     request=self.request)
@@ -755,7 +755,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
                 messages.error(self.request, str(ex))
                 return redirect(reverse(
                     'projectroles:roles',
-                    kwargs={'project': project.omics_uuid}))
+                    kwargs={'project': project.sodar_uuid}))
 
             # Get object
             self.object = RoleAssignment.objects.get(
@@ -792,7 +792,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
         return redirect(
             reverse(
                 'projectroles:roles',
-                kwargs={'project': self.object.project.omics_uuid}))
+                kwargs={'project': self.object.project.sodar_uuid}))
 
 
 class RoleAssignmentCreateView(
@@ -818,7 +818,7 @@ class RoleAssignmentUpdateView(
     model = RoleAssignment
     form_class = RoleAssignmentForm
     slug_url_kwarg = 'roleassignment'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def get_form_kwargs(self):
         """Pass current user to form"""
@@ -833,7 +833,7 @@ class RoleAssignmentDeleteView(
     """RoleAssignment deletion view"""
     model = RoleAssignment
     slug_url_kwarg = 'roleassignment'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def post(self, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
@@ -841,7 +841,7 @@ class RoleAssignmentDeleteView(
         tl_event = None
 
         self.object = RoleAssignment.objects.get(
-            omics_uuid=kwargs['roleassignment'])
+            sodar_uuid=kwargs['roleassignment'])
         project = self.object.project
         user = self.object.user
         role = self.object.role
@@ -870,12 +870,12 @@ class RoleAssignmentDeleteView(
 
             flow_data = {
                 'username': user.username,
-                'user_uuid': str(user.omics_uuid),
+                'user_uuid': str(user.sodar_uuid),
                 'role_pk': role.pk}
 
             try:
                 taskflow.submit(
-                    project_uuid=project.omics_uuid,
+                    project_uuid=project.sodar_uuid,
                     flow_name='role_delete',
                     flow_data=flow_data,
                     request=self.request)
@@ -888,7 +888,7 @@ class RoleAssignmentDeleteView(
                 messages.error(self.request, str(ex))
                 return HttpResponseRedirect(redirect(reverse(
                     'projectroles:roles',
-                    kwargs={'project': project.omics_uuid})))
+                    kwargs={'project': project.sodar_uuid})))
 
         # Local save without Taskflow
         else:
@@ -909,7 +909,7 @@ class RoleAssignmentDeleteView(
                 user.username))
 
         return HttpResponseRedirect(reverse(
-            'projectroles:roles', kwargs={'project': project.omics_uuid}))
+            'projectroles:roles', kwargs={'project': project.sodar_uuid}))
 
     def get_form_kwargs(self):
         """Pass current user to form"""
@@ -934,7 +934,7 @@ class RoleAssignmentImportView(
         if request.user.is_superuser:
             projects = Project.objects.filter(
                 type=PROJECT_TYPE_PROJECT).exclude(
-                omics_uuid=self.kwargs['project'])
+                sodar_uuid=self.kwargs['project'])
 
             context['owned_projects'] = sorted(
                 [p for p in projects],
@@ -945,7 +945,7 @@ class RoleAssignmentImportView(
                 project__type=PROJECT_TYPE_PROJECT,
                 user=self.request.user,
                 role__name=PROJECT_ROLE_OWNER).exclude(
-                    project__omics_uuid=self.kwargs['project'])
+                    project__sodar_uuid=self.kwargs['project'])
 
             if assignments.count() > 0:
                 context['owned_projects'] = sorted(
@@ -968,7 +968,7 @@ class RoleAssignmentImportView(
 
         dest_project = self.get_permission_object()
         source_project = Project.objects.get(
-            omics_uuid=post_data['source-project'])
+            sodar_uuid=post_data['source-project'])
 
         use_taskflow = taskflow.use_taskflow(dest_project) if \
             taskflow else False
@@ -1003,7 +1003,7 @@ class RoleAssignmentImportView(
 
             context['previous_page'] = reverse(
                 'projectroles:role_import',
-                kwargs={'project': dest_project.omics_uuid})
+                kwargs={'project': dest_project.sodar_uuid})
 
             return super(TemplateView, self).render_to_response(context)
 
@@ -1021,7 +1021,7 @@ class RoleAssignmentImportView(
 
         for key in import_keys:
             source_as = RoleAssignment.objects.get(
-                omics_uuid=key.split('_')[2])
+                sodar_uuid=key.split('_')[2])
 
             try:
                 old_as = RoleAssignment.objects.get(
@@ -1115,7 +1115,7 @@ class RoleAssignmentImportView(
         if import_mode == 'replace' and del_count > 0:
             del_uuids = [k.split('_')[2] for k in del_keys]
             del_assignments = RoleAssignment.objects.filter(
-                omics_uuid__in=del_uuids).order_by('user__username')
+                sodar_uuid__in=del_uuids).order_by('user__username')
             del_users = [a.user for a in del_assignments]
 
             del_assignments.delete()
@@ -1165,7 +1165,7 @@ class RoleAssignmentImportView(
 
         return redirect(reverse(
             'projectroles:roles',
-            kwargs={'project': dest_project.omics_uuid}))
+            kwargs={'project': dest_project.sodar_uuid}))
 
 
 # ProjectInvite Views ----------------------------------------------------------
@@ -1244,7 +1244,7 @@ class ProjectInviteView(
         """Override get_object to provide a Project object for both template
         and permission checking"""
         try:
-            obj = Project.objects.get(omics_uuid=self.kwargs['project'])
+            obj = Project.objects.get(sodar_uuid=self.kwargs['project'])
             return obj
 
         except Project.DoesNotExist:
@@ -1293,7 +1293,7 @@ class ProjectInviteCreateView(
         """Pass current user to form"""
         kwargs = super(ProjectInviteCreateView, self).get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
-        kwargs.update({'project': self.get_permission_object().omics_uuid})
+        kwargs.update({'project': self.get_permission_object().sodar_uuid})
         return kwargs
 
     def form_valid(self, form):
@@ -1304,7 +1304,7 @@ class ProjectInviteCreateView(
 
         return redirect(reverse(
             'projectroles:invites',
-            kwargs={'project': self.object.project.omics_uuid}))
+            kwargs={'project': self.object.project.sodar_uuid}))
 
 
 class ProjectInviteAcceptView(
@@ -1356,7 +1356,7 @@ class ProjectInviteAcceptView(
                 fail_desc='User already has roles in project')
             return redirect(reverse(
                 'projectroles:detail',
-                kwargs={'project': invite.project.omics_uuid}))
+                kwargs={'project': invite.project.sodar_uuid}))
 
         except RoleAssignment.DoesNotExist:
             pass
@@ -1396,12 +1396,12 @@ class ProjectInviteAcceptView(
 
             flow_data = {
                 'username': self.request.user.username,
-                'user_uuid': str(self.request.user.omics_uuid),
+                'user_uuid': str(self.request.user.sodar_uuid),
                 'role_pk': invite.role.pk}
 
             try:
                 taskflow.submit(
-                    project_uuid=str(invite.project.omics_uuid),
+                    project_uuid=str(invite.project.sodar_uuid),
                     flow_name='role_update',
                     flow_data=flow_data,
                     request=self.request)
@@ -1447,7 +1447,7 @@ class ProjectInviteAcceptView(
                 invite.role.name))
         return redirect(reverse(
             'projectroles:detail',
-            kwargs={'project': invite.project.omics_uuid}))
+            kwargs={'project': invite.project.sodar_uuid}))
 
 
 class ProjectInviteResendView(
@@ -1459,7 +1459,7 @@ class ProjectInviteResendView(
     def get(self, *args, **kwargs):
         try:
             invite = ProjectInvite.objects.get(
-                omics_uuid=self.kwargs['projectinvite'],
+                sodar_uuid=self.kwargs['projectinvite'],
                 active=True)
 
         except ProjectInvite.DoesNotExist:
@@ -1480,7 +1480,7 @@ class ProjectInviteResendView(
 
         return redirect(reverse(
             'projectroles:invites',
-            kwargs={'project': invite.project.omics_uuid}))
+            kwargs={'project': invite.project.sodar_uuid}))
 
 
 class ProjectInviteRevokeView(
@@ -1498,7 +1498,7 @@ class ProjectInviteRevokeView(
         if 'projectinvite' in self.kwargs:
             try:
                 context['invite'] = ProjectInvite.objects.get(
-                    omics_uuid=self.kwargs['projectinvite'])
+                    sodar_uuid=self.kwargs['projectinvite'])
 
             except ProjectInvite.DoesNotExist:
                 pass
@@ -1513,7 +1513,7 @@ class ProjectInviteRevokeView(
 
         try:
             invite = ProjectInvite.objects.get(
-                omics_uuid=kwargs['projectinvite'])
+                sodar_uuid=kwargs['projectinvite'])
 
             invite.active = False
             invite.save()
@@ -1535,7 +1535,7 @@ class ProjectInviteRevokeView(
 
         return redirect(reverse(
             'projectroles:invites',
-            kwargs={'project': project.omics_uuid}))
+            kwargs={'project': project.sodar_uuid}))
 
 
 # Javascript API Views ---------------------------------------------------
@@ -1583,14 +1583,14 @@ class ProjectGetAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'],
+                sodar_uuid=request.data['project_uuid'],
                 submit_status=SUBMIT_STATUS_OK)
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
 
         ret_data = {
-            'project_uuid': str(project.omics_uuid),
+            'project_uuid': str(project.sodar_uuid),
             'title': project.title,
             'description': project.description}
 
@@ -1602,7 +1602,7 @@ class ProjectUpdateAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid'])
             project.title = request.data['title']
             project.description = request.data['description']
             project.readme.raw = request.data['readme']
@@ -1620,8 +1620,8 @@ class RoleAssignmentGetAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
-            user = User.objects.get(omics_uuid=request.data['user_uuid'])
+                sodar_uuid=request.data['project_uuid'])
+            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
 
         except (Project.DoesNotExist, User.DoesNotExist) as ex:
             return Response(str(ex), status=404)
@@ -1630,9 +1630,9 @@ class RoleAssignmentGetAPIView(APIView):
             role_as = RoleAssignment.objects.get(
                 project=project, user=user)
             ret_data = {
-                'assignment_uuid': str(role_as.omics_uuid),
-                'project_uuid': str(role_as.project.omics_uuid),
-                'user_uuid': str(role_as.user.omics_uuid),
+                'assignment_uuid': str(role_as.sodar_uuid),
+                'project_uuid': str(role_as.project.sodar_uuid),
+                'user_uuid': str(role_as.user.sodar_uuid),
                 'role_pk': role_as.role.pk,
                 'role_name': role_as.role.name}
             return Response(ret_data, status=200)
@@ -1646,8 +1646,8 @@ class RoleAssignmentSetAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
-            user = User.objects.get(omics_uuid=request.data['user_uuid'])
+                sodar_uuid=request.data['project_uuid'])
+            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
             role = Role.objects.get(pk=request.data['role_pk'])
 
         except (Project.DoesNotExist, User.DoesNotExist,
@@ -1670,8 +1670,8 @@ class RoleAssignmentDeleteAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
-            user = User.objects.get(omics_uuid=request.data['user_uuid'])
+                sodar_uuid=request.data['project_uuid'])
+            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
 
         except (Project.DoesNotExist, User.DoesNotExist) as ex:
             return Response(str(ex), status=404)
@@ -1692,13 +1692,13 @@ class ProjectSettingsGetAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid'])
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
 
         ret_data = {
-            'project_uuid': project.omics_uuid,
+            'project_uuid': project.sodar_uuid,
             'settings': get_all_settings(project)}
 
         return Response(ret_data, status=200)
@@ -1709,7 +1709,7 @@ class ProjectSettingsSetAPIView(APIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                omics_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid'])
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)

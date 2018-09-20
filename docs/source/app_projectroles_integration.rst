@@ -91,7 +91,7 @@ Add the following rows into your ``base.txt`` file:
 .. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@v0.2.0#egg=django-sodar-core
+    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@v0.2.1#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
@@ -378,7 +378,7 @@ Extending the User Model
 In a cookiecutter-django project, an extended user model should already exist
 in ``{SITE_NAME}/users/models.py``. The abstract model provided by the
 projectroles app provides the same model with critical additions, most notably
-the ``omics_uuid`` field used as an unique identifier for SODAR objects
+the ``sodar_uuid`` field used as an unique identifier for SODAR objects
 including users.
 
 If you have not added any of your own modifications to the model, you can simply
@@ -386,9 +386,9 @@ If you have not added any of your own modifications to the model, you can simply
 
 .. code-block:: python
 
-    from projectroles.models import OmicsUser
+    from projectroles.models import SODARUser
 
-    class User(OmicsUser):
+    class User(SODARUser):
         pass
 
 If you need to add your own extra fields or functions (or have existing ones
@@ -411,7 +411,7 @@ Populating UUIDs for Existing Users
 -----------------------------------
 
 When integrating projectroles into an existing site with existing users, the
-``omics_uuid`` field needs to be populated. See
+``sodar_uuid`` field needs to be populated. See
 `instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
 

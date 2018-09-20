@@ -9,19 +9,19 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from ..models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectSetting, ProjectUserTag, OMICS_CONSTANTS, PROJECT_TAG_STARRED
+    ProjectSetting, ProjectUserTag, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from ..plugins import get_app_plugin
 
-# Omics constants
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = OMICS_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 
 
 # Settings
@@ -134,7 +134,7 @@ class TestProject(TestCase, ProjectMixin):
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category_top.pk,
             'submit_status': SUBMIT_STATUS_OK,
-            'omics_uuid': self.project_sub.omics_uuid,
+            'sodar_uuid': self.project_sub.sodar_uuid,
             'description': ''}
         model_dict = model_to_dict(self.project_sub)
         # HACK: Can't compare markupfields like this. Better solution?
@@ -217,7 +217,7 @@ class TestProject(TestCase, ProjectMixin):
         """Test get_absolute_url()"""
         expected_url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project_sub.omics_uuid})
+            kwargs={'project': self.project_sub.sodar_uuid})
         self.assertEqual(self.project_sub.get_absolute_url(), expected_url)
 
 
@@ -307,7 +307,7 @@ class TestRoleAssignment(TestCase, ProjectMixin, RoleAssignmentMixin):
             'project': self.category_top.pk,
             'user': self.user_alice.pk,
             'role': self.role_owner.pk,
-            'omics_uuid': self.assignment_owner.omics_uuid}
+            'sodar_uuid': self.assignment_owner.sodar_uuid}
 
     def test_initialization(self):
         self.assertEqual(
@@ -385,14 +385,14 @@ class TestRoleAssignment(TestCase, ProjectMixin, RoleAssignmentMixin):
                 'project': self.project_top.pk,
                 'user': self.user_erin.pk,
                 'role': self.role_contributor.pk,
-                'omics_uuid': assignment_c0.omics_uuid
+                'sodar_uuid': assignment_c0.sodar_uuid
             },
             {
                 'id': assignment_c1.pk,
                 'project': self.project_top.pk,
                 'user': self.user_frank.pk,
                 'role': self.role_contributor.pk,
-                'omics_uuid': assignment_c1.omics_uuid
+                'sodar_uuid': assignment_c1.sodar_uuid
             }
         ]
 
@@ -463,7 +463,7 @@ class TestProjectInvite(
             'date_expire': self.invite.date_expire,
             'message': '',
             'secret': SECRET,
-            'omics_uuid': self.invite.omics_uuid,
+            'sodar_uuid': self.invite.sodar_uuid,
             'active': True}
         self.assertEqual(model_to_dict(self.invite), expected)
 
@@ -579,7 +579,7 @@ class TestProjectSetting(
             'name': 'str_setting',
             'type': 'STRING',
             'value': 'test',
-            'omics_uuid': self.setting_str.omics_uuid}
+            'sodar_uuid': self.setting_str.sodar_uuid}
         self.assertEqual(model_to_dict(self.setting_str), expected)
 
     def test_initialization_integer(self):
@@ -591,7 +591,7 @@ class TestProjectSetting(
             'name': 'int_setting',
             'type': 'INTEGER',
             'value': '170',
-            'omics_uuid': self.setting_int.omics_uuid}
+            'sodar_uuid': self.setting_int.sodar_uuid}
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
@@ -653,7 +653,7 @@ class TestProjectUserTag(
             'project': self.project.pk,
             'user': self.user.pk,
             'name': PROJECT_TAG_STARRED,
-            'omics_uuid': self.tag.omics_uuid}
+            'sodar_uuid': self.tag.sodar_uuid}
         self.assertEqual(model_to_dict(self.tag), expected)
 
     def test__str__(self):

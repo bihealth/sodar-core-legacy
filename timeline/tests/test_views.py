@@ -4,7 +4,7 @@ import uuid
 from django.core.urlresolvers import reverse
 
 # Projectroles dependency
-from projectroles.models import Role, OMICS_CONSTANTS
+from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
@@ -12,13 +12,13 @@ from .test_models import TestProjectEventBase, ProjectEventMixin,\
     ProjectEventStatusMixin
 
 
-# Omics constants
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestViewsBase(
@@ -71,7 +71,7 @@ class TestProjectListView(TestViewsBase):
             response = self.client.get(
                 reverse(
                     'timeline:list_project',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
             self.assertEqual(response.status_code, 200)
 
 
@@ -94,7 +94,7 @@ class TestObjectListView(TestViewsBase):
                 reverse(
                     'timeline:list_object',
                     kwargs={
-                        'project': self.project.omics_uuid,
+                        'project': self.project.sodar_uuid,
                         'object_model': self.ref_obj.object_model,
                         'object_uuid': self.ref_obj.object_uuid}))
             self.assertEqual(response.status_code, 200)
@@ -119,7 +119,7 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
     def test_set_status(self):
         """Test setting the status of the event"""
         values = {
-            'event_uuid': self.event_init.omics_uuid,
+            'event_uuid': self.event_init.sodar_uuid,
             'status_type': 'OK',
             'status_desc': ''}
 
@@ -145,7 +145,7 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
     def test_set_invalid_status(self):
         """Test setting the status of the event with an invalid status type"""
         values = {
-            'event_uuid': self.event_init.omics_uuid,
+            'event_uuid': self.event_init.sodar_uuid,
             'status_type': 'ahL4VeerAeth4ohh',
             'status_desc': ''}
 

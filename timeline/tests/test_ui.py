@@ -4,7 +4,7 @@ from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import OMICS_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.tests.test_ui import TestUIBase
 
@@ -12,13 +12,13 @@ from .test_models import ProjectEventMixin, \
     ProjectEventStatusMixin
 
 
-# Omics settings
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestListView(
@@ -61,7 +61,7 @@ class TestListView(
 
         url = reverse(
             'timeline:list_project',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_object_event_visibility(self):
@@ -88,7 +88,7 @@ class TestListView(
         url = reverse(
             'timeline:list_object',
             kwargs={
-                'project': self.project.omics_uuid,
+                'project': self.project.sodar_uuid,
                 'object_model': self.ref_obj.object_model,
                 'object_uuid': self.ref_obj.object_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
@@ -104,5 +104,5 @@ class TestListView(
 
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-tl-list-event')

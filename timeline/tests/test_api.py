@@ -4,7 +4,7 @@ from django.forms.models import model_to_dict
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import OMICS_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 
@@ -15,12 +15,12 @@ from ..models import ProjectEvent, ProjectEventStatus, ProjectEventObjectRef,\
 
 
 # Global constants from settings
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestTimelineAPI(
@@ -61,7 +61,7 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': {'test_key': 'test_val'},
-            'omics_uuid': event.omics_uuid}
+            'sodar_uuid': event.sodar_uuid}
 
         self.assertEqual(model_to_dict(event), expected)
 
@@ -110,7 +110,7 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': {'test_key': 'test_val'},
-            'omics_uuid': event.omics_uuid}
+            'sodar_uuid': event.sodar_uuid}
 
         self.assertEqual(model_to_dict(event), expected_event)
 
@@ -195,7 +195,7 @@ class TestTimelineAPI(
             'label': 'obj',
             'name': 'assignment',
             'object_model': temp_obj.__class__.__name__,
-            'object_uuid': temp_obj.omics_uuid,
+            'object_uuid': temp_obj.sodar_uuid,
             'extra_data': {'test_key': 'test_val'}}
 
         self.assertEqual(model_to_dict(ref), expected)
@@ -240,11 +240,11 @@ class TestTimelineAPI(
         expected_url = reverse(
             'timeline:list_object',
             kwargs={
-                'project': self.project.omics_uuid,
+                'project': self.project.sodar_uuid,
                 'object_model': self.user_owner.__class__.__name__,
-                'object_uuid': self.user_owner.omics_uuid})
+                'object_uuid': self.user_owner.sodar_uuid})
         url = self.timeline.get_object_url(
-            self.project.omics_uuid, self.user_owner)
+            self.project.sodar_uuid, self.user_owner)
 
         self.assertEqual(expected_url, url)
 
@@ -254,11 +254,11 @@ class TestTimelineAPI(
         expected_url = reverse(
             'timeline:list_object',
             kwargs={
-                'project': self.project.omics_uuid,
+                'project': self.project.sodar_uuid,
                 'object_model': self.user_owner.__class__.__name__,
-                'object_uuid': self.user_owner.omics_uuid})
+                'object_uuid': self.user_owner.sodar_uuid})
 
         link = self.timeline.get_object_link(
-            self.project.omics_uuid, self.user_owner)
+            self.project.sodar_uuid, self.user_owner)
 
         self.assertIn(expected_url, link)

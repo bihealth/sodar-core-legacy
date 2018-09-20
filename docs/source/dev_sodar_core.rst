@@ -143,7 +143,6 @@ Git Branches
     - The ``dev`` branch is merged into it for freezing releases
 - ``dev``
     - The bleeding edge development branch with (mostly) stable new features
-    - This branch is deployed for test use in ``http://omics-beta.bihealth.org``
 - Temporary development branches
     - Base on ``dev``
     - Please use a consistent naming such as ``feature/x`` and ``fix/y``

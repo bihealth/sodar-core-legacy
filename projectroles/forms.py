@@ -8,21 +8,21 @@ from django.utils import timezone
 from pagedown.widgets import PagedownWidget
 
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectSetting, OMICS_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
+    ProjectSetting, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
 from .plugins import ProjectAppPluginPoint
 from .utils import get_user_display_name, build_secret
 from projectroles.project_settings import validate_project_setting, \
     get_project_setting, get_default_setting
 
-# Omics constants
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_TYPE_CHOICES = OMICS_CONSTANTS['PROJECT_TYPE_CHOICES']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-SUBMIT_STATUS_OK = OMICS_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_TYPE_CHOICES = SODAR_CONSTANTS['PROJECT_TYPE_CHOICES']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 
 # Local constants and settings
 APP_NAME = 'projectroles'
@@ -40,7 +40,7 @@ class ProjectForm(forms.ModelForm):
     owner = forms.ModelChoiceField(
         User.objects.all(),
         required=True,
-        to_field_name='omics_uuid',
+        to_field_name='sodar_uuid',
         label='Owner',
         help_text='Project owner')
 
@@ -97,7 +97,7 @@ class ProjectForm(forms.ModelForm):
 
         if project:
             try:
-                parent_project = Project.objects.get(omics_uuid=project)
+                parent_project = Project.objects.get(sodar_uuid=project)
 
             except Project.DoesNotExist:
                 pass
@@ -113,8 +113,8 @@ class ProjectForm(forms.ModelForm):
         # Form modifications
         ####################
 
-        # Modify ModelChoiceFields to use omics_uuid
-        self.fields['parent'].to_field_name = 'omics_uuid'
+        # Modify ModelChoiceFields to use sodar_uuid
+        self.fields['parent'].to_field_name = 'sodar_uuid'
 
         # Set readme widget with preview
         self.fields['readme'].widget = PagedownWidget(show_preview=True)
@@ -140,24 +140,24 @@ class ProjectForm(forms.ModelForm):
 
                 # Get owner choices
                 self.fields['owner'].choices = [
-                    (user.omics_uuid, get_user_display_name(user, True)) for
+                    (user.sodar_uuid, get_user_display_name(user, True)) for
                     user in get_selectable_users(current_user).exclude(
                         pk__in=project_users).order_by('name')]
 
                 # Set current owner as initial value
                 owner = self.instance.get_owner().user
-                self.initial['owner'] = owner.omics_uuid
+                self.initial['owner'] = owner.sodar_uuid
 
             # Else don't allow changing the user
             else:
                 owner = self.instance.get_owner().user
                 force_select_value(
                     self.fields['owner'],
-                    (owner.omics_uuid, get_user_display_name(owner, True)))
+                    (owner.sodar_uuid, get_user_display_name(owner, True)))
 
             # Set initial value for parent
             if parent_project:
-                self.initial['parent'] = parent_project.omics_uuid
+                self.initial['parent'] = parent_project.sodar_uuid
 
             else:
                 self.initial['parent'] = None
@@ -166,7 +166,7 @@ class ProjectForm(forms.ModelForm):
         else:
             # Common stuff
             self.fields['owner'].choices = [
-                (user.omics_uuid, get_user_display_name(user, True)) for user in
+                (user.sodar_uuid, get_user_display_name(user, True)) for user in
                 get_selectable_users(current_user).order_by('username')]
 
             # Creating a subproject
@@ -174,19 +174,19 @@ class ProjectForm(forms.ModelForm):
                 # Parent must be current parent
                 force_select_value(
                     self.fields['parent'],
-                    (parent_project.omics_uuid, parent_project.title))
+                    (parent_project.sodar_uuid, parent_project.title))
 
                 # Set parent owner as initial value
                 parent_owner = parent_project.get_owner().user
-                self.initial['owner'] = parent_owner.omics_uuid
+                self.initial['owner'] = parent_owner.sodar_uuid
 
                 # Set up parent field
-                self.initial['parent'] = parent_project.omics_uuid
+                self.initial['parent'] = parent_project.sodar_uuid
 
             # Creating a top level project
             else:
                 self.fields['owner'].choices = [
-                    (user.omics_uuid, get_user_display_name(user, True)) for
+                    (user.sodar_uuid, get_user_display_name(user, True)) for
                     user in get_selectable_users(current_user).order_by(
                         'username')]
 
@@ -263,7 +263,7 @@ class RoleAssignmentForm(forms.ModelForm):
 
         else:
             try:
-                self.project = Project.objects.get(omics_uuid=project)
+                self.project = Project.objects.get(sodar_uuid=project)
 
             except Project.DoesNotExist:
                 pass
@@ -272,9 +272,9 @@ class RoleAssignmentForm(forms.ModelForm):
         # Form modifications
         ####################
 
-        # Modify ModelChoiceFields to use omics_uuid
-        self.fields['project'].to_field_name = 'omics_uuid'
-        self.fields['user'].to_field_name = 'omics_uuid'
+        # Modify ModelChoiceFields to use sodar_uuid
+        self.fields['project'].to_field_name = 'sodar_uuid'
+        self.fields['user'].to_field_name = 'sodar_uuid'
 
         # Limit role choices
         self.fields['role'].choices = get_role_choices(
@@ -285,13 +285,13 @@ class RoleAssignmentForm(forms.ModelForm):
             # Do not allow switching to another project
             force_select_value(
                 self.fields['project'],
-                (self.instance.project.omics_uuid,
+                (self.instance.project.sodar_uuid,
                  self.instance.project.title))
 
             # Do not allow switching to a different user
             force_select_value(
                 self.fields['user'],
-                (self.instance.user.omics_uuid, get_user_display_name(
+                (self.instance.user.sodar_uuid, get_user_display_name(
                     self.instance.user, True)))
 
             # Set initial role
@@ -302,14 +302,14 @@ class RoleAssignmentForm(forms.ModelForm):
             # Limit project choice to self.project
             force_select_value(
                 self.fields['project'],
-                (self.project.omics_uuid, self.project.title))
+                (self.project.sodar_uuid, self.project.title))
 
             # Limit user choices to users without roles in current project
             project_users = RoleAssignment.objects.filter(
                 project=self.project.pk).values_list('user').distinct()
 
             self.fields['user'].choices = [
-                (user.omics_uuid, get_user_display_name(user, True)) for user in
+                (user.sodar_uuid, get_user_display_name(user, True)) for user in
                 get_selectable_users(current_user).exclude(
                     pk__in=project_users).order_by('name')]
 
@@ -387,7 +387,7 @@ class ProjectInviteForm(forms.ModelForm):
         self.project = None
 
         try:
-            self.project = Project.objects.get(omics_uuid=project)
+            self.project = Project.objects.get(sodar_uuid=project)
 
         except Project.DoesNotExist:
             pass

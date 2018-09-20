@@ -5,6 +5,22 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+v0.2.1 (2018-09-20)
+===================
+
+Changed
+-------
+
+- **General**
+    - Change ``omics_uuid`` field in all apps' models to ``sodar_uuid`` (omics_data_mgmt#166)
+- **Projectroles**
+    - Rename abstract ``OmicsUser`` model into ``SODARUser`` (omics_data_mgmt#166)
+    - Rename ``OMICS_CONSTANTS`` into ``SODAR_CONSTANTS`` (omics_data_mgmt#166)
+    - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (omics_data_mgmt(#166)
+    - Rename ``omics_url`` in sodar_taskflow tests to ``sodar_url`` (see omics_taskflow#36)
+    - Rename ``shepherd-theme-omics.css`` to ``shepherd-theme-sodar.css`` (omics_data_mgmt#166)
+
+
 v0.2.0 (2018-09-19)
 ===================
 

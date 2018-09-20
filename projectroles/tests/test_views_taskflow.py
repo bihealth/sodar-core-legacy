@@ -1,6 +1,6 @@
 """Integration tests for views in the projectroles Django app with taskflow"""
 
-# NOTE: You must supply 'omics_url': self.live_server_url in taskflow requests!
+# NOTE: You must supply 'sodar_url': self.live_server_url in taskflow requests!
 #       This is due to the Django 1.10.x feature described here:
 #       https://code.djangoproject.com/ticket/27596
 
@@ -16,7 +16,7 @@ from .taskflow_testcase import TestCase
 from unittest import skipIf     # Could also use tags..
 
 from ..models import Project, Role, RoleAssignment, ProjectInvite, \
-    OMICS_CONSTANTS
+    SODAR_CONSTANTS
 from ..plugins import get_backend_api, change_plugin_status
 from ..project_settings import get_all_settings
 from .test_models import ProjectInviteMixin
@@ -25,16 +25,16 @@ from .test_models import ProjectInviteMixin
 User = auth.get_user_model()
 
 
-# Omics constants
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
-SUBMIT_STATUS_OK = OMICS_CONSTANTS['SUBMIT_STATUS_OK']
-SUBMIT_STATUS_PENDING = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = OMICS_CONSTANTS['SUBMIT_STATUS_PENDING_TASKFLOW']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING_TASKFLOW']
 
 
 # Local constants
@@ -53,13 +53,13 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
         values = {
             'title': title,
             'type': type,
-            'parent': parent.omics_uuid if parent else None,
-            'owner': owner.omics_uuid,
+            'parent': parent.sodar_uuid if parent else None,
+            'owner': owner.sodar_uuid,
             'description': description,
-            'omics_url': self.live_server_url}  # HACK: Override callback URL
+            'sodar_url': self.live_server_url}  # HACK: Override callback URL
         values.update(get_all_settings())   # Add default settings
 
-        post_kwargs = {'project': parent.omics_uuid} if parent else {}
+        post_kwargs = {'project': parent.sodar_uuid} if parent else {}
 
         with self.login(self.user):
             response = self.client.post(
@@ -70,7 +70,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             self.assertRedirects(
                 response, reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.omics_uuid}))
+                    kwargs={'project': project.sodar_uuid}))
 
         project = Project.objects.get(title=title)
         owner_as = project.get_owner()
@@ -79,20 +79,20 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
     def _make_assignment_taskflow(
             self, project, user, role):
         values = {
-            'project': project.omics_uuid,
-            'user': user.omics_uuid,
+            'project': project.sodar_uuid,
+            'user': user.sodar_uuid,
             'role': role.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse('projectroles:role_create', kwargs={
-                    'project': project.omics_uuid}),
+                    'project': project.sodar_uuid}),
                 values)
             role_as = RoleAssignment.objects.get(
                 project=project, user=user)
             self.assertRedirects(response, reverse(
-                'projectroles:roles', kwargs={'project': project.omics_uuid}))
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}))
 
         role_as = RoleAssignment.objects.get(project=project, user=user)
         return role_as
@@ -127,7 +127,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
-            'owner': self.user.omics_uuid,
+            'owner': self.user.sodar_uuid,
             'description': 'description'}
         values.update(get_all_settings())  # Add default settings
 
@@ -172,7 +172,7 @@ class TestProjectCreateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
-            'omics_uuid': project.omics_uuid}
+            'sodar_uuid': project.sodar_uuid}
 
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
@@ -187,7 +187,7 @@ class TestProjectCreateView(TestTaskflowBase):
             'project': project.pk,
             'role': self.role_owner.pk,
             'user': self.user.pk,
-            'omics_uuid': owner_as.omics_uuid}
+            'sodar_uuid': owner_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(owner_as), expected)
 
@@ -216,16 +216,16 @@ class TestProjectUpdateView(TestTaskflowBase):
         values = model_to_dict(self.project)
         values['title'] = 'updated title'
         values['description'] = 'updated description'
-        values['owner'] = self.user.omics_uuid  # NOTE: Must add owner
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['readme'] = 'updated readme'
         values.update(get_all_settings())  # Add default settings
-        values['omics_url'] = self.live_server_url  # HACK
+        values['sodar_url'] = self.live_server_url  # HACK
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:update',
-                    kwargs={'project': self.project.omics_uuid}),
+                    kwargs={'project': self.project.sodar_uuid}),
                 values)
 
         # Assert Project state after update
@@ -239,7 +239,7 @@ class TestProjectUpdateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
-            'omics_uuid': self.project.omics_uuid}
+            'sodar_uuid': self.project.sodar_uuid}
 
         model_dict = model_to_dict(self.project)
         model_dict.pop('readme', None)
@@ -251,7 +251,7 @@ class TestProjectUpdateView(TestTaskflowBase):
             self.assertRedirects(
                 response, reverse(
                     'projectroles:detail',
-                    kwargs={'project': self.project.omics_uuid}))
+                    kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentCreateView(TestTaskflowBase):
@@ -278,16 +278,16 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
 
         # Issue POST request
         values = {
-            'project': self.project.omics_uuid,
-            'user': self.user_new.omics_uuid,
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_create',
-                    kwargs={'project': self.project.omics_uuid}),
+                    kwargs={'project': self.project.sodar_uuid}),
                 values)
 
         # Assert RoleAssignment state after creation
@@ -301,7 +301,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_guest.pk,
-            'omics_uuid': role_as.omics_uuid}
+            'sodar_uuid': role_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(role_as), expected)
 
@@ -309,7 +309,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
         with self.login(self.user):
             self.assertRedirects(response, reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentUpdateView(TestTaskflowBase):
@@ -339,16 +339,16 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         values = {
-            'project': self.project.omics_uuid,
-            'user': self.user_new.omics_uuid,
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
             'role': self.role_contributor.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_update',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}),
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}),
                 values)
 
         # Assert RoleAssignment state after update
@@ -362,7 +362,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_contributor.pk,
-            'omics_uuid': role_as.omics_uuid}
+            'sodar_uuid': role_as.sodar_uuid}
 
         self.assertEqual(model_to_dict(role_as), expected)
 
@@ -370,7 +370,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
         with self.login(self.user):
             self.assertRedirects(response, reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestRoleAssignmentDeleteView(TestTaskflowBase):
@@ -403,8 +403,8 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.omics_uuid}),
-                {'omics_url': self.live_server_url})
+                    kwargs={'roleassignment': self.role_as.sodar_uuid}),
+                {'sodar_url': self.live_server_url})
 
         # Assert RoleAssignment state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -413,7 +413,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
         with self.login(self.user):
             self.assertRedirects(response, reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
 
 class TestProjectInviteAcceptView(
@@ -458,11 +458,11 @@ class TestProjectInviteAcceptView(
             response = self.client.get(reverse(
                 'projectroles:invite_accept',
                 kwargs={'secret': self.invite.secret}),
-                {'omics_url': self.live_server_url})
+                {'sodar_url': self.live_server_url})
 
             self.assertRedirects(response, reverse(
                 'projectroles:detail',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
             # Assert postconditions
             self.assertEqual(

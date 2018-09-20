@@ -1,5 +1,6 @@
 .. _dev_project_app:
 
+
 Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -80,7 +81,7 @@ Model UUID Field
 ----------------
 
 To provide a unique identifier for objects in the SODAR context, add a
-``UUIDField`` with the name of ``omics_uuid`` into your model.
+``UUIDField`` with the name of ``sodar_uuid`` into your model.
 
 .. note::
 
@@ -91,7 +92,7 @@ To provide a unique identifier for objects in the SODAR context, add a
 .. note::
 
     When updating an existing Django model with an existing database, the
-    ``omics_uuid`` field needs to be populated. See
+    ``sodar_uuid`` field needs to be populated. See
     `instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
     on how to create the required migrations.
 
@@ -113,10 +114,10 @@ Below is an example of a projectroles-compatible Django model:
             Project,
             related_name='some_objects',
             help_text='Project in which this object belongs')
-        omics_uuid = models.UUIDField(
+        sodar_uuid = models.UUIDField(
             default=uuid.uuid4,
             unique=True,
-            help_text='SomeModel Omics UUID')
+            help_text='SomeModel SODAR UUID')
 
 
 Rules File
@@ -166,7 +167,7 @@ The following variables and functions are **mandatory**:
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
 - ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
 - ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
-  **must** take the project ``omics_uuid`` as a kwarg named ``project``)
+  **must** take the project ``sodar_uuid`` as a kwarg named ``project``)
 - ``description``: Verbose description of app
 - ``app_permission``: Basic permission for viewing app data in project (see
   above)
@@ -223,9 +224,9 @@ In order to link a view to project and check user permissions using mixins,
 the URL keyword arguments **must** include an argument which matches *one of
 the following conditions*:
 
-- Contains a kwarg ``project`` which corresponds to the ``omics_uuid``
+- Contains a kwarg ``project`` which corresponds to the ``sodar_uuid``
   member value of a ``projectroles.models.Project`` object
-- Contains a kwarg corresponding to the ``omics_uuid`` of another Django
+- Contains a kwarg corresponding to the ``sodar_uuid`` of another Django
   model, which must contain a member field ``project`` which is a foreign key
   for a ``Projectroles.models.Project`` object. The kwarg **must** be named
   after the Django model of the referred object (in lowercase).
@@ -351,7 +352,7 @@ As described in the Plugins chapter, an app entry point view is to be defined
 in the ``ProjectAppPlugin``. This is **mandatory**.
 
 The view **must** take a ``project`` URL kwarg which corresponds to a
-``Project.omics_uuid``.
+``Project.sodar_uuid``.
 
 For an example, see ``example_project_app.views.ExampleView`` and the associated
 template.
@@ -447,7 +448,7 @@ Example of a simple results template, in case of a single ``all`` category:
      {% include 'projectroles/_search_header.html' with search_title=search_results.all.title result_count=search_results.all.items|length %}
 
      {# Set up a table with your results #}
-     <table class="table table-striped omics-card-table omics-search-table" id="omics-ff-search-table">
+     <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-ff-search-table">
        <thead>
          <tr>
            <th>Name</th>

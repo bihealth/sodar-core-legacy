@@ -13,19 +13,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
-from projectroles.models import Role, OMICS_CONSTANTS
+from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin,\
     ProjectInviteMixin
 
 
-# Omics constants
-PROJECT_ROLE_OWNER = OMICS_CONSTANTS['PROJECT_ROLE_OWNER']
-PROJECT_ROLE_DELEGATE = OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']
-PROJECT_ROLE_CONTRIBUTOR = OMICS_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
-PROJECT_ROLE_GUEST = OMICS_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CATEGORY = OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_PROJECT = OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']
+# SODAR constants
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 # Local constants
@@ -372,7 +372,7 @@ class TestProjectDetail(TestUIBase):
                 'sodar-pr-link-project-star'])]
 
         url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.omics_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
@@ -398,7 +398,7 @@ class TestProjectDetail(TestUIBase):
                 'sodar-pr-link-project-star'])]
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.category.omics_uuid})
+            kwargs={'project': self.category.sodar_uuid})
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
@@ -418,7 +418,7 @@ class TestProjectRoles(TestUIBase):
             self.as_guest.user]
         url = reverse(
             'projectroles:roles',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list', True)
@@ -438,7 +438,7 @@ class TestProjectRoles(TestUIBase):
             self.as_guest.user]
         url = reverse(
             'projectroles:roles',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-invite', True)
@@ -458,7 +458,7 @@ class TestProjectRoles(TestUIBase):
             self.as_guest.user]
         url = reverse(
             'projectroles:roles',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-create', True)
@@ -477,14 +477,14 @@ class TestProjectRoles(TestUIBase):
             (self.as_guest.user, 0)]
         url = reverse(
             'projectroles:roles',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-pr-btn-grp-role')
 
     def test_role_preview(self):
         """Test visibility of role preview popup"""
         url = reverse(
             'projectroles:role_create',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.login_and_redirect(self.as_owner.user, url)
 
         button = self.selenium.find_element_by_id('sodar-pr-email-preview-link')
@@ -500,7 +500,7 @@ class TestProjectRoles(TestUIBase):
         """Test visibility of invite preview popup"""
         url = reverse(
             'projectroles:invite_create',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.login_and_redirect(self.as_owner.user, url)
 
         button = self.selenium.find_element_by_id(
@@ -526,7 +526,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             self.as_delegate.user]
         url = reverse(
             'projectroles:invites',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list', True)
@@ -540,7 +540,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             self.as_delegate.user]
         url = reverse(
             'projectroles:invites',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-invite', True)
@@ -554,7 +554,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             self.as_delegate.user]
         url = reverse(
             'projectroles:invites',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-create', True)
@@ -576,7 +576,7 @@ class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
             (self.as_delegate.user, 1)]
         url = reverse(
             'projectroles:invites',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-pr-btn-grp-invite')
 
 
@@ -593,7 +593,7 @@ class TestPlugins(TestUIBase):
         expected = [(self.superuser, self.plugin_count)]
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
 
     def test_plugin_cards(self):
@@ -601,7 +601,7 @@ class TestPlugins(TestUIBase):
         expected = [(self.superuser, self.plugin_count)]
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
@@ -624,7 +624,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
         """Test visibility of sidebar in the project_detail view"""
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             [self.superuser], url, 'sodar-pr-sidebar', True)
@@ -640,7 +640,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
         """Test visibility of app links"""
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
         expected = [(self.superuser, len(get_active_plugins()))]
 
         self.assert_element_count(
@@ -650,7 +650,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
         """Test active status of link on the project_detail page"""
         url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_active(
             self.superuser, 'sodar-pr-nav-project-detail',
@@ -662,7 +662,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
     def test_link_active_role_create(self):
         """Test active status of link on the role creation page"""
@@ -670,7 +670,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_create',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
     def test_link_active_role_update(self):
         """Test active status of link on the role update page"""
@@ -678,7 +678,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_update',
-                kwargs={'roleassignment': self.as_contributor.omics_uuid}))
+                kwargs={'roleassignment': self.as_contributor.sodar_uuid}))
 
     def test_link_active_role_delete(self):
         """Test active status of link on the role deletion page"""
@@ -686,7 +686,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:role_delete',
-                kwargs={'roleassignment': self.as_contributor.omics_uuid}))
+                kwargs={'roleassignment': self.as_contributor.sodar_uuid}))
 
     def test_link_active_role_invites(self):
         """Test active status of link on the invites page"""
@@ -694,7 +694,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invites',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
     def test_link_active_role_invite_create(self):
         """Test active status of link on the invite create page"""
@@ -702,7 +702,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_create',
-                kwargs={'project': self.project.omics_uuid}))
+                kwargs={'project': self.project.sodar_uuid}))
 
     def test_link_active_role_invite_resend(self):
         """Test active status of link on the invite resend page"""
@@ -717,7 +717,7 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_resend',
-                kwargs={'projectinvite': invite.omics_uuid}))
+                kwargs={'projectinvite': invite.sodar_uuid}))
 
     def test_link_active_role_invite_revoke(self):
         """Test active status of link on the invite revoke page"""
@@ -732,13 +732,13 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
             self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
             reverse(
                 'projectroles:invite_revoke',
-                kwargs={'projectinvite': invite.omics_uuid}))
+                kwargs={'projectinvite': invite.sodar_uuid}))
 
     def test_link_active_update(self):
         """Test active status of link on the project_update page"""
         url = reverse(
             'projectroles:update',
-            kwargs={'project': self.project.omics_uuid})
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_active(
             self.superuser, 'sodar-pr-nav-project-update',

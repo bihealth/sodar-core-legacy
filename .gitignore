@@ -50,16 +50,6 @@ coverage.xml
 .idea/*
 docs/pycharm/*
 
-# Provided default Pycharm Run/Debug Configurations should be tracked by git
-# In case of local modifications made by Pycharm, use update-index command
-# for each changed file, like this:
-# git update-index --assume-unchanged .idea/omics_data_access.iml
-# !.idea/runConfigurations/
-# !.idea/omics_data_access.iml
-# !.idea/vcs.xml
-# !.idea/webResources.xml
-
-
 # Vim
 
 *~

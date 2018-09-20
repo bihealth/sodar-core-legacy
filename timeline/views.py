@@ -40,7 +40,7 @@ class ProjectTimelineView(
 
     def get_queryset(self):
         set_kwargs = {
-            'project__omics_uuid': self.kwargs['project']}
+            'project__sodar_uuid': self.kwargs['project']}
 
         if not self.request.user.has_perm(
                 'timeline.view_classified_event',
@@ -65,7 +65,7 @@ class ObjectTimelineView(ProjectTimelineView):
         return context
 
     def get_queryset(self):
-        project = Project.objects.get(omics_uuid=self.kwargs['project'])
+        project = Project.objects.get(sodar_uuid=self.kwargs['project'])
 
         queryset = ProjectEvent.objects.get_object_events(
             project=project,
@@ -87,7 +87,7 @@ class TimelineEventStatusSetAPIView(APIView):
     def post(self, request):
         try:
             tl_event = ProjectEvent.objects.get(
-                omics_uuid=request.data['event_uuid'])
+                sodar_uuid=request.data['event_uuid'])
 
         except ProjectEvent.DoesNotExist:
             return Response('Timeline event not found', status=404)
