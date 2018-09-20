@@ -1,6 +1,6 @@
 """Integration tests for views in the projectroles Django app with taskflow"""
 
-# NOTE: You must supply 'omics_url': self.live_server_url in taskflow requests!
+# NOTE: You must supply 'sodar_url': self.live_server_url in taskflow requests!
 #       This is due to the Django 1.10.x feature described here:
 #       https://code.djangoproject.com/ticket/27596
 
@@ -56,7 +56,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'parent': parent.sodar_uuid if parent else None,
             'owner': owner.sodar_uuid,
             'description': description,
-            'omics_url': self.live_server_url}  # HACK: Override callback URL
+            'sodar_url': self.live_server_url}  # HACK: Override callback URL
         values.update(get_all_settings())   # Add default settings
 
         post_kwargs = {'project': parent.sodar_uuid} if parent else {}
@@ -82,7 +82,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'project': project.sodar_uuid,
             'user': user.sodar_uuid,
             'role': role.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
@@ -219,7 +219,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['readme'] = 'updated readme'
         values.update(get_all_settings())  # Add default settings
-        values['omics_url'] = self.live_server_url  # HACK
+        values['sodar_url'] = self.live_server_url  # HACK
 
         with self.login(self.user):
             response = self.client.post(
@@ -281,7 +281,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
             'project': self.project.sodar_uuid,
             'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
@@ -342,7 +342,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
             'project': self.project.sodar_uuid,
             'user': self.user_new.sodar_uuid,
             'role': self.role_contributor.pk,
-            'omics_url': self.live_server_url}
+            'sodar_url': self.live_server_url}
 
         with self.login(self.user):
             response = self.client.post(
@@ -404,7 +404,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
                 reverse(
                     'projectroles:role_delete',
                     kwargs={'roleassignment': self.role_as.sodar_uuid}),
-                {'omics_url': self.live_server_url})
+                {'sodar_url': self.live_server_url})
 
         # Assert RoleAssignment state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -458,7 +458,7 @@ class TestProjectInviteAcceptView(
             response = self.client.get(reverse(
                 'projectroles:invite_accept',
                 kwargs={'secret': self.invite.secret}),
-                {'omics_url': self.live_server_url})
+                {'sodar_url': self.live_server_url})
 
             self.assertRedirects(response, reverse(
                 'projectroles:detail',

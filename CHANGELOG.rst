@@ -17,6 +17,7 @@ Changed
     - Rename abstract ``OmicsUser`` model into ``SODARUser`` (omics_data_mgmt#166)
     - Rename ``OMICS_CONSTANTS`` into ``SODAR_CONSTANTS`` (omics_data_mgmt#166)
     - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (omics_data_mgmt(#166)
+    - Rename ``omics_url`` in sodar_taskflow tests to ``sodar_url`` (see omics_taskflow#36)
 
 
 v0.2.0 (2018-09-19)
