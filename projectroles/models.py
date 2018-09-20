@@ -20,7 +20,7 @@ from .utils import set_user_group
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 # Global constants
-OMICS_CONSTANTS = {
+SODAR_CONSTANTS = {
     # Project roles
     'PROJECT_ROLE_OWNER': 'project owner',
     'PROJECT_ROLE_DELEGATE': 'project delegate',
@@ -37,9 +37,9 @@ OMICS_CONSTANTS = {
     'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW'}
 
 # Choices for forms/admin with project type
-OMICS_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
-    (OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY'], 'Category'),
-    (OMICS_CONSTANTS['PROJECT_TYPE_PROJECT'], 'Project')]
+SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
+    (SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'], 'Category'),
+    (SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], 'Project')]
 
 # Local constants
 PROJECT_SETTING_TYPES = [
@@ -106,8 +106,8 @@ class Project(models.Model):
     #: Type of project ("CATEGORY", "PROJECT")
     type = models.CharField(
         max_length=64,
-        choices=OMICS_CONSTANTS['PROJECT_TYPE_CHOICES'],
-        default=OMICS_CONSTANTS['PROJECT_TYPE_PROJECT'],
+        choices=SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'],
+        default=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
         help_text='Type of project ("CATEGORY", "PROJECT")')
 
     #: Parent category if nested, otherwise null
@@ -134,7 +134,7 @@ class Project(models.Model):
     #: Status of project creation
     submit_status = models.CharField(
         max_length=64,
-        default=OMICS_CONSTANTS['SUBMIT_STATUS_OK'],
+        default=SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
         help_text='Status of project creation')
 
     #: Project SODAR UUID
@@ -182,7 +182,7 @@ class Project(models.Model):
     def _validate_parent_type(self):
         """Validate parent value to ensure parent can not be a project"""
         if (self.parent and
-                self.parent.type == OMICS_CONSTANTS['PROJECT_TYPE_PROJECT']):
+                self.parent.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']):
             raise ValidationError(
                 'Subprojects are only allowed within categories')
 
@@ -201,7 +201,7 @@ class Project(models.Model):
     def get_children(self):
         """Return child objects for the Project sorted by title"""
         return self.children.filter(
-            submit_status=OMICS_CONSTANTS['SUBMIT_STATUS_OK']).order_by('title')
+            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']).order_by('title')
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
@@ -218,7 +218,7 @@ class Project(models.Model):
         """Return RoleAssignment for owner or None if not set"""
         try:
             return self.roles.get(
-                role__name=OMICS_CONSTANTS['PROJECT_ROLE_OWNER'])
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
 
         except RoleAssignment.DoesNotExist:
             return None
@@ -227,7 +227,7 @@ class Project(models.Model):
         """Return RoleAssignment for delegate or None if not set"""
         try:
             return self.roles.get(
-                role__name=OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE'])
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
 
         except RoleAssignment.DoesNotExist:
             return None
@@ -236,8 +236,8 @@ class Project(models.Model):
         """Return RoleAssignments for members of project excluding owner and
         delegate"""
         return self.roles.filter(
-            ~Q(role__name=OMICS_CONSTANTS['PROJECT_ROLE_OWNER']) &
-            ~Q(role__name=OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']))
+            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']) &
+            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']))
 
     def has_role(self, user, include_children=False):
         """Return whether user has roles in Project. If include_children is
@@ -380,7 +380,7 @@ class RoleAssignment(models.Model):
     def _validate_owner(self):
         """Validate role to ensure no more than one project owner is assigned
         to a project"""
-        if self.role.name == OMICS_CONSTANTS['PROJECT_ROLE_OWNER']:
+        if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_OWNER']:
             owner = self.project.get_owner()
 
             if owner and (not self.pk or owner.pk != self.pk):
@@ -391,7 +391,7 @@ class RoleAssignment(models.Model):
     def _validate_delegate(self):
         """Validate role to ensure no more than one project delegate is
         assigned to a project"""
-        if self.role.name == OMICS_CONSTANTS['PROJECT_ROLE_DELEGATE']:
+        if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']:
             delegate = self.project.get_delegate()
 
             if delegate and (not self.pk or delegate.pk != self.pk):
@@ -402,8 +402,8 @@ class RoleAssignment(models.Model):
     def _validate_category(self):
         """Validate project and role types to ensure roles other than project
         owner are not set for category-type projects"""
-        if (self.project.type == OMICS_CONSTANTS['PROJECT_TYPE_CATEGORY'] and
-                self.role.name != OMICS_CONSTANTS['PROJECT_ROLE_OWNER']):
+        if (self.project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'] and
+                self.role.name != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']):
             raise ValidationError(
                 'Only the role of project owner is allowed for categories')
 

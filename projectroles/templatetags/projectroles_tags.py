@@ -2,7 +2,7 @@ from django import template
 from django.conf import settings
 from django.utils import timezone
 
-from ..models import Project, RoleAssignment, OMICS_CONSTANTS, \
+from ..models import Project, RoleAssignment, SODAR_CONSTANTS, \
     PROJECT_TAG_STARRED
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
@@ -106,10 +106,10 @@ def print_not_found_alert(project_results, app_search_data, search_type):
 
 
 @register.simple_tag
-def omics_constant(value):
-    """Get value from OMICS_CONSTANTS in settings"""
-    return OMICS_CONSTANTS[value] \
-        if value in OMICS_CONSTANTS else None
+def sodar_constant(value):
+    """Get value from SODAR_CONSTANTS"""
+    return SODAR_CONSTANTS[value] \
+        if value in SODAR_CONSTANTS else None
 
 
 @register.simple_tag

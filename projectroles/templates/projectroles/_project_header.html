@@ -5,7 +5,7 @@
 {% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
 {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
 
-{% omics_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
+{% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 
 <div class="row sodar-pr-content-title">
 

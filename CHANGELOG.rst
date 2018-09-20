@@ -15,6 +15,8 @@ Changed
     - Change ``omics_uuid`` field in all apps' models to ``sodar_uuid`` (omics_data_mgmt#166)
 - **Projectroles**
     - Rename abstract ``OmicsUser`` model into ``SODARUser`` (omics_data_mgmt#166)
+    - Rename ``OMICS_CONSTANTS`` into ``SODAR_CONSTANTS`` (omics_data_mgmt#166)
+    - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (omics_data_mgmt(#166)
 
 
 v0.2.0 (2018-09-19)
