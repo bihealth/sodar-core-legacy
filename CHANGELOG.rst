@@ -18,6 +18,7 @@ Changed
     - Rename ``OMICS_CONSTANTS`` into ``SODAR_CONSTANTS`` (omics_data_mgmt#166)
     - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (omics_data_mgmt(#166)
     - Rename ``omics_url`` in sodar_taskflow tests to ``sodar_url`` (see omics_taskflow#36)
+    - Rename ``shepherd-theme-omics.css`` to ``shepherd-theme-sodar.css`` (omics_data_mgmt#166)
 
 
 v0.2.0 (2018-09-19)
