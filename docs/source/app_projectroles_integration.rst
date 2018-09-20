@@ -91,7 +91,7 @@ Add the following rows into your ``base.txt`` file:
 .. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@v0.2.0#egg=django-sodar-core
+    -e git+ssh://git@cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git@v0.2.1#egg=django-sodar-core
 
 Install the requirements now containing the required packages:
 
