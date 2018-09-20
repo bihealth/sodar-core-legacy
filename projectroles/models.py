@@ -34,12 +34,43 @@ SODAR_CONSTANTS = {
     # Submission status
     'SUBMIT_STATUS_OK': 'OK',
     'SUBMIT_STATUS_PENDING': 'PENDING',
-    'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW'}
+    'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW',
+
+    # RemoteSite mode
+    'SITE_MODE_SOURCE': 'SOURCE',
+    'SITE_MODE_TARGET': 'TARGET',
+
+    # RemoteProject access types
+    'REMOTE_LEVEL_AVAIL': 'AVAIL',
+    'REMOTE_LEVEL_INFO': 'INFO',
+    'REMOTE_LEVEL_ROLES': 'ROLES'
+}
 
 # Choices for forms/admin with project type
 SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
     (SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'], 'Category'),
     (SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], 'Project')]
+
+# RemoteSite modes
+SODAR_CONSTANTS['SITE_MODES'] = [
+    SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+    SODAR_CONSTANTS['SITE_MODE_TARGET']]
+
+# RemoteProject access levels
+SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = [
+    SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_INFO'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_ROLES']]
+
+# RemoteProject access choices
+SODAR_CONSTANTS['REMOTE_ACCESS_CHOICES'] = [
+    (SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+        'View project availability'),
+    (SODAR_CONSTANTS['REMOTE_LEVEL_INFO'],
+        'View project information'),
+    (SODAR_CONSTANTS['REMOTE_LEVEL_ROLES'],
+        'View and synchronize project information and user roles')]
+
 
 # Local constants
 PROJECT_SETTING_TYPES = [
@@ -648,6 +679,130 @@ class ProjectUserTag(models.Model):
     def __repr__(self):
         values = (self.project.title, self.user.username, self.name)
         return 'ProjectUserTag({})'.format(', '.join(repr(v) for v in values))
+
+
+# RemoteSite--------------------------------------------------------------------
+
+
+class RemoteSite(models.Model):
+    """Remote SODAR site"""
+
+    #: Site name
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text='Site name')
+
+    #: Site URL
+    url = models.URLField(
+        max_length=2000,
+        blank=False,
+        null=False,
+        unique=True,
+        help_text='Site URL')
+
+    #: Site mode
+    mode = models.CharField(
+        max_length=64,
+        unique=False,
+        blank=False,
+        null=False,
+        default=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+        help_text='Site mode')
+
+    #: Site description
+    description = models.TextField(
+        help_text='Site description')
+
+    #: Secret token used to connect to the master site
+    secret = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=False,
+        null=False,
+        help_text='Secret token for connecting to the source site')
+
+    #: RemoteSite relation UUID (local)
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        help_text='RemoteSite relation UUID (local)')
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return '{} ({})'.format(
+            self.name, self.mode, self.name)
+
+    def __repr__(self):
+        values = (self.name, self.mode, self.url)
+        return 'RemoteSite({})'.format(', '.join(repr(v) for v in values))
+
+    def save(self, *args, **kwargs):
+        """Version of save() to include custom validation"""
+        self._validate_mode()
+        super().save(*args, **kwargs)
+
+    def _validate_mode(self):
+        """Validate mode value"""
+        if self.mode not in SODAR_CONSTANTS['SITE_MODES']:
+            raise ValidationError(
+                'Mode "{}" not found in SITE_MODES'.format(self.mode))
+
+
+# RemoteProject ----------------------------------------------------------------
+
+
+class RemoteProject(models.Model):
+    """Remote project relation"""
+
+    #: Related project UUID
+    project_uuid = models.UUIDField(
+        default=None,
+        unique=False,
+        help_text='Project UUID')
+
+    #: Related remote SODAR site
+    site = models.ForeignKey(
+        RemoteSite,
+        null=False,
+        related_name='projects',
+        help_text='Remote SODAR site')
+
+    #: Project access level
+    level = models.CharField(
+        max_length=255,
+        unique=False,
+        blank=False,
+        null=False,
+        choices=SODAR_CONSTANTS['REMOTE_ACCESS_CHOICES'],
+        default=SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+        help_text='Project access level')
+
+    #: DateTime of last access from/to remote site
+    date_access = models.DateTimeField(
+        null=True,
+        auto_now_add=False,
+        help_text='DateTime of last access from/to remote site')
+
+    #: RemoteProject relation UUID (local)
+    sodar_uuid = models.UUIDField(
+        default=uuid.uuid4,
+        unique=True,
+        help_text='RemoteProject relation UUID (local)')
+
+    class Meta:
+        ordering = [
+            'site__name', 'project_uuid']
+
+    def __str__(self):
+        return '{} ({})'.format(
+            self.site.name, self.site.mode, self.project_uuid)
+
+    def __repr__(self):
+        values = (self.site.name, self.site.mode, self.project_uuid)
+        return 'RemoteProject({})'.format(', '.join(repr(v) for v in values))
 
 
 # Abstract User Model ----------------------------------------------------------
