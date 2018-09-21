@@ -26,7 +26,7 @@ from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
     get_email_footer, get_role_change_body, get_role_change_subject
 from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    SODAR_CONSTANTS, PROJECT_TAG_STARRED
+    RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_settings import set_project_setting, get_project_setting, \
     get_all_settings
@@ -1538,7 +1538,24 @@ class ProjectInviteRevokeView(
             kwargs={'project': project.sodar_uuid}))
 
 
-# Javascript API Views ---------------------------------------------------
+# Remote site and project views ------------------------------------------------
+
+
+# TODO: Pagination
+class RemoteManagementView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Main view for displaying remote site/project management"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remote_access.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteManagementView, self).get_context_data(
+            *args, **kwargs)
+        context['sites'] = RemoteSite.objects.all().order_by('name')
+        return context
+
+
+# Javascript API Views ---------------------------------------------------------
 
 
 class ProjectStarringAPIView(

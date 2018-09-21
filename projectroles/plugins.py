@@ -17,6 +17,9 @@ DISABLED = 1
 REMOVED = 2
 
 
+# Plugin points ----------------------------------------------------------------
+
+
 class ProjectAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering project specific apps"""
 
@@ -204,6 +207,9 @@ class SiteAppPluginPoint(PluginPoint):
         return []
 
 
+# Plugin API -------------------------------------------------------------------
+
+
 def get_active_plugins(plugin_type='project_app'):
     """
     Return active plugins of a specific type
@@ -273,3 +279,31 @@ def get_backend_api(plugin_name, force=False):
             pass
 
     return None
+
+
+# Plugins within projectroles --------------------------------------------------
+
+
+class RemoteProjectSitePlugin(SiteAppPluginPoint):
+    """Site plugin for remote site and project management"""
+
+    #: Name (slug-safe, used in URLs)
+    name = 'remotesites'
+
+    #: Title (used in templates)
+    title = 'Remote Site Access'
+
+    #: App URLs (will be included in settings by djangoplugins)
+    urls = []
+
+    #: FontAwesome icon ID string
+    icon = 'cloud'
+
+    #: Description string
+    description = 'Management of remote SODAR sites and remote project access'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'projectroles:remote'
+
+    #: Required permission for displaying the app
+    app_permission = 'userprofile.update_remote'

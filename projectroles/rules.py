@@ -136,3 +136,8 @@ rules.add_perm(
 rules.add_perm(
     'projectroles.import_roles',
     rules.is_superuser | is_project_owner)
+
+# Allow updating remtote sites and remote project access
+rules.add_perm(
+    'projectroles.update_remote',
+    rules.is_superuser)

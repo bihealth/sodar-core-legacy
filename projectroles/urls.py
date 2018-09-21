@@ -81,6 +81,11 @@ urlpatterns = [
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
     ),
+    url(
+        regex=r'^remote/$',
+        view=views.RemoteManagementView.as_view(),
+        name='remote',
+    ),
     # Javascript API Views
     url(
         regex=r'^star/(?P<project>[0-9a-f-]+)',

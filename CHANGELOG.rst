@@ -5,6 +5,18 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - ``RemoteSite`` and ``RemoteProject`` models (#3)
+    - ``RemoteProjectSitePlugin`` site plugin (#3)
+    - ``PROJECTROLES_SITE_MODE`` setting (#3)
+
+
 v0.2.1 (2018-09-20)
 ===================
 
