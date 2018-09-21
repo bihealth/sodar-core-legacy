@@ -797,11 +797,11 @@ class RemoteProject(models.Model):
             'site__name', 'project_uuid']
 
     def __str__(self):
-        return '{} ({})'.format(
-            self.site.name, self.site.mode, self.project_uuid)
+        return '{}: {} ({})'.format(
+            self.site.name, str(self.project_uuid), self.site.mode)
 
     def __repr__(self):
-        values = (self.site.name, self.site.mode, self.project_uuid)
+        values = (self.site.name, str(self.project_uuid), self.site.mode)
         return 'RemoteProject({})'.format(', '.join(repr(v) for v in values))
 
 

@@ -1,5 +1,7 @@
 """Tests for models in the projectroles Django app"""
 
+import uuid
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
@@ -9,8 +11,11 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from ..models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectSetting, ProjectUserTag, SODAR_CONSTANTS, PROJECT_TAG_STARRED
+    ProjectSetting, ProjectUserTag, RemoteSite, RemoteProject, \
+    SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from ..plugins import get_app_plugin
+from ..utils import build_secret
+
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -31,6 +36,9 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 # Local constants
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
 EXAMPLE_APP_NAME = 'example_project_app'
+REMOTE_SITE_NAME = 'Test site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_SECRET = build_secret()
 
 
 class ProjectMixin:
@@ -49,7 +57,6 @@ class ProjectMixin:
             'description': description}
         project = Project(**values)
         project.save()
-
         return project
 
 
@@ -71,7 +78,6 @@ class ProjectInviteMixin:
             'active': True}
         invite = ProjectInvite(**values)
         invite.save()
-
         return invite
 
 
@@ -107,6 +113,44 @@ class ProjectUserTagMixin:
         return tag
 
 
+class RemoteSiteMixin:
+    """Helper mixin for RemoteSite creation"""
+
+    @classmethod
+    def _make_site(
+            cls, name, url, mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='', secret=build_secret()):
+        """Make and save a RemoteSite"""
+        values = {
+            'name': name,
+            'url': url,
+            'mode': mode,
+            'description': description,
+            'secret': secret}
+        site = RemoteSite(**values)
+        site.save()
+        return site
+
+
+class RemoteProjectMixin:
+    """Helper mixin for RemoteProject creation"""
+
+    @classmethod
+    def _make_remote_project(
+            cls, project_uuid, site, level):
+        """Make and save a RemoteProject"""
+        if type(project_uuid) == str:
+            project_uuid = uuid.UUID(project_uuid)
+
+        values = {
+            'project_uuid': project_uuid,
+            'site': site,
+            'level': level}
+        remote_project = RemoteProject(**values)
+        remote_project.save()
+        return remote_project
+
+
 class TestProject(TestCase, ProjectMixin):
     """Tests for model.Project"""
 
@@ -128,6 +172,7 @@ class TestProject(TestCase, ProjectMixin):
             parent=None)
 
     def test_initialization(self):
+        """Test Project initialization"""
         expected = {
             'id': self.project_sub.pk,
             'title': 'TestProjectSub',
@@ -142,10 +187,12 @@ class TestProject(TestCase, ProjectMixin):
         self.assertEqual(model_dict, expected)
 
     def test__str__(self):
+        """Test Project __str__()"""
         expected = 'TestCategoryTop / TestProjectSub'
         self.assertEqual(str(self.project_sub), expected)
 
     def test__repr__(self):
+        """Test Project __repr__()"""
         expected = "Project('TestProjectSub', 'PROJECT', " \
             "'TestCategoryTop')"
         self.assertEqual(repr(self.project_sub), expected)
@@ -228,6 +275,7 @@ class TestRole(TestCase):
             name=PROJECT_ROLE_OWNER)
 
     def test_initialization(self):
+        """Test Role initialization"""
         expected = {
             'id': self.role.pk,
             'name': PROJECT_ROLE_OWNER,
@@ -235,10 +283,12 @@ class TestRole(TestCase):
         self.assertEqual(model_to_dict(self.role), expected)
 
     def test__str__(self):
+        """Test Role __str__()"""
         expected = PROJECT_ROLE_OWNER
         self.assertEqual(str(self.role), expected)
 
     def test__repr__(self):
+        """Test Role __repr__()"""
         expected = "Role('{}')".format(PROJECT_ROLE_OWNER)
         self.assertEqual(repr(self.role), expected)
 
@@ -310,14 +360,17 @@ class TestRoleAssignment(TestCase, ProjectMixin, RoleAssignmentMixin):
             'sodar_uuid': self.assignment_owner.sodar_uuid}
 
     def test_initialization(self):
+        """Test RoleAssignment initialization"""
         self.assertEqual(
             model_to_dict(self.assignment_owner), self.expected_default)
 
     def test__str__(self):
+        """Test RoleAssignment __str__()"""
         expected = 'TestCategoryTop: {}: alice'.format(PROJECT_ROLE_OWNER)
         self.assertEqual(str(self.assignment_owner), expected)
 
     def test__repr__(self):
+        """Test RoleAssignment __repr__()"""
         expected = "RoleAssignment('TestCategoryTop', 'alice', '{}')".format(
             PROJECT_ROLE_OWNER)
         self.assertEqual(repr(self.assignment_owner), expected)
@@ -454,6 +507,7 @@ class TestProjectInvite(
             message='')
 
     def test_initialization(self):
+        """Test ProjectInvite initialization"""
         expected = {
             'id': self.invite.pk,
             'email': 'test@example.com',
@@ -468,11 +522,13 @@ class TestProjectInvite(
         self.assertEqual(model_to_dict(self.invite), expected)
 
     def test__str__(self):
+        """Test ProjectInvite __str__()"""
         expected = 'TestProject: test@example.com (project contributor) ' \
                    '[ACTIVE]'
         self.assertEqual(str(self.invite), expected)
 
     def test__repr__(self):
+        """Test ProjectInvite __repr__()"""
         expected = "ProjectInvite('TestProject', 'test@example.com', " \
             "'project contributor', True)"
         self.assertEqual(repr(self.invite), expected)
@@ -572,6 +628,7 @@ class TestProjectSetting(
             value=True)
 
     def test_initialization(self):
+        """Test ProjectSetting initialization"""
         expected = {
             'id': self.setting_str.pk,
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
@@ -595,10 +652,12 @@ class TestProjectSetting(
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
+        """Test ProjectSetting __str__()"""
         expected = 'TestProject: {} / str_setting'.format(EXAMPLE_APP_NAME)
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
+        """Test ProjectSetting __repr__()"""
         expected = "ProjectSetting('TestProject', '{}', " \
             "'str_setting')".format(EXAMPLE_APP_NAME)
         self.assertEqual(repr(self.setting_str), expected)
@@ -648,6 +707,7 @@ class TestProjectUserTag(
         self.tag = self._make_tag(self.project, self.user, PROJECT_TAG_STARRED)
 
     def test_initialization(self):
+        """Test ProjectUserTag initialization"""
         expected = {
             'id': self.tag.pk,
             'project': self.project.pk,
@@ -657,9 +717,137 @@ class TestProjectUserTag(
         self.assertEqual(model_to_dict(self.tag), expected)
 
     def test__str__(self):
+        """Test ProjectUserTag __str__()"""
         expected = 'TestProject: owner: STARRED'
         self.assertEqual(str(self.tag), expected)
 
     def test__repr__(self):
+        """Test ProjectUserTag __repr__()"""
         expected = "ProjectUserTag('TestProject', 'owner', 'STARRED')"
         self.assertEqual(repr(self.tag), expected)
+
+
+class TestRemoteSite(
+        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin):
+    """Tests for model.RemoteSite"""
+
+    def setUp(self):
+        # Init project
+        self.project = self._make_project(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=None)
+
+        # Init role
+        self.role_owner = Role.objects.get(
+            name=PROJECT_ROLE_OWNER)
+
+        # Init user & role
+        self.user = self.make_user('owner')
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+        # Init remote site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='',
+            secret=REMOTE_SITE_SECRET)
+
+    def test_initialization(self):
+        """Test RemoteSite initialization"""
+        expected = {
+            'id': self.site.pk,
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'mode': SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            'description': '',
+            'secret': REMOTE_SITE_SECRET,
+            'sodar_uuid': self.site.sodar_uuid}
+        self.assertEqual(model_to_dict(self.site), expected)
+
+    def test__str__(self):
+        """Test RemoteSite __str__()"""
+        expected = '{} ({})'.format(
+            REMOTE_SITE_NAME, SODAR_CONSTANTS['SITE_MODE_TARGET'])
+        self.assertEqual(str(self.site), expected)
+
+    def test__repr__(self):
+        """Test RemoteSite __repr__()"""
+        expected = "RemoteSite('{}', '{}', '{}')".format(
+            REMOTE_SITE_NAME,
+            SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            REMOTE_SITE_URL)
+        self.assertEqual(repr(self.site), expected)
+
+    def test_validate_mode(self):
+        """Test _validate_mode() with an invalid mode (should fail)"""
+
+        with self.assertRaises(ValidationError):
+            self._make_site(
+                name='New site',
+                url='http://example.com',
+                mode='uGaj9eicQueib1th')
+
+
+class TestRemoteProject(
+        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin):
+    """Tests for model.RemoteProject"""
+
+    def setUp(self):
+        # Init project
+        self.project = self._make_project(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=None)
+
+        # Init role
+        self.role_owner = Role.objects.get(
+            name=PROJECT_ROLE_OWNER)
+
+        # Init user & role
+        self.user = self.make_user('owner')
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+        # Init remote site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='',
+            secret=REMOTE_SITE_SECRET)
+
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'])
+
+    def test_initialization(self):
+        """Test RemoteProject initialization"""
+        expected = {
+            'id': self.remote_project.pk,
+            'project_uuid': self.project.sodar_uuid,
+            'site': self.site.pk,
+            'level': SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+            'date_access': None,
+            'sodar_uuid': self.remote_project.sodar_uuid}
+        self.assertEqual(model_to_dict(self.remote_project), expected)
+
+    def test__str__(self):
+        """Test RemoteProject __str__()"""
+        expected = '{}: {} ({})'.format(
+            REMOTE_SITE_NAME,
+            str(self.project.sodar_uuid),
+            SODAR_CONSTANTS['SITE_MODE_TARGET'])
+        self.assertEqual(str(self.remote_project), expected)
+
+    def test__repr__(self):
+        """Test RemoteProject __repr__()"""
+        expected = "RemoteProject('{}', '{}', '{}')".format(
+            REMOTE_SITE_NAME,
+            str(self.project.sodar_uuid),
+            SODAR_CONSTANTS['SITE_MODE_TARGET'])
+        self.assertEqual(repr(self.remote_project), expected)
