@@ -1563,7 +1563,20 @@ class RemoteManagementView(
     def get_context_data(self, *args, **kwargs):
         context = super(RemoteManagementView, self).get_context_data(
             *args, **kwargs)
-        context['sites'] = RemoteSite.objects.all().order_by('name')
+
+        # TODO: Do this nicer
+        site_mode = 'TARGET' if \
+            settings.PROJECTROLES_SITE_MODE == 'SOURCE' else 'SOURCE'
+
+        sites = RemoteSite.objects.filter(
+            mode=site_mode).order_by('name')
+
+        if (sites.count() > 0 and
+                settings.PROJECTROLES_SITE_MODE ==
+                SODAR_CONSTANTS['SITE_MODE_TARGET']):
+            sites = sites[:1]
+
+        context['sites'] = sites
         return context
 
 

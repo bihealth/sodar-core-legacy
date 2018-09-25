@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django.utils import timezone
 
 from test_plus.test import TestCase
@@ -16,8 +16,9 @@ from ..models import Project, Role, RoleAssignment, ProjectInvite, \
     ProjectUserTag, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from ..plugins import change_plugin_status, get_backend_api, \
     get_active_plugins, ProjectAppPluginPoint
+from ..utils import build_secret
 from .test_models import ProjectMixin, RoleAssignmentMixin, \
-    ProjectInviteMixin, ProjectUserTagMixin
+    ProjectInviteMixin, ProjectUserTagMixin, RemoteSiteMixin, RemoteProjectMixin
 from projectroles.utils import get_user_display_name
 
 
@@ -36,6 +37,9 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 # Local constants
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
+REMOTE_SITE_NAME = 'Test site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_SECRET = build_secret()
 
 
 class ProjectSettingMixin:
@@ -1430,3 +1434,41 @@ class TestRoleAssignmentDeleteAPIView(
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
+
+
+class TestRemoteProjectListView(
+        TestViewsBase, RemoteSiteMixin):
+    """Tests for remote site list view"""
+
+    def setUp(self):
+        super(TestRemoteProjectListView, self).setUp()
+
+        # Create target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            description='',
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render_as_source(self):
+        """Test rendering of the remote site management list view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['sites'].count(), 1)  # 1 target site
+
+    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    def test_render_as_target(self):
+        """Test rendering of the remote site management list view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['sites'].count(), 0)  # 1 source sites
+
+
+# TODO: Tests for RemoteSite create/update/delete views
