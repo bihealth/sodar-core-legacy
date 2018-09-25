@@ -6,6 +6,7 @@ from . import views
 app_name = 'projectroles'
 
 urlpatterns = [
+    # General project views
     url(
         regex=r'^(?P<project>[0-9a-f-]+)$',
         view=views.ProjectDetailView.as_view(),
@@ -26,11 +27,13 @@ urlpatterns = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
+    # Search view
     url(
         regex=r'^search/$',
         view=views.ProjectSearchView.as_view(),
         name='search',
     ),
+    # Project role views
     url(
         regex=r'^members/(?P<project>[0-9a-f-]+)$',
         view=views.ProjectRoleView.as_view(),
@@ -56,6 +59,7 @@ urlpatterns = [
         view=views.RoleAssignmentImportView.as_view(),
         name='role_import',
     ),
+    # Project invite views
     url(
         regex=r'^invites/(?P<project>[0-9a-f-]+)$',
         view=views.ProjectInviteView.as_view(),
@@ -81,18 +85,34 @@ urlpatterns = [
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
     ),
+    # Remote site and project views
     url(
         regex=r'^remote/$',
         view=views.RemoteManagementView.as_view(),
         name='remote',
     ),
-    # Javascript API Views
+    url(
+        regex=r'^remote/site/add$',
+        view=views.RemoteSiteCreateView.as_view(),
+        name='remote_site_create',
+    ),
+    url(
+        regex=r'^remote/site/update/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteSiteUpdateView.as_view(),
+        name='remote_site_update',
+    ),
+    url(
+        regex=r'^remote/site/delete/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteSiteDeleteView.as_view(),
+        name='remote_site_delete',
+    ),
+    # Javascript API views
     url(
         regex=r'^star/(?P<project>[0-9a-f-]+)',
         view=views.ProjectStarringAPIView.as_view(),
         name='star',
     ),
-    # Taskflow API Views
+    # Taskflow API views
     url(
         regex=r'^taskflow/get$',
         view=views.ProjectGetAPIView.as_view(),

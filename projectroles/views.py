@@ -24,7 +24,8 @@ from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
     send_expiry_note, get_invite_subject, get_invite_body, get_invite_message, \
     get_email_footer, get_role_change_body, get_role_change_subject
-from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm
+from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm, \
+    RemoteSiteForm
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
     RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
@@ -112,6 +113,18 @@ class ProjectAccessMixin:
 class LoggedInPermissionMixin(PermissionRequiredMixin):
     """Mixin for handling redirection for both unlogged users and authenticated
     users without permissions"""
+    def has_permission(self):
+        """Override has_permission() for this mixin also to work with admin
+        users without a permission object"""
+        try:
+            return super(LoggedInPermissionMixin, self).has_permission()
+
+        except AttributeError:
+            if self.request.user.is_superuser:
+                return True
+
+        return False
+
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
         if self.request.user.is_authenticated():
@@ -922,7 +935,7 @@ class RoleAssignmentImportView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
         ProjectContextMixin, TemplateView):
     """View for importing roles from an existing project"""
-    # TODO: Add taskflow functionality in v0.3
+    # TODO: Add taskflow functionality
     http_method_names = ['get', 'post']
     template_name = 'projectroles/roleassignment_import.html'
     permission_required = 'projectroles.import_roles'
@@ -1541,7 +1554,6 @@ class ProjectInviteRevokeView(
 # Remote site and project views ------------------------------------------------
 
 
-# TODO: Pagination
 class RemoteManagementView(
         LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     """Main view for displaying remote site/project management"""
@@ -1553,6 +1565,62 @@ class RemoteManagementView(
             *args, **kwargs)
         context['sites'] = RemoteSite.objects.all().order_by('name')
         return context
+
+
+class RemoteSiteModifyMixin(ModelFormMixin):
+    def form_valid(self, form):
+        if settings.PROJECTROLES_SITE_MODE == 'TARGET':
+            form_action = 'set'
+
+        else:
+            form_action = 'updated' if self.object else 'created'
+
+        self.object = form.save()
+
+        messages.success(self.request, '{} site "{}" {}.'.format(
+            self.object.mode.capitalize(),
+            self.object.name,
+            form_action))
+        return HttpResponseRedirect(reverse('projectroles:remote'))
+
+
+class RemoteSiteCreateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, CreateView):
+    """RemoteSite creation view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+
+
+class RemoteSiteUpdateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, UpdateView):
+    """RemoteSite updating view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+    slug_url_kwarg = 'remotesite'
+    slug_field = 'sodar_uuid'
+
+
+class RemoteSiteDeleteView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, DeleteView):
+    """RemoteSite deletion view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+    slug_url_kwarg = 'remotesite'
+    slug_field = 'sodar_uuid'
+
+    def get_success_url(self):
+        messages.success(
+            self.request, '{} site "{}" deleted'.format(
+                self.object.mode.capitalize(),
+                self.object.name))
+
+        return reverse('projectroles:remote')
 
 
 # Javascript API Views ---------------------------------------------------------

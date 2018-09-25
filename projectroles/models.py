@@ -153,6 +153,8 @@ class Project(models.Model):
     description = models.CharField(
         max_length=512,
         unique=False,
+        blank=True,
+        null=True,
         help_text='Short project description')
 
     #: Project README (optional, supports markdown)

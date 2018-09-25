@@ -15,6 +15,13 @@ Added
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
     - ``RemoteProjectSitePlugin`` site plugin (#3)
     - ``PROJECTROLES_SITE_MODE`` setting (#3)
+    - Remote site and project management site app (#3)
+
+Changed
+-------
+
+- **Projectroles**
+    - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
 
 
 v0.2.1 (2018-09-20)

@@ -1,0 +1,25 @@
+<tr>
+  <td>
+    <a href="#">{{ site.name }}</a>
+    {% if site.description %}
+      <a class="omics-pr-site-desc-link" tabindex="0" data-toggle="popover"
+         data-trigger="focus" data-placement="top" data-html="true"
+         data-content="{{ site.description }}">
+        <i class="fa fa-info-circle text-info"></i>
+      </a>
+    {% endif %}
+  </td>
+  <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>
+  <td class="text-right">0</td>
+  <td class="text-nowrap"><code>{{ site.secret }}</code></td>
+  <td>
+    {% if site.date_access %}
+      {{ site.date_access }}
+    {% else %}
+      <span class="text-muted">Never</span>
+    {% endif %}
+  </td>
+  <td>
+    {% include 'projectroles/_remote_site_buttons.html' %}
+  </td>
+</tr>

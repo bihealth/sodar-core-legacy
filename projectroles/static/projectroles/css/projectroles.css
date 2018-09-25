@@ -555,6 +555,11 @@ a.sodar-nav-link-last {
   text-decoration: line-through;
 }
 
+.text-monospace {
+  font-size: 85%;
+  padding-top: 1.15em !important;
+}
+
 
 /* Misc --------------------------------------------------------------------- */
 

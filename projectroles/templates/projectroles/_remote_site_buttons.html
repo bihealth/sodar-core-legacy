@@ -1,0 +1,21 @@
+{% load rules %}
+{% load projectroles_common_tags %}
+
+<div class="btn-group sodar-edit-button-group sodar-pr-btn-grp-site"
+     role="group" id="sodar-pr-btn-grp-site-{{ site.sodar_uuid }}">
+  <button class="btn btn-secondary dropdown-toggle btn-sm sodar-edit-dropdown"
+      type="button" data-toggle="dropdown"
+      aria-haspopup="true" aria-expanded="false">
+    <i class="fa fa-cog"></i>
+  </button>
+  <div class="dropdown-menu dropdown-menu-right">
+    <a class="dropdown-item"
+       href="{% url 'projectroles:remote_site_update' remotesite=site.sodar_uuid %}">
+      <i class="fa fa-fw fa-pencil"></i> Update Site
+    </a>
+    <a class="dropdown-item"
+       href="{% url 'projectroles:remote_site_delete' remotesite=site.sodar_uuid %}">
+      <i class="fa fa-fw fa-times"></i> Remove Site
+    </a>
+  </div>
+</div>
