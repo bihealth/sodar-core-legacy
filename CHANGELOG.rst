@@ -13,7 +13,7 @@ Added
 
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
-    - ``RemoteProjectSitePlugin`` site plugin (#3)
+    - ``RemoteSiteAppPlugin`` site plugin (#3)
     - ``PROJECTROLES_SITE_MODE`` setting (#3)
     - Remote site and project management site app (#3)
 

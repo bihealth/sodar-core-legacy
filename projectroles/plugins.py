@@ -284,7 +284,7 @@ def get_backend_api(plugin_name, force=False):
 # Plugins within projectroles --------------------------------------------------
 
 
-class RemoteProjectSitePlugin(SiteAppPluginPoint):
+class RemoteSiteAppPlugin(SiteAppPluginPoint):
     """Site plugin for remote site and project management"""
 
     #: Name (slug-safe, used in URLs)
