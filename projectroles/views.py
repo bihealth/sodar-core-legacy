@@ -51,6 +51,8 @@ SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
     'SUBMIT_STATUS_PENDING_TASKFLOW']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -1565,15 +1567,15 @@ class RemoteManagementView(
             *args, **kwargs)
 
         # TODO: Do this nicer
-        site_mode = 'TARGET' if \
-            settings.PROJECTROLES_SITE_MODE == 'SOURCE' else 'SOURCE'
+        site_mode = (SITE_MODE_TARGET if
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE else
+                SITE_MODE_SOURCE)
 
         sites = RemoteSite.objects.filter(
             mode=site_mode).order_by('name')
 
         if (sites.count() > 0 and
-                settings.PROJECTROLES_SITE_MODE ==
-                SODAR_CONSTANTS['SITE_MODE_TARGET']):
+                settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET):
             sites = sites[:1]
 
         context['sites'] = sites
@@ -1590,7 +1592,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
 
         self.object = form.save()
 
-        messages.success(self.request, '{} site "{}" {}.'.format(
+        messages.success(self.request, '{} site "{}" {}'.format(
             self.object.mode.capitalize(),
             self.object.name,
             form_action))
@@ -1604,6 +1606,16 @@ class RemoteSiteCreateView(
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
+
+    def get(self, request, *args, **kwargs):
+        """Override get() to disallow rendering this view if current site is
+        in TARGET mode and a source site already exists"""
+        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
+                RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0):
+            messages.error(request, 'Source site has already been set')
+            return HttpResponseRedirect(reverse('projectroles:remote'))
+
+        return super(RemoteSiteCreateView, self).get(request, args, kwargs)
 
 
 class RemoteSiteUpdateView(
