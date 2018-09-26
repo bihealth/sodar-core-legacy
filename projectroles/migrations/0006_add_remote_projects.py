@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('project_uuid', models.UUIDField(default=None, help_text='Project UUID')),
-                ('level', models.CharField(choices=[('AVAIL', 'View project availability'), ('INFO', 'View project information'), ('ROLES', 'View and synchronize project information and user roles')], default='AVAIL', help_text='Project access level', max_length=255)),
+                ('level', models.CharField(default='VIEW_AVAIL', help_text='Project access level', max_length=255)),
                 ('date_access', models.DateTimeField(help_text='DateTime of last access from/to remote site', null=True)),
                 ('sodar_uuid', models.UUIDField(default=uuid.uuid4, help_text='RemoteProject relation UUID (local)', unique=True)),
             ],

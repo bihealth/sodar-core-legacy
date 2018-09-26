@@ -823,7 +823,7 @@ class TestRemoteProject(
         self.remote_project = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'])
 
     def test_initialization(self):
         """Test RemoteProject initialization"""
@@ -831,7 +831,7 @@ class TestRemoteProject(
             'id': self.remote_project.pk,
             'project_uuid': self.project.sodar_uuid,
             'site': self.site.pk,
-            'level': SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+            'level': SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
             'date_access': None,
             'sodar_uuid': self.remote_project.sodar_uuid}
         self.assertEqual(model_to_dict(self.remote_project), expected)

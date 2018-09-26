@@ -1556,14 +1556,14 @@ class ProjectInviteRevokeView(
 # Remote site and project views ------------------------------------------------
 
 
-class RemoteManagementView(
+class RemoteSiteListView(
         LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
-    """Main view for displaying remote site/project management"""
+    """Main view for displaying remote site list"""
     permission_required = 'projectroles.update_remote'
-    template_name = 'projectroles/remote_access.html'
+    template_name = 'projectroles/remote_sites.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RemoteManagementView, self).get_context_data(
+        context = super(RemoteSiteListView, self).get_context_data(
             *args, **kwargs)
 
         # TODO: Do this nicer
@@ -1646,6 +1646,40 @@ class RemoteSiteDeleteView(
                 self.object.name))
 
         return reverse('projectroles:remote')
+
+
+class RemoteProjectListView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Main view for displaying a remote site's project list"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remote_projects.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectListView, self).get_context_data(
+            *args, **kwargs)
+
+        # Current site
+        try:
+            context['site'] = RemoteSite.objects.get(
+                sodar_uuid=self.kwargs['remotesite'])
+
+        except RemoteSite.DoesNotExist:
+            pass
+
+        # Projects in SOURCE mode: all local projects of type PROJECT
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            projects = Project.objects.filter(
+                type=PROJECT_TYPE_PROJECT)
+
+            context['projects'] = sorted(
+                [p for p in projects],
+                key=lambda x: x.get_full_title())
+
+        # Projects in TARGET mode: retrieve from source
+        else:   # SITE_MODE_TARGET
+            pass    # TODO
+
+        return context
 
 
 # Javascript API Views ---------------------------------------------------------

@@ -1,0 +1,65 @@
+{% extends "projectroles/base.html" %}
+
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
+{% block title %}Remote Projects for {{ site.name }} {% endblock %}
+
+{% block projectroles %}
+
+{% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+
+<div class="row sodar-subtitle-container">
+  <h2><i class="fa fa-cloud-{% if site_mode == 'SOURCE' %}upload{% else %}download{% endif %}"></i>
+      {{ site.name }}</h2>
+  <a role="button" class="btn btn-secondary ml-auto"
+     href="{% url 'projectroles:remote' %}">
+    <i class="fa fa-arrow-circle-left"></i>
+    Back to Site List
+  </a>
+</div>
+
+<div class="container-fluid sodar-page-container">
+
+  {% if projects|length == 0 %}
+    <div class="alert alert-warning">
+      No projects are available.
+    </div>
+
+  {% else %}
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4>
+          <i class="fa fa-cubes"></i>
+          {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} Projects
+        </h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-pr-remote-project-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Accessed</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in projects %}
+              {% include 'projectroles/_remote_project_list_item.html' %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="container-fluid text-right">
+      <button type="submit" class="btn btn-primary">
+        <i class="fa fa-pencil"></i> Update Project Access
+      </button>
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock projectroles %}

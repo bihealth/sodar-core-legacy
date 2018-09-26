@@ -41,9 +41,9 @@ SODAR_CONSTANTS = {
     'SITE_MODE_TARGET': 'TARGET',
 
     # RemoteProject access types
-    'REMOTE_LEVEL_AVAIL': 'AVAIL',
-    'REMOTE_LEVEL_INFO': 'INFO',
-    'REMOTE_LEVEL_ROLES': 'ROLES'
+    'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
+    'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
+    'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'
 }
 
 # Choices for forms/admin with project type
@@ -58,18 +58,18 @@ SODAR_CONSTANTS['SITE_MODES'] = [
 
 # RemoteProject access levels
 SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = [
-    SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
-    SODAR_CONSTANTS['REMOTE_LEVEL_INFO'],
-    SODAR_CONSTANTS['REMOTE_LEVEL_ROLES']]
+    SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
 
 # RemoteProject access choices
-SODAR_CONSTANTS['REMOTE_ACCESS_CHOICES'] = [
-    (SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
-        'View project availability'),
-    (SODAR_CONSTANTS['REMOTE_LEVEL_INFO'],
-        'View project information'),
-    (SODAR_CONSTANTS['REMOTE_LEVEL_ROLES'],
-        'View and synchronize project information and user roles')]
+SODAR_CONSTANTS['REMOTE_LEVEL_CHOICES'] = [
+    (SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+        'View availability'),
+    (SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+        'Read information'),
+    (SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        'Read members')]
 
 
 # Local constants
@@ -752,6 +752,16 @@ class RemoteSite(models.Model):
             raise ValidationError(
                 'Mode "{}" not found in SITE_MODES'.format(self.mode))
 
+    # Custom row-level functions
+
+    def get_access_date(self):
+        """Return date of latest project access by remote site"""
+        projects = RemoteProject.objects.filter(
+            site=self).order_by('-date_access')
+
+        if projects.count() > 0:
+            return projects.first().date_access
+
 
 # RemoteProject ----------------------------------------------------------------
 
@@ -778,8 +788,7 @@ class RemoteProject(models.Model):
         unique=False,
         blank=False,
         null=False,
-        choices=SODAR_CONSTANTS['REMOTE_ACCESS_CHOICES'],
-        default=SODAR_CONSTANTS['REMOTE_LEVEL_AVAIL'],
+        default=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
         help_text='Project access level')
 
     #: DateTime of last access from/to remote site

@@ -2,7 +2,7 @@ from django import template
 from django.conf import settings
 from django.utils import timezone
 
-from ..models import Project, RoleAssignment, SODAR_CONSTANTS, \
+from ..models import Project, RoleAssignment, RemoteProject, SODAR_CONSTANTS, \
     PROJECT_TAG_STARRED
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
@@ -256,4 +256,34 @@ def get_login_info():
                 settings.AUTH_LDAP2_USERNAME_DOMAIN)
 
     ret += '.</p>'
+    return ret
+
+
+@register.simple_tag
+def get_target_project_select(site, project):
+    """Get remote target project level selection HTML"""
+    existing_level = None
+
+    try:
+        rp = RemoteProject.objects.get(
+            site__mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            site=site,
+            project_uuid=project.sodar_uuid)
+        existing_level = rp.level
+
+    except RemoteProject.DoesNotExist:
+        pass
+
+    ret = '<select class="form-control form-control-sm" ' \
+          'id="sodar-pr-remote-project-select-{}">\n'.format(project.sodar_uuid)
+    ret += '<option value="0" {}>No access</option>\n'.format(
+        'selected' if not existing_level else '')
+
+    for choice in SODAR_CONSTANTS['REMOTE_LEVEL_CHOICES']:
+        ret += '<option value="{}" {}>{}</option>\n'.format(
+            choice[0],
+            choice[1],
+            'selected' if existing_level == choice[0] else '')
+
+    ret += '</select>\n'
     return ret

@@ -1,0 +1,26 @@
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+<tr>
+  <td class="text-nowrap align-middle">
+    <div class="sodar-overflow-container">
+      <a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">{% get_project_title_html project %}</a>
+    </div>
+  </td>
+  <td class="text-nowrap align-middle">
+    {% if project.date_access %}
+      {{ project.date_access|date:'Y-m-d H:i' }}
+    {% else %}
+      <span class="text-muted">Never</span>
+    {% endif %}
+  </td>
+  <td class="align-middle">
+    {% if site_mode == 'SOURCE' %}
+      {% autoescape off %}
+        {% get_target_project_select site project %}
+      {% endautoescape %}
+    {% else %}
+      Level goes here for TARGET
+    {% endif %}
+  </td>
+</tr>

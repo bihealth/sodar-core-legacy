@@ -1,6 +1,8 @@
 <tr>
   <td>
-    <a href="#">{{ site.name }}</a>
+    <a href="{% url 'projectroles:remote_projects' remotesite=site.sodar_uuid %}">
+      {{ site.name }}
+    </a>
     {% if site.description %}
       <a class="omics-pr-site-desc-link" tabindex="0" data-toggle="popover"
          data-trigger="focus" data-placement="top" data-html="true"
@@ -12,9 +14,9 @@
   <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>
   <td class="text-right">0</td>
   <td class="text-nowrap"><code>{{ site.secret }}</code></td>
-  <td>
-    {% if site.date_access %}
-      {{ site.date_access }}
+  <td class="text-nowrap">
+    {% if site.get_access_date %}
+      {{ site.get_access_date|date:'Y-m-d H:i' }}
     {% else %}
       <span class="text-muted">Never</span>
     {% endif %}
