@@ -23,6 +23,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants and settings
 APP_NAME = 'projectroles'
@@ -466,14 +468,14 @@ class RemoteSiteForm(forms.ModelForm):
             attrs={'class': "sodar-code-input"})
 
         # Special cases for SOURCE
-        if settings.PROJECTROLES_SITE_MODE == SODAR_CONSTANTS[
-                'SITE_MODE_SOURCE']:
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             self.fields['secret'].widget.attrs['readonly'] = True
 
         # Creation
         if not self.instance.pk:
-            # Generate secret token
-            self.fields['secret'].initial = build_secret()
+            # Generate secret token for target site
+            if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+                self.fields['secret'].initial = build_secret()
 
         # Updating
         else:   # self.instance.pk
@@ -483,12 +485,11 @@ class RemoteSiteForm(forms.ModelForm):
         """Override of form saving function"""
         obj = super(RemoteSiteForm, self).save(commit=False)
 
-        if settings.PROJECTROLES_SITE_MODE == SODAR_CONSTANTS[
-                'SITE_MODE_SOURCE']:
-            obj.mode = SODAR_CONSTANTS['SITE_MODE_TARGET']
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            obj.mode = SITE_MODE_TARGET
 
         else:
-            obj.mode = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+            obj.mode = SITE_MODE_SOURCE
 
         obj.save()
         return obj

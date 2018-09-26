@@ -11,11 +11,13 @@
 
 <div class="row sodar-subtitle-container">
   <h2><i class="fa fa-cloud"></i> Remote Site Access</h2>
-  <a role="button" class="btn btn-primary ml-auto"
-     href="{% url 'projectroles:remote_site_create' %}">
-    <i class="fa fa-plus"></i>
-    Add {% if site_mode == 'TARGET' %}Source{% else %}Target{% endif %} Site
-  </a>
+  {% if site_mode == 'SOURCE' or not sites %}
+    <a role="button" class="btn btn-primary ml-auto"
+       href="{% url 'projectroles:remote_site_create' %}">
+      <i class="fa fa-plus"></i>
+      Add {% if site_mode == 'TARGET' %}Source{% else %}Target{% endif %} Site
+    </a>
+  {% endif %}
 </div>
 
 <div class="container-fluid sodar-page-container">
