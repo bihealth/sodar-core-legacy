@@ -262,28 +262,31 @@ def get_login_info():
 @register.simple_tag
 def get_target_project_select(site, project):
     """Get remote target project level selection HTML"""
-    existing_level = None
+    current_level = None
 
     try:
         rp = RemoteProject.objects.get(
             site__mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
             site=site,
             project_uuid=project.sodar_uuid)
-        existing_level = rp.level
+        current_level = rp.level
 
     except RemoteProject.DoesNotExist:
         pass
 
     ret = '<select class="form-control form-control-sm" ' \
           'id="sodar-pr-remote-project-select-{}">\n'.format(project.sodar_uuid)
-    ret += '<option value="0" {}>No access</option>\n'.format(
-        'selected' if not existing_level else '')
 
-    for choice in SODAR_CONSTANTS['REMOTE_LEVEL_CHOICES']:
+    for k, v in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'].items():
+        selected = False
+
+        if (k == current_level or (
+                k == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and
+                not current_level)):
+            selected = True
+
         ret += '<option value="{}" {}>{}</option>\n'.format(
-            choice[0],
-            choice[1],
-            'selected' if existing_level == choice[0] else '')
+            k, 'selected' if selected else '', v)
 
     ret += '</select>\n'
     return ret

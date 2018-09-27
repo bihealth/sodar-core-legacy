@@ -41,6 +41,7 @@ SODAR_CONSTANTS = {
     'SITE_MODE_TARGET': 'TARGET',
 
     # RemoteProject access types
+    'REMOTE_LEVEL_NONE': 'NONE',
     'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
     'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
     'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'
@@ -57,20 +58,11 @@ SODAR_CONSTANTS['SITE_MODES'] = [
     SODAR_CONSTANTS['SITE_MODE_TARGET']]
 
 # RemoteProject access levels
-SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = [
-    SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
-
-# RemoteProject access choices
-SODAR_CONSTANTS['REMOTE_LEVEL_CHOICES'] = [
-    (SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
-        'View availability'),
-    (SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
-        'Read information'),
-    (SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
-        'Read members')]
-
+SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = {
+    SODAR_CONSTANTS['REMOTE_LEVEL_NONE']: 'No access',
+    SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']: 'View availability',
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']: 'Read information',
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']: 'Read members'}
 
 # Local constants
 PROJECT_SETTING_TYPES = [
@@ -788,7 +780,7 @@ class RemoteProject(models.Model):
         unique=False,
         blank=False,
         null=False,
-        default=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+        default=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
         help_text='Project access level')
 
     #: DateTime of last access from/to remote site
