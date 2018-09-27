@@ -87,9 +87,9 @@ urlpatterns = [
     ),
     # Remote site and project views
     url(
-        regex=r'^remote/$',
+        regex=r'^remote/sites$',
         view=views.RemoteSiteListView.as_view(),
-        name='remote',
+        name='remote_sites',
     ),
     url(
         regex=r'^remote/site/add$',

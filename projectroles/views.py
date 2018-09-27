@@ -1596,7 +1596,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
             self.object.mode.capitalize(),
             self.object.name,
             form_action))
-        return HttpResponseRedirect(reverse('projectroles:remote'))
+        return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
 
 class RemoteSiteCreateView(
@@ -1613,7 +1613,7 @@ class RemoteSiteCreateView(
         if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
                 RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0):
             messages.error(request, 'Source site has already been set')
-            return HttpResponseRedirect(reverse('projectroles:remote'))
+            return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
         return super(RemoteSiteCreateView, self).get(request, args, kwargs)
 
@@ -1645,7 +1645,7 @@ class RemoteSiteDeleteView(
                 self.object.mode.capitalize(),
                 self.object.name))
 
-        return reverse('projectroles:remote')
+        return reverse('projectroles:remote_sites')
 
 
 class RemoteProjectListView(

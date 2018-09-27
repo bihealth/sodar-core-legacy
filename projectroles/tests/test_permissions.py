@@ -656,7 +656,7 @@ class TestRemoteSiteApp(TestPermissionBase, RemoteSiteMixin):
 
     def test_list(self):
         """Test remote site list view permissions"""
-        url = reverse('projectroles:remote')
+        url = reverse('projectroles:remote_sites')
         good_users = [
             self.superuser]
         bad_users = [

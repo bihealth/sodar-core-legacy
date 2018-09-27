@@ -303,7 +303,7 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
     description = 'Management of remote SODAR sites and remote project access'
 
     #: Entry point URL ID
-    entry_point_url_id = 'projectroles:remote'
+    entry_point_url_id = 'projectroles:remote_sites'
 
     #: Required permission for displaying the app
     app_permission = 'userprofile.update_remote'

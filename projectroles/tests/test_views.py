@@ -1463,7 +1463,7 @@ class TestRemoteSiteListView(
         """Test rendering the remote site list view as source"""
 
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:remote'))
+            response = self.client.get(reverse('projectroles:remote_sites'))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['sites'].count(), 1)  # 1 target site
@@ -1473,7 +1473,7 @@ class TestRemoteSiteListView(
         """Test rendering the remote site list view as source"""
 
         with self.login(self.user):
-            response = self.client.get(reverse('projectroles:remote'))
+            response = self.client.get(reverse('projectroles:remote_sites'))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['sites'].count(), 0)  # 1 source sites
@@ -1532,7 +1532,7 @@ class TestRemoteSiteCreateView(
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:remote_site_create'))
-            self.assertRedirects(response, reverse('projectroles:remote'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     def test_create_target(self):
         """Test creating a target site"""
@@ -1569,7 +1569,7 @@ class TestRemoteSiteCreateView(
 
         # Assert redirect
         with self.login(self.user):
-            self.assertRedirects(response, reverse('projectroles:remote'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     @override_settings(PROJECTROLES_SITE_MODE='TARGET')
     def test_create_source(self):
@@ -1607,7 +1607,7 @@ class TestRemoteSiteCreateView(
 
         # Assert redirect
         with self.login(self.user):
-            self.assertRedirects(response, reverse('projectroles:remote'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     def test_create_target_existing_name(self):
         """Test creating a target site with an existing name"""
@@ -1740,7 +1740,7 @@ class TestRemoteSiteUpdateView(
 
         # Assert redirect
         with self.login(self.user):
-            self.assertRedirects(response, reverse('projectroles:remote'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     def test_update_existing_name(self):
         """Test creating a target site with an existing name as source (should fail)"""
@@ -1840,7 +1840,7 @@ class TestRemoteSiteDeleteView(TestViewsBase, RemoteSiteMixin):
                 reverse(
                     'projectroles:remote_site_delete',
                     kwargs={'remotesite': self.target_site.sodar_uuid}))
-            self.assertRedirects(response, reverse('projectroles:remote'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
         # Assert site status
         self.assertEqual(RemoteSite.objects.all().count(), 0)
