@@ -16,12 +16,16 @@ Added
     - ``RemoteSiteAppPlugin`` site plugin (#3)
     - ``PROJECTROLES_SITE_MODE`` setting (#3)
     - Remote site and project management site app (#3)
+- **Timeline**
+    - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 
 Changed
 -------
 
 - **Projectroles**
     - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
+- **Timeline**
+    - Minor refactoring of ``api.get_event_description()`` (#30)
 
 
 v0.2.1 (2018-09-20)

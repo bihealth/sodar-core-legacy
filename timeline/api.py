@@ -7,7 +7,7 @@ from django.urls import reverse
 from django.utils.text import Truncator
 
 # Projectroles dependency
-from projectroles.models import Project
+from projectroles.models import Project, RemoteSite
 from projectroles.plugins import ProjectAppPluginPoint
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
@@ -103,7 +103,6 @@ class TimelineAPI:
         """Return printable version of event description"""
         desc = event.description
         unknown_label = '(unknown)'
-        not_found_label = '<span class="text-danger">{}</span> {}'
 
         ref_ids = re.findall("{'?(.*?)'?\}", desc)
 
@@ -117,6 +116,10 @@ class TimelineAPI:
             if not {' ', '-'}.intersection(label):
                 return Truncator(label).chars(LABEL_MAX_WIDTH)
             return label
+
+        def get_not_found_label(ref_obj, history_link):
+            return '<span class="text-danger">{}</span> {}'.format(
+                get_label(ref_obj.name), history_link)
 
         for r in ref_ids:
 
@@ -170,10 +173,26 @@ class TimelineAPI:
                 except Project.DoesNotExist:
                     refs[r] = ref_obj.name
 
+            # Special case: RemoteSite model
+            elif ref_obj.object_model == 'RemoteSite':
+                try:
+                    site = RemoteSite.objects.get(
+                        sodar_uuid=ref_obj.object_uuid)
+
+                    if request and request.user.is_superuser:
+                        refs[r] = '<a href="{}">{}</a> {}'.format(
+                            reverse(
+                                'projectroles:remote_projects',
+                                kwargs={'remotesite': site.sodar_uuid}),
+                            site.name,
+                            history_link)
+
+                except RemoteSite.DoesNotExist:
+                    refs[r] = get_not_found_label(ref_obj, history_link)
+
             # Special case: projectroles app
             elif event.app == 'projectroles':
-                refs[r] = not_found_label.format(
-                    get_label(ref_obj.name), history_link)
+                refs[r] = get_not_found_label(ref_obj, history_link)
 
             # Apps with plugins
             else:
@@ -193,8 +212,7 @@ class TimelineAPI:
                         history_link)
 
                 else:
-                    refs[r] = not_found_label.format(
-                        get_label(ref_obj.name), history_link)
+                    refs[r] = get_not_found_label(ref_obj, history_link)
 
         return event.description.format(**refs)
 

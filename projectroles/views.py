@@ -1709,13 +1709,14 @@ class RemoteProjectsBatchUpdateView(
         site = context['site']
         post_data = request.POST
         confirmed = True if 'update-confirmed' in post_data else False
+        timeline = get_backend_api('timeline_backend')
 
         redirect_url = reverse(
             'projectroles:remote_projects',
             kwargs={'remotesite': site.sodar_uuid})
 
         # Ensure site is in SOURCE mode
-        if settings.PROJECTROLES_SITE_MODE != 'SOURCE':
+        if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
             messages.error(
                 request, 'Site in TARGET mode, cannot update project access')
             return HttpResponseRedirect(redirect_url)
@@ -1779,6 +1780,26 @@ class RemoteProjectsBatchUpdateView(
                     level=v)
 
             rp.save()
+
+            if timeline:
+                project = Project.objects.get(sodar_uuid=project_uuid)
+
+                tl_event = timeline.add_event(
+                    project=project,
+                    app_name=APP_NAME,
+                    user=request.user,
+                    event_name='update_remote',
+                    description=
+                    'update remote access for site {{{}}} to "{})'.format(
+                        'site', v,
+                        SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower()),
+                    classified=True,
+                    status_type='OK')
+
+                tl_event.add_object(
+                    obj=site,
+                    label='site',
+                    name=site.name)
 
         # All OK
         messages.success(
