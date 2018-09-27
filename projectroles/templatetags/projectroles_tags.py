@@ -275,7 +275,9 @@ def get_target_project_select(site, project):
         pass
 
     ret = '<select class="form-control form-control-sm" ' \
-          'id="sodar-pr-remote-project-select-{}">\n'.format(project.sodar_uuid)
+          'name="remote_access_{project}" ' \
+          'id="sodar-pr-remote-project-select-{project}">\n'.format(
+            project=project.sodar_uuid)
 
     for k, v in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'].items():
         selected = False
@@ -290,3 +292,11 @@ def get_target_project_select(site, project):
 
     ret += '</select>\n'
     return ret
+
+
+@register.simple_tag
+def get_remote_access_legend(level):
+    if level not in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS']:
+        return 'N/A'
+
+    return SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]

@@ -53,6 +53,7 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
     'SUBMIT_STATUS_PENDING_TASKFLOW']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -1680,6 +1681,113 @@ class RemoteProjectListView(
             pass    # TODO
 
         return context
+
+
+class RemoteProjectsBatchUpdateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Manually created form view for updating project access in batch for a
+    remote target site"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remoteproject_update.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectsBatchUpdateView, self).get_context_data(
+            *args, **kwargs)
+
+        # Current site
+        try:
+            context['site'] = RemoteSite.objects.get(
+                sodar_uuid=self.kwargs['remotesite'])
+
+        except RemoteSite.DoesNotExist:
+            pass
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data()
+        site = context['site']
+        post_data = request.POST
+        confirmed = True if 'update-confirmed' in post_data else False
+
+        redirect_url = reverse(
+            'projectroles:remote_projects',
+            kwargs={'remotesite': site.sodar_uuid})
+
+        # Ensure site is in SOURCE mode
+        if settings.PROJECTROLES_SITE_MODE != 'SOURCE':
+            messages.error(
+                request, 'Site in TARGET mode, cannot update project access')
+            return HttpResponseRedirect(redirect_url)
+
+        access_fields = {
+            k: v for k, v in post_data.items() if k.startswith('remote_access')}
+
+        ######################
+        # Confirmation needed
+        ######################
+
+        if not confirmed:
+            # Pass on (only) changed projects to confirmation form
+            modifying_access = []
+
+            for k, v in access_fields.items():
+                remote_obj = None
+                project_uuid = k.split('_')[2]
+
+                try:
+                    remote_obj = RemoteProject.objects.get(
+                        site=site, project_uuid=project_uuid)
+
+                except RemoteProject.DoesNotExist:
+                    pass
+
+                if ((not remote_obj and v != REMOTE_LEVEL_NONE) or (
+                        remote_obj and remote_obj.level != v)):
+                    modifying_access.append({
+                        'project': Project.objects.get(sodar_uuid=project_uuid),
+                        'old_level': REMOTE_LEVEL_NONE if
+                        not remote_obj else remote_obj.level,
+                        'new_level': v})
+
+            if not modifying_access:
+                messages.warning(
+                    request, 'No changes to project access detected')
+                return HttpResponseRedirect(redirect_url)
+
+            context['modifying_access'] = modifying_access
+
+            return super(TemplateView, self).render_to_response(context)
+
+        ############
+        # Confirmed
+        ############
+
+        for k, v in access_fields.items():
+            project_uuid = k.split('_')[2]
+
+            # Update or create a RemoteProject object
+            try:
+                rp = RemoteProject.objects.get(
+                    site=site, project_uuid=project_uuid)
+                rp.level = v
+
+            except RemoteProject.DoesNotExist:
+                rp = RemoteProject(
+                    site=site,
+                    project_uuid=project_uuid,
+                    level=v)
+
+            rp.save()
+
+        # All OK
+        messages.success(
+            request,
+            'Access level updated for {} project{} in site "{}"'.format(
+                len(access_fields.items()),
+                's' if len(access_fields.items()) == 1 else '',
+                context['site'].name))
+        return HttpResponseRedirect(redirect_url)
 
 
 # Javascript API Views ---------------------------------------------------------

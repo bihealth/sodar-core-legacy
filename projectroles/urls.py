@@ -111,6 +111,11 @@ urlpatterns = [
         view=views.RemoteProjectListView.as_view(),
         name='remote_projects',
     ),
+    url(
+        regex=r'^remote/projects/update/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteProjectsBatchUpdateView.as_view(),
+        name='remote_projects_update',
+    ),
     # Javascript API views
     url(
         regex=r'^star/(?P<project>[0-9a-f-]+)',

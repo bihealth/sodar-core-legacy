@@ -14,8 +14,7 @@
       {{ site.name }}</h2>
   <a role="button" class="btn btn-secondary ml-auto"
      href="{% url 'projectroles:remote_sites' %}">
-    <i class="fa fa-arrow-circle-left"></i>
-    Back to Site List
+    <i class="fa fa-arrow-circle-left"></i> Back to Site List
   </a>
 </div>
 
@@ -27,37 +26,42 @@
     </div>
 
   {% else %}
-    <div class="card mb-3">
-      <div class="card-header">
-        <h4>
-          <i class="fa fa-cubes"></i>
-          {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} Projects
-        </h4>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-striped sodar-card-table"
-               id="sodar-pr-remote-project-table">
-          <thead>
-            <tr>
-              <th>Project</th>
-              <th>Accessed</th>
-              <th>Level</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for project in projects %}
-              {% include 'projectroles/_remote_project_list_item.html' %}
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <form method="post" action="{% url 'projectroles:remote_projects_update' remotesite=site.sodar_uuid %}">
+      {% csrf_token %}
 
-    <div class="container-fluid text-right">
-      <button type="submit" class="btn btn-primary">
-        <i class="fa fa-pencil"></i> Update Project Access
-      </button>
-    </div>
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>
+            <i class="fa fa-cubes"></i>
+            {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} Projects
+          </h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table"
+                 id="sodar-pr-remote-project-table">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Accessed</th>
+                <th>Level</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for project in projects %}
+                {% include 'projectroles/_remote_project_list_item.html' %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="container-fluid text-right">
+        <button type="submit" class="btn btn-primary">
+          <i class="fa fa-pencil"></i> Update Project Access
+        </button>
+      </div>
+
+    </form>
   {% endif %}
 
 </div>
