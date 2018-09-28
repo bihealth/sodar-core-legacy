@@ -1844,3 +1844,135 @@ class TestRemoteSiteDeleteView(TestViewsBase, RemoteSiteMixin):
 
         # Assert site status
         self.assertEqual(RemoteSite.objects.all().count(), 0)
+
+
+class TestRemoteProjectsBatchUpdateView(
+        TestViewsBase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin):
+    """Tests for remote project batch update view"""
+
+    def setUp(self):
+        super(TestRemoteProjectsBatchUpdateView, self).setUp()
+
+        # Set up project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+        # Set up target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render_confirm(self):
+        """Test rendering the remote project update view in confirm mode"""
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['site'], self.target_site)
+            self.assertIsNotNone(response.context['modifying_access'])
+
+    def test_render_confirm_no_change(self):
+        """Test rendering the remote project update view without changes (should redirect)"""
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+    def test_post_create(self):
+        """Test updating remote project access by adding a new RemoteProject"""
+
+        # Assert precondition
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+            'update-confirmed': 1}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(RemoteProject.objects.all().count(), 1)
+            rp = RemoteProject.objects.first()
+            self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
+            self.assertEqual(
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+    def test_post_update(self):
+        """Test updating remote project access by modifying an existing RemoteProject"""
+
+        rp = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'])
+
+        # Assert precondition
+        self.assertEqual(RemoteProject.objects.all().count(), 1)
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+            'update-confirmed': 1}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(RemoteProject.objects.all().count(), 1)
+            rp.refresh_from_db()
+            self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
+            self.assertEqual(
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))

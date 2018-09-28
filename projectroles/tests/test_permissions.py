@@ -654,7 +654,7 @@ class TestRemoteSiteApp(TestPermissionBase, RemoteSiteMixin):
             description='',
             secret=REMOTE_SITE_SECRET)
 
-    def test_list(self):
+    def test_site_list(self):
         """Test remote site list view permissions"""
         url = reverse('projectroles:remote_sites')
         good_users = [
@@ -694,6 +694,32 @@ class TestRemoteSiteApp(TestPermissionBase, RemoteSiteMixin):
         """Test remote site delete view permissions"""
         url = reverse(
             'projectroles:remote_site_delete',
+            kwargs={'remotesite': self.site.sodar_uuid})
+        good_users = [
+            self.superuser]
+        bad_users = [
+            self.anonymous,
+            self.regular_user]
+        self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
+    def test_project_list(self):
+        """Test remote project list view permissions"""
+        url = reverse(
+            'projectroles:remote_projects',
+            kwargs={'remotesite': self.site.sodar_uuid})
+        good_users = [
+            self.superuser]
+        bad_users = [
+            self.anonymous,
+            self.regular_user]
+        self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
+    def test_project_update(self):
+        """Test remote project update view permissions"""
+        url = reverse(
+            'projectroles:remote_projects_update',
             kwargs={'remotesite': self.site.sodar_uuid})
         good_users = [
             self.superuser]

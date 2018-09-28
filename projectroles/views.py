@@ -1806,7 +1806,7 @@ class RemoteProjectsBatchUpdateView(
             request,
             'Access level updated for {} project{} in site "{}"'.format(
                 len(access_fields.items()),
-                's' if len(access_fields.items()) == 1 else '',
+                's' if len(access_fields.items()) > 1 else '',
                 context['site'].name))
         return HttpResponseRedirect(redirect_url)
 
