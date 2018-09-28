@@ -17,8 +17,11 @@ from django.views.generic import TemplateView, DetailView, UpdateView,\
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
+
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
 from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
@@ -54,6 +57,9 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
+REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
+REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -1814,7 +1820,120 @@ class RemoteProjectsBatchUpdateView(
         return HttpResponseRedirect(redirect_url)
 
 
-# Javascript API Views ---------------------------------------------------------
+# Base SODAR API Views ---------------------------------------------------------
+
+
+# NOTE: Using a specific versioner for the query API, to be generalized..
+class SourceIDAPIVersioning(AcceptHeaderVersioning):
+    default_version = settings.SODAR_API_DEFAULT_VERSION
+    allowed_versions = [settings.SODAR_API_DEFAULT_VERSION]
+    version_param = 'version'
+
+
+class SourceIDAPIRenderer(JSONRenderer):
+    media_type = 'application/vnd.bihealth.sodar+json'
+
+
+class BaseAPIView(APIView):
+    """Base SODAR API View with accept header versioning"""
+    versioning_class = SourceIDAPIVersioning
+    renderer_classes = [SourceIDAPIRenderer]
+
+
+# SODAR API Views --------------------------------------------------------------
+
+
+class RemoteProjectSyncAPIView(BaseAPIView):
+    """API view for synchronizing remote projects to a target site"""
+    def get(self, request, *args, **kwargs):
+        # TODO: TBD: What about existing users with identical user names?
+        # TODO: TBD: What if the SODAR instance has modified role types?
+
+        auth_header = request.META.get('HTTP_AUTHORIZATION')
+
+        if (len(auth_header.split(' ')) != 2 or
+                auth_header.split(' ')[0].lower() != 'token'):
+            return Response('Authorization token not found', status=401)
+
+        secret = auth_header.split(' ')[1]
+        host = request.META.get('HTTP_HOST')
+
+        try:
+            rs = RemoteSite.objects.get(
+                mode=SITE_MODE_TARGET, secret=secret, url__contains=host)
+
+        except RemoteSite.DoesNotExist:
+            return Response('Unauthorized', status=401)
+
+        sync_data = {
+            'users': [],
+            'categories': [],
+            'projects': []}
+
+        def add_user(user):
+            if user.username not in [u['username'] for u in sync_data['users']]:
+                sync_data['users'].append({
+                    'sodar_uuid': user.sodar_uuid,
+                    'username': user.username,
+                    'name': user.name,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'groups': []})  # TODO: Groups
+
+        def add_parent_categories(category):
+            if category.parent:
+                add_parent_categories(category.parent)
+
+            if (category.sodar_uuid not in [
+                    c['sodar_uuid'] for c in sync_data['categories']]):
+                sync_data['categories'].append({
+                    'sodar_uuid': category.sodar_uuid,
+                    'title': category.title,
+                    'description': category.description,
+                    'readme': category.readme.raw,
+                    'owner': category.get_owner().username})
+                add_user(category.get_owner())
+
+        for rp in rs.projects:
+            project_data = {
+                'sodar_uuid': rp.project_uuid,
+                'level': rp.level}
+            project = rp.get_project()
+
+            # View available projects
+            if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
+                project_data['available'] = True if project else False
+
+            # Add info
+            elif project and rp.level in [
+                    REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]:
+                project_data['title'] = project.title
+                project_data['type'] = project.type
+                project_data['description'] = project.description
+                project_data['readme'] = project.readme.raw
+
+            # If level is READ_ROLES, add categories and roles
+            if rp.level == REMOTE_LEVEL_READ_ROLES:
+                # Add categories
+                if project.parent:
+                    add_parent_categories(project.parent)
+
+                project_data['roles'] = []
+
+                for role_as in project.roles.all():
+                    project_data['roles'].append({
+                        'sodar_uuid': role_as.sodar_uuid,
+                        'user': role_as.user.username,
+                        'role': role_as.role.name})
+                    add_user(role_as.user.username)
+
+            sync_data['projects'].append(project_data)
+            # TODO: Log with timeline
+
+        return Response(sync_data, status=200)
+
+
+# Ajax API Views ---------------------------------------------------------------
 
 
 class ProjectStarringAPIView(
@@ -1847,7 +1966,7 @@ class ProjectStarringAPIView(
         return Response(0 if tag_state else 1, status=200)
 
 
-# Taskflow API Views -----------------------------------------------------
+# Taskflow API Views -----------------------------------------------------------
 
 
 # TODO: Limit access to localhost

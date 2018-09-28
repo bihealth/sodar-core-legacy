@@ -116,7 +116,13 @@ urlpatterns = [
         view=views.RemoteProjectsBatchUpdateView.as_view(),
         name='remote_projects_update',
     ),
-    # Javascript API views
+    # SODAR API views
+    url(
+        regex=r'^api/remote/sync$',
+        view=views.RemoteProjectSyncAPIView.as_view(),
+        name='api_remote_sync',
+    ),
+    # Ajax API views
     url(
         regex=r'^star/(?P<project>[0-9a-f-]+)',
         view=views.ProjectStarringAPIView.as_view(),

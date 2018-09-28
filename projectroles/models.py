@@ -807,6 +807,16 @@ class RemoteProject(models.Model):
         values = (self.site.name, str(self.project_uuid), self.site.mode)
         return 'RemoteProject({})'.format(', '.join(repr(v) for v in values))
 
+    # Custom row-level functions
+
+    def get_project(self):
+        """Get the related Project object"""
+        try:
+            return Project.objects.get(sodar_uuid=self.project_uuid)
+
+        except Project.DoesNotExist:
+            return None
+
 
 # Abstract User Model ----------------------------------------------------------
 
