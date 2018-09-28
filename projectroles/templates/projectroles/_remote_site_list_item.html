@@ -12,7 +12,7 @@
     {% endif %}
   </td>
   <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>
-  <td class="text-right">0</td>
+  <td class="text-right">{{ site.projects.all.count }}</td>
   <td class="text-nowrap"><code>{{ site.secret }}</code></td>
   <td class="text-nowrap">
     {% if site.get_access_date %}

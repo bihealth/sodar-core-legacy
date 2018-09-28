@@ -1585,11 +1585,14 @@ class RemoteSiteListView(
 
 class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):
-        if settings.PROJECTROLES_SITE_MODE == 'TARGET':
+        if self.object:
+            form_action = 'updated'
+
+        elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
             form_action = 'set'
 
         else:
-            form_action = 'updated' if self.object else 'created'
+            form_action = 'created'
 
         self.object = form.save()
 
