@@ -1823,21 +1823,20 @@ class RemoteProjectsBatchUpdateView(
 # Base SODAR API Views ---------------------------------------------------------
 
 
-# NOTE: Using a specific versioner for the query API, to be generalized..
-class SourceIDAPIVersioning(AcceptHeaderVersioning):
+class SODARAPIVersioning(AcceptHeaderVersioning):
     default_version = settings.SODAR_API_DEFAULT_VERSION
     allowed_versions = [settings.SODAR_API_DEFAULT_VERSION]
     version_param = 'version'
 
 
-class SourceIDAPIRenderer(JSONRenderer):
+class SODARAPIRenderer(JSONRenderer):
     media_type = 'application/vnd.bihealth.sodar+json'
 
 
 class BaseAPIView(APIView):
     """Base SODAR API View with accept header versioning"""
-    versioning_class = SourceIDAPIVersioning
-    renderer_classes = [SourceIDAPIRenderer]
+    versioning_class = SODARAPIVersioning
+    renderer_classes = [SODARAPIRenderer]
 
 
 # SODAR API Views --------------------------------------------------------------
