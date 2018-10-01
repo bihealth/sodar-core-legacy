@@ -1706,7 +1706,7 @@ class RemoteProjectsBatchUpdateView(
         # Current site
         try:
             context['site'] = RemoteSite.objects.get(
-                sodar_uuid=self.kwargs['remotesite'])
+                sodar_uuid=kwargs['remotesite'])
 
         except RemoteSite.DoesNotExist:
             pass
@@ -1714,7 +1714,7 @@ class RemoteProjectsBatchUpdateView(
         return context
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context_data()
+        context = self.get_context_data(*args, **kwargs)
         site = context['site']
         post_data = request.POST
         confirmed = True if 'update-confirmed' in post_data else False

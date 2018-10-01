@@ -112,7 +112,7 @@ urlpatterns = [
         name='remote_projects',
     ),
     url(
-        regex=r'^remote/site/update/(?P<remotesite>[0-9a-f-]+)$',
+        regex=r'^remote/site/access/(?P<remotesite>[0-9a-f-]+)$',
         view=views.RemoteProjectsBatchUpdateView.as_view(),
         name='remote_projects_update',
     ),
