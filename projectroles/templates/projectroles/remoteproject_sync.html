@@ -1,0 +1,38 @@
+{% extends "projectroles/base.html" %}
+
+{% load crispy_forms_filters %}
+
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+{% block title %}Synchronize Projects from {{ site.name }} {% endblock %}
+
+{% block projectroles %}
+
+{% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+
+<div class="row sodar-subtitle-container">
+  <h2>Synchronize Projects from {{ site.name }}</h2>
+  <a role="button" class="btn btn-secondary ml-auto"
+     href="{% url 'projectroles:remote_sites' %}">
+    <i class="fa fa-arrow-circle-left"></i> Back to Sites
+  </a>
+</div>
+
+<div class="container-fluid sodar-page-container">
+
+  {% if not remote_data %}
+    <div class="alert alert-warning">
+      No remote data received from source site "<strong>{{ site.name }}</strong>".
+    </div>
+
+  {% else %}
+    <div class="alert alert-success">
+      Remote data received, to be printed here for confirmation..
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock projectroles %}

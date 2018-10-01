@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+import urllib.request
 
 from django.apps import apps
 from django.conf import settings
@@ -17,10 +18,12 @@ from django.views.generic import TemplateView, DetailView, UpdateView,\
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
+from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
+from knox.auth import TokenAuthentication
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
@@ -1799,7 +1802,7 @@ class RemoteProjectsBatchUpdateView(
                     user=request.user,
                     event_name='update_remote',
                     description=
-                    'update remote access for site {{{}}} to "{})'.format(
+                    'update remote access for site {{{}}} to {})'.format(
                         'site', v,
                         SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower()),
                     classified=True,
@@ -1818,6 +1821,59 @@ class RemoteProjectsBatchUpdateView(
                 's' if len(access_fields.items()) > 1 else '',
                 context['site'].name))
         return HttpResponseRedirect(redirect_url)
+
+
+class RemoteProjectsSyncView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Synchronize remote projects from a source site"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remoteproject_sync.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectsSyncView, self).get_context_data(
+            *args, **kwargs)
+
+        # Current site
+        try:
+            context['site'] = RemoteSite.objects.get(
+                sodar_uuid=kwargs['remotesite'])
+
+        except RemoteSite.DoesNotExist:
+            pass
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        """Override get() for a confirmation view"""
+        redirect_url = reverse('projectroles:remote_sites')
+
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            messages.error(
+                request, 'Site in SOURCE mode, remote sync not allowed')
+            return HttpResponseRedirect(redirect_url)
+
+        context = self.get_context_data(*args, **kwargs)
+        site = context['site']
+
+        api_url = site.url + reverse(
+            'projectroles:api_remote_get',
+            kwargs={'secret': site.secret})
+
+        try:
+            response = urllib.request.urlopen(api_url)
+            context['remote_data'] = json.loads(response.read())
+
+        except Exception as ex:
+            ex_str = str(ex)
+
+            if len(ex_str) >= 255:
+                ex_str = ex_str[:255]
+
+            messages.error(
+                request, 'Unable to synchronize projects: {}'.format(ex_str))
+            return HttpResponseRedirect(redirect_url)
+
+        return super(TemplateView, self).render_to_response(context)
 
 
 # Base SODAR API Views ---------------------------------------------------------
@@ -1842,27 +1898,24 @@ class BaseAPIView(APIView):
 # SODAR API Views --------------------------------------------------------------
 
 
-class RemoteProjectSyncAPIView(BaseAPIView):
-    """API view for synchronizing remote projects to a target site"""
+# TODO: TBD: Use Knox auth? Requires user and logging in
+class RemoteProjectGetAPIView(BaseAPIView):
+    """API view for retrieving remote projects from a source site"""
+    permission_classes = (AllowAny,)    # We check the secret in get()/post()
+
     def get(self, request, *args, **kwargs):
-        # TODO: TBD: What about existing users with identical user names?
         # TODO: TBD: What if the SODAR instance has modified role types?
-
-        auth_header = request.META.get('HTTP_AUTHORIZATION')
-
-        if (len(auth_header.split(' ')) != 2 or
-                auth_header.split(' ')[0].lower() != 'token'):
-            return Response('Authorization token not found', status=401)
-
-        secret = auth_header.split(' ')[1]
+        secret = kwargs['secret']
         host = request.META.get('HTTP_HOST')
 
         try:
             rs = RemoteSite.objects.get(
-                mode=SITE_MODE_TARGET, secret=secret, url__contains=host)
+                mode=SITE_MODE_TARGET,
+                secret=secret,
+                url__contains=host)
 
         except RemoteSite.DoesNotExist:
-            return Response('Unauthorized', status=401)
+            return Response('Remote site not found, unauthorized', status=401)
 
         sync_data = {
             'users': [],
@@ -1877,7 +1930,7 @@ class RemoteProjectSyncAPIView(BaseAPIView):
                     'name': user.name,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
-                    'groups': []})  # TODO: Groups
+                    'groups': [g.name for g in user.groups.all()]})
 
         def add_parent_categories(category):
             if category.parent:
@@ -1890,10 +1943,10 @@ class RemoteProjectSyncAPIView(BaseAPIView):
                     'title': category.title,
                     'description': category.description,
                     'readme': category.readme.raw,
-                    'owner': category.get_owner().username})
-                add_user(category.get_owner())
+                    'owner': category.get_owner().user.username})
+                add_user(category.get_owner().user)
 
-        for rp in rs.projects:
+        for rp in rs.projects.all():
             project_data = {
                 'sodar_uuid': rp.project_uuid,
                 'level': rp.level}
@@ -1924,7 +1977,7 @@ class RemoteProjectSyncAPIView(BaseAPIView):
                         'sodar_uuid': role_as.sodar_uuid,
                         'user': role_as.user.username,
                         'role': role_as.role.name})
-                    add_user(role_as.user.username)
+                    add_user(role_as.user)
 
             sync_data['projects'].append(project_data)
             # TODO: Log with timeline

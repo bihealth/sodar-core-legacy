@@ -1638,35 +1638,6 @@ class TestRemoteSiteCreateView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
-    def test_create_target_existing_url(self):
-        """Test creating a target site with an existing URL"""
-
-        # Set up existing site
-        self.target_site = self._make_site(
-            name=REMOTE_SITE_NAME,
-            url=REMOTE_SITE_URL,
-            mode=SITE_MODE_TARGET,
-            description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
-
-        # Assert precondition
-        self.assertEqual(RemoteSite.objects.all().count(), 1)
-
-        values = {
-            'name': REMOTE_SITE_NEW_NAME,
-            'url': REMOTE_SITE_URL,     # Old URL
-            'description': REMOTE_SITE_NEW_DESC,
-            'secret': build_secret()}
-
-        with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:remote_site_create'),
-                values)
-
-        # Assert postconditions
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(RemoteSite.objects.all().count(), 1)
-
 
 class TestRemoteSiteUpdateView(
         TestViewsBase, RemoteSiteMixin):
@@ -1759,37 +1730,6 @@ class TestRemoteSiteUpdateView(
         values = {
             'name': REMOTE_SITE_NAME,   # Old name
             'url': REMOTE_SITE_NEW_URL,
-            'description': REMOTE_SITE_NEW_DESC,
-            'secret': REMOTE_SITE_SECRET}
-
-        with self.login(self.user):
-            response = self.client.post(
-                reverse(
-                    'projectroles:remote_site_update',
-                    kwargs={'remotesite': new_target_site.sodar_uuid}),
-                values)
-
-        # Assert postconditions
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-    def test_update_existing_url(self):
-        """Test creating a target site with an existing URL as source (should fail)"""
-
-        # Create new site
-        new_target_site = self._make_site(
-            name=REMOTE_SITE_NEW_NAME,
-            url=REMOTE_SITE_NEW_URL,
-            mode=SITE_MODE_TARGET,
-            description=REMOTE_SITE_NEW_DESC,
-            secret=REMOTE_SITE_NEW_SECRET)
-
-        # Assert precondition
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-        values = {
-            'name': REMOTE_SITE_NEW_NAME,
-            'url': REMOTE_SITE_URL,     # Old URL
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET}
 

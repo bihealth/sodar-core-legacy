@@ -116,11 +116,16 @@ urlpatterns = [
         view=views.RemoteProjectsBatchUpdateView.as_view(),
         name='remote_projects_update',
     ),
+    url(
+        regex=r'^remote/site/sync/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteProjectsSyncView.as_view(),
+        name='remote_projects_sync',
+    ),
     # SODAR API views
     url(
-        regex=r'^api/remote/sync$',
-        view=views.RemoteProjectSyncAPIView.as_view(),
-        name='api_remote_sync',
+        regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',
+        view=views.RemoteProjectGetAPIView.as_view(),
+        name='api_remote_get',
     ),
     # Ajax API views
     url(

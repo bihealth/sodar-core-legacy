@@ -14,10 +14,9 @@
       <i class="fa fa-fw fa-cubes"></i> View{% if site_mode == 'SOURCE' %}/Edit{% endif %} Projects
     </a>
     {% if site_mode == 'TARGET' and site.mode == 'SOURCE' %}
-      <a class="dropdown-item{% if site.projects.count == 0 %} disabled{% endif %}"
-         href="#">
+      <a class="dropdown-item" href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">
         <i class="fa fa-fw fa-cloud-download"></i>
-        Sync Projects
+        Synchronize
       </a>
     {% endif %}
     <a class="dropdown-item"

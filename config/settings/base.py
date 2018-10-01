@@ -280,6 +280,13 @@ REST_FRAMEWORK = {
     ),
 }
 
+# Knox settings
+TOKEN_TTL = None
+
+# Settings for HTTP AuthBasic
+BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
+BASICAUTH_DISABLE = False
+
 
 # LDAP configuration
 # ------------------------------------------------------------------------------
@@ -406,8 +413,3 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15
-
-
-# Settings for HTTP AuthBasic
-BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
-BASICAUTH_DISABLE = False

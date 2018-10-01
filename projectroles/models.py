@@ -692,7 +692,7 @@ class RemoteSite(models.Model):
         max_length=2000,
         blank=False,
         null=False,
-        unique=True,
+        unique=False,
         help_text='Site URL')
 
     #: Site mode
@@ -711,7 +711,7 @@ class RemoteSite(models.Model):
     #: Secret token used to connect to the master site
     secret = models.CharField(
         max_length=255,
-        unique=True,
+        unique=False,
         blank=False,
         null=False,
         help_text='Secret token for connecting to the source site')
@@ -724,6 +724,7 @@ class RemoteSite(models.Model):
 
     class Meta:
         ordering = ['name']
+        unique_together = ['url', 'mode', 'secret']
 
     def __str__(self):
         return '{} ({})'.format(
