@@ -23,7 +23,6 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
-from knox.auth import TokenAuthentication
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
@@ -38,6 +37,7 @@ from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_settings import set_project_setting, get_project_setting, \
     get_all_settings
 from .project_tags import get_tag_state, set_tag_state, remove_tag
+from .remote_projects import sync_remote_projects
 from .utils import get_expiry_date
 
 # Access Django user model
@@ -1861,7 +1861,7 @@ class RemoteProjectsSyncView(
 
         try:
             response = urllib.request.urlopen(api_url)
-            context['remote_data'] = json.loads(response.read())
+            remote_data = json.loads(response.read())
 
         except Exception as ex:
             ex_str = str(ex)
@@ -1872,6 +1872,9 @@ class RemoteProjectsSyncView(
             messages.error(
                 request, 'Unable to synchronize projects: {}'.format(ex_str))
             return HttpResponseRedirect(redirect_url)
+
+        # Sync data
+        # context['update_data'] = sync_remote_projects(site, remote_data)
 
         return super(TemplateView, self).render_to_response(context)
 
@@ -1930,6 +1933,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
                     'name': user.name,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
+                    'email': user.email,
                     'groups': [g.name for g in user.groups.all()]})
 
         def add_parent_categories(category):
@@ -1941,6 +1945,8 @@ class RemoteProjectGetAPIView(BaseAPIView):
                 sync_data['categories'].append({
                     'sodar_uuid': category.sodar_uuid,
                     'title': category.title,
+                    'parent': category.parent.sodar_uuid if
+                    category.parent else None,
                     'description': category.description,
                     'readme': category.readme.raw,
                     'owner': category.get_owner().user.username})
@@ -1960,7 +1966,6 @@ class RemoteProjectGetAPIView(BaseAPIView):
             elif project and rp.level in [
                     REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]:
                 project_data['title'] = project.title
-                project_data['type'] = project.type
                 project_data['description'] = project.description
                 project_data['readme'] = project.readme.raw
 

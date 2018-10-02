@@ -402,8 +402,14 @@ SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
 
 
 # Projectroles app settings
-PROJECTROLES_SITE_MODE = env.str(
-    'PROJECTROLES_SITE_MODE', 'SOURCE')  # Remote access mode: SOURCE or TARGET
+
+# Remote access mode: SOURCE or TARGET
+PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
+
+# Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
+PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+
+# General projectroles settings
 PROJECTROLES_SECRET_LENGTH = 32
 PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
 PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
