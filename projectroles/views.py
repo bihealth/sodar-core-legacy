@@ -37,7 +37,7 @@ from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_settings import set_project_setting, get_project_setting, \
     get_all_settings
 from .project_tags import get_tag_state, set_tag_state, remove_tag
-from .remote_projects import sync_remote_projects
+from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date
 
 # Access Django user model
@@ -1845,6 +1845,7 @@ class RemoteProjectsSyncView(
 
     def get(self, request, *args, **kwargs):
         """Override get() for a confirmation view"""
+        remote_api = RemoteProjectAPI()
         redirect_url = reverse('projectroles:remote_sites')
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
@@ -1874,7 +1875,8 @@ class RemoteProjectsSyncView(
             return HttpResponseRedirect(redirect_url)
 
         # Sync data
-        # context['update_data'] = sync_remote_projects(site, remote_data)
+        # context['update_data'] = remote_api.sync_source_data(
+        #     site, remote_data)
 
         return super(TemplateView, self).render_to_response(context)
 
@@ -1907,12 +1909,12 @@ class RemoteProjectGetAPIView(BaseAPIView):
     permission_classes = (AllowAny,)    # We check the secret in get()/post()
 
     def get(self, request, *args, **kwargs):
-        # TODO: TBD: What if the SODAR instance has modified role types?
+        remote_api = RemoteProjectAPI()
         secret = kwargs['secret']
         host = request.META.get('HTTP_HOST')
 
         try:
-            rs = RemoteSite.objects.get(
+            target_site = RemoteSite.objects.get(
                 mode=SITE_MODE_TARGET,
                 secret=secret,
                 url__contains=host)
@@ -1920,73 +1922,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
 
-        sync_data = {
-            'users': [],
-            'categories': [],
-            'projects': []}
-
-        def add_user(user):
-            if user.username not in [u['username'] for u in sync_data['users']]:
-                sync_data['users'].append({
-                    'sodar_uuid': user.sodar_uuid,
-                    'username': user.username,
-                    'name': user.name,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'email': user.email,
-                    'groups': [g.name for g in user.groups.all()]})
-
-        def add_parent_categories(category):
-            if category.parent:
-                add_parent_categories(category.parent)
-
-            if (category.sodar_uuid not in [
-                    c['sodar_uuid'] for c in sync_data['categories']]):
-                sync_data['categories'].append({
-                    'sodar_uuid': category.sodar_uuid,
-                    'title': category.title,
-                    'parent': category.parent.sodar_uuid if
-                    category.parent else None,
-                    'description': category.description,
-                    'readme': category.readme.raw,
-                    'owner': category.get_owner().user.username})
-                add_user(category.get_owner().user)
-
-        for rp in rs.projects.all():
-            project_data = {
-                'sodar_uuid': rp.project_uuid,
-                'level': rp.level}
-            project = rp.get_project()
-
-            # View available projects
-            if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
-                project_data['available'] = True if project else False
-
-            # Add info
-            elif project and rp.level in [
-                    REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]:
-                project_data['title'] = project.title
-                project_data['description'] = project.description
-                project_data['readme'] = project.readme.raw
-
-            # If level is READ_ROLES, add categories and roles
-            if rp.level == REMOTE_LEVEL_READ_ROLES:
-                # Add categories
-                if project.parent:
-                    add_parent_categories(project.parent)
-
-                project_data['roles'] = []
-
-                for role_as in project.roles.all():
-                    project_data['roles'].append({
-                        'sodar_uuid': role_as.sodar_uuid,
-                        'user': role_as.user.username,
-                        'role': role_as.role.name})
-                    add_user(role_as.user)
-
-            sync_data['projects'].append(project_data)
-            # TODO: Log with timeline
-
+        sync_data = remote_api.get_target_data(target_site)
         return Response(sync_data, status=200)
 
 

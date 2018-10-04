@@ -10,11 +10,11 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
-from ..models import Project, Role, RoleAssignment, ProjectInvite, \
+from projectroles.models import Project, Role, RoleAssignment, ProjectInvite, \
     ProjectSetting, ProjectUserTag, RemoteSite, RemoteProject, \
     SODAR_CONSTANTS, PROJECT_TAG_STARRED
-from ..plugins import get_app_plugin
-from ..utils import build_secret
+from projectroles.plugins import get_app_plugin
+from projectroles.utils import build_secret, set_user_group
 
 
 # SODAR constants
@@ -149,6 +149,25 @@ class RemoteProjectMixin:
         remote_project = RemoteProject(**values)
         remote_project.save()
         return remote_project
+
+
+class SodarUserMixin:
+    """Helper mixin for LDAP SodarUser creation"""
+
+    def _make_sodar_user(
+            self, username, name, first_name, last_name, sodar_uuid=None,
+            password='password'):
+        user = self.make_user(username, password)
+        user.name = name
+        user.first_name = first_name
+        user.last_name = last_name
+
+        if sodar_uuid:
+            user.sodar_uuid = sodar_uuid
+
+        user.save()
+        set_user_group(user)
+        return user
 
 
 class TestProject(TestCase, ProjectMixin):
