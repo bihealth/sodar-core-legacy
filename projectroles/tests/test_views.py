@@ -1468,7 +1468,7 @@ class TestRemoteSiteListView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['sites'].count(), 1)  # 1 target site
 
-    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_as_target(self):
         """Test rendering the remote site list view as source"""
 
@@ -1501,7 +1501,7 @@ class TestRemoteSiteCreateView(
         self.assertIsNotNone(form.fields['secret'].initial)
         self.assertEqual(form.fields['secret'].widget.attrs['readonly'], True)
 
-    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_as_target(self):
         """Test rendering the remote site create view as target"""
 
@@ -1517,7 +1517,7 @@ class TestRemoteSiteCreateView(
         self.assertIsNone(form.fields['secret'].initial)
         self.assertNotIn('readonly', form.fields['secret'].widget.attrs)
 
-    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_as_target_existing(self):
         """Test rendering the remote site create view as target with an existing source (should fail)"""
 
@@ -1571,7 +1571,7 @@ class TestRemoteSiteCreateView(
         with self.login(self.user):
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
-    @override_settings(PROJECTROLES_SITE_MODE='TARGET')
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_source(self):
         """Test creating a source site as target"""
 

@@ -67,6 +67,7 @@ class RemoteProjectAPI:
                 new_cat = {
                     'sodar_uuid': category.sodar_uuid,
                     'title': category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
                     'parent': category.parent.sodar_uuid if
                     category.parent else None,
                     'description': category.description,
@@ -79,11 +80,12 @@ class RemoteProjectAPI:
                 sync_data['categories'].append(new_cat)
 
         for rp in target_site.projects.all():
+            project = rp.get_project()
             project_data = {
                 'sodar_uuid': rp.project_uuid,
-                'level': rp.level}
-            project = rp.get_project()
-            project_data['title'] = project.title
+                'level': rp.level,
+                'title': project.title,
+                'type': PROJECT_TYPE_PROJECT}
 
             # View available projects
             if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
@@ -128,6 +130,13 @@ class RemoteProjectAPI:
 
         logger.info(
             'Synchronizing user and project data from "{}"..'.format(site.name))
+
+        # Return None if no projects with READ_ROLES are included
+        # TODO: TBD: What if access in source is e.g. removed?
+        if (not [p for p in remote_data['projects'] if
+                p['level'] == REMOTE_LEVEL_READ_ROLES]):
+            logger.info('No READ_ROLES access set, nothing to synchronize')
+            return None
 
         update_data = {
             'users': {'new': [], 'update': []},
@@ -218,6 +227,8 @@ class RemoteProjectAPI:
             project = None
             parent = None
             action = 'create'
+            section = 'categories' if \
+                p['type'] == PROJECT_TYPE_CATEGORY else 'projects'
 
             # Get existing project
             try:
@@ -270,7 +281,7 @@ class RemoteProjectAPI:
                     project.parent = parent
                     project.save()
 
-                # TODO: If READ_ROLES, update roles
+                # TODO: Update roles
                 # TODO: Update RemoteProject object
 
             # Create new project
@@ -283,11 +294,11 @@ class RemoteProjectAPI:
 
                 project = Project.objects.create(**create_values)
 
-                update_data['x']['new'].append(project)
+                update_data[section]['new'].append(project)
                 logger.info('Created {}: {} ({})'.format(
                     project_type.lower(), p['title'], p['sodar_uuid']))
 
-                # TODO: If READ_ROLES, create roles
+                # TODO: Create roles
                 # TODO: Create RemoteProject object
 
         # Update categories
@@ -295,8 +306,9 @@ class RemoteProjectAPI:
             update_project(p, PROJECT_TYPE_CATEGORY)
 
         # Update projects
-        for p in [p for p in remote_data['projects'] if p['level'] in [
-                REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]]:
+        for p in [
+                p for p in remote_data['projects'] if
+                p['level'] == REMOTE_LEVEL_READ_ROLES]:
             update_project(p, PROJECT_TYPE_PROJECT)
 
         logger.info('Synchronization OK')

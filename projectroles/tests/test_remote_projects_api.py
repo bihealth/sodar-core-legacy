@@ -1,26 +1,21 @@
 """Test for the remote projects API in the projectroles app"""
-
-import base64
-from urllib.parse import urlencode
+import uuid
 
 from django.conf import settings
-from django.core.urlresolvers import reverse
-from django.forms.models import model_to_dict
-from django.test import RequestFactory, override_settings
-from django.utils import timezone
+from django.contrib import auth
+from django.test import override_settings
 
 from test_plus.test import TestCase
 
-from projectroles import views
-from projectroles.models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectUserTag, RemoteSite, RemoteProject, SODAR_CONSTANTS, \
-    PROJECT_TAG_STARRED
-from projectroles.plugins import change_plugin_status, get_backend_api, \
-    get_active_plugins, ProjectAppPluginPoint
+from projectroles.models import Project, Role, RoleAssignment, \
+    RemoteSite, RemoteProject, SODAR_CONSTANTS
+
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import build_secret
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin, \
     RemoteSiteMixin, RemoteProjectMixin, SodarUserMixin
+
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -40,10 +35,6 @@ REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
-CATEGORY_NAME = 'TestCategory'
-PROJECT_NAME = 'ProjectName'
-ADMIN_USER_NAME = settings.PROJECTROLES_ADMIN_OWNER
-
 SOURCE_SITE_NAME = 'Test source site'
 SOURCE_SITE_URL = 'https://sodar.bihealth.org'
 SOURCE_SITE_DESC = 'Source description'
@@ -55,6 +46,16 @@ SOURCE_USER_GROUP = SOURCE_USER_DOMAIN.lower()
 SOURCE_USER_NAME = 'Firstname Lastname'
 SOURCE_USER_FIRST_NAME = SOURCE_USER_NAME.split(' ')[0]
 SOURCE_USER_LAST_NAME = SOURCE_USER_NAME.split(' ')[1]
+SOURCE_USER_EMAIL = SOURCE_USER_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER_UUID = uuid.uuid4()
+
+SOURCE_CATEGORY_UUID = uuid.uuid4()
+SOURCE_CATEGORY_TITLE = 'TestCategory'
+SOURCE_PROJECT_UUID = uuid.uuid4()
+SOURCE_PROJECT_TITLE = 'TestProject'
+SOURCE_PROJECT_DESCRIPTION = 'Description'
+SOURCE_PROJECT_README = 'Readme'
+
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -78,12 +79,6 @@ class TestGetTargetData(
         self.role_guest = Role.objects.get_or_create(
             name=PROJECT_ROLE_GUEST)[0]
 
-        # Init superuser on the source site
-        self.user_admin = self.make_user(ADMIN_USER_NAME)
-        self.user_admin.is_staff = True
-        self.user_admin.is_superuser = True
-        self.user_admin.save()
-
         # Init an LDAP user on the source site
         self.user_source = self._make_sodar_user(
             username=SOURCE_USER_USERNAME,
@@ -93,9 +88,9 @@ class TestGetTargetData(
 
         # Init local category and project
         self.category = self._make_project(
-            CATEGORY_NAME, PROJECT_TYPE_CATEGORY, None)
+            SOURCE_CATEGORY_TITLE, PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
-            PROJECT_NAME, PROJECT_TYPE_PROJECT, self.category)
+            SOURCE_PROJECT_TITLE, PROJECT_TYPE_PROJECT, self.category)
 
         # Init role assignments
         self.category_owner_as = self._make_assignment(
@@ -128,6 +123,7 @@ class TestGetTargetData(
             'projects': [{
                 'sodar_uuid': self.project.sodar_uuid,
                 'title': self.project.title,
+                'type': PROJECT_TYPE_PROJECT,
                 'level': REMOTE_LEVEL_VIEW_AVAIL,
                 'available': True}]}
 
@@ -147,16 +143,65 @@ class TestGetTargetData(
             'categories': [{
                 'sodar_uuid': self.category.sodar_uuid,
                 'title': self.category.title,
+                'type': PROJECT_TYPE_CATEGORY,
                 'parent': None,
                 'description': self.category.description,
                 'readme': self.category.readme.raw}],
             'projects': [{
                 'sodar_uuid': self.project.sodar_uuid,
                 'title': self.project.title,
+                'type': PROJECT_TYPE_PROJECT,
                 'level': REMOTE_LEVEL_READ_INFO,
                 'description': self.project.description,
                 'readme': self.project.readme.raw,
                 'parent': self.category.sodar_uuid}]}
+
+        self.assertEqual(sync_data, expected)
+
+    def test_read_info_nested(self):
+        """Test get data with project level of READ_INFO with nested categories"""
+        sub_category = self._make_project(
+            'SubCategory', PROJECT_TYPE_CATEGORY, parent=self.category)
+        self._make_assignment(sub_category, self.user_source, self.role_owner)
+        self.project.parent = sub_category
+        self.project.save()
+
+        remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_READ_INFO)
+
+        sync_data = self.remote_api.get_target_data(self.target_site)
+        self.maxDiff = None  # DEBUG
+
+        expected = {
+            'users': [],
+            'categories': [
+                {
+                    'sodar_uuid': self.category.sodar_uuid,
+                    'title': self.category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'parent': None,
+                    'description': self.category.description,
+                    'readme': self.category.readme.raw
+                },
+                {
+                    'sodar_uuid': sub_category.sodar_uuid,
+                    'title': sub_category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'parent': self.category.sodar_uuid,
+                    'description': sub_category.description,
+                    'readme': sub_category.readme.raw
+                }
+            ],
+            'projects': [{
+                'sodar_uuid': self.project.sodar_uuid,
+                'title': self.project.title,
+                'type': PROJECT_TYPE_PROJECT,
+                'level': REMOTE_LEVEL_READ_INFO,
+                'description': self.project.description,
+                'readme': self.project.readme.raw,
+                'parent': sub_category.sodar_uuid}]}
 
         self.assertEqual(sync_data, expected)
 
@@ -181,6 +226,7 @@ class TestGetTargetData(
             'categories': [{
                 'sodar_uuid': self.category.sodar_uuid,
                 'title': self.category.title,
+                'type': PROJECT_TYPE_CATEGORY,
                 'parent': None,
                 'description': self.category.description,
                 'readme': self.category.readme.raw,
@@ -188,6 +234,7 @@ class TestGetTargetData(
             'projects': [{
                 'sodar_uuid': self.project.sodar_uuid,
                 'title': self.project.title,
+                'type': PROJECT_TYPE_PROJECT,
                 'level': REMOTE_LEVEL_READ_ROLES,
                 'description': self.project.description,
                 'readme': self.project.readme.raw,
@@ -198,3 +245,91 @@ class TestGetTargetData(
                     'role': self.project_owner_as.role.name}]}]}
 
         self.assertEqual(sync_data, expected)
+
+    def test_no_access(self):
+        """Test get data with no project access set in the source site"""
+        sync_data = self.remote_api.get_target_data(self.target_site)
+
+        expected = {
+            'users': [],
+            'categories': [],
+            'projects': []}
+
+        self.assertEqual(sync_data, expected)
+
+
+class TestSyncSourceData(
+        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin, SodarUserMixin):
+    """Tests for the sync_source_data() API function"""
+
+    def setUp(self):
+        # Init roles
+        self.role_owner = Role.objects.get_or_create(
+            name=PROJECT_ROLE_OWNER)[0]
+        self.role_delegate = Role.objects.get_or_create(
+            name=PROJECT_ROLE_DELEGATE)[0]
+        self.role_contributor = Role.objects.get_or_create(
+            name=PROJECT_ROLE_CONTRIBUTOR)[0]
+        self.role_guest = Role.objects.get_or_create(
+            name=PROJECT_ROLE_GUEST)[0]
+
+        # Init source site
+        self.source_site = self._make_site(
+            name=SOURCE_SITE_NAME,
+            url=SOURCE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=SOURCE_SITE_DESC,
+            secret=SOURCE_SITE_SECRET)
+
+        self.remote_api = RemoteProjectAPI()
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_create(self):
+        """Test sync with non-existing project data and READ_ROLE access"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 0)
+
+        remote_data = {
+            'users': [{
+                'sodar_uuid': SOURCE_USER_UUID,
+                'username': SOURCE_USER_USERNAME,
+                'name': SOURCE_USER_NAME,
+                'first_name': SOURCE_USER_FIRST_NAME,
+                'last_name': SOURCE_USER_LAST_NAME,
+                'email': SOURCE_USER_EMAIL,
+                'groups': [SOURCE_USER_GROUP]}],
+            'categories': [{
+                'sodar_uuid': SOURCE_CATEGORY_UUID,
+                'title': SOURCE_CATEGORY_TITLE,
+                'type': PROJECT_TYPE_CATEGORY,
+                'parent': None,
+                'description': SOURCE_PROJECT_DESCRIPTION,
+                'readme': SOURCE_PROJECT_README,
+                'owner': SOURCE_USER_USERNAME}],
+            'projects': [{
+                'sodar_uuid': SOURCE_PROJECT_UUID,
+                'title': SOURCE_PROJECT_TITLE,
+                'type': PROJECT_TYPE_PROJECT,
+                'level': REMOTE_LEVEL_READ_ROLES,
+                'description': SOURCE_PROJECT_DESCRIPTION,
+                'readme': SOURCE_PROJECT_README,
+                'parent': SOURCE_CATEGORY_UUID,
+                'roles': [{
+                    'sodar_uuid': str(uuid.uuid4()),
+                    'user': SOURCE_USER_USERNAME,
+                    'role': self.role_owner.name}]}]}
+
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 2)
+        # self.assertEqual(RoleAssignment.objects.all().count(), 2)  # TODO
+        self.assertEqual(User.objects.all().count(), 1)
+
+        # Assert update_data
+        # TODO
