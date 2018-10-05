@@ -43,32 +43,29 @@ class RemoteProjectAPI:
         """
 
         sync_data = {
-            'users': [],
-            'categories': [],
-            'projects': []}
+            'users': {},
+            'projects': {}}
 
         def add_user(user):
-            if user.username not in [u['username'] for u in sync_data['users']]:
-                sync_data['users'].append({
-                    'sodar_uuid': user.sodar_uuid,
+            if user.username not in [
+                    u['username'] for u in sync_data['users'].values()]:
+                sync_data['users'][str(user.sodar_uuid)] = {
                     'username': user.username,
                     'name': user.name,
                     'first_name': user.first_name,
                     'last_name': user.last_name,
                     'email': user.email,
-                    'groups': [g.name for g in user.groups.all()]})
+                    'groups': [g.name for g in user.groups.all()]}
 
         def add_parent_categories(category, project_level):
             if category.parent:
                 add_parent_categories(category.parent, project_level)
 
-            if (category.sodar_uuid not in [
-                    c['sodar_uuid'] for c in sync_data['categories']]):
+            if str(category.sodar_uuid) not in sync_data['projects'].keys():
                 new_cat = {
-                    'sodar_uuid': category.sodar_uuid,
                     'title': category.title,
                     'type': PROJECT_TYPE_CATEGORY,
-                    'parent': category.parent.sodar_uuid if
+                    'parent_uuid': str(category.parent.sodar_uuid) if
                     category.parent else None,
                     'description': category.description,
                     'readme': category.readme.raw}
@@ -77,12 +74,11 @@ class RemoteProjectAPI:
                     new_cat['owner'] = category.get_owner().user.username
                     add_user(category.get_owner().user)
 
-                sync_data['categories'].append(new_cat)
+                sync_data['projects'][str(category.sodar_uuid)] = new_cat
 
         for rp in target_site.projects.all():
             project = rp.get_project()
             project_data = {
-                'sodar_uuid': rp.project_uuid,
                 'level': rp.level,
                 'title': project.title,
                 'type': PROJECT_TYPE_PROJECT}
@@ -100,20 +96,19 @@ class RemoteProjectAPI:
                 # Add categories
                 if project.parent:
                     add_parent_categories(project.parent, rp.level)
-                    project_data['parent'] = project.parent.sodar_uuid
+                    project_data['parent_uuid'] = str(project.parent.sodar_uuid)
 
             # If level is READ_ROLES, add categories and roles
             if rp.level in REMOTE_LEVEL_READ_ROLES:
-                project_data['roles'] = []
+                project_data['roles'] = {}
 
                 for role_as in project.roles.all():
-                    project_data['roles'].append({
-                        'sodar_uuid': role_as.sodar_uuid,
+                    project_data['roles'][str(role_as.sodar_uuid)] = {
                         'user': role_as.user.username,
-                        'role': role_as.role.name})
+                        'role': role_as.role.name}
                     add_user(role_as.user)
 
-            sync_data['projects'].append(project_data)
+            sync_data['projects'][str(rp.project_uuid)] = project_data
             # TODO: Log with timeline
 
         return sync_data
@@ -124,8 +119,8 @@ class RemoteProjectAPI:
         Synchronize remote user and project data into the local Django database
         and return information of additions
         :param site: RemoteSite object for the source site
-        :param remote_data: Data returned by get_target_data() in the source site
-        :return: Dict or None if nothing was updated
+        :param remote_data: Data returned by get_target_data() in the source
+        :return: Dict with updated remote_data or None if nothing was changed
         """
 
         logger.info(
@@ -133,16 +128,13 @@ class RemoteProjectAPI:
 
         # Return None if no projects with READ_ROLES are included
         # TODO: TBD: What if access in source is e.g. removed?
-        if (not [p for p in remote_data['projects'] if
+        # TODO: Fix
+        '''
+        if (not [p for p in remote_data['projects'].values() if
                 p['level'] == REMOTE_LEVEL_READ_ROLES]):
             logger.info('No READ_ROLES access set, nothing to synchronize')
             return None
-
-        update_data = {
-            'users': {'new': [], 'update': []},
-            'categories': {'new': [], 'update': []},
-            'projects': {'new': [], 'update': []},
-            'errors': []}
+        '''
 
         def update_obj(obj, data, fields):
             """Update object"""
@@ -151,23 +143,14 @@ class RemoteProjectAPI:
             obj.save()
             return obj
 
-        def add_project_error(error_msg, project_data, project_type, action):
-            """Add and log project error"""
-            update_data['errors'].append({
-                'item': project_type.lower(),
-                'action': action,
-                'name': p['title'],
-                'sodar_uuid': p['sodar_uuid'],
-                'msg': error_msg})
-            logger.error('{} {} "{}" ({}): {}'.format(
-                action.capitalize(),
-                project_type.lower(),
-                project_data['title'],
-                project_data['sodar_uuid'],
-                error_msg))
+        ########
+        # Users
+        ########
 
-        # Users (NOTE: only sync LDAP/AD users)
-        for u in [u for u in remote_data['users'] if '@' in u['username']]:
+        # NOTE: only sync LDAP/AD users
+        for sodar_uuid, u in {
+                k: v for k, v in remote_data['users'].items() if
+                '@' in v['username']}.items():
 
             # Update existing user
             try:
@@ -181,9 +164,9 @@ class RemoteProjectAPI:
 
                 if updated_fields:
                     user = update_obj(user, u, updated_fields)
-                    update_data['users']['update'].append(user)
+                    u['status'] = 'updated'
                     logger.info('Updated user: {} ({}): {}'.format(
-                        u['username'], u['sodar_uuid'],
+                        u['username'], sodar_uuid,
                         ', '.join(updated_fields)))
 
                 # Check and update groups
@@ -211,7 +194,7 @@ class RemoteProjectAPI:
             except User.DoesNotExist:
                 create_values = {k: v for k, v in u.items() if k != 'groups'}
                 user = User.objects.create(**create_values)
-                update_data['users']['new'].append(user)
+                u['status'] = 'created'
                 logger.info('Created user: {}'.format(user.username))
 
                 for g in u['groups']:
@@ -220,35 +203,52 @@ class RemoteProjectAPI:
                     logger.debug('Added user {} ({}) to group "{}"'.format(
                         user.username, user.sodar_uuid, g))
 
-        # Project updating/creation helper
-        def update_project(p, project_type):
-            if project_type == PROJECT_TYPE_CATEGORY and p['parent']:
-                update_project(p['parent'], project_type)
+        ##########################
+        # Categories and Projects
+        ##########################
+
+        def update_project(sodar_uuid, p, remote_data):
+            """Create or update project and its parents"""
+
+            def handle_project_error(
+                    error_msg, sodar_uuid, p, action, remote_data):
+                """Add and log project error"""
+                logger.error('{} {} "{}" ({}): {}'.format(
+                    action.capitalize(), p['type'].lower(), p['title'],
+                    sodar_uuid, error_msg))
+                remote_data['projects'][sodar_uuid]['status'] = 'error'
+                remote_data['projects'][sodar_uuid]['status_msg'] = error_msg
+                return remote_data
+
+            if p['parent_uuid']:
+                c = remote_data['projects'][p['parent_uuid']]
+                remote_data = update_project(
+                    p['parent_uuid'], c, remote_data)
+
             project = None
             parent = None
             action = 'create'
-            section = 'categories' if \
-                p['type'] == PROJECT_TYPE_CATEGORY else 'projects'
 
             # Get existing project
             try:
                 project = Project.objects.get(
-                    type=project_type, sodar_uuid=p['sodar_uuid'])
+                    type=p['type'], sodar_uuid=sodar_uuid)
                 action = 'update'
 
             except Project.DoesNotExist:
                 pass
 
             # Get parent and ensure it exists
-            if p['parent']:
+            if p['parent_uuid']:
                 try:
-                    parent = Project.objects.get(sodar_uuid=p['parent'])
+                    parent = Project.objects.get(sodar_uuid=p['parent_uuid'])
 
                 except Project.DoesNotExist:
                     # Handle error
-                    error_msg = 'Parent {} not found'.format(p['parent'])
-                    add_project_error(error_msg, p, project_type, action)
-                    return
+                    error_msg = 'Parent {} not found'.format(p['parent_uuid'])
+                    remote_data = handle_project_error(
+                        error_msg, sodar_uuid, p, action, remote_data)
+                    return remote_data
 
             # Check existing name under the same parent
             try:
@@ -259,8 +259,8 @@ class RemoteProjectAPI:
                 error_msg = 'A {} with the title "{}" exists under the same ' \
                             'parent, unable to create'.format(
                                 old_project.type.lower(), old_project.title)
-                add_project_error(error_msg, p, project_type, action)
-                return
+                remote_data = handle_project_error(
+                    error_msg, sodar_uuid, p, action, remote_data)
 
             except Project.DoesNotExist:
                 pass
@@ -281,37 +281,38 @@ class RemoteProjectAPI:
                     project.parent = parent
                     project.save()
 
+                remote_data['projects'][sodar_uuid]['status'] = 'updated'
+
                 # TODO: Update roles
                 # TODO: Update RemoteProject object
 
             # Create new project
             else:
-                create_fields = ['title', 'description', 'readme', 'sodar_uuid']
+                create_fields = ['title', 'description', 'readme']
                 create_values = {
                     k: v for k, v in p.items() if k in create_fields}
-                create_values['type'] = project_type
+                create_values['type'] = p['type']
                 create_values['parent'] = parent
+                create_values['sodar_uuid'] = sodar_uuid
 
                 project = Project.objects.create(**create_values)
 
-                update_data[section]['new'].append(project)
                 logger.info('Created {}: {} ({})'.format(
-                    project_type.lower(), p['title'], p['sodar_uuid']))
+                    p['type'].lower(), p['title'], sodar_uuid))
 
                 # TODO: Create roles
                 # TODO: Create RemoteProject object
 
-        # Update categories
-        for p in remote_data['categories']:
-            update_project(p, PROJECT_TYPE_CATEGORY)
+                remote_data['projects'][sodar_uuid]['status'] = 'updated'
+
+            return remote_data
 
         # Update projects
-        for p in [
-                p for p in remote_data['projects'] if
-                p['level'] == REMOTE_LEVEL_READ_ROLES]:
-            update_project(p, PROJECT_TYPE_PROJECT)
+        for sodar_uuid, p in {
+                k: v for k, v in remote_data['projects'].items() if
+                v['type'] == PROJECT_TYPE_PROJECT and
+                v['level'] == REMOTE_LEVEL_READ_ROLES}.items():
+            remote_data = update_project(sodar_uuid, p, remote_data)
 
         logger.info('Synchronization OK')
-
-        # TODO: Return None if no updates were found
-        return update_data
+        return remote_data

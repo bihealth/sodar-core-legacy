@@ -47,15 +47,14 @@ SOURCE_USER_NAME = 'Firstname Lastname'
 SOURCE_USER_FIRST_NAME = SOURCE_USER_NAME.split(' ')[0]
 SOURCE_USER_LAST_NAME = SOURCE_USER_NAME.split(' ')[1]
 SOURCE_USER_EMAIL = SOURCE_USER_USERNAME.split('@')[0] + '@example.com'
-SOURCE_USER_UUID = uuid.uuid4()
+SOURCE_USER_UUID = str(uuid.uuid4())
 
-SOURCE_CATEGORY_UUID = uuid.uuid4()
+SOURCE_CATEGORY_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_TITLE = 'TestCategory'
-SOURCE_PROJECT_UUID = uuid.uuid4()
+SOURCE_PROJECT_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
-
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -118,14 +117,16 @@ class TestGetTargetData(
         sync_data = self.remote_api.get_target_data(self.target_site)
 
         expected = {
-            'users': [],
-            'categories': [],
-            'projects': [{
-                'sodar_uuid': self.project.sodar_uuid,
-                'title': self.project.title,
-                'type': PROJECT_TYPE_PROJECT,
-                'level': REMOTE_LEVEL_VIEW_AVAIL,
-                'available': True}]}
+            'users': {},
+            'projects': {
+                str(self.project.sodar_uuid): {
+                    'title': self.project.title,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_VIEW_AVAIL,
+                    'available': True
+                }
+            }
+        }
 
         self.assertEqual(sync_data, expected)
 
@@ -139,22 +140,25 @@ class TestGetTargetData(
         sync_data = self.remote_api.get_target_data(self.target_site)
 
         expected = {
-            'users': [],
-            'categories': [{
-                'sodar_uuid': self.category.sodar_uuid,
-                'title': self.category.title,
-                'type': PROJECT_TYPE_CATEGORY,
-                'parent': None,
-                'description': self.category.description,
-                'readme': self.category.readme.raw}],
-            'projects': [{
-                'sodar_uuid': self.project.sodar_uuid,
-                'title': self.project.title,
-                'type': PROJECT_TYPE_PROJECT,
-                'level': REMOTE_LEVEL_READ_INFO,
-                'description': self.project.description,
-                'readme': self.project.readme.raw,
-                'parent': self.category.sodar_uuid}]}
+            'users': {},
+            'projects': {
+                str(self.category.sodar_uuid): {
+                    'title': self.category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'parent_uuid': None,
+                    'description': self.category.description,
+                    'readme': self.category.readme.raw
+                },
+                str(self.project.sodar_uuid): {
+                    'title': self.project.title,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_READ_INFO,
+                    'description': self.project.description,
+                    'readme': self.project.readme.raw,
+                    'parent_uuid': str(self.category.sodar_uuid)
+                }
+            }
+        }
 
         self.assertEqual(sync_data, expected)
 
@@ -175,33 +179,32 @@ class TestGetTargetData(
         self.maxDiff = None  # DEBUG
 
         expected = {
-            'users': [],
-            'categories': [
-                {
-                    'sodar_uuid': self.category.sodar_uuid,
+            'users': {},
+            'projects': {
+                str(self.category.sodar_uuid): {
                     'title': self.category.title,
                     'type': PROJECT_TYPE_CATEGORY,
-                    'parent': None,
+                    'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme.raw
                 },
-                {
-                    'sodar_uuid': sub_category.sodar_uuid,
+                str(sub_category.sodar_uuid): {
                     'title': sub_category.title,
                     'type': PROJECT_TYPE_CATEGORY,
-                    'parent': self.category.sodar_uuid,
+                    'parent_uuid': str(self.category.sodar_uuid),
                     'description': sub_category.description,
                     'readme': sub_category.readme.raw
+                },
+                str(self.project.sodar_uuid): {
+                    'title': self.project.title,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_READ_INFO,
+                    'description': self.project.description,
+                    'readme': self.project.readme.raw,
+                    'parent_uuid': str(sub_category.sodar_uuid)
                 }
-            ],
-            'projects': [{
-                'sodar_uuid': self.project.sodar_uuid,
-                'title': self.project.title,
-                'type': PROJECT_TYPE_PROJECT,
-                'level': REMOTE_LEVEL_READ_INFO,
-                'description': self.project.description,
-                'readme': self.project.readme.raw,
-                'parent': sub_category.sodar_uuid}]}
+            }
+        }
 
         self.assertEqual(sync_data, expected)
 
@@ -215,34 +218,41 @@ class TestGetTargetData(
         sync_data = self.remote_api.get_target_data(self.target_site)
 
         expected = {
-            'users': [{
-                'sodar_uuid': self.user_source.sodar_uuid,
-                'username': self.user_source.username,
-                'name': self.user_source.name,
-                'first_name': self.user_source.first_name,
-                'last_name': self.user_source.last_name,
-                'email': self.user_source.email,
-                'groups': [SOURCE_USER_GROUP]}],
-            'categories': [{
-                'sodar_uuid': self.category.sodar_uuid,
-                'title': self.category.title,
-                'type': PROJECT_TYPE_CATEGORY,
-                'parent': None,
-                'description': self.category.description,
-                'readme': self.category.readme.raw,
-                'owner': self.user_source.username}],
-            'projects': [{
-                'sodar_uuid': self.project.sodar_uuid,
-                'title': self.project.title,
-                'type': PROJECT_TYPE_PROJECT,
-                'level': REMOTE_LEVEL_READ_ROLES,
-                'description': self.project.description,
-                'readme': self.project.readme.raw,
-                'parent': self.category.sodar_uuid,
-                'roles': [{
-                    'sodar_uuid': self.project_owner_as.sodar_uuid,
-                    'user': self.project_owner_as.user.username,
-                    'role': self.project_owner_as.role.name}]}]}
+            'users': {
+                str(self.user_source.sodar_uuid): {
+                    'username': self.user_source.username,
+                    'name': self.user_source.name,
+                    'first_name': self.user_source.first_name,
+                    'last_name': self.user_source.last_name,
+                    'email': self.user_source.email,
+                    'groups': [SOURCE_USER_GROUP]
+                }
+            },
+            'projects': {
+                str(self.category.sodar_uuid): {
+                    'title': self.category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'parent_uuid': None,
+                    'description': self.category.description,
+                    'readme': self.category.readme.raw,
+                    'owner': self.user_source.username
+                },
+                str(self.project.sodar_uuid): {
+                    'title': self.project.title,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_READ_ROLES,
+                    'description': self.project.description,
+                    'readme': self.project.readme.raw,
+                    'parent_uuid': str(self.category.sodar_uuid),
+                    'roles': {
+                        str(self.project_owner_as.sodar_uuid): {
+                            'user': self.project_owner_as.user.username,
+                            'role': self.project_owner_as.role.name
+                        }
+                    }
+                }
+            }
+        }
 
         self.assertEqual(sync_data, expected)
 
@@ -251,9 +261,8 @@ class TestGetTargetData(
         sync_data = self.remote_api.get_target_data(self.target_site)
 
         expected = {
-            'users': [],
-            'categories': [],
-            'projects': []}
+            'users': {},
+            'projects': {}}
 
         self.assertEqual(sync_data, expected)
 
@@ -294,34 +303,42 @@ class TestSyncSourceData(
         self.assertEqual(User.objects.all().count(), 0)
 
         remote_data = {
-            'users': [{
-                'sodar_uuid': SOURCE_USER_UUID,
-                'username': SOURCE_USER_USERNAME,
-                'name': SOURCE_USER_NAME,
-                'first_name': SOURCE_USER_FIRST_NAME,
-                'last_name': SOURCE_USER_LAST_NAME,
-                'email': SOURCE_USER_EMAIL,
-                'groups': [SOURCE_USER_GROUP]}],
-            'categories': [{
-                'sodar_uuid': SOURCE_CATEGORY_UUID,
-                'title': SOURCE_CATEGORY_TITLE,
-                'type': PROJECT_TYPE_CATEGORY,
-                'parent': None,
-                'description': SOURCE_PROJECT_DESCRIPTION,
-                'readme': SOURCE_PROJECT_README,
-                'owner': SOURCE_USER_USERNAME}],
-            'projects': [{
-                'sodar_uuid': SOURCE_PROJECT_UUID,
-                'title': SOURCE_PROJECT_TITLE,
-                'type': PROJECT_TYPE_PROJECT,
-                'level': REMOTE_LEVEL_READ_ROLES,
-                'description': SOURCE_PROJECT_DESCRIPTION,
-                'readme': SOURCE_PROJECT_README,
-                'parent': SOURCE_CATEGORY_UUID,
-                'roles': [{
-                    'sodar_uuid': str(uuid.uuid4()),
-                    'user': SOURCE_USER_USERNAME,
-                    'role': self.role_owner.name}]}]}
+            'users': {
+                SOURCE_USER_UUID: {
+                    'sodar_uuid': SOURCE_USER_UUID,
+                    'username': SOURCE_USER_USERNAME,
+                    'name': SOURCE_USER_NAME,
+                    'first_name': SOURCE_USER_FIRST_NAME,
+                    'last_name': SOURCE_USER_LAST_NAME,
+                    'email': SOURCE_USER_EMAIL,
+                    'groups': [SOURCE_USER_GROUP]
+                }
+            },
+            'projects': {
+                SOURCE_CATEGORY_UUID: {
+                    'title': SOURCE_CATEGORY_TITLE,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'parent_uuid': None,
+                    'description': SOURCE_PROJECT_DESCRIPTION,
+                    'readme': SOURCE_PROJECT_README,
+                    'owner': SOURCE_USER_USERNAME
+                },
+                SOURCE_PROJECT_UUID: {
+                    'title': SOURCE_PROJECT_TITLE,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_READ_ROLES,
+                    'description': SOURCE_PROJECT_DESCRIPTION,
+                    'readme': SOURCE_PROJECT_README,
+                    'parent_uuid': SOURCE_CATEGORY_UUID,
+                    'roles': {
+                        str(uuid.uuid4()): {
+                            'user': SOURCE_USER_USERNAME,
+                            'role': self.role_owner.name
+                        }
+                    }
+                }
+            }
+        }
 
         update_data = self.remote_api.sync_source_data(
             self.source_site, remote_data)
