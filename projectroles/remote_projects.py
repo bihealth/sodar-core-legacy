@@ -1,12 +1,14 @@
 """Remote project management utilities for the projectroles app"""
 
+from datetime import datetime as dt
 import logging
 
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import Group
 
-from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import Project, Role, RoleAssignment, RemoteProject, \
+    SODAR_CONSTANTS
 
 
 User = auth.get_user_model()
@@ -71,8 +73,12 @@ class RemoteProjectAPI:
                     'readme': category.readme.raw}
 
                 if project_level == REMOTE_LEVEL_READ_ROLES:
+                    new_cat['level'] = REMOTE_LEVEL_READ_ROLES
                     new_cat['owner'] = category.get_owner().user.username
                     add_user(category.get_owner().user)
+
+                else:
+                    new_cat['level'] = REMOTE_LEVEL_READ_INFO
 
                 sync_data['projects'][str(category.sodar_uuid)] = new_cat
 
@@ -312,10 +318,29 @@ class RemoteProjectAPI:
                     p['type'].lower(), p['title'], uuid))
                 remote_data['projects'][uuid]['status'] = 'created'
 
-            # TODO: Create/Update RemoteProject object
+            # Create/update a RemoteProject object
+            try:
+                remote_project = RemoteProject.objects.get(
+                    site=site, project_uuid=project.sodar_uuid)
+                remote_project.level = p['level']
+                remote_project.date_access = dt.now()
+                remote_action = 'updated'
+
+            except RemoteProject.DoesNotExist:
+                remote_project = RemoteProject.objects.create(
+                    site=site,
+                    project_uuid=project.sodar_uuid,
+                    level=p['level'],
+                    date_access=dt.now())
+                remote_action = 'created'
+
+            logger.debug('{} RemoteProject {} for "{}" ({})'.format(
+                remote_action.capitalize(), remote_project.sodar_uuid,
+                project.title, project.sodar_uuid))
 
             # Skip the rest if not updating roles
-            if 'level' not in p or p['level'] != REMOTE_LEVEL_READ_ROLES:
+            if (('level' in p and p['level'] != REMOTE_LEVEL_READ_ROLES) or
+                    'roles' not in p):
                 return remote_data
 
             # Create/update roles

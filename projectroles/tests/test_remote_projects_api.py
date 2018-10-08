@@ -146,6 +146,7 @@ class TestGetTargetData(
                 str(self.category.sodar_uuid): {
                     'title': self.category.title,
                     'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme.raw
@@ -185,6 +186,7 @@ class TestGetTargetData(
                 str(self.category.sodar_uuid): {
                     'title': self.category.title,
                     'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme.raw
@@ -192,6 +194,7 @@ class TestGetTargetData(
                 str(sub_category.sodar_uuid): {
                     'title': sub_category.title,
                     'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_INFO,
                     'parent_uuid': str(self.category.sodar_uuid),
                     'description': sub_category.description,
                     'readme': sub_category.readme.raw
@@ -233,6 +236,7 @@ class TestGetTargetData(
                 str(self.category.sodar_uuid): {
                     'title': self.category.title,
                     'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_ROLES,
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme.raw,
@@ -307,6 +311,7 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
 
         remote_data = {
             'users': {
@@ -324,6 +329,7 @@ class TestSyncSourceData(
                 SOURCE_CATEGORY_UUID: {
                     'title': SOURCE_CATEGORY_TITLE,
                     'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_ROLES,
                     'parent_uuid': None,
                     'description': SOURCE_PROJECT_DESCRIPTION,
                     'readme': SOURCE_PROJECT_README,
@@ -353,6 +359,7 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
         self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
 
         # Assert update_data changes
         self.assertEqual(
