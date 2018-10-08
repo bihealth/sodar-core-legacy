@@ -55,7 +55,8 @@ SOURCE_PROJECT_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
-SOURCE_ROLE_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE_UUID = str(uuid.uuid4())
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -240,7 +241,12 @@ class TestGetTargetData(
                     'parent_uuid': None,
                     'description': self.category.description,
                     'readme': self.category.readme.raw,
-                    'owner': self.user_source.username
+                    'roles': {
+                        str(self.project_owner_as.sodar_uuid): {
+                            'user': self.project_owner_as.user.username,
+                            'role': self.project_owner_as.role.name
+                        }
+                    }
                 },
                 str(self.project.sodar_uuid): {
                     'title': self.project.title,
@@ -333,7 +339,12 @@ class TestSyncSourceData(
                     'parent_uuid': None,
                     'description': SOURCE_PROJECT_DESCRIPTION,
                     'readme': SOURCE_PROJECT_README,
-                    'owner': SOURCE_USER_USERNAME
+                    'roles': {
+                        SOURCE_CATEGORY_ROLE_UUID: {
+                            'user': SOURCE_USER_USERNAME,
+                            'role': self.role_owner.name
+                        }
+                    }
                 },
                 SOURCE_PROJECT_UUID: {
                     'title': SOURCE_PROJECT_TITLE,
@@ -343,7 +354,7 @@ class TestSyncSourceData(
                     'readme': SOURCE_PROJECT_README,
                     'parent_uuid': SOURCE_CATEGORY_UUID,
                     'roles': {
-                        SOURCE_ROLE_UUID: {
+                        SOURCE_PROJECT_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name
                         }
@@ -357,16 +368,16 @@ class TestSyncSourceData(
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
 
         # Assert update_data changes
-        self.assertEqual(
-            update_data['projects'][SOURCE_CATEGORY_UUID]['status'], 'created')
-        self.assertEqual(
-            update_data['projects'][SOURCE_PROJECT_UUID]['status'], 'created')
-        self.assertEqual(
-            update_data['projects'][SOURCE_PROJECT_UUID]['roles'][
-                SOURCE_ROLE_UUID]['status'],
-            'created')
+        expected = dict(remote_data)
+        expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE_UUID]['status'] = 'created'
+        self.assertEqual(update_data, expected)

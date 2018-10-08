@@ -64,7 +64,7 @@ class RemoteProjectAPI:
                 add_parent_categories(category.parent, project_level)
 
             if str(category.sodar_uuid) not in sync_data['projects'].keys():
-                new_cat = {
+                cat_data = {
                     'title': category.title,
                     'type': PROJECT_TYPE_CATEGORY,
                     'parent_uuid': str(category.parent.sodar_uuid) if
@@ -73,14 +73,18 @@ class RemoteProjectAPI:
                     'readme': category.readme.raw}
 
                 if project_level == REMOTE_LEVEL_READ_ROLES:
-                    new_cat['level'] = REMOTE_LEVEL_READ_ROLES
-                    new_cat['owner'] = category.get_owner().user.username
-                    add_user(category.get_owner().user)
+                    cat_data['level'] = REMOTE_LEVEL_READ_ROLES
+                    role_as = project.get_owner()
+                    cat_data['roles'] = {}
+                    cat_data['roles'][str(role_as.sodar_uuid)] = {
+                        'user': role_as.user.username,
+                        'role': role_as.role.name}
+                    add_user(role_as.user)
 
                 else:
-                    new_cat['level'] = REMOTE_LEVEL_READ_INFO
+                    cat_data['level'] = REMOTE_LEVEL_READ_INFO
 
-                sync_data['projects'][str(category.sodar_uuid)] = new_cat
+                sync_data['projects'][str(category.sodar_uuid)] = cat_data
 
         for rp in target_site.projects.all():
             project = rp.get_project()
@@ -339,8 +343,7 @@ class RemoteProjectAPI:
                 project.title, project.sodar_uuid))
 
             # Skip the rest if not updating roles
-            if (('level' in p and p['level'] != REMOTE_LEVEL_READ_ROLES) or
-                    'roles' not in p):
+            if 'level' in p and p['level'] != REMOTE_LEVEL_READ_ROLES:
                 return remote_data
 
             # Create/update roles
