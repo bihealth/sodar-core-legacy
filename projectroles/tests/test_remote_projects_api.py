@@ -55,6 +55,7 @@ SOURCE_PROJECT_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
+SOURCE_ROLE_UUID = str(uuid.uuid4())
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -273,6 +274,11 @@ class TestSyncSourceData(
     """Tests for the sync_source_data() API function"""
 
     def setUp(self):
+        # Init users
+        self.admin_user = self.make_user(settings.PROJECTROLES_ADMIN_OWNER)
+        self.admin_user.is_staff = True
+        self.admin_user.is_superuser = True
+
         # Init roles
         self.role_owner = Role.objects.get_or_create(
             name=PROJECT_ROLE_OWNER)[0]
@@ -300,7 +306,7 @@ class TestSyncSourceData(
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
-        self.assertEqual(User.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
 
         remote_data = {
             'users': {
@@ -331,7 +337,7 @@ class TestSyncSourceData(
                     'readme': SOURCE_PROJECT_README,
                     'parent_uuid': SOURCE_CATEGORY_UUID,
                     'roles': {
-                        str(uuid.uuid4()): {
+                        SOURCE_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name
                         }
@@ -345,8 +351,15 @@ class TestSyncSourceData(
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
-        # self.assertEqual(RoleAssignment.objects.all().count(), 2)  # TODO
-        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(User.objects.all().count(), 2)
 
-        # Assert update_data
-        # TODO
+        # Assert update_data changes
+        self.assertEqual(
+            update_data['projects'][SOURCE_CATEGORY_UUID]['status'], 'created')
+        self.assertEqual(
+            update_data['projects'][SOURCE_PROJECT_UUID]['status'], 'created')
+        self.assertEqual(
+            update_data['projects'][SOURCE_PROJECT_UUID]['roles'][
+                SOURCE_ROLE_UUID]['status'],
+            'created')

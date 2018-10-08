@@ -121,20 +121,32 @@ class RemoteProjectAPI:
         :param site: RemoteSite object for the source site
         :param remote_data: Data returned by get_target_data() in the source
         :return: Dict with updated remote_data or None if nothing was changed
+        :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
         """
+
+        # TODO: Add timeline events
 
         logger.info(
             'Synchronizing user and project data from "{}"..'.format(site.name))
 
         # Return None if no projects with READ_ROLES are included
-        # TODO: TBD: What if access in source is e.g. removed?
-        # TODO: Fix
-        '''
-        if (not [p for p in remote_data['projects'].values() if
-                p['level'] == REMOTE_LEVEL_READ_ROLES]):
+        if not {k: v for k, v in remote_data['projects'].items() if
+                v['type'] == PROJECT_TYPE_PROJECT and
+                v['level'] == REMOTE_LEVEL_READ_ROLES}.values():
             logger.info('No READ_ROLES access set, nothing to synchronize')
             return None
-        '''
+
+        # Get default owner if remote projects have a local owner
+        try:
+            default_owner = User.objects.get(
+                username=settings.PROJECTROLES_ADMIN_OWNER)
+
+        except User.DoesNotExist:
+            error_msg = 'Local user "{}" defined in ' \
+                        'PROJECTROLES_ADMIN_OWNER not found'.format(
+                settings.PROJECTROLES_ADMIN_OWNER)
+            logger.error(error_msg)
+            raise ValueError(error_msg)
 
         def update_obj(obj, data, fields):
             """Update object"""
@@ -207,17 +219,17 @@ class RemoteProjectAPI:
         # Categories and Projects
         ##########################
 
-        def update_project(sodar_uuid, p, remote_data):
+        def update_project(uuid, p, remote_data):
             """Create or update project and its parents"""
 
             def handle_project_error(
-                    error_msg, sodar_uuid, p, action, remote_data):
+                    error_msg, uuid, p, action, remote_data):
                 """Add and log project error"""
                 logger.error('{} {} "{}" ({}): {}'.format(
                     action.capitalize(), p['type'].lower(), p['title'],
-                    sodar_uuid, error_msg))
-                remote_data['projects'][sodar_uuid]['status'] = 'error'
-                remote_data['projects'][sodar_uuid]['status_msg'] = error_msg
+                    uuid, error_msg))
+                remote_data['projects'][uuid]['status'] = 'error'
+                remote_data['projects'][uuid]['status_msg'] = error_msg
                 return remote_data
 
             if p['parent_uuid']:
@@ -232,7 +244,7 @@ class RemoteProjectAPI:
             # Get existing project
             try:
                 project = Project.objects.get(
-                    type=p['type'], sodar_uuid=sodar_uuid)
+                    type=p['type'], sodar_uuid=uuid)
                 action = 'update'
 
             except Project.DoesNotExist:
@@ -247,7 +259,7 @@ class RemoteProjectAPI:
                     # Handle error
                     error_msg = 'Parent {} not found'.format(p['parent_uuid'])
                     remote_data = handle_project_error(
-                        error_msg, sodar_uuid, p, action, remote_data)
+                        error_msg, uuid, p, action, remote_data)
                     return remote_data
 
             # Check existing name under the same parent
@@ -260,7 +272,7 @@ class RemoteProjectAPI:
                             'parent, unable to create'.format(
                                 old_project.type.lower(), old_project.title)
                 remote_data = handle_project_error(
-                    error_msg, sodar_uuid, p, action, remote_data)
+                    error_msg, uuid, p, action, remote_data)
 
             except Project.DoesNotExist:
                 pass
@@ -281,10 +293,9 @@ class RemoteProjectAPI:
                     project.parent = parent
                     project.save()
 
-                remote_data['projects'][sodar_uuid]['status'] = 'updated'
-
-                # TODO: Update roles
-                # TODO: Update RemoteProject object
+                logger.info('Updated {}: {} ({})'.format(
+                    p['type'].lower(), p['title'], uuid))
+                remote_data['projects'][uuid]['status'] = 'updated'
 
             # Create new project
             else:
@@ -293,17 +304,133 @@ class RemoteProjectAPI:
                     k: v for k, v in p.items() if k in create_fields}
                 create_values['type'] = p['type']
                 create_values['parent'] = parent
-                create_values['sodar_uuid'] = sodar_uuid
+                create_values['sodar_uuid'] = uuid
 
                 project = Project.objects.create(**create_values)
 
                 logger.info('Created {}: {} ({})'.format(
-                    p['type'].lower(), p['title'], sodar_uuid))
+                    p['type'].lower(), p['title'], uuid))
+                remote_data['projects'][uuid]['status'] = 'created'
 
-                # TODO: Create roles
-                # TODO: Create RemoteProject object
+            # TODO: Create/Update RemoteProject object
 
-                remote_data['projects'][sodar_uuid]['status'] = 'updated'
+            # Skip the rest if not updating roles
+            if 'level' not in p or p['level'] != REMOTE_LEVEL_READ_ROLES:
+                return remote_data
+
+            # Create/update roles
+            for r_uuid, r in p['roles'].items():
+                # Ensure the Role exists
+                try:
+                    role = Role.objects.get(name=r['role'])
+
+                except Role.DoesNotExist:
+                    error_msg = 'Role object "{}" not found (assignment ' \
+                                '{})'.format(r['role'], r_uuid)
+                    logger.error(error_msg)
+                    remote_data[
+                        'projects'][project.sodar_uuid]['roles'][r_uuid][
+                        'status'] = 'error'
+                    remote_data[
+                        'projects'][project.sodar_uuid]['roles'][r_uuid][
+                        'status_msg'] = error_msg
+                    continue
+
+                # If role is "project owner" for a non-LDAP user, get
+                # the default local user instead
+                if (r['role'] == PROJECT_ROLE_OWNER and
+                        '@' not in r['user']):
+                    role_user = default_owner
+                    logger.info(
+                        'Non-LDAP user "{}" set as owner for project '
+                        '"{}" ({}), assigning role to user '
+                        '"{}"'.format(
+                            r['user'], project.title,
+                            project.sodar_uuid, default_owner.username))
+
+                else:
+                    role_user = User.objects.get(username=r['user'])
+
+                # Update RoleAssignment if it exists and is changed
+                as_updated = False
+
+                try:
+                    if r['role'] == PROJECT_ROLE_OWNER:     # Owner = special
+                        old_as = RoleAssignment.objects.get(
+                            project__sodar_uuid=project.sodar_uuid,
+                            role__name=PROJECT_ROLE_OWNER)
+
+                        if old_as.user != role_user:
+                            as_updated = True
+
+                            # Delete existing role of the new owner if it exists
+                            try:
+                                RoleAssignment.objects.get(
+                                    project__sodar_uuid=project.sodar_uuid,
+                                    user=role_user).delete()
+                                logger.debug(
+                                    'Deleted existing owner role from '
+                                    'user "{}"'.format(role_user.username))
+
+                            except RoleAssignment.DoesNotExist:
+                                pass
+
+                    else:
+                        old_as = RoleAssignment.objects.get(
+                            project__sodar_uuid=project.sodar_uuid,
+                            user=role_user)
+
+                        if old_as.role != role:
+                            as_updated = True
+
+                    if as_updated:
+                        old_as.role = role
+                        old_as.user = role_user
+                        old_as.save()
+                        remote_data[
+                            'projects'][project.sodar_uuid]['roles'][r_uuid][
+                            'status'] = 'updated'
+                        logger.info('Updated role {}: {} = {}'.format(
+                            r_uuid, role_user.username, role.name))
+
+                # Create a new RoleAssignment if not found
+                except RoleAssignment.DoesNotExist:
+                    role_values = {
+                        'sodar_uuid': r_uuid,
+                        'project': project,
+                        'role': role,
+                        'user': role_user}
+                    role_as = RoleAssignment.objects.create(**role_values)
+                    remote_data[
+                        'projects'][project.sodar_uuid]['roles'][r_uuid][
+                        'status'] = 'created'
+                    logger.info('Created role {}: {} -> {}'.format(
+                        r_uuid, role_user.username, role.name))
+
+                # Remove deleted user roles
+                current_users = [
+                    v['user'] for k, v in p[
+                        'roles'].items()]
+                current_users.append(default_owner.username)
+
+                deleted_roles = RoleAssignment.objects.filter(
+                    project__sodar_uuid=project.sodar_uuid).exclude(
+                        role__name=PROJECT_ROLE_OWNER,
+                        user__username__in=current_users)
+                deleted_count = deleted_roles.count()
+
+                if deleted_count > 0:
+                    deleted_users = sorted([
+                        r.user.username for r in deleted_roles])
+                    deleted_roles.delete()
+
+                    remote_data['projects'][uuid][
+                        'deleted_roles'] = deleted_users
+                    logger.info(
+                        'Deleted {} removed role{} for: {}').format(
+                            deleted_count,
+                            's' if deleted_count != 1 else '',
+                            ', '.join(deleted_users))
 
             return remote_data
 
