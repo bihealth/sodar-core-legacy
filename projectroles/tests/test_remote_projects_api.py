@@ -3,6 +3,7 @@ import uuid
 
 from django.conf import settings
 from django.contrib import auth
+from django.forms.models import model_to_dict
 from django.test import override_settings
 
 from test_plus.test import TestCase
@@ -371,6 +372,54 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        new_user = User.objects.get(username=SOURCE_USER_USERNAME)
+
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        expected = {
+            'id': category_obj.pk,
+            'title': SOURCE_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': None,
+            'submit_status': SUBMIT_STATUS_OK,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID)}
+        model_dict = model_to_dict(category_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        c_owner_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE_UUID)
+        expected = {
+            'id': c_owner_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user.pk,
+            'role': self.role_owner.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE_UUID)}
+        self.assertEqual(model_to_dict(c_owner_obj), expected)
+
+        project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        expected = {
+            'id': project_obj.pk,
+            'title': SOURCE_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': category_obj.pk,
+            'submit_status': SUBMIT_STATUS_OK,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID)}
+        model_dict = model_to_dict(project_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        p_owner_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE_UUID)
+        expected = {
+            'id': p_owner_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user.pk,
+            'role': self.role_owner.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE_UUID)}
+        self.assertEqual(model_to_dict(p_owner_obj), expected)
 
         # Assert update_data changes
         expected = dict(remote_data)
