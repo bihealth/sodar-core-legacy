@@ -19,6 +19,7 @@ Added
     - Remote project API (#3)
     - Generic SODAR API base classes
     - ``SodarUserMixin`` for SODAR user helpers in tests
+    - Optional ``readme`` and ``sodar_uuid`` args for ``_make_project()`` in tests
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 

@@ -47,14 +47,18 @@ class ProjectMixin:
     @classmethod
     def _make_project(
             cls, title, type, parent, description='',
-            submit_status=SUBMIT_STATUS_OK):
+            submit_status=SUBMIT_STATUS_OK, readme=None,
+            sodar_uuid=None):
         """Make and save a Project"""
         values = {
             'title': title,
             'type': type,
             'parent': parent,
             'submit_status': submit_status,
-            'description': description}
+            'description': description,
+            'readme': readme}
+        if sodar_uuid:
+            values['sodar_uuid'] = sodar_uuid
         project = Project(**values)
         project.save()
         return project
@@ -137,7 +141,7 @@ class RemoteProjectMixin:
 
     @classmethod
     def _make_remote_project(
-            cls, project_uuid, site, level):
+            cls, project_uuid, site, level, date_access=None):
         """Make and save a RemoteProject"""
         if type(project_uuid) == str:
             project_uuid = uuid.UUID(project_uuid)
@@ -145,7 +149,8 @@ class RemoteProjectMixin:
         values = {
             'project_uuid': project_uuid,
             'site': site,
-            'level': level}
+            'level': level,
+            'date_access': date_access}
         remote_project = RemoteProject(**values)
         remote_project.save()
         return remote_project

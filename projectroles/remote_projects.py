@@ -180,7 +180,8 @@ class RemoteProjectAPI:
                 updated_fields = []
 
                 for k, v in u.items():
-                    if (k != 'groups' and hasattr(user, k) and
+                    if (k not in ['groups', 'sodar_uuid'] and
+                            hasattr(user, k) and
                             str(getattr(user, k)) != str(v)):
                         updated_fields.append(k)
 
@@ -291,8 +292,9 @@ class RemoteProjectAPI:
             if project:
                 updated_fields = []
 
-                for k, v in u.items():
-                    if (k != 'parent' and hasattr(project, k) and
+                for k, v in p.items():
+                    if (k not in ['parent', 'sodar_uuid', 'roles'] and
+                            hasattr(project, k) and
                             str(getattr(project, k)) != str(v)):
                         updated_fields.append(k)
 
@@ -303,8 +305,9 @@ class RemoteProjectAPI:
                     project.parent = parent
                     project.save()
 
-                logger.info('Updated {}: {} ({})'.format(
-                    p['type'].lower(), p['title'], uuid))
+                logger.info('Updated {}: {} ({}): {}'.format(
+                    p['type'].lower(), p['title'], uuid,
+                    ', '.join(updated_fields)))
                 remote_data['projects'][uuid]['status'] = 'updated'
 
             # Create new project
@@ -416,8 +419,8 @@ class RemoteProjectAPI:
                         old_as.user = role_user
                         old_as.save()
                         remote_data[
-                            'projects'][project.sodar_uuid]['roles'][r_uuid][
-                            'status'] = 'updated'
+                            'projects'][str(project.sodar_uuid)]['roles'][
+                            r_uuid]['status'] = 'updated'
                         logger.info('Updated role {}: {} = {}'.format(
                             r_uuid, role_user.username, role.name))
 
@@ -430,35 +433,35 @@ class RemoteProjectAPI:
                         'user': role_user}
                     role_as = RoleAssignment.objects.create(**role_values)
                     remote_data[
-                        'projects'][project.sodar_uuid]['roles'][r_uuid][
+                        'projects'][str(project.sodar_uuid)]['roles'][r_uuid][
                         'status'] = 'created'
                     logger.info('Created role {}: {} -> {}'.format(
                         r_uuid, role_user.username, role.name))
 
-                # Remove deleted user roles
-                current_users = [
-                    v['user'] for k, v in p[
-                        'roles'].items()]
-                current_users.append(default_owner.username)
+            # Remove deleted user roles
+            current_users = [
+                v['user'] for k, v in p[
+                    'roles'].items()]
+            current_users.append(default_owner.username)
 
-                deleted_roles = RoleAssignment.objects.filter(
-                    project__sodar_uuid=project.sodar_uuid).exclude(
-                        role__name=PROJECT_ROLE_OWNER,
+            deleted_roles = RoleAssignment.objects.filter(
+                project__sodar_uuid=project.sodar_uuid).exclude(
+                    role__name=PROJECT_ROLE_OWNER).exclude(
                         user__username__in=current_users)
-                deleted_count = deleted_roles.count()
+            deleted_count = deleted_roles.count()
 
-                if deleted_count > 0:
-                    deleted_users = sorted([
-                        r.user.username for r in deleted_roles])
-                    deleted_roles.delete()
+            if deleted_count > 0:
+                deleted_users = sorted([
+                    r.user.username for r in deleted_roles])
+                deleted_roles.delete()
 
-                    remote_data['projects'][uuid][
-                        'deleted_roles'] = deleted_users
-                    logger.info(
-                        'Deleted {} removed role{} for: {}').format(
-                            deleted_count,
-                            's' if deleted_count != 1 else '',
-                            ', '.join(deleted_users))
+                remote_data['projects'][uuid][
+                    'deleted_roles'] = deleted_users
+                logger.info(
+                    'Deleted {} removed role{} for: {}'.format(
+                        deleted_count,
+                        's' if deleted_count != 1 else '',
+                        ', '.join(deleted_users)))
 
             return remote_data
 
