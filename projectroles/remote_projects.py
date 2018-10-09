@@ -1,11 +1,11 @@
 """Remote project management utilities for the projectroles app"""
 
-from datetime import datetime as dt
 import logging
 
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import Group
+from django.utils import timezone
 
 from projectroles.models import Project, Role, RoleAssignment, RemoteProject, \
     SODAR_CONSTANTS
@@ -136,8 +136,7 @@ class RemoteProjectAPI:
 
         # TODO: Add timeline events
 
-        logger.info(
-            'Synchronizing user and project data from "{}"..'.format(site.name))
+        logger.info('Synchronizing data from "{}"..'.format(site.name))
 
         # Return unchanged data if no projects with READ_ROLES are included
         if not {k: v for k, v in remote_data['projects'].items() if
@@ -168,6 +167,8 @@ class RemoteProjectAPI:
         ########
         # Users
         ########
+
+        logger.info('Synchronizing LDAP/AD users..')
 
         # NOTE: only sync LDAP/AD users
         for sodar_uuid, u in {
@@ -226,6 +227,8 @@ class RemoteProjectAPI:
                     logger.debug('Added user {} ({}) to group "{}"'.format(
                         user.username, user.sodar_uuid, g))
 
+        logger.info('User sync OK')
+
         ##########################
         # Categories and Projects
         ##########################
@@ -251,6 +254,9 @@ class RemoteProjectAPI:
             project = None
             parent = None
             action = 'create'
+
+            logger.info('Processing {} "{}" ({})..'.format(
+                p['type'].lower(), p['title'], uuid))
 
             # Get existing project
             try:
@@ -279,9 +285,10 @@ class RemoteProjectAPI:
                     parent=parent, title=p['title'])
 
                 # Handle error
-                error_msg = 'A {} with the title "{}" exists under the same ' \
+                error_msg = '{} with the title "{}" exists under the same ' \
                             'parent, unable to create'.format(
-                                old_project.type.lower(), old_project.title)
+                                old_project.type.capitalize(),
+                                old_project.title)
                 remote_data = handle_project_error(
                     error_msg, uuid, p, action, remote_data)
 
@@ -298,17 +305,20 @@ class RemoteProjectAPI:
                             str(getattr(project, k)) != str(v)):
                         updated_fields.append(k)
 
-                project = update_obj(project, p, updated_fields)
+                if updated_fields:
+                    project = update_obj(project, p, updated_fields)
 
-                # Manually update parent
-                if parent != project.parent:
-                    project.parent = parent
-                    project.save()
+                    # Manually update parent
+                    if parent != project.parent:
+                        project.parent = parent
+                        project.save()
 
-                logger.info('Updated {}: {} ({}): {}'.format(
-                    p['type'].lower(), p['title'], uuid,
-                    ', '.join(updated_fields)))
-                remote_data['projects'][uuid]['status'] = 'updated'
+                    logger.info('Updated {}'.format(
+                        p['type'].lower()))
+                    remote_data['projects'][uuid]['status'] = 'updated'
+
+                else:
+                    logger.info('Nothing to update')
 
             # Create new project
             else:
@@ -321,8 +331,7 @@ class RemoteProjectAPI:
 
                 project = Project.objects.create(**create_values)
 
-                logger.info('Created {}: {} ({})'.format(
-                    p['type'].lower(), p['title'], uuid))
+                logger.info('Created {}'.format(p['type'].lower()))
                 remote_data['projects'][uuid]['status'] = 'created'
 
             # Create/update a RemoteProject object
@@ -330,7 +339,7 @@ class RemoteProjectAPI:
                 remote_project = RemoteProject.objects.get(
                     site=site, project_uuid=project.sodar_uuid)
                 remote_project.level = p['level']
-                remote_project.date_access = dt.now()
+                remote_project.date_access = timezone.now()
                 remote_action = 'updated'
 
             except RemoteProject.DoesNotExist:
@@ -338,12 +347,11 @@ class RemoteProjectAPI:
                     site=site,
                     project_uuid=project.sodar_uuid,
                     level=p['level'],
-                    date_access=dt.now())
+                    date_access=timezone.now())
                 remote_action = 'created'
 
-            logger.debug('{} RemoteProject {} for "{}" ({})'.format(
-                remote_action.capitalize(), remote_project.sodar_uuid,
-                project.title, project.sodar_uuid))
+            logger.debug('{} RemoteProject {}'.format(
+                remote_action.capitalize(), remote_project.sodar_uuid))
 
             # Skip the rest if not updating roles
             if 'level' in p and p['level'] != REMOTE_LEVEL_READ_ROLES:
@@ -373,7 +381,7 @@ class RemoteProjectAPI:
                         '@' not in r['user']):
                     role_user = default_owner
                     logger.info(
-                        'Non-LDAP user "{}" set as owner for project '
+                        'Non-LDAP/AD user "{}" set as owner for project '
                         '"{}" ({}), assigning role to user '
                         '"{}"'.format(
                             r['user'], project.title,
@@ -463,9 +471,12 @@ class RemoteProjectAPI:
                         's' if deleted_count != 1 else '',
                         ', '.join(deleted_users)))
 
+            logger.info('{} OK'.format(p['type'].capitalize()))
             return remote_data
 
         # Update projects
+        logger.info('Synchronizing projects..')
+
         for sodar_uuid, p in {
                 k: v for k, v in remote_data['projects'].items() if
                 v['type'] == PROJECT_TYPE_PROJECT and
