@@ -121,7 +121,6 @@ class RemoteProjectAPI:
                     add_user(role_as.user)
 
             sync_data['projects'][str(rp.project_uuid)] = project_data
-            # TODO: Log with timeline
 
         return sync_data
 
@@ -145,7 +144,7 @@ class RemoteProjectAPI:
         except User.DoesNotExist:
             error_msg = 'Local user "{}" defined in ' \
                         'PROJECTROLES_ADMIN_OWNER not found'.format(
-                settings.PROJECTROLES_ADMIN_OWNER)
+                            settings.PROJECTROLES_ADMIN_OWNER)
             logger.error(error_msg)
             raise ValueError(error_msg)
 
@@ -344,8 +343,8 @@ class RemoteProjectAPI:
                     # Handle error
                     error_msg = '{} with the title "{}" exists under the ' \
                                 'same parent, unable to create'.format(
-                        old_project.type.capitalize(),
-                        old_project.title)
+                                    old_project.type.capitalize(),
+                                    old_project.title)
                     remote_data = handle_project_error(
                         error_msg, uuid, p, action, remote_data)
                     return remote_data

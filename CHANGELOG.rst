@@ -20,6 +20,7 @@ Added
     - Generic SODAR API base classes
     - ``SodarUserMixin`` for SODAR user helpers in tests
     - Optional ``readme`` and ``sodar_uuid`` args for ``_make_project()`` in tests
+    - ``syncremote`` management command for calling ``RemoteProjectAPI.sync_source_data()``
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 
