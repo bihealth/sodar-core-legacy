@@ -160,12 +160,15 @@ class SodarUserMixin:
     """Helper mixin for LDAP SodarUser creation"""
 
     def _make_sodar_user(
-            self, username, name, first_name, last_name, sodar_uuid=None,
-            password='password'):
+            self, username, name, first_name, last_name, email=None,
+            sodar_uuid=None, password='password'):
         user = self.make_user(username, password)
         user.name = name
         user.first_name = first_name
         user.last_name = last_name
+
+        if email:
+            user.email = email
 
         if sodar_uuid:
             user.sodar_uuid = sodar_uuid

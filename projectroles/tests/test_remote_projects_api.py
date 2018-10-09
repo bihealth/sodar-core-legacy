@@ -87,7 +87,8 @@ class TestGetTargetData(
             username=SOURCE_USER_USERNAME,
             name=SOURCE_USER_NAME,
             first_name=SOURCE_USER_FIRST_NAME,
-            last_name=SOURCE_USER_LAST_NAME)
+            last_name=SOURCE_USER_LAST_NAME,
+            email=SOURCE_USER_EMAIL)
 
         # Init local category and project
         self.category = self._make_project(
@@ -483,7 +484,8 @@ class TestSyncSourceData(
             username=SOURCE_USER_USERNAME,
             name='NewFirstName NewLastName',
             first_name='NewFirstName',
-            last_name='NewLastName')
+            last_name='NewLastName',
+            email='newemail@example.com')
         c_owner_obj = self._make_assignment(
             category_obj, target_user, self.role_owner)
         p_owner_obj = self._make_assignment(
@@ -518,7 +520,6 @@ class TestSyncSourceData(
             'name': 'Some Name',
             'first_name': 'Some',
             'last_name': 'Name',
-            'email': 'newuser@example.com',
             'groups': [SOURCE_USER_GROUP]}
         remote_data['projects'][SOURCE_PROJECT_UUID][
             'roles'][new_role_uuid] = {
@@ -650,7 +651,8 @@ class TestSyncSourceData(
             username=SOURCE_USER_USERNAME,
             name=SOURCE_USER_NAME,
             first_name=SOURCE_USER_FIRST_NAME,
-            last_name=SOURCE_USER_LAST_NAME)
+            last_name=SOURCE_USER_LAST_NAME,
+            email=SOURCE_USER_EMAIL)
         c_owner_obj = self._make_assignment(
             category_obj, target_user, self.role_owner)
         p_owner_obj = self._make_assignment(
@@ -724,7 +726,8 @@ class TestSyncSourceData(
             username=SOURCE_USER_USERNAME,
             name=SOURCE_USER_NAME,
             first_name=SOURCE_USER_FIRST_NAME,
-            last_name=SOURCE_USER_LAST_NAME)
+            last_name=SOURCE_USER_LAST_NAME,
+            email=SOURCE_USER_EMAIL)
         c_owner_obj = self._make_assignment(
             category_obj, target_user, self.role_owner)
         p_owner_obj = self._make_assignment(

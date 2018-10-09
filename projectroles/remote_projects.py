@@ -279,42 +279,31 @@ class RemoteProjectAPI:
                         error_msg, uuid, p, action, remote_data)
                     return remote_data
 
-            # Check existing name under the same parent
-            try:
-                old_project = Project.objects.get(
-                    parent=parent, title=p['title'])
-
-                # Handle error
-                error_msg = '{} with the title "{}" exists under the same ' \
-                            'parent, unable to create'.format(
-                                old_project.type.capitalize(),
-                                old_project.title)
-                remote_data = handle_project_error(
-                    error_msg, uuid, p, action, remote_data)
-
-            except Project.DoesNotExist:
-                pass
-
             # Update project
             if project:
                 updated_fields = []
 
                 for k, v in p.items():
-                    if (k not in ['parent', 'sodar_uuid', 'roles'] and
+                    if (k not in ['parent', 'sodar_uuid', 'roles', 'readme'] and
                             hasattr(project, k) and
                             str(getattr(project, k)) != str(v)):
                         updated_fields.append(k)
 
-                if updated_fields:
+                # README is a special case
+                if project.readme.raw != p['readme']:
+                    updated_fields.append('readme')
+
+                if updated_fields or project.parent != parent:
                     project = update_obj(project, p, updated_fields)
 
                     # Manually update parent
                     if parent != project.parent:
                         project.parent = parent
                         project.save()
+                        updated_fields.append('parent')
 
-                    logger.info('Updated {}'.format(
-                        p['type'].lower()))
+                    logger.info('Updated {}: {}'.format(
+                        p['type'].lower(), ', '.join(sorted(updated_fields))))
                     remote_data['projects'][uuid]['status'] = 'updated'
 
                 else:
@@ -322,6 +311,23 @@ class RemoteProjectAPI:
 
             # Create new project
             else:
+                # Check existing title under the same parent
+                try:
+                    old_project = Project.objects.get(
+                        parent=parent, title=p['title'])
+
+                    # Handle error
+                    error_msg = '{} with the title "{}" exists under the ' \
+                                'same parent, unable to create'.format(
+                        old_project.type.capitalize(),
+                        old_project.title)
+                    remote_data = handle_project_error(
+                        error_msg, uuid, p, action, remote_data)
+                    return remote_data
+
+                except Project.DoesNotExist:
+                    pass
+
                 create_fields = ['title', 'description', 'readme']
                 create_values = {
                     k: v for k, v in p.items() if k in create_fields}
@@ -471,7 +477,6 @@ class RemoteProjectAPI:
                         's' if deleted_count != 1 else '',
                         ', '.join(deleted_users)))
 
-            logger.info('{} OK'.format(p['type'].capitalize()))
             return remote_data
 
         # Update projects
