@@ -534,7 +534,6 @@ class TestSyncSourceData(
         self.assertEqual(User.objects.all().count(), 3)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
 
-        target_user = User.objects.get(username=SOURCE_USER_USERNAME)
         new_user = User.objects.get(username=new_user_username)
 
         category_obj.refresh_from_db()
@@ -625,3 +624,235 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             new_role_uuid]['status'] = 'created'
         self.assertEqual(update_data, expected)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_remove_role(self):
+        """Test sync with existing project data and a removed role"""
+
+        # Set up target category and project
+        category_obj = self._make_project(
+            title=SOURCE_CATEGORY_TITLE,
+            type=PROJECT_TYPE_CATEGORY,
+            parent=None,
+            description=SOURCE_PROJECT_DESCRIPTION,
+            readme=SOURCE_PROJECT_README,
+            sodar_uuid=SOURCE_CATEGORY_UUID)
+        project_obj = self._make_project(
+            title=SOURCE_PROJECT_TITLE,
+            type=PROJECT_TYPE_PROJECT,
+            parent=category_obj,
+            description=SOURCE_PROJECT_DESCRIPTION,
+            readme=SOURCE_PROJECT_README,
+            sodar_uuid=SOURCE_PROJECT_UUID)
+
+        # Set up user and roles
+        target_user = self._make_sodar_user(
+            username=SOURCE_USER_USERNAME,
+            name=SOURCE_USER_NAME,
+            first_name=SOURCE_USER_FIRST_NAME,
+            last_name=SOURCE_USER_LAST_NAME)
+        c_owner_obj = self._make_assignment(
+            category_obj, target_user, self.role_owner)
+        p_owner_obj = self._make_assignment(
+            project_obj, target_user, self.role_owner)
+
+        # Set up RemoteProject objects
+        remote_cat = self._make_remote_project(
+            project_uuid=category_obj.sodar_uuid,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES)
+        remote_project = self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES)
+
+        # Add new user and contributor role in target site
+        new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
+        new_user = self.make_user(new_user_username)
+        new_role_obj = self._make_assignment(
+            project_obj, new_user, self.role_contributor)
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        remote_data = self.default_data
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        with self.assertRaises(RoleAssignment.DoesNotExist):
+            RoleAssignment.objects.get(
+                project__sodar_uuid=SOURCE_PROJECT_UUID,
+                role__name=PROJECT_ROLE_CONTRIBUTOR)
+
+        # Assert update_data changes
+        expected = dict(remote_data)
+        expected['projects'][SOURCE_PROJECT_UUID]['deleted_roles'] = \
+            [new_user_username]
+        self.assertEqual(update_data, expected)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_update_no_changes(self):
+        """Test sync with existing project data and no changes"""
+
+        # Set up target category and project
+        category_obj = self._make_project(
+            title=SOURCE_CATEGORY_TITLE,
+            type=PROJECT_TYPE_CATEGORY,
+            parent=None,
+            description=SOURCE_PROJECT_DESCRIPTION,
+            readme=SOURCE_PROJECT_README,
+            sodar_uuid=SOURCE_CATEGORY_UUID)
+        project_obj = self._make_project(
+            title=SOURCE_PROJECT_TITLE,
+            type=PROJECT_TYPE_PROJECT,
+            parent=category_obj,
+            description=SOURCE_PROJECT_DESCRIPTION,
+            readme=SOURCE_PROJECT_README,
+            sodar_uuid=SOURCE_PROJECT_UUID)
+
+        # Set up user and roles
+        target_user = self._make_sodar_user(
+            username=SOURCE_USER_USERNAME,
+            name=SOURCE_USER_NAME,
+            first_name=SOURCE_USER_FIRST_NAME,
+            last_name=SOURCE_USER_LAST_NAME)
+        c_owner_obj = self._make_assignment(
+            category_obj, target_user, self.role_owner)
+        p_owner_obj = self._make_assignment(
+            project_obj, target_user, self.role_owner)
+
+        # Set up RemoteProject objects
+        remote_cat = self._make_remote_project(
+            project_uuid=category_obj.sodar_uuid,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES)
+        remote_project = self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES)
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        remote_data = self.default_data
+
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        category_obj.refresh_from_db()
+        expected = {
+            'id': category_obj.pk,
+            'title': SOURCE_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': None,
+            'submit_status': SUBMIT_STATUS_OK,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID)}
+        model_dict = model_to_dict(category_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        c_owner_obj.refresh_from_db()
+        expected = {
+            'id': c_owner_obj.pk,
+            'project': category_obj.pk,
+            'user': target_user.pk,
+            'role': self.role_owner.pk,
+            'sodar_uuid': c_owner_obj.sodar_uuid}
+        self.assertEqual(model_to_dict(c_owner_obj), expected)
+
+        project_obj.refresh_from_db()
+        expected = {
+            'id': project_obj.pk,
+            'title': SOURCE_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': category_obj.pk,
+            'submit_status': SUBMIT_STATUS_OK,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID)}
+        model_dict = model_to_dict(project_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        p_owner_obj.refresh_from_db()
+        expected = {
+            'id': p_owner_obj.pk,
+            'project': project_obj.pk,
+            'user': target_user.pk,
+            'role': self.role_owner.pk,
+            'sodar_uuid': p_owner_obj.sodar_uuid}
+        self.assertEqual(model_to_dict(p_owner_obj), expected)
+
+        remote_cat_obj = RemoteProject.objects.get(
+            site=self.source_site,
+            project_uuid=category_obj.sodar_uuid)
+        expected = {
+            'id': remote_cat_obj.pk,
+            'site': self.source_site.pk,
+            'project_uuid': category_obj.sodar_uuid,
+            'level': REMOTE_LEVEL_READ_ROLES,
+            'date_access': remote_cat_obj.date_access,
+            'sodar_uuid': remote_cat_obj.sodar_uuid}
+        self.assertEqual(model_to_dict(remote_cat_obj), expected)
+
+        remote_project_obj = RemoteProject.objects.get(
+            site=self.source_site,
+            project_uuid=project_obj.sodar_uuid)
+        expected = {
+            'id': remote_project_obj.pk,
+            'site': self.source_site.pk,
+            'project_uuid': project_obj.sodar_uuid,
+            'level': REMOTE_LEVEL_READ_ROLES,
+            'date_access': remote_project_obj.date_access,
+            'sodar_uuid': remote_project_obj.sodar_uuid}
+        self.assertEqual(model_to_dict(remote_project_obj), expected)
+
+        # Assert no changes between update_data and remote_data
+        self.assertEqual(update_data, remote_data)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_create_no_access(self):
+        """Test sync with no READ_ROLE access set"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        remote_data = self.default_data
+
+        remote_data['projects'][SOURCE_CATEGORY_UUID]['level'] = \
+            REMOTE_LEVEL_READ_INFO
+        remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = \
+            REMOTE_LEVEL_READ_INFO
+
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        # Assert no changes between update_data and remote_data
+        self.assertEqual(update_data, remote_data)

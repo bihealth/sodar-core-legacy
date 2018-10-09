@@ -130,7 +130,7 @@ class RemoteProjectAPI:
         and return information of additions
         :param site: RemoteSite object for the source site
         :param remote_data: Data returned by get_target_data() in the source
-        :return: Dict with updated remote_data or None if nothing was changed
+        :return: Dict with updated remote_data
         :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
         """
 
@@ -139,12 +139,12 @@ class RemoteProjectAPI:
         logger.info(
             'Synchronizing user and project data from "{}"..'.format(site.name))
 
-        # Return None if no projects with READ_ROLES are included
+        # Return unchanged data if no projects with READ_ROLES are included
         if not {k: v for k, v in remote_data['projects'].items() if
                 v['type'] == PROJECT_TYPE_PROJECT and
                 v['level'] == REMOTE_LEVEL_READ_ROLES}.values():
             logger.info('No READ_ROLES access set, nothing to synchronize')
-            return None
+            return remote_data
 
         # Get default owner if remote projects have a local owner
         try:
