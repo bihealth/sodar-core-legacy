@@ -9,10 +9,12 @@ from django.utils import timezone
 
 from projectroles.models import Project, Role, RoleAssignment, RemoteProject, \
     SODAR_CONSTANTS
-
+from projectroles.plugins import get_backend_api
 
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
+
+APP_NAME = 'projectroles'
 
 
 # SODAR constants
@@ -124,26 +126,16 @@ class RemoteProjectAPI:
         return sync_data
 
     @classmethod
-    def sync_source_data(cls, site, remote_data):
+    def sync_source_data(cls, site, remote_data, request=None):
         """
         Synchronize remote user and project data into the local Django database
         and return information of additions
         :param site: RemoteSite object for the source site
         :param remote_data: Data returned by get_target_data() in the source
+        :param request: Request object (optional)
         :return: Dict with updated remote_data
         :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
         """
-
-        # TODO: Add timeline events
-
-        logger.info('Synchronizing data from "{}"..'.format(site.name))
-
-        # Return unchanged data if no projects with READ_ROLES are included
-        if not {k: v for k, v in remote_data['projects'].items() if
-                v['type'] == PROJECT_TYPE_PROJECT and
-                v['level'] == REMOTE_LEVEL_READ_ROLES}.values():
-            logger.info('No READ_ROLES access set, nothing to synchronize')
-            return remote_data
 
         # Get default owner if remote projects have a local owner
         try:
@@ -156,6 +148,20 @@ class RemoteProjectAPI:
                 settings.PROJECTROLES_ADMIN_OWNER)
             logger.error(error_msg)
             raise ValueError(error_msg)
+
+        # Set up timeline and default user
+        timeline = get_backend_api('timeline_backend')
+        if timeline:
+            tl_user = request.user if request else default_owner
+
+        logger.info('Synchronizing data from "{}"..'.format(site.name))
+
+        # Return unchanged data if no projects with READ_ROLES are included
+        if not {k: v for k, v in remote_data['projects'].items() if
+                v['type'] == PROJECT_TYPE_PROJECT and
+                v['level'] == REMOTE_LEVEL_READ_ROLES}.values():
+            logger.info('No READ_ROLES access set, nothing to synchronize')
+            return remote_data
 
         def update_obj(obj, data, fields):
             """Update object"""
@@ -189,6 +195,7 @@ class RemoteProjectAPI:
                 if updated_fields:
                     user = update_obj(user, u, updated_fields)
                     u['status'] = 'updated'
+
                     logger.info('Updated user: {} ({}): {}'.format(
                         u['username'], sodar_uuid,
                         ', '.join(updated_fields)))
@@ -302,9 +309,27 @@ class RemoteProjectAPI:
                         project.save()
                         updated_fields.append('parent')
 
+                    remote_data['projects'][uuid]['status'] = 'updated'
+
+                    if timeline:
+                        tl_desc = 'update project from remote site ' \
+                                  '"{{{}}}" ({})'.format(
+                                    'site', ', '.format(updated_fields))
+                        # TODO: Add extra_data
+                        tl_event = timeline.add_event(
+                            project=project,
+                            app_name=APP_NAME,
+                            user=tl_user,
+                            event_name='remote_project_update',
+                            description=tl_desc,
+                            status_type='OK')
+                        tl_event.add_object(
+                            obj=site,
+                            label='site',
+                            name=site.name)
+
                     logger.info('Updated {}: {}'.format(
                         p['type'].lower(), ', '.join(sorted(updated_fields))))
-                    remote_data['projects'][uuid]['status'] = 'updated'
 
                 else:
                     logger.info('Nothing to update')
@@ -334,11 +359,25 @@ class RemoteProjectAPI:
                 create_values['type'] = p['type']
                 create_values['parent'] = parent
                 create_values['sodar_uuid'] = uuid
-
                 project = Project.objects.create(**create_values)
 
-                logger.info('Created {}'.format(p['type'].lower()))
                 remote_data['projects'][uuid]['status'] = 'created'
+
+                if timeline:
+                    tl_event = timeline.add_event(
+                        project=project,
+                        app_name=APP_NAME,
+                        user=tl_user,
+                        event_name='remote_project_create',
+                        description='create project from remote site {site}',
+                        status_type='OK')
+                    # TODO: Add extra_data
+                    tl_event.add_object(
+                        obj=site,
+                        label='site',
+                        name=site.name)
+
+                logger.info('Created {}'.format(p['type'].lower()))
 
             # Create/update a RemoteProject object
             try:
@@ -435,6 +474,27 @@ class RemoteProjectAPI:
                         remote_data[
                             'projects'][str(project.sodar_uuid)]['roles'][
                             r_uuid]['status'] = 'updated'
+
+                        if timeline:
+                            tl_desc = 'update role to "{}" for {{{}}} ' \
+                                      'from site {{{}}}'.format(
+                                        role.name, 'user', 'site')
+                            tl_event = timeline.add_event(
+                                project=project,
+                                app_name=APP_NAME,
+                                user=tl_user,
+                                event_name='remote_role_update',
+                                description=tl_desc,
+                                status_type='OK')
+                            tl_event.add_object(
+                                obj=role_user,
+                                label='user',
+                                name=role_user.username)
+                            tl_event.add_object(
+                                obj=site,
+                                label='site',
+                                name=site.name)
+
                         logger.info('Updated role {}: {} = {}'.format(
                             r_uuid, role_user.username, role.name))
 
@@ -446,9 +506,31 @@ class RemoteProjectAPI:
                         'role': role,
                         'user': role_user}
                     role_as = RoleAssignment.objects.create(**role_values)
+
                     remote_data[
                         'projects'][str(project.sodar_uuid)]['roles'][r_uuid][
                         'status'] = 'created'
+
+                    if timeline:
+                        tl_desc = 'add role "{}" for {{{}}} ' \
+                                  'from site {{{}}}'.format(
+                                    role.name, 'user', 'site')
+                        tl_event = timeline.add_event(
+                            project=project,
+                            app_name=APP_NAME,
+                            user=tl_user,
+                            event_name='remote_role_create',
+                            description=tl_desc,
+                            status_type='OK')
+                        tl_event.add_object(
+                            obj=role_user,
+                            label='user',
+                            name=role_user.username)
+                        tl_event.add_object(
+                            obj=site,
+                            label='site',
+                            name=site.name)
+
                     logger.info('Created role {}: {} -> {}'.format(
                         r_uuid, role_user.username, role.name))
 
@@ -467,10 +549,36 @@ class RemoteProjectAPI:
             if deleted_count > 0:
                 deleted_users = sorted([
                     r.user.username for r in deleted_roles])
-                deleted_roles.delete()
+                remote_data['projects'][uuid]['deleted_roles'] = []
 
-                remote_data['projects'][uuid][
-                    'deleted_roles'] = deleted_users
+                for del_as in deleted_roles:
+                    del_user = del_as.user
+                    del_role = del_as.role
+                    del_as.delete()
+
+                    remote_data['projects'][uuid][
+                        'deleted_roles'].append(del_user.username)
+
+                    if timeline:
+                        tl_desc = 'remove role "{}" from {{{}}} ' \
+                                  'by site {{{}}}'.format(
+                                    del_role.name, 'user', 'site')
+                        tl_event = timeline.add_event(
+                            project=project,
+                            app_name=APP_NAME,
+                            user=tl_user,
+                            event_name='remote_role_delete',
+                            description=tl_desc,
+                            status_type='OK')
+                        tl_event.add_object(
+                            obj=del_user,
+                            label='user',
+                            name=del_user.username)
+                        tl_event.add_object(
+                            obj=site,
+                            label='site',
+                            name=site.name)
+
                 logger.info(
                     'Deleted {} removed role{} for: {}'.format(
                         deleted_count,

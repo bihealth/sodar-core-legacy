@@ -1,5 +1,4 @@
 """Test for the remote projects API in the projectroles app"""
-from datetime import datetime as dt
 import uuid
 
 from django.conf import settings
@@ -366,6 +365,7 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
+        # self.assertEqual(Time)
 
         remote_data = self.default_data
         update_data = self.remote_api.sync_source_data(
