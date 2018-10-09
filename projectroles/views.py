@@ -1875,9 +1875,14 @@ class RemoteProjectsSyncView(
             return HttpResponseRedirect(redirect_url)
 
         # Sync data
-        # context['update_data'] = remote_api.sync_source_data(
-        #     site, remote_data)
+        update_data = remote_api.sync_source_data(site, remote_data, request)
 
+        if remote_data == update_data:
+            messages.warning(
+                request, 'No changes detected in data, nothing to synchronize')
+            return HttpResponseRedirect(redirect_url)
+
+        context['update_data'] = update_data
         return super(TemplateView, self).render_to_response(context)
 
 
