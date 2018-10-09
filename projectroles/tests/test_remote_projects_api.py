@@ -460,6 +460,39 @@ class TestSyncSourceData(
         self.assertEqual(update_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_create_local_owner(self):
+        """Test sync with non-existing project data and a local owner"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        remote_data = self.default_data
+
+        remote_data['users'][SOURCE_USER_UUID]['username'] = 'source_admin'
+        remote_data['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE_UUID]['user'] = 'source_admin'
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE_UUID]['user'] = 'source_admin'
+
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        self.assertEqual(category_obj.get_owner().user, self.admin_user)
+
+        project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(project_obj.get_owner().user, self.admin_user)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_update(self):
         """Test sync with existing project data and READ_ROLE access"""
 
