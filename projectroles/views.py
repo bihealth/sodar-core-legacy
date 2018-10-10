@@ -1916,13 +1916,11 @@ class RemoteProjectGetAPIView(BaseAPIView):
     def get(self, request, *args, **kwargs):
         remote_api = RemoteProjectAPI()
         secret = kwargs['secret']
-        host = request.META.get('HTTP_HOST')
 
         try:
             target_site = RemoteSite.objects.get(
                 mode=SITE_MODE_TARGET,
-                secret=secret,
-                url__contains=host)
+                secret=secret)
 
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
