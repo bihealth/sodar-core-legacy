@@ -136,8 +136,6 @@ class RemoteProjectAPI:
         :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
         """
 
-        print('remote_data:\n{}'.format(remote_data))   # DEBUG
-
         # Get default owner if remote projects have a local owner
         try:
             default_owner = User.objects.get(
