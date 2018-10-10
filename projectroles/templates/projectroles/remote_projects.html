@@ -55,11 +55,13 @@
         </div>
       </div>
 
-      <div class="container-fluid text-right">
-        <button type="submit" class="btn btn-primary">
-          <i class="fa fa-pencil"></i> Update Project Access
-        </button>
-      </div>
+      {% if site_mode == 'SOURCE' %}
+        <div class="container-fluid text-right">
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-pencil"></i> Update Project Access
+          </button>
+        </div>
+      {% endif %}
 
     </form>
   {% endif %}

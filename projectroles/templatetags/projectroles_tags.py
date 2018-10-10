@@ -300,3 +300,13 @@ def get_remote_access_legend(level):
         return 'N/A'
 
     return SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
+
+
+@register.simple_tag
+def get_remote_project_obj(site, project):
+    try:
+        return RemoteProject.objects.get(
+            site=site, project_uuid=project.sodar_uuid)
+
+    except RemoteProject.DoesNotExist:
+        return None

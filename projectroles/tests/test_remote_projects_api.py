@@ -431,6 +431,7 @@ class TestSyncSourceData(
             'id': remote_cat_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': category_obj.sodar_uuid,
+            'project': category_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_cat_obj.date_access,
             'sodar_uuid': remote_cat_obj.sodar_uuid}
@@ -443,6 +444,7 @@ class TestSyncSourceData(
             'id': remote_project_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_project_obj.date_access,
             'sodar_uuid': remote_project_obj.sodar_uuid}
@@ -598,10 +600,12 @@ class TestSyncSourceData(
         # Set up RemoteProject objects
         remote_cat = self._make_remote_project(
             project_uuid=category_obj.sodar_uuid,
+            project=category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
         remote_project = self._make_remote_project(
             project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
 
@@ -703,6 +707,7 @@ class TestSyncSourceData(
             'id': remote_cat_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': category_obj.sodar_uuid,
+            'project': category_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_cat_obj.date_access,
             'sodar_uuid': remote_cat_obj.sodar_uuid}
@@ -715,6 +720,7 @@ class TestSyncSourceData(
             'id': remote_project_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_project_obj.date_access,
             'sodar_uuid': remote_project_obj.sodar_uuid}
@@ -840,10 +846,12 @@ class TestSyncSourceData(
         # Set up RemoteProject objects
         remote_cat = self._make_remote_project(
             project_uuid=category_obj.sodar_uuid,
+            project=category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
         remote_project = self._make_remote_project(
             project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
 
@@ -915,6 +923,7 @@ class TestSyncSourceData(
             'id': remote_cat_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': category_obj.sodar_uuid,
+            'project': category_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_cat_obj.date_access,
             'sodar_uuid': remote_cat_obj.sodar_uuid}
@@ -927,6 +936,7 @@ class TestSyncSourceData(
             'id': remote_project_obj.pk,
             'site': self.source_site.pk,
             'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_project_obj.date_access,
             'sodar_uuid': remote_project_obj.sodar_uuid}

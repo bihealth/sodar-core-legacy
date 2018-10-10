@@ -141,7 +141,7 @@ class RemoteProjectMixin:
 
     @classmethod
     def _make_remote_project(
-            cls, project_uuid, site, level, date_access=None):
+            cls, project_uuid, site, level, date_access=None, project=None):
         """Make and save a RemoteProject"""
         if type(project_uuid) == str:
             project_uuid = uuid.UUID(project_uuid)
@@ -150,7 +150,8 @@ class RemoteProjectMixin:
             'project_uuid': project_uuid,
             'site': site,
             'level': level,
-            'date_access': date_access}
+            'date_access': date_access,
+            'project': project}
         remote_project = RemoteProject(**values)
         remote_project.save()
         return remote_project
@@ -850,13 +851,15 @@ class TestRemoteProject(
         self.remote_project = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            project=self.project)
 
     def test_initialization(self):
         """Test RemoteProject initialization"""
         expected = {
             'id': self.remote_project.pk,
             'project_uuid': self.project.sodar_uuid,
+            'project': self.project.pk,
             'site': self.site.pk,
             'level': SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
             'date_access': None,

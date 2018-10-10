@@ -1,6 +1,8 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
+{% get_remote_project_obj site project as remote_project %}
+
 <tr>
   <td class="text-nowrap align-middle">
     <div class="sodar-overflow-container">
@@ -8,19 +10,22 @@
     </div>
   </td>
   <td class="text-nowrap align-middle">
-    {% if project.date_access %}
-      {{ project.date_access|date:'Y-m-d H:i' }}
+    {% if remote_project.date_access %}
+      {{ remote_project.date_access|date:'Y-m-d H:i' }}
     {% else %}
       <span class="text-muted">Never</span>
     {% endif %}
   </td>
-  <td class="align-middle py-0">
+
     {% if site_mode == 'SOURCE' %}
-      {% autoescape off %}
-        {% get_target_project_select site project %}
-      {% endautoescape %}
+      <td class="align-middle py-0">
+        {% autoescape off %}
+          {% get_target_project_select site project %}
+        {% endautoescape %}
+      </td>
     {% else %}
-      Level goes here for TARGET
+      <td>
+        {% get_remote_access_legend remote_project.level %}
+      </td>
     {% endif %}
-  </td>
 </tr>

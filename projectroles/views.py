@@ -1671,26 +1671,23 @@ class RemoteProjectListView(
         context = super(RemoteProjectListView, self).get_context_data(
             *args, **kwargs)
 
-        # Current site
-        try:
-            context['site'] = RemoteSite.objects.get(
-                sodar_uuid=self.kwargs['remotesite'])
-
-        except RemoteSite.DoesNotExist:
-            pass
+        site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
+        context['site'] = site
 
         # Projects in SOURCE mode: all local projects of type PROJECT
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
-            projects = Project.objects.filter(
-                type=PROJECT_TYPE_PROJECT)
-
-            context['projects'] = sorted(
-                [p for p in projects],
-                key=lambda x: x.get_full_title())
+            projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
 
         # Projects in TARGET mode: retrieve from source
         else:   # SITE_MODE_TARGET
-            pass    # TODO
+            remote_uuids = [
+                p.project_uuid for p in site.projects.all()]
+            projects = Project.objects.filter(
+                type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids)
+
+        if projects:
+            context['projects'] = sorted(
+                [p for p in projects], key=lambda x: x.get_full_title())
 
         return context
 

@@ -768,6 +768,14 @@ class RemoteProject(models.Model):
         unique=False,
         help_text='Project UUID')
 
+    #: Related project object (if created locally)
+    project = models.ForeignKey(
+        Project,
+        related_name='remotes',
+        blank=True,
+        null=True,
+        help_text='Related project object (if created locally)')
+
     #: Related remote SODAR site
     site = models.ForeignKey(
         RemoteSite,

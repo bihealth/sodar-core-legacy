@@ -384,6 +384,7 @@ class RemoteProjectAPI:
                 remote_project = RemoteProject.objects.get(
                     site=site, project_uuid=project.sodar_uuid)
                 remote_project.level = p['level']
+                remote_project.project = project
                 remote_project.date_access = timezone.now()
                 remote_action = 'updated'
 
@@ -391,6 +392,7 @@ class RemoteProjectAPI:
                 remote_project = RemoteProject.objects.create(
                     site=site,
                     project_uuid=project.sodar_uuid,
+                    project=project,
                     level=p['level'],
                     date_access=timezone.now())
                 remote_action = 'created'
