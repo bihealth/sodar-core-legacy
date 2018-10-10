@@ -459,6 +459,78 @@ class TestSyncSourceData(
         self.assertEqual(update_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_sync_create_multiple(self):
+        """Test sync with non-existing project data and multiple projects"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        remote_data = self.default_data
+
+        new_project_uuid = str(uuid.uuid4())
+        new_project_title = 'New Project Title'
+        new_role_uuid = str(uuid.uuid4())
+
+        remote_data['projects'][new_project_uuid] = {
+            'title': new_project_title,
+            'type': PROJECT_TYPE_PROJECT,
+            'level': REMOTE_LEVEL_READ_ROLES,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'readme': SOURCE_PROJECT_README,
+            'parent_uuid': SOURCE_CATEGORY_UUID,
+            'roles': {
+                new_role_uuid: {
+                    'user': SOURCE_USER_USERNAME,
+                    'role': self.role_owner.name
+                }
+            }
+        }
+
+        update_data = self.remote_api.sync_source_data(
+            self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 3)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+
+        new_user = User.objects.get(username=SOURCE_USER_USERNAME)
+
+        category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
+        new_project_obj = Project.objects.get(sodar_uuid=new_project_uuid)
+        expected = {
+            'id': new_project_obj.pk,
+            'title': new_project_title,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': SOURCE_PROJECT_DESCRIPTION,
+            'parent': category_obj.pk,
+            'submit_status': SUBMIT_STATUS_OK,
+            'sodar_uuid': uuid.UUID(new_project_uuid)}
+        model_dict = model_to_dict(new_project_obj)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        p_new_owner_obj = RoleAssignment.objects.get(sodar_uuid=new_role_uuid)
+        expected = {
+            'id': p_new_owner_obj.pk,
+            'project': new_project_obj.pk,
+            'user': new_user.pk,
+            'role': self.role_owner.pk,
+            'sodar_uuid': uuid.UUID(new_role_uuid)}
+        self.assertEqual(model_to_dict(p_new_owner_obj), expected)
+
+        # Assert update_data changes
+        expected = dict(remote_data)
+        expected['projects'][new_project_uuid]['status'] = 'created'
+        expected['projects'][new_project_uuid]['roles'][
+            new_role_uuid]['status'] = 'created'
+        self.assertEqual(update_data, expected)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_create_local_owner(self):
         """Test sync with non-existing project data and a local owner"""
 

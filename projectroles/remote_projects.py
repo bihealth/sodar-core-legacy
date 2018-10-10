@@ -238,6 +238,7 @@ class RemoteProjectAPI:
         ##########################
         # Categories and Projects
         ##########################
+        updated_parents = []
 
         def update_project(uuid, p, remote_data):
             """Create or update project and its parents"""
@@ -252,10 +253,11 @@ class RemoteProjectAPI:
                 remote_data['projects'][uuid]['status_msg'] = error_msg
                 return remote_data
 
-            if p['parent_uuid']:
+            # Add/update parents if not yet handled
+            if p['parent_uuid'] and p['parent_uuid'] not in updated_parents:
                 c = remote_data['projects'][p['parent_uuid']]
-                remote_data = update_project(
-                    p['parent_uuid'], c, remote_data)
+                remote_data = update_project(p['parent_uuid'], c, remote_data)
+                updated_parents.append(p['parent_uuid'])
 
             project = None
             parent = None
@@ -266,8 +268,7 @@ class RemoteProjectAPI:
 
             # Get existing project
             try:
-                project = Project.objects.get(
-                    type=p['type'], sodar_uuid=uuid)
+                project = Project.objects.get(type=p['type'], sodar_uuid=uuid)
                 action = 'update'
 
             except Project.DoesNotExist:
@@ -536,9 +537,7 @@ class RemoteProjectAPI:
                         r_uuid, role_user.username, role.name))
 
             # Remove deleted user roles
-            current_users = [
-                v['user'] for k, v in p[
-                    'roles'].items()]
+            current_users = [v['user'] for k, v in p['roles'].items()]
             current_users.append(default_owner.username)
 
             deleted_roles = RoleAssignment.objects.filter(
@@ -548,8 +547,7 @@ class RemoteProjectAPI:
             deleted_count = deleted_roles.count()
 
             if deleted_count > 0:
-                deleted_users = sorted([
-                    r.user.username for r in deleted_roles])
+                deleted_users = sorted([r.user.username for r in deleted_roles])
                 remote_data['projects'][uuid]['deleted_roles'] = []
 
                 for del_as in deleted_roles:
