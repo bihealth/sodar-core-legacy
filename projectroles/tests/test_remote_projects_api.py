@@ -244,9 +244,9 @@ class TestGetTargetData(
                     'description': self.category.description,
                     'readme': self.category.readme.raw,
                     'roles': {
-                        str(self.project_owner_as.sodar_uuid): {
-                            'user': self.project_owner_as.user.username,
-                            'role': self.project_owner_as.role.name
+                        str(self.category_owner_as.sodar_uuid): {
+                            'user': self.category_owner_as.user.username,
+                            'role': self.category_owner_as.role.name
                         }
                     }
                 },

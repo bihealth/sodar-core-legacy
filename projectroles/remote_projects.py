@@ -76,7 +76,7 @@ class RemoteProjectAPI:
 
                 if project_level == REMOTE_LEVEL_READ_ROLES:
                     cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-                    role_as = project.get_owner()
+                    role_as = category.get_owner()
                     cat_data['roles'] = {}
                     cat_data['roles'][str(role_as.sodar_uuid)] = {
                         'user': role_as.user.username,
@@ -135,6 +135,8 @@ class RemoteProjectAPI:
         :return: Dict with updated remote_data
         :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
         """
+
+        print('remote_data:\n{}'.format(remote_data))   # DEBUG
 
         # Get default owner if remote projects have a local owner
         try:
@@ -439,69 +441,76 @@ class RemoteProjectAPI:
 
                 # Update RoleAssignment if it exists and is changed
                 as_updated = False
+                role_query = {'project__sodar_uuid': project.sodar_uuid}
+
+                if r['role'] == PROJECT_ROLE_OWNER:
+                    role_query['role__name'] = PROJECT_ROLE_OWNER
+
+                else:
+                    role_query['user'] = role_user
 
                 try:
-                    if r['role'] == PROJECT_ROLE_OWNER:     # Owner = special
-                        old_as = RoleAssignment.objects.get(
-                            project__sodar_uuid=project.sodar_uuid,
-                            role__name=PROJECT_ROLE_OWNER)
+                    old_as = RoleAssignment.objects.get(**role_query)
 
-                        if old_as.user != role_user:
-                            as_updated = True
-
-                            # Delete existing role of the new owner if it exists
-                            try:
-                                RoleAssignment.objects.get(
-                                    project__sodar_uuid=project.sodar_uuid,
-                                    user=role_user).delete()
-                                logger.debug(
-                                    'Deleted existing owner role from '
-                                    'user "{}"'.format(role_user.username))
-
-                            except RoleAssignment.DoesNotExist:
-                                pass
-
-                    else:
-                        old_as = RoleAssignment.objects.get(
-                            project__sodar_uuid=project.sodar_uuid,
-                            user=role_user)
-
-                        if old_as.role != role:
-                            as_updated = True
-
-                    if as_updated:
-                        old_as.role = role
-                        old_as.user = role_user
-                        old_as.save()
-                        remote_data[
-                            'projects'][str(project.sodar_uuid)]['roles'][
-                            r_uuid]['status'] = 'updated'
-
-                        if timeline:
-                            tl_desc = 'update role to "{}" for {{{}}} ' \
-                                      'from site {{{}}}'.format(
-                                        role.name, 'user', 'site')
-                            tl_event = timeline.add_event(
-                                project=project,
-                                app_name=APP_NAME,
-                                user=tl_user,
-                                event_name='remote_role_update',
-                                description=tl_desc,
-                                status_type='OK')
-                            tl_event.add_object(
-                                obj=role_user,
-                                label='user',
-                                name=role_user.username)
-                            tl_event.add_object(
-                                obj=site,
-                                label='site',
-                                name=site.name)
-
-                        logger.info('Updated role {}: {} = {}'.format(
-                            r_uuid, role_user.username, role.name))
-
-                # Create a new RoleAssignment if not found
                 except RoleAssignment.DoesNotExist:
+                    old_as = None
+
+                if old_as:
+                    # Owner handling
+                    if (r['role'] == PROJECT_ROLE_OWNER and
+                            old_as.user != role_user):
+                        as_updated = True
+
+                        # Delete existing role of the new owner if it exists
+                        try:
+                            RoleAssignment.objects.get(
+                                project__sodar_uuid=project.sodar_uuid,
+                                user=role_user).delete()
+                            logger.debug(
+                                'Deleted existing owner role from '
+                                'user "{}"'.format(role_user.username))
+
+                        except RoleAssignment.DoesNotExist:
+                            pass
+
+                    # Handling of other roles
+                    elif (r['role'] != PROJECT_ROLE_OWNER and
+                            old_as.role != role):
+                        as_updated = True
+
+                if as_updated:
+                    old_as.role = role
+                    old_as.user = role_user
+                    old_as.save()
+                    remote_data[
+                        'projects'][str(project.sodar_uuid)]['roles'][
+                        r_uuid]['status'] = 'updated'
+
+                    if timeline:
+                        tl_desc = 'update role to "{}" for {{{}}} ' \
+                                  'from site {{{}}}'.format(
+                                    role.name, 'user', 'site')
+                        tl_event = timeline.add_event(
+                            project=project,
+                            app_name=APP_NAME,
+                            user=tl_user,
+                            event_name='remote_role_update',
+                            description=tl_desc,
+                            status_type='OK')
+                        tl_event.add_object(
+                            obj=role_user,
+                            label='user',
+                            name=role_user.username)
+                        tl_event.add_object(
+                            obj=site,
+                            label='site',
+                            name=site.name)
+
+                    logger.info('Updated role {}: {} = {}'.format(
+                        r_uuid, role_user.username, role.name))
+
+                # Create a new RoleAssignment
+                elif not old_as:
                     role_values = {
                         'sodar_uuid': r_uuid,
                         'project': project,
