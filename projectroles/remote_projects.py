@@ -404,6 +404,7 @@ class RemoteProjectAPI:
 
             # Create/update roles
             # NOTE: Only update AD/LDAP user roles and local owner roles
+            # TODO: Refactor this
             for r_uuid, r in {
                     k: v for k, v in p['roles'].items() if
                     '@' in v['user'] or
@@ -426,13 +427,8 @@ class RemoteProjectAPI:
 
                 # If role is "project owner" for a non-LDAP user, get
                 # the default local user instead
-                if (r['role'] == PROJECT_ROLE_OWNER and
-                        '@' not in r['user']):
+                if r['role'] == PROJECT_ROLE_OWNER and '@' not in r['user']:
                     role_user = default_owner
-                    logger.info(
-                        'Non-LDAP/AD user "{}" set as owner, assigning role '
-                        'to user "{}"'.format(
-                            r['user'], default_owner.username))
 
                 else:
                     role_user = User.objects.get(username=r['user'])
@@ -453,11 +449,20 @@ class RemoteProjectAPI:
                 except RoleAssignment.DoesNotExist:
                     old_as = None
 
-                if old_as:
-                    # Owner handling
-                    if (r['role'] == PROJECT_ROLE_OWNER and
-                            old_as.user != role_user):
+                # Owner updating
+                if old_as and r['role'] == PROJECT_ROLE_OWNER:
+                    # Update user or local admin user
+                    if (('@' in r['user'] and old_as.user != role_user) or
+                            (role_user == default_owner and
+                             project.get_owner().user != default_owner)):
                         as_updated = True
+
+                        # Notify of assigning role to default owner
+                        if role_user == default_owner:
+                            logger.info(
+                                'Non-LDAP/AD user "{}" set as owner, '
+                                'assigning role to user "{}"'.format(
+                                    r['user'], default_owner.username))
 
                         # Delete existing role of the new owner if it exists
                         try:
@@ -471,10 +476,10 @@ class RemoteProjectAPI:
                         except RoleAssignment.DoesNotExist:
                             pass
 
-                    # Handling of other roles
-                    elif (r['role'] != PROJECT_ROLE_OWNER and
-                            old_as.role != role):
-                        as_updated = True
+                # Updating of other roles
+                elif (old_as and r['role'] != PROJECT_ROLE_OWNER and
+                        old_as.role != role):
+                    as_updated = True
 
                 if as_updated:
                     old_as.role = role
