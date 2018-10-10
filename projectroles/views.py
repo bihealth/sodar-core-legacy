@@ -1877,7 +1877,13 @@ class RemoteProjectsSyncView(
         # Sync data
         update_data = remote_api.sync_source_data(site, remote_data, request)
 
-        if remote_data == update_data:
+        # HACK: Check for updates in a rather crude way
+        updated_users = [u for u in update_data['users'] if 'status' in u]
+        updated_projects = [
+            p for p in update_data['projects'] if
+            'status' in p or ('roles' in p and 'status' in p['roles'])]
+
+        if updated_users or updated_projects:
             messages.warning(
                 request, 'No changes detected in data, nothing to synchronize')
             return HttpResponseRedirect(redirect_url)
