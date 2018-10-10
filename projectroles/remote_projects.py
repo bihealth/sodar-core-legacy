@@ -402,7 +402,11 @@ class RemoteProjectAPI:
                 return remote_data
 
             # Create/update roles
-            for r_uuid, r in p['roles'].items():
+            # NOTE: Only update AD/LDAP user roles and local owner roles
+            for r_uuid, r in {
+                    k: v for k, v in p['roles'].items() if
+                    '@' in v['user'] or
+                    v['role'] == PROJECT_ROLE_OWNER}.items():
                 # Ensure the Role exists
                 try:
                     role = Role.objects.get(name=r['role'])
@@ -425,11 +429,9 @@ class RemoteProjectAPI:
                         '@' not in r['user']):
                     role_user = default_owner
                     logger.info(
-                        'Non-LDAP/AD user "{}" set as owner for project '
-                        '"{}" ({}), assigning role to user '
-                        '"{}"'.format(
-                            r['user'], project.title,
-                            project.sodar_uuid, default_owner.username))
+                        'Non-LDAP/AD user "{}" set as owner, assigning role '
+                        'to user "{}"'.format(
+                            r['user'], default_owner.username))
 
                 else:
                     role_user = User.objects.get(username=r['user'])
