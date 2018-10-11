@@ -50,117 +50,71 @@
     </div>
 
   {% else %}
-    <div class="card mb-3">
-      <div class="card-header">
-        <h4><i class="fa fa-user"></i> Updated Users</h4>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
-               id="sodar-pr-remote-update-table-users">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for u_uuid, u in update_data.users.items %}
-              {% if u.status %}
-                <tr>
-                  <td>
-                    {% get_user_by_username u.username as user_obj %}
-                    {% if user_obj %}
-                      {% autoescape off %}
-                        {% get_user_html user_obj %}
-                      {% endautoescape %}
-                    {% else %}
-                      {{ u.username }}
-                    {% endif %}
-                  </td>
-                  <td class="text-nowrap {% if u.status == 'error' %}text-danger{% else %}text-success{% endif %}">
-                    {{ u.status | title }}
+    {% if user_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4><i class="fa fa-user"></i> Users ({{ user_count }})</h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-users">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u_uuid, u in update_data.users.items %}
+                {% if u.status %}
+                  <tr>
+                    <td>
+                      {% get_user_by_username u.username as user_obj %}
+                      {% if user_obj %}
+                        {% autoescape off %}
+                          {% get_user_html user_obj %}
+                        {% endautoescape %}
+                      {% else %}
+                        {{ u.username }}
+                      {% endif %}
+                    </td>
+                    <td class="text-nowrap {% if u.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                      {{ u.status | title }}
 
-                    {% if u.status_msg %}
-                      <a tabindex="0" data-toggle="popover"
-                         data-trigger="focus" data-placement="top" data-html="true"
-                         data-content="{{ u.status_msg }}">
-                        <i class="fa fa-info-circle text-info"></i>
-                      </a>
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
+                      {% if u.status_msg %}
+                        <a tabindex="0" data-toggle="popover"
+                           data-trigger="focus" data-placement="top" data-html="true"
+                           data-content="{{ u.status_msg }}">
+                          <i class="fa fa-info-circle text-info"></i>
+                        </a>
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    {% endif %}
 
-    <div class="card mb-3">
-      <div class="card-header">
-        <h4><i class="fa fa-cubes"></i> Updated Categories and Projects</h4>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
-               id="sodar-pr-remote-update-table-projects">
-          <thead>
-            <tr>
-              <th>Category/Project</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p_uuid, p in update_data.projects.items %}
-              {% if p.status %}
-                <tr>
-                  <td>
-                    {% get_project_by_uuid p_uuid as p_obj %}
-                    {% if p_obj %}
-                      {% autoescape off %}
-                        {% get_project_link p_obj full_title=True %}
-                      {% endautoescape %}
-                    {% else %}
-                      {{ p.title }}
-                    {% endif %}
-                  </td>
-                  <td class="text-nowrap {% if p.status == 'error' %}text-danger{% else %}text-success{% endif %}">
-                    {{ p.status | title }}
-
-                    {% if p.status_msg %}
-                      <a tabindex="0" data-toggle="popover"
-                         data-trigger="focus" data-placement="top" data-html="true"
-                         data-content="{{ p.status_msg }}">
-                        <i class="fa fa-info-circle text-info"></i>
-                      </a>
-                    {% endif %}
-                  </td>
-                </tr>
-              {% endif %}
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="card mb-3">
-      <div class="card-header">
-        <h4><i class="fa fa-users"></i> Updated Members</h4>
-      </div>
-      <div class="card-body p-0">
-        <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
-               id="sodar-pr-remote-update-table-roles">
-          <thead>
-            <tr>
-              <th>Project</th>
-              <th>User</th>
-              <th>Role</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p_uuid, p in update_data.projects.items %}
-              {% for r_uuid, r in p.roles.items %}
-                {% if r.status %}
+    {% if project_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4><i class="fa fa-cubes"></i> Categories and Projects ({{ project_count }})</h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-projects">
+            <thead>
+              <tr>
+                <th>Category/Project</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p_uuid, p in update_data.projects.items %}
+                {% if p.status %}
                   <tr>
                     <td>
                       {% get_project_by_uuid p_uuid as p_obj %}
@@ -172,26 +126,13 @@
                         {{ p.title }}
                       {% endif %}
                     </td>
-                    <td>
-                      {% get_user_by_username r.user as user_obj %}
-                      {% if user_obj %}
-                        {% autoescape off %}
-                          {% get_user_html user_obj %}
-                        {% endautoescape %}
-                      {% else %}
-                        {{ r.user }}
-                      {% endif %}
-                    </td>
-                    <td>
-                      {{ r.role }}
-                    </td>
-                    <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">
-                      {{ r.status | title }}
+                    <td class="text-nowrap {% if p.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                      {{ p.status | title }}
 
-                      {% if r.status_msg %}
+                      {% if p.status_msg %}
                         <a tabindex="0" data-toggle="popover"
                            data-trigger="focus" data-placement="top" data-html="true"
-                           data-content="{{ r.status_msg }}">
+                           data-content="{{ p.status_msg }}">
                           <i class="fa fa-info-circle text-info"></i>
                         </a>
                       {% endif %}
@@ -199,11 +140,76 @@
                   </tr>
                 {% endif %}
               {% endfor %}
-            {% endfor %}
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    {% endif %}
+
+    {% if role_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4><i class="fa fa-users"></i> Members ({{ role_count }})</h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-roles">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p_uuid, p in update_data.projects.items %}
+                {% for r_uuid, r in p.roles.items %}
+                  {% if r.status %}
+                    <tr>
+                      <td>
+                        {% get_project_by_uuid p_uuid as p_obj %}
+                        {% if p_obj %}
+                          {% autoescape off %}
+                            {% get_project_link p_obj full_title=True %}
+                          {% endautoescape %}
+                        {% else %}
+                          {{ p.title }}
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% get_user_by_username r.user as user_obj %}
+                        {% if user_obj %}
+                          {% autoescape off %}
+                            {% get_user_html user_obj %}
+                          {% endautoescape %}
+                        {% else %}
+                          {{ r.user }}
+                        {% endif %}
+                      </td>
+                      <td>
+                        {{ r.role }}
+                      </td>
+                      <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                        {{ r.status | title }}
+
+                        {% if r.status_msg %}
+                          <a tabindex="0" data-toggle="popover"
+                             data-trigger="focus" data-placement="top" data-html="true"
+                             data-content="{{ r.status_msg }}">
+                            <i class="fa fa-info-circle text-info"></i>
+                          </a>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
 
   {% endif %}
 

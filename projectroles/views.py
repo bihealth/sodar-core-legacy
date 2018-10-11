@@ -1893,6 +1893,9 @@ class RemoteProjectsSyncView(
             return HttpResponseRedirect(redirect_url)
 
         context['update_data'] = update_data
+        context['user_count'] = user_count
+        context['project_count'] = project_count
+        context['role_count'] = role_count
         messages.success(
             request, 'Project data updated according to source site')
         return super(TemplateView, self).render_to_response(context)
