@@ -432,6 +432,17 @@ class RemoteProjectAPI:
                 if r['role'] == PROJECT_ROLE_OWNER and '@' not in r['user']:
                     role_user = default_owner
 
+                    # Notify of assigning role to default owner
+                    status_msg = 'Non-LDAP/AD user "{}" set as owner, ' \
+                                 'assigning role to user "{}"'.format(
+                                    r['user'], default_owner.username)
+
+                    remote_data['projects'][uuid]['roles'][
+                        r_uuid]['user'] = default_owner.username
+                    remote_data['projects'][uuid]['roles'][
+                        r_uuid]['status_msg'] = status_msg
+                    logger.info(status_msg)
+
                 else:
                     role_user = User.objects.get(username=r['user'])
 
@@ -458,13 +469,6 @@ class RemoteProjectAPI:
                             (role_user == default_owner and
                              project.get_owner().user != default_owner)):
                         as_updated = True
-
-                        # Notify of assigning role to default owner
-                        if role_user == default_owner:
-                            logger.info(
-                                'Non-LDAP/AD user "{}" set as owner, '
-                                'assigning role to user "{}"'.format(
-                                    r['user'], default_owner.username))
 
                         # Delete existing role of the new owner if it exists
                         try:

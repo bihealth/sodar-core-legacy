@@ -5,14 +5,17 @@ import mistune
 
 from django import template
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
 from django.template.loader import get_template
 from django.urls import reverse
 
 import projectroles
+from projectroles.models import Project
 from projectroles.plugins import get_backend_api
 
 site = import_module(settings.SITE_PACKAGE)
+User = get_user_model()
 
 register = template.Library()
 
@@ -82,6 +85,7 @@ def get_project_title_html(project):
     ret += project.title
     return ret
 
+
 @register.simple_tag
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
@@ -91,11 +95,11 @@ def get_user_html(user):
 
 
 @register.simple_tag
-def get_project_link(project):
-    """Return link to project with simple title"""
+def get_project_link(project, full_title=False):
+    """Return link to project with a simple or full title"""
     return '<a href="{}">{}</a>'.format(
         reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
-        project.title)
+        project.get_full_title() if full_title else project.title)
 
 
 @register.simple_tag
@@ -148,3 +152,23 @@ def template_exists(path):
 
     except template.TemplateDoesNotExist:
         return False
+
+
+@register.simple_tag
+def get_project_by_uuid(sodar_uuid):
+    """Return Project by sodar_uuid"""
+    try:
+        return Project.objects.get(sodar_uuid=sodar_uuid)
+
+    except Project.DoesNotExist:
+        return None
+
+
+@register.simple_tag
+def get_user_by_username(username):
+    """Return User by username"""
+    try:
+        return User.objects.get(username=username)
+
+    except User.DoesNotExist:
+        return None

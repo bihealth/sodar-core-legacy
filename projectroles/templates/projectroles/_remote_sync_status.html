@@ -1,0 +1,9 @@
+{# Expected param: status_msg #}
+
+{% if status_msg %}
+  <a tabindex="0" data-toggle="popover"
+     data-trigger="focus" data-placement="top" data-html="true"
+     data-content="{{ status_msg }}">
+    <i class="fa fa-info-circle text-info"></i>
+  </a>
+{% endif %}
