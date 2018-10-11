@@ -27,8 +27,114 @@
     </div>
 
   {% else %}
-    <div class="alert alert-success">
-      Remote data received, to be printed here for confirmation..
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4><i class="fa fa-user"></i> Updated Users</h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-pr-remote-project-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k, u in update_data.users.items %}
+              {% if u.status %}
+                <tr>
+                  <td>
+                    {# TODO: Get user obj and name #}
+                    {{ u.username }}
+                  </td>
+                  <td class="{% if u.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                    {# TODO: Add popup with u.status_msg #}
+                    {{ u.status | title }}
+                  </td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4><i class="fa fa-cubes"></i> Updated Categories and Projects</h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-pr-remote-project-table">
+          <thead>
+            <tr>
+              <th>Category/Project</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k, p in update_data.projects.items %}
+              {% if p.status %}
+                <tr>
+                  <td>
+                    {# TODO: Get project obj and name #}
+                    {{ p.title }}
+                  </td>
+                  <td class="{% if p.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                    {# TODO: Add popup with p.status_msg #}
+                    {{ p.status | title }}
+                  </td>
+                </tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4><i class="fa fa-users"></i> Updated Members</h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-pr-remote-project-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k, p in update_data.projects.items %}
+              {% for rk, r in p.roles.items %}
+                {% if r.status %}
+                  <tr>
+                    <td>
+                      {# TODO: Get project obj and link #}
+                      {{ p.title }}
+                    </td>
+                    <td>
+                      {# TODO: Get user obj and link #}
+                      {{ r.user }}
+                    </td>
+                    <td>
+                      {{ r.role }}
+                    </td>
+                    <td class="{% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                      {# TODO: Add popup with r.status_msg #}
+                      {{ r.status | title }}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
   {% endif %}

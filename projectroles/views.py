@@ -1888,10 +1888,13 @@ class RemoteProjectsSyncView(
         # Redirect if no changes were detected
         if user_count == 0 and project_count == 0 and role_count == 0:
             messages.warning(
-                request, 'No changes detected in data, nothing to synchronize')
+                request,
+                'No changes in remote site detected, nothing to synchronize')
             return HttpResponseRedirect(redirect_url)
 
         context['update_data'] = update_data
+        messages.success(
+            request, 'Project data updated according to source site')
         return super(TemplateView, self).render_to_response(context)
 
 

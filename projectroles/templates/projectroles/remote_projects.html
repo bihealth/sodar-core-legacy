@@ -23,6 +23,10 @@
   {% if projects|length == 0 %}
     <div class="alert alert-info">
       No projects are available.
+      {% if site_mode == 'TARGET' %}
+        To retrieve remote project data, <a href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">synchronize with the source site</a>
+        or use the <code>syncremote</code> management command.
+      {% endif %}
     </div>
 
   {% else %}

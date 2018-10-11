@@ -82,7 +82,6 @@ def get_project_title_html(project):
     ret += project.title
     return ret
 
-
 @register.simple_tag
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
