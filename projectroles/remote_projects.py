@@ -565,14 +565,14 @@ class RemoteProjectAPI:
 
             if deleted_count > 0:
                 deleted_users = sorted([r.user.username for r in deleted_roles])
-                remote_data['projects'][uuid]['deleted_roles'] = []
 
                 for del_as in deleted_roles:
                     del_user = del_as.user
                     del_role = del_as.role
+                    del_uuid = str(del_as.sodar_uuid)
                     del_as.delete()
 
-                    remote_data['projects'][uuid]['roles'][r_uuid] = {
+                    remote_data['projects'][uuid]['roles'][del_uuid] = {
                         'user': del_user.username,
                         'role': del_role.name,
                         'status': 'deleted'}

@@ -1,4 +1,5 @@
 """Test for the remote projects API in the projectroles app"""
+from copy import deepcopy
 import uuid
 
 from django.conf import settings
@@ -367,8 +368,10 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 0)
 
         remote_data = self.default_data
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
@@ -450,15 +453,20 @@ class TestSyncSourceData(
             'sodar_uuid': remote_project_obj.sodar_uuid}
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
-        # Assert update_data changes
-        expected = dict(remote_data)
+        # Assert remote_data changes
+        expected = original_data
+        expected['users'][SOURCE_USER_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
             SOURCE_CATEGORY_ROLE_UUID]['status'] = 'created'
         expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'created'
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID]['status'] = 'created'
-        self.assertEqual(update_data, expected)
+
+        # print('remote_data:\n{}'.format(remote_data))   # DEBUG
+        # print('expected:\n{}'.format(expected))
+
+        self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_create_multiple(self):
@@ -792,8 +800,10 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 2)
 
         remote_data = self.default_data
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
@@ -806,13 +816,14 @@ class TestSyncSourceData(
                 project__sodar_uuid=SOURCE_PROJECT_UUID,
                 role__name=PROJECT_ROLE_CONTRIBUTOR)
 
-        # Assert update_data changes
-        expected = dict(remote_data)
+        # Assert remote_data changes
+        expected = original_data
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
                 'user': new_user_username,
                 'role': PROJECT_ROLE_CONTRIBUTOR,
                 'status': 'deleted'}
-        self.assertEqual(update_data, expected)
+
+        self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_update_no_changes(self):
