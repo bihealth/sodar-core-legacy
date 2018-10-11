@@ -556,10 +556,9 @@ class RemoteProjectAPI:
 
             # Remove deleted user roles
             current_users = [v['user'] for k, v in p['roles'].items()]
-            current_users.append(default_owner.username)
 
             deleted_roles = RoleAssignment.objects.filter(
-                project__sodar_uuid=project.sodar_uuid).exclude(
+                project=project).exclude(
                     role__name=PROJECT_ROLE_OWNER).exclude(
                         user__username__in=current_users)
             deleted_count = deleted_roles.count()
@@ -573,8 +572,10 @@ class RemoteProjectAPI:
                     del_role = del_as.role
                     del_as.delete()
 
-                    remote_data['projects'][uuid][
-                        'deleted_roles'].append(del_user.username)
+                    remote_data['projects'][uuid]['roles'][r_uuid] = {
+                        'user': del_user.username,
+                        'role': del_role.name,
+                        'status': 'deleted'}
 
                     if timeline:
                         tl_desc = 'remove role "{}" from {{{}}} ' \

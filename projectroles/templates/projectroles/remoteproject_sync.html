@@ -177,7 +177,7 @@
                           {{ p.title }}
                         {% endif %}
                       </td>
-                      <td>
+                      <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>
                         {% get_user_by_username r.user as user_obj %}
                         {% if user_obj %}
                           {% autoescape off %}
@@ -187,7 +187,7 @@
                           {{ r.user }}
                         {% endif %}
                       </td>
-                      <td>
+                      <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>
                         {{ r.role }}
                       </td>
                       <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">

@@ -737,7 +737,7 @@ class TestSyncSourceData(
         self.assertEqual(update_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_remove_role(self):
+    def test_sync_delete_role(self):
         """Test sync with existing project data and a removed role"""
 
         # Set up target category and project
@@ -783,6 +783,7 @@ class TestSyncSourceData(
         new_user = self.make_user(new_user_username)
         new_role_obj = self._make_assignment(
             project_obj, new_user, self.role_contributor)
+        new_role_uuid = str(new_role_obj.sodar_uuid)
 
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
@@ -807,8 +808,10 @@ class TestSyncSourceData(
 
         # Assert update_data changes
         expected = dict(remote_data)
-        expected['projects'][SOURCE_PROJECT_UUID]['deleted_roles'] = \
-            [new_user_username]
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
+                'user': new_user_username,
+                'role': PROJECT_ROLE_CONTRIBUTOR,
+                'status': 'deleted'}
         self.assertEqual(update_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
