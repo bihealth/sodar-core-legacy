@@ -187,6 +187,9 @@ class TimelineAPI:
                             site.name,
                             history_link)
 
+                    else:
+                        refs[r] = site.name
+
                 except RemoteSite.DoesNotExist:
                     refs[r] = get_not_found_label(ref_obj, history_link)
 
