@@ -5,6 +5,29 @@
 
 {% block title %}Remote Projects for {{ site.name }} {% endblock %}
 
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    .table#sodar-pr-remote-project-table thead tr th:last-child {
+      width: 250px;
+    }
+
+    .table#sodar-pr-remote-project-table tbody tr td:last-child {
+      width: 250px;
+    }
+
+    @media screen and (max-width: 900px) {
+      .table#sodar-pr-remote-project-table thead tr th:nth-child(2) {
+        display: none;
+      }
+
+      .table#sodar-pr-remote-project-table tbody tr td:nth-child(2) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
+
 {% block projectroles %}
 
 {% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}

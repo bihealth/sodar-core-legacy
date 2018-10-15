@@ -18,6 +18,10 @@ PROJECT_TYPE_DISPLAY = {
     'PROJECT': 'Project',
     'CATEGORY': 'Category'}
 
+# Behaviour for certain levels has not been specified/implemented yet
+ACTIVE_LEVEL_TYPES = [
+    SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
 
 register = template.Library()
 
@@ -279,16 +283,17 @@ def get_target_project_select(site, project):
           'id="sodar-pr-remote-project-select-{project}">\n'.format(
             project=project.sodar_uuid)
 
-    for k, v in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'].items():
+    for level in ACTIVE_LEVEL_TYPES:
         selected = False
+        legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
 
-        if (k == current_level or (
-                k == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and
+        if (level == current_level or (
+                level == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and
                 not current_level)):
             selected = True
 
         ret += '<option value="{}" {}>{}</option>\n'.format(
-            k, 'selected' if selected else '', v)
+            level, 'selected' if selected else '', legend)
 
     ret += '</select>\n'
     return ret
