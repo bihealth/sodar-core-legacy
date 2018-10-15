@@ -22,6 +22,7 @@ Added
     - Optional ``readme`` and ``sodar_uuid`` args for ``_make_project()`` in tests
     - ``syncremote`` management command for calling ``RemoteProjectAPI.sync_source_data()``
     - ``get_project_by_uuid()`` and ``get_user_by_username()`` template tags
+    - ``get_remote_icon()`` template tag (#3)
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 
@@ -30,7 +31,7 @@ Changed
 
 - **Projectroles**
     - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
-    - Enable short/full title selection in ``get_project_link()`` template tag
+    - Enable short/full title selection and remote project icon in ``get_project_link()`` template tag
 - **Timeline**
     - Minor refactoring of ``api.get_event_description()`` (#30)
 
