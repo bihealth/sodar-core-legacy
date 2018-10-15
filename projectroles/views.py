@@ -146,7 +146,6 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
             return redirect(reverse('home'))
 
         else:
-            messages.error(self.request, 'Please log in')
             return redirect_to_login(self.request.get_full_path())
 
 
