@@ -463,9 +463,6 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID]['status'] = 'created'
 
-        # print('remote_data:\n{}'.format(remote_data))   # DEBUG
-        # print('expected:\n{}'.format(expected))
-
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -499,8 +496,10 @@ class TestSyncSourceData(
             }
         }
 
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 3)
@@ -533,12 +532,23 @@ class TestSyncSourceData(
             'sodar_uuid': uuid.UUID(new_role_uuid)}
         self.assertEqual(model_to_dict(p_new_owner_obj), expected)
 
-        # Assert update_data changes
-        expected = dict(remote_data)
+        # Assert remote_data changes
+        expected = original_data
+        expected['users'][SOURCE_USER_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE_UUID]['status'] = 'created'
         expected['projects'][new_project_uuid]['status'] = 'created'
         expected['projects'][new_project_uuid]['roles'][
             new_role_uuid]['status'] = 'created'
-        self.assertEqual(update_data, expected)
+
+        print('remote_data:\n{}'.format(remote_data))   # DEBUG
+        print('expected:\n{}'.format(expected))         # DEBUG
+
+        self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_create_local_owner(self):
@@ -558,8 +568,8 @@ class TestSyncSourceData(
         remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID]['user'] = 'source_admin'
 
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
@@ -642,7 +652,10 @@ class TestSyncSourceData(
                 'user': new_user_username,
                 'role': PROJECT_ROLE_CONTRIBUTOR}
 
-        update_data = self.remote_api.sync_source_data(
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(
             self.source_site, remote_data)
 
         # Assert database status
@@ -735,14 +748,15 @@ class TestSyncSourceData(
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
         # Assert update_data changes
-        expected = dict(remote_data)
+        expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
         expected['users'][new_user_uuid]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             new_role_uuid]['status'] = 'created'
-        self.assertEqual(update_data, expected)
+
+        self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_delete_role(self):
@@ -876,9 +890,10 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 2)
 
         remote_data = self.default_data
+        original_data = deepcopy(remote_data)
 
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
@@ -957,7 +972,7 @@ class TestSyncSourceData(
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
         # Assert no changes between update_data and remote_data
-        self.assertEqual(update_data, remote_data)
+        self.assertEqual(original_data, remote_data)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_create_no_access(self):
@@ -976,8 +991,10 @@ class TestSyncSourceData(
         remote_data['projects'][SOURCE_PROJECT_UUID]['level'] = \
             REMOTE_LEVEL_READ_INFO
 
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 0)
@@ -986,7 +1003,7 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 0)
 
         # Assert no changes between update_data and remote_data
-        self.assertEqual(update_data, remote_data)
+        self.assertEqual(original_data, remote_data)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_sync_create_local_user(self):
@@ -1016,8 +1033,8 @@ class TestSyncSourceData(
             'user': local_user_username,
             'role': self.role_contributor.name}
 
-        update_data = self.remote_api.sync_source_data(
-            self.source_site, remote_data)
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
 
         # Assert database status (the new user and role should not be created)
         self.assertEqual(Project.objects.all().count(), 2)
