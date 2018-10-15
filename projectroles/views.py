@@ -155,11 +155,47 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         return self._get_project(self.request, self.kwargs)
 
 
-class RolePermissionMixin(LoggedInPermissionMixin, ProjectAccessMixin):
+class ProjectModifyPermissionMixin(
+        LoggedInPermissionMixin, ProjectPermissionMixin):
+    """Mixin for handling access to project modifying views, denying access even
+    for local superusers if the project is remote and thus immutable"""
+
+    def has_permission(self):
+        """Override has_permission() to check remote project status"""
+        perm = super(ProjectModifyPermissionMixin, self).has_permission()
+
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
+            project = self._get_project(self.request, self.kwargs)
+
+            try:
+                remote_project = RemoteProject.objects.get(project=project)
+                return False
+
+            except RemoteProject.DoesNotExist:
+                return True
+
+        return perm
+
+    def handle_no_permission(self):
+        """Override handle_no_permission to redirect user"""
+        if self.request.user.is_authenticated():
+            messages.error(
+                self.request,
+                'Modifications are not allowed for remote projects')
+            return redirect(reverse('home'))
+
+        else:
+            return redirect_to_login(self.request.get_full_path())
+
+
+class RolePermissionMixin(ProjectModifyPermissionMixin):
     """Mixin to ensure permissions for RoleAssignment according to user role in
     project"""
     def has_permission(self):
         """Override has_permission to check perms depending on role"""
+        if not super(RolePermissionMixin, self).has_permission():
+            return False
+
         try:
             obj = RoleAssignment.objects.get(
                 sodar_uuid=self.kwargs['roleassignment'])
@@ -648,6 +684,14 @@ class ProjectCreateView(
 
     def get(self, request, *args, **kwargs):
         """Override get() to limit project creation under other projects"""
+
+        # If site is in target mode and target creation is not allowed, redirect
+        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
+                not settings.PROJECTROLES_TARGET_CREATE):
+            messages.error(
+                request, 'Creating local projects not allowed')
+            return HttpResponseRedirect(reverse('home'))
+
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
 
@@ -663,7 +707,7 @@ class ProjectCreateView(
 
 
 class ProjectUpdateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
         ProjectModifyMixin, UpdateView):
     """Project updating view"""
     permission_required = 'projectroles.update_project'
@@ -820,8 +864,8 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
 
 
 class RoleAssignmentCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, RoleAssignmentModifyMixin, CreateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        RoleAssignmentModifyMixin, CreateView):
     """RoleAssignment creation view"""
     permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
@@ -836,9 +880,10 @@ class RoleAssignmentCreateView(
 
 
 class RoleAssignmentUpdateView(
-        LoginRequiredMixin, RolePermissionMixin, ProjectContextMixin,
-        RoleAssignmentModifyMixin, UpdateView):
+        LoginRequiredMixin, RolePermissionMixin,
+        ProjectContextMixin, RoleAssignmentModifyMixin, UpdateView):
     """RoleAssignment updating view"""
+    permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     form_class = RoleAssignmentForm
     slug_url_kwarg = 'roleassignment'
@@ -852,9 +897,10 @@ class RoleAssignmentUpdateView(
 
 
 class RoleAssignmentDeleteView(
-        LoginRequiredMixin, RolePermissionMixin, ProjectContextMixin,
-        DeleteView):
+        LoginRequiredMixin, RolePermissionMixin, ProjectModifyPermissionMixin,
+        ProjectContextMixin, DeleteView):
     """RoleAssignment deletion view"""
+    permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
@@ -943,8 +989,8 @@ class RoleAssignmentDeleteView(
 
 
 class RoleAssignmentImportView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        TemplateView):
     """View for importing roles from an existing project"""
     # TODO: Add taskflow functionality
     http_method_names = ['get', 'post']
@@ -1255,6 +1301,7 @@ class ProjectInviteMixin:
             messages.error(request, status_desc)
 
 
+# TODO: Disable access if remote project
 class ProjectInviteView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
         TemplateView):
@@ -1286,6 +1333,7 @@ class ProjectInviteView(
         return context
 
 
+# TODO: Disable access if remote project
 class ProjectInviteCreateView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
         ProjectContextMixin, ProjectInviteMixin, CreateView):
@@ -1331,8 +1379,7 @@ class ProjectInviteCreateView(
             kwargs={'project': self.object.project.sodar_uuid}))
 
 
-class ProjectInviteAcceptView(
-        LoginRequiredMixin, View):
+class ProjectInviteAcceptView(LoginRequiredMixin, View):
     """View to handle accepting a project invite"""
 
     def get(self, *args, **kwargs):
@@ -1475,8 +1522,8 @@ class ProjectInviteAcceptView(
 
 
 class ProjectInviteResendView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectInviteMixin, View):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin,
+        View):
     """View to handle resending a project invite"""
     permission_required = 'projectroles.invite_users'
 
@@ -1508,8 +1555,8 @@ class ProjectInviteResendView(
 
 
 class ProjectInviteRevokeView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        TemplateView):
     """Batch delete/move confirm view"""
     template_name = 'projectroles/invite_revoke_confirm.html'
     permission_required = 'projectroles.invite_users'

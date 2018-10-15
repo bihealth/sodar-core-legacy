@@ -667,16 +667,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:update',
             kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -721,16 +719,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:create',
             kwargs={'project': self.category.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
-            self.as_owner.user,
             self.anonymous,
+            self.superuser,
+            self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -739,16 +735,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_create',
             kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -757,16 +751,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_update',
             kwargs={'roleassignment': self.as_contributor.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -775,16 +767,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_delete',
             kwargs={'roleassignment': self.as_contributor.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -793,16 +783,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_update',
             kwargs={'roleassignment': self.as_delegate.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -811,16 +799,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_delete',
             kwargs={'roleassignment': self.as_delegate.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -829,16 +815,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_import',
             kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
             self.anonymous,
+            self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
