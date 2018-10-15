@@ -406,6 +406,9 @@ SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
 # Remote access mode: SOURCE or TARGET
 PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 
+# Enable or disable project creation if site is in TARGET mode
+PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
+
 # Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
 PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
 

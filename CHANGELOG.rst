@@ -14,7 +14,7 @@ Added
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
     - ``RemoteSiteAppPlugin`` site plugin (#3)
-    - ``PROJECTROLES_SITE_MODE`` setting (#3)
+    - ``PROJECTROLES_SITE_MODE`` and ``PROJECTROLES_TARGET_CREATE`` settings (#3)
     - Remote site and project management site app (#3)
     - Remote project API (#3)
     - Generic SODAR API base classes
@@ -23,6 +23,7 @@ Added
     - ``syncremote`` management command for calling ``RemoteProjectAPI.sync_source_data()``
     - ``get_project_by_uuid()`` and ``get_user_by_username()`` template tags
     - ``get_remote_icon()`` template tag (#3)
+    - Predicates in rules for handling remote projects (#3)
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 
@@ -32,6 +33,7 @@ Changed
 - **Projectroles**
     - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
     - Enable short/full title selection and remote project icon in ``get_project_link()`` template tag
+    - Refactor rules
 - **Timeline**
     - Minor refactoring of ``api.get_event_description()`` (#30)
 
