@@ -1895,7 +1895,7 @@ class RemoteProjectsSyncView(
 
         try:
             response = urllib.request.urlopen(api_url)
-            remote_data = json.loads(response.read())
+            remote_data = json.loads(response.read().decode('utf-8'))
 
         except Exception as ex:
             ex_str = str(ex)
