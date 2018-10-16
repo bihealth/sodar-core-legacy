@@ -1,5 +1,6 @@
 import uuid
 
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.signals import user_logged_in
@@ -294,6 +295,24 @@ class Project(models.Model):
     def get_full_title(self):
         """Return full title of project (just an alias for __str__())"""
         return str(self)
+
+    def is_remote(self):
+        """Return True if current project has been retrieved from a remote
+        SODAR site"""
+        if (settings.PROJECTROLES_SITE_MODE ==
+                SODAR_CONSTANTS['SITE_MODE_TARGET']):
+            RemoteProject = apps.get_model('projectroles', 'RemoteProject')
+
+            try:
+                RemoteProject.objects.get(
+                    project_uuid=self.sodar_uuid,
+                    site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'])
+                return True
+
+            except RemoteProject.DoesNotExist:
+                pass
+
+        return False
 
 
 # Role -------------------------------------------------------------------------

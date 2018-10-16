@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
 from django.utils import timezone
+from django.test import override_settings
 
 from test_plus.test import TestCase
 
@@ -27,6 +28,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 # Settings
@@ -262,6 +265,10 @@ class TestProject(TestCase, ProjectMixin):
         expected = self.category_top.title + ' / ' + self.project_sub.title
         self.assertEqual(
             self.project_sub.get_full_title(), expected)
+
+    def test_is_remote(self):
+        """Test Project.is_remote() without remote projects"""
+        self.assertEqual(self.project_sub.is_remote(), False)
 
     def test_validate_parent(self):
         """Test parent ForeignKey validation: project can't be its own
@@ -844,7 +851,7 @@ class TestRemoteProject(
         self.site = self._make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
-            mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            mode=SITE_MODE_TARGET,
             description='',
             secret=REMOTE_SITE_SECRET)
 
@@ -871,7 +878,7 @@ class TestRemoteProject(
         expected = '{}: {} ({})'.format(
             REMOTE_SITE_NAME,
             str(self.project.sodar_uuid),
-            SODAR_CONSTANTS['SITE_MODE_TARGET'])
+            SITE_MODE_TARGET)
         self.assertEqual(str(self.remote_project), expected)
 
     def test__repr__(self):
@@ -879,5 +886,16 @@ class TestRemoteProject(
         expected = "RemoteProject('{}', '{}', '{}')".format(
             REMOTE_SITE_NAME,
             str(self.project.sodar_uuid),
-            SODAR_CONSTANTS['SITE_MODE_TARGET'])
+            SITE_MODE_TARGET)
         self.assertEqual(repr(self.remote_project), expected)
+
+    def test_is_remote_source(self):
+        """Test Project.is_remote() as source"""
+        self.assertEqual(self.project.is_remote(), False)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_is_remote_target(self):
+        """Test Project.is_remote() as target"""
+        self.site.mode = SITE_MODE_SOURCE
+        self.site.save()
+        self.assertEqual(self.project.is_remote(), True)

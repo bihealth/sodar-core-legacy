@@ -25,6 +25,7 @@ Added
     - ``get_remote_icon()`` template tag (#3)
     - Predicates in rules for handling remote projects (#3)
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
+    - ``is_remote()`` helper in the ``Project`` model (#3)
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 

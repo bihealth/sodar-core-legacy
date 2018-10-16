@@ -163,18 +163,8 @@ class ProjectModifyPermissionMixin(
     def has_permission(self):
         """Override has_permission() to check remote project status"""
         perm = super(ProjectModifyPermissionMixin, self).has_permission()
-
-        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
-            project = self._get_project(self.request, self.kwargs)
-
-            try:
-                remote_project = RemoteProject.objects.get(project=project)
-                return False
-
-            except RemoteProject.DoesNotExist:
-                return True
-
-        return perm
+        project = self._get_project(self.request, self.kwargs)
+        return False if project.is_remote() else perm
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""

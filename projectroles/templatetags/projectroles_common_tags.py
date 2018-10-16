@@ -114,11 +114,10 @@ def get_project_link(project, full_title=False, request=None):
 @register.simple_tag
 def get_remote_icon(project, request):
     """Get remote project icon HTML"""
-    if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
-            request.user.is_superuser):
+    if project.is_remote() and request.user.is_superuser:
         try:
             remote_project = RemoteProject.objects.get(project=project)
-            return '<i class="fa fa-lock text-muted mx-1 ' \
+            return '<i class="fa fa-globe text-muted mx-1 ' \
                    'sodar-pr-remote-project-icon" title="{}" ' \
                    'data-toggle="tooltip" data-placement="top"></i>'.format(
                     'Remote project from ' + remote_project.site.name)
