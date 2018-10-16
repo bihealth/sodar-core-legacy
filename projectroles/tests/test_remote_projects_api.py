@@ -545,9 +545,6 @@ class TestSyncSourceData(
         expected['projects'][new_project_uuid]['roles'][
             new_role_uuid]['status'] = 'created'
 
-        print('remote_data:\n{}'.format(remote_data))   # DEBUG
-        print('expected:\n{}'.format(expected))         # DEBUG
-
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
