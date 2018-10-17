@@ -51,11 +51,11 @@ class AdminAlert(models.Model):
         default=True,
         help_text='Alert status (for disabling the alert before expiration)')
 
-    #: Adminalerts Omics UUID
-    omics_uuid = models.UUIDField(
+    #: Adminalerts SODAR UUID
+    sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='Adminalerts Omics UUID')
+        help_text='Adminalerts SODAR UUID')
 
     def __str__(self):
         return '{}{}'.format(
