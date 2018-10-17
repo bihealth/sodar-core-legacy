@@ -1,6 +1,8 @@
 {% load projectroles_tags %}
 {% load rules %}
 
+{% allow_project_creation as allow_creation %}
+
 <div class="btn-group sodar-sidebar-alt-btn pull-left" role="group" id="sodar-pr-sidebar-alt-btn">
   <button class="btn btn-dark dropdown-toggle btn-sm sodar-edit-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-bars"></i>
@@ -66,7 +68,7 @@
 
     {% if project and project.type == 'CATEGORY' %}
       {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-      {% if can_create_project %}
+      {% if allow_creation and can_create_project %}
          <a class="dropdown-item"
             href="{% url 'projectroles:create' project=project.sodar_uuid %}"
             id="sodar-pr-alt-link-project-create">
@@ -75,7 +77,7 @@
       {% endif %}
     {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
       {% has_perm 'projectroles.create_project' request.user as can_create_project %}
-      {% if can_create_project %}
+      {% if allow_creation and can_create_project %}
         <a class="dropdown-item"
            href="{% url 'projectroles:create' %}"
            id="sodar-pr-alt-link-home-create">

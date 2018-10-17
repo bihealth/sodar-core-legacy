@@ -315,3 +315,13 @@ def get_remote_project_obj(site, project):
 
     except RemoteProject.DoesNotExist:
         return None
+
+
+@register.simple_tag
+def allow_project_creation():
+    if (settings.PROJECTROLES_SITE_MODE ==
+            SODAR_CONSTANTS['SITE_MODE_TARGET'] and
+            not settings.PROJECTROLES_TARGET_CREATE):
+        return False
+
+    return True

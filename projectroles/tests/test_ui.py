@@ -713,6 +713,81 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-alt-link-project-update', False)
 
+    def test_create_link(self):
+        """Test visibility of create link"""
+        expected_true = [
+            self.superuser,
+            self.as_owner.user]
+        expected_false = [
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.category.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False)
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_link_target(self):
+        """Test visibility of create link as target"""
+
+        # Set up site as target
+        self._set_up_as_target(
+            projects=[self.category, self.project])
+
+        expected_true = [
+            self.superuser,
+            self.as_owner.user]
+        expected_false = [
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.category.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False)
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+
+    @override_settings(
+        PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
+        PROJECTROLES_TARGET_CREATE=False)
+    def test_create_link_target_disable(self):
+        """Test visibility of create link as target with creation not allowed"""
+
+        # Set up site as target
+        self._set_up_as_target(
+            projects=[self.category, self.project])
+
+        expected_false = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.category.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+
     def test_link_active_detail(self):
         """Test active status of link on the project_detail page"""
         url = reverse(
