@@ -296,21 +296,30 @@ class Project(models.Model):
         """Return full title of project (just an alias for __str__())"""
         return str(self)
 
+    def get_source_site(self):
+        """Return source site or None if this is a locally defined project"""
+        if (settings.PROJECTROLES_SITE_MODE ==
+                SODAR_CONSTANTS['SITE_MODE_SOURCE']):
+            return None
+
+        RemoteProject = apps.get_model('projectroles', 'RemoteProject')
+
+        try:
+            return RemoteProject.objects.get(
+                project_uuid=self.sodar_uuid,
+                site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE']).site
+
+        except RemoteProject.DoesNotExist:
+            pass
+
+        return None
+
     def is_remote(self):
         """Return True if current project has been retrieved from a remote
         SODAR site"""
         if (settings.PROJECTROLES_SITE_MODE ==
-                SODAR_CONSTANTS['SITE_MODE_TARGET']):
-            RemoteProject = apps.get_model('projectroles', 'RemoteProject')
-
-            try:
-                RemoteProject.objects.get(
-                    project_uuid=self.sodar_uuid,
-                    site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'])
-                return True
-
-            except RemoteProject.DoesNotExist:
-                pass
+                SODAR_CONSTANTS['SITE_MODE_TARGET'] and self.get_source_site()):
+            return True
 
         return False
 

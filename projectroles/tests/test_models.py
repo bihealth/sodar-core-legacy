@@ -925,3 +925,14 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.is_remote(), True)
+
+    def test_get_source_site(self):
+        """Test Project.get_source_site() as source"""
+        self.assertEqual(self.project.get_source_site(), None)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_get_source_site_target(self):
+        """Test Project.get_source_site() as target"""
+        self.site.mode = SITE_MODE_SOURCE
+        self.site.save()
+        self.assertEqual(self.project.get_source_site(), self.site)
