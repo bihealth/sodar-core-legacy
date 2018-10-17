@@ -53,7 +53,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
                     'Details</a>'.format(
                         reverse(
                             'adminalerts:detail',
-                            kwargs={'uuid': a.omics_uuid}))
+                            kwargs={'uuid': a.sodar_uuid}))
 
             messages.append({
                 'content': content,

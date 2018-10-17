@@ -51,7 +51,7 @@ class TestAdminAlert(TestCase, AdminAlertMixin):
             # 'description': 'description',
             'date_expire': self.alert.date_expire,
             'active': True,
-            'omics_uuid': self.alert.omics_uuid}
+            'sodar_uuid': self.alert.sodar_uuid}
         model_dict = model_to_dict(self.alert)
         # HACK: Can't compare markupfields like this. Better solution?
         model_dict.pop('description', None)

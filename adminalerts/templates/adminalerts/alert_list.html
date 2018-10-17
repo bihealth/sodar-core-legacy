@@ -87,7 +87,7 @@
           <tbody>
             {% for a in object_list %}
               <tr {% if not a.is_active %}class="text-muted"{% endif %} id="omics-aa-alert-item-{{ a.pk }}">
-                <td><a href="{% url 'adminalerts:detail' uuid=a.omics_uuid %}">{{ a.message }}</a></td>
+                <td><a href="{% url 'adminalerts:detail' uuid=a.sodar_uuid %}">{{ a.message }}</a></td>
                 <td>{% get_user_html a.user as user_html %}{{ user_html|safe }}</td>
                 <td>{{ a.date_created | date:'Y-m-d H:i:s' }}</td>
                 <td>{{ a.date_expire | date:'Y-m-d' }}</td>
@@ -105,10 +105,10 @@
                       <i class="fa fa-cog"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
-                      <a class="dropdown-item" href="{% url 'adminalerts:update' uuid=a.omics_uuid %}">
+                      <a class="dropdown-item" href="{% url 'adminalerts:update' uuid=a.sodar_uuid %}">
                         <i class="fa fa-fw fa-pencil"></i> Update Alert
                       </a>
-                      <a class="dropdown-item" href="{% url 'adminalerts:delete' uuid=a.omics_uuid %}">
+                      <a class="dropdown-item" href="{% url 'adminalerts:delete' uuid=a.sodar_uuid %}">
                         <i class="fa fa-fw fa-close"></i> Delete Alert
                       </a>
                     </div>

@@ -40,7 +40,7 @@ class TestAlertMessage(TestAlertUIBase):
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'omics-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class')
 
     def test_message_inactive(self):
         """Test visibility of an inactive alert message"""
@@ -53,7 +53,7 @@ class TestAlertMessage(TestAlertUIBase):
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'omics-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class')
 
     def test_message_expired(self):
         """Test visibility of an expired alert message"""

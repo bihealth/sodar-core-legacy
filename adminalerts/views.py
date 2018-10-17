@@ -7,9 +7,8 @@ from django.views.generic import DetailView, UpdateView, CreateView, \
 from django.views.generic.edit import ModelFormMixin
 
 # Projectroles dependency
-# TBD: Ok to depend on Projectroles here even though this is not a project app?
-from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin, \
-    CurrentUserFormMixin
+from projectroles.views import LoginRequiredMixin, LoggedInPermissionMixin,\
+    HTTPRefererMixin, CurrentUserFormMixin
 
 from .forms import AdminAlertForm
 from .models import AdminAlert
@@ -25,7 +24,7 @@ class AdminAlertListView(LoggedInPermissionMixin, ListView):
     model = AdminAlert
     paginate_by = settings.ADMINALERTS_PAGINATION
     slug_url_kwarg = 'uuid'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def get_queryset(self):
         return AdminAlert.objects.all().order_by('-pk')
@@ -38,7 +37,7 @@ class AdminAlertDetailView(
     template_name = 'adminalerts/alert_detail.html'
     model = AdminAlert
     slug_url_kwarg = 'uuid'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
 
 # Modification views -----------------------------------------------------------
@@ -52,8 +51,9 @@ class AdminAlertModifyMixin(ModelFormMixin):
         return HttpResponseRedirect(reverse('adminalerts:list'))
 
 
+# TODO: Re-add LoggedInPermissionMixin after rebasing from feature/remote
 class AdminAlertCreateView(
-        LoggedInPermissionMixin, AdminAlertModifyMixin, HTTPRefererMixin,
+        AdminAlertModifyMixin, HTTPRefererMixin,
         CurrentUserFormMixin, CreateView):
     """AdminAlert creation view"""
     model = AdminAlert
@@ -69,7 +69,7 @@ class AdminAlertUpdateView(
     form_class = AdminAlertForm
     permission_required = 'adminalerts.update_alert'
     slug_url_kwarg = 'uuid'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
 
 class AdminAlertDeleteView(
@@ -78,7 +78,7 @@ class AdminAlertDeleteView(
     model = AdminAlert
     permission_required = 'adminalerts.update_alert'
     slug_url_kwarg = 'uuid'
-    slug_field = 'omics_uuid'
+    slug_field = 'sodar_uuid'
 
     def get_success_url(self):
         """Override for redirecting alert list view with message"""

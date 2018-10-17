@@ -57,7 +57,7 @@ class TestAdminAlertDetailView(TestViewsBase):
             response = self.client.get(
                 reverse(
                     'adminalerts:detail',
-                    kwargs={'uuid': self.alert.omics_uuid}))
+                    kwargs={'uuid': self.alert.sodar_uuid}))
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.context['object'], self.alert)
 
@@ -125,7 +125,7 @@ class TestAdminAlertUpdateView(TestViewsBase):
             response = self.client.get(
                 reverse(
                     'adminalerts:update',
-                    kwargs={'uuid': self.alert.omics_uuid}))
+                    kwargs={'uuid': self.alert.sodar_uuid}))
             self.assertEqual(response.status_code, 200)
 
     def test_update(self):
@@ -144,7 +144,7 @@ class TestAdminAlertUpdateView(TestViewsBase):
             response = self.client.post(
                 reverse(
                     'adminalerts:update',
-                    kwargs={'uuid': self.alert.omics_uuid}),
+                    kwargs={'uuid': self.alert.sodar_uuid}),
                 post_data)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
@@ -172,7 +172,7 @@ class TestAdminAlertUpdateView(TestViewsBase):
             response = self.client.post(
                 reverse(
                     'adminalerts:update',
-                    kwargs={'uuid': self.alert.omics_uuid}),
+                    kwargs={'uuid': self.alert.sodar_uuid}),
                 post_data)
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
@@ -190,7 +190,7 @@ class TestAdminAlertDeleteView(TestViewsBase):
             response = self.client.get(
                 reverse(
                     'adminalerts:delete',
-                    kwargs={'uuid': self.alert.omics_uuid}))
+                    kwargs={'uuid': self.alert.sodar_uuid}))
             self.assertEqual(response.status_code, 200)
 
     def test_delete(self):
@@ -203,7 +203,7 @@ class TestAdminAlertDeleteView(TestViewsBase):
             response = self.client.post(
                 reverse(
                     'adminalerts:delete',
-                    kwargs={'uuid': self.alert.omics_uuid}))
+                    kwargs={'uuid': self.alert.sodar_uuid}))
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
 
