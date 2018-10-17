@@ -160,6 +160,32 @@ class RemoteProjectMixin:
         return remote_project
 
 
+class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
+    """Helper mixin for setting up the site as TARGET for testing"""
+
+    @classmethod
+    def _set_up_as_target(cls, projects):
+        """Set up current site as a target site"""
+        source_site = cls._make_site(
+            name='Test Source',
+            url='http://0.0.0.0',
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=build_secret())
+
+        remote_projects = []
+
+        for project in projects:
+            remote_projects.append(
+                cls._make_remote_project(
+                    project_uuid=project.sodar_uuid,
+                    project=project,
+                    site=source_site,
+                    level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']))
+
+        return source_site, remote_projects
+
+
 class SodarUserMixin:
     """Helper mixin for LDAP SodarUser creation"""
 
