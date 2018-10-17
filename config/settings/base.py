@@ -74,6 +74,9 @@ LOCAL_APPS = [
     # User Profile site app
     'userprofile.apps.UserprofileConfig',
 
+    # Admin Alerts site app
+    'adminalerts.apps.AdminalertsConfig',
+
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
 
