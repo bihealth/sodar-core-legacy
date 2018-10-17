@@ -66,7 +66,7 @@ class TestAlertMessage(TestAlertUIBase):
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'omics-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class')
 
 
 class TestListView(TestAlertUIBase):
@@ -79,7 +79,7 @@ class TestListView(TestAlertUIBase):
         url = reverse('adminalerts:list')
 
         self.assert_element_count(
-            expected, url, 'omics-aa-alert-item', 'id')
+            expected, url, 'sodar-aa-alert-item', 'id')
 
     def test_list_buttons(self):
         """Test existence of buttons in list"""
@@ -88,4 +88,4 @@ class TestListView(TestAlertUIBase):
         url = reverse('adminalerts:list')
 
         self.assert_element_count(
-            expected, url, 'omics-aa-alert-buttons', 'id')
+            expected, url, 'sodar-aa-alert-buttons', 'id')
