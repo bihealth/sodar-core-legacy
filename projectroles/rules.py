@@ -85,16 +85,7 @@ def has_roles(user):
 @rules.predicate
 def is_modifiable_project(user, obj):
     """Whether or not project metadata is modifiable"""
-    if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
-        try:
-            remote_project = RemoteProject.objects.get(
-                project=obj, site__mode=SITE_MODE_SOURCE)
-            return False
-
-        except RemoteProject.DoesNotExist:
-            pass
-
-    return True
+    return False if obj.is_remote() else True
 
 
 @rules.predicate
