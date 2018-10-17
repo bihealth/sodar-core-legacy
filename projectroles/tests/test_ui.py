@@ -627,7 +627,7 @@ class TestPlugins(TestUIBase):
         self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
-class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
+class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
     """Tests for the project sidebar"""
 
     def setUp(self):
@@ -667,6 +667,51 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin):
 
         self.assert_element_count(
             expected, url, 'sodar-pr-nav-app-plugin')
+
+    def test_update_link(self):
+        """Test visibility of update link"""
+        expected_true = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user]
+        expected_false = [
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-update', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-update', False)
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-update', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-update', False)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_update_link_target(self):
+        """Test visibility of update link as target"""
+
+        # Set up site as target
+        self._set_up_as_target(
+            projects=[self.category, self.project])
+
+        expected_false = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-update', False)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-update', False)
 
     def test_link_active_detail(self):
         """Test active status of link on the project_detail page"""
