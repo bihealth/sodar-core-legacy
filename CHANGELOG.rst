@@ -40,6 +40,7 @@ Changed
     - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
     - Enable short/full title selection and remote project icon in ``get_project_link()`` template tag
     - Refactor rules
+    - Disable Taskflow API views if Taskflow backend is not enabled (#37)
 - **Timeline**
     - Minor refactoring of ``api.get_event_description()`` (#30)
 

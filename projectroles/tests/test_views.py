@@ -1916,3 +1916,33 @@ class TestRemoteProjectsBatchUpdateView(
                 reverse(
                     'projectroles:remote_projects',
                     kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+
+class TestTaskflowAPIViews(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+    """Tests for taskflow API views without taskflow enabled"""
+
+    def setUp(self):
+        super(TestTaskflowAPIViews, self).setUp()
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+    @override_settings(ENABLED_BACKEND_PLUGINS=[])
+    def test_disable_api_views(self):
+        """Test to make sure API views are disabled without taskflow"""
+
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 401)

@@ -18,7 +18,7 @@ from django.views.generic import TemplateView, DetailView, UpdateView,\
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
@@ -2016,11 +2016,24 @@ class ProjectStarringAPIView(
 # Taskflow API Views -----------------------------------------------------------
 
 
-# TODO: Limit access to localhost
+# TODO: Proper access control (TBD, must also be implemented in sodar_taskflow)
+
+
+class TaskflowAPIPermission(BasePermission):
+    """Taskflow API permission handling"""
+
+    def has_permission(self, request, view):
+        # Only allow accessing Taskflow API views if Taskflow is used
+        return True if get_backend_api('taskflow') else False
+
+
+class BaseTaskflowAPIView(APIView):
+    """Base Taskflow API view"""
+    permission_classes = [TaskflowAPIPermission]
 
 
 # TODO: Use GET instead of POST
-class ProjectGetAPIView(APIView):
+class ProjectGetAPIView(BaseTaskflowAPIView):
     """API view for getting a project"""
     def post(self, request):
         try:
@@ -2039,7 +2052,7 @@ class ProjectGetAPIView(APIView):
         return Response(ret_data, status=200)
 
 
-class ProjectUpdateAPIView(APIView):
+class ProjectUpdateAPIView(BaseTaskflowAPIView):
     """API view for updating a project"""
     def post(self, request):
         try:
@@ -2057,7 +2070,7 @@ class ProjectUpdateAPIView(APIView):
 
 
 # TODO: Use GET instead of POST
-class RoleAssignmentGetAPIView(APIView):
+class RoleAssignmentGetAPIView(BaseTaskflowAPIView):
     """API view for getting a role assignment for user and project"""
     def post(self, request):
         try:
@@ -2083,7 +2096,7 @@ class RoleAssignmentGetAPIView(APIView):
             return Response(str(ex), status=404)
 
 
-class RoleAssignmentSetAPIView(APIView):
+class RoleAssignmentSetAPIView(BaseTaskflowAPIView):
     """View for creating or updating a role assignment based on params"""
     def post(self, request):
         try:
@@ -2108,7 +2121,7 @@ class RoleAssignmentSetAPIView(APIView):
         return Response('ok', status=200)
 
 
-class RoleAssignmentDeleteAPIView(APIView):
+class RoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2129,7 +2142,7 @@ class RoleAssignmentDeleteAPIView(APIView):
 
 
 # TODO: Use GET instead of POST
-class ProjectSettingsGetAPIView(APIView):
+class ProjectSettingsGetAPIView(BaseTaskflowAPIView):
     """API view for getting project settings"""
     def post(self, request):
         try:
@@ -2146,7 +2159,7 @@ class ProjectSettingsGetAPIView(APIView):
         return Response(ret_data, status=200)
 
 
-class ProjectSettingsSetAPIView(APIView):
+class ProjectSettingsSetAPIView(BaseTaskflowAPIView):
     """API view for updating project settings"""
     def post(self, request):
         try:
