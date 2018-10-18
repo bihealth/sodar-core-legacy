@@ -74,6 +74,9 @@ LOCAL_APPS = [
     # User Profile site app
     'userprofile.apps.UserprofileConfig',
 
+    # Admin Alerts site app
+    'adminalerts.apps.AdminalertsConfig',
+
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
 
@@ -422,3 +425,12 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15
+
+
+# Adminalerts app settings
+ADMINALERTS_PAGINATION = 15
+
+
+# Settings for HTTP AuthBasic
+BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
+BASICAUTH_DISABLE = False
