@@ -43,6 +43,12 @@ Changed
 - **Timeline**
     - Minor refactoring of ``api.get_event_description()`` (#30)
 
+Fixed
+-----
+
+- **General**
+    - Pillow dependency typo in ``requirements/base.txt`` (#33)
+
 
 v0.2.1 (2018-09-20)
 ===================
