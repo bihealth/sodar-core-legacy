@@ -5,14 +5,20 @@ import mistune
 
 from django import template
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
 from django.template.loader import get_template
 from django.urls import reverse
 
 import projectroles
+from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 site = import_module(settings.SITE_PACKAGE)
+User = get_user_model()
+
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 register = template.Library()
 
@@ -92,11 +98,34 @@ def get_user_html(user):
 
 
 @register.simple_tag
-def get_project_link(project):
-    """Return link to project with simple title"""
-    return '<a href="{}">{}</a>'.format(
+def get_project_link(project, full_title=False, request=None):
+    """Return link to project with a simple or full title"""
+    remote_icon = ''
+
+    if request:
+        remote_icon = get_remote_icon(project, request)
+
+    return '<a href="{}">{}</a> {}'.format(
         reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
-        project.title)
+        project.get_full_title() if full_title else project.title,
+        remote_icon)
+
+
+@register.simple_tag
+def get_remote_icon(project, request):
+    """Get remote project icon HTML"""
+    if project.is_remote() and request.user.is_superuser:
+        try:
+            remote_project = RemoteProject.objects.get(project=project)
+            return '<i class="fa fa-globe text-info mx-1 ' \
+                   'sodar-pr-remote-project-icon" title="{}" ' \
+                   'data-toggle="tooltip" data-placement="top"></i>'.format(
+                    'Remote project from ' + remote_project.site.name)
+
+        except RemoteProject.DoesNotExist:
+            pass
+
+    return ''
 
 
 @register.simple_tag
@@ -149,3 +178,23 @@ def template_exists(path):
 
     except template.TemplateDoesNotExist:
         return False
+
+
+@register.simple_tag
+def get_project_by_uuid(sodar_uuid):
+    """Return Project by sodar_uuid"""
+    try:
+        return Project.objects.get(sodar_uuid=sodar_uuid)
+
+    except Project.DoesNotExist:
+        return None
+
+
+@register.simple_tag
+def get_user_by_username(username):
+    """Return User by username"""
+    try:
+        return User.objects.get(username=username)
+
+    except User.DoesNotExist:
+        return None

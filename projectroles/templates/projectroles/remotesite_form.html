@@ -1,0 +1,41 @@
+{% extends "projectroles/base.html" %}
+
+{% load rules %}
+{% load crispy_forms_filters %}
+{% load projectroles_common_tags %}
+
+{% block title %}{% if object.pk %}Update{% else %}Add{% endif %} {% if site_mode == 'TARGET' %}Source{% else %}Target{% endif %} Site{% endblock %}
+
+{% block projectroles %}
+
+{% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+
+<div class="row sodar-subtitle-container">
+  <h2>{% if object.pk %}Update{% else %}Add{% endif %} {% if site_mode == 'TARGET' %}Source{% else %}Target{% endif %} Site</h2>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  <form method="post">
+    {% csrf_token %}
+    {{ form | crispy }}
+
+    <div class="row">
+      <div class="btn-group ml-auto" role="group">
+        <a role="button" class="btn btn-secondary"
+           href="{{ request.session.real_referer }}">
+          <i class="fa fa-arrow-circle-left"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa fa-check"></i>
+          {% if object.pk %}
+            Update
+          {% else %}
+            Add
+          {% endif %}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+{% endblock projectroles %}

@@ -536,6 +536,11 @@ a.sodar-nav-link-last {
   height: 32px;
 }
 
+.sodar-form-control-table {
+  height: 28px !important;
+  font-size: 85% !important;
+}
+
 .sodar-horizontal-radio {
   padding-right: 18px;
 }
@@ -553,6 +558,11 @@ a.sodar-nav-link-last {
 
 .text-strikethrough {
   text-decoration: line-through;
+}
+
+.text-monospace {
+  font-size: 85%;
+  padding-top: 1.15em !important;
 }
 
 

@@ -2,6 +2,7 @@
 {% load projectroles_tags %}
 
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
+{% allow_project_creation as allow_creation %}
 
 {# Project nav #}
 
@@ -53,7 +54,7 @@
       </a>
     </li>
   {% endif %}
-  {% if can_update_project %}
+  {% if not project.is_remote and can_update_project %}
     <li id="sodar-pr-nav-project-update"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}">
       <a class="nav-link"
@@ -70,7 +71,7 @@
 
 {% if project and project.type == 'CATEGORY' %}
   {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-  {% if can_create_project %}
+  {% if allow_creation and can_create_project %}
     <li id="sodar-pr-nav-project-create"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
@@ -82,7 +83,7 @@
   {% endif %}
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
-  {% if can_create_project %}
+  {% if allow_creation and can_create_project %}
     <li id="sodar-pr-nav-project-create" class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"

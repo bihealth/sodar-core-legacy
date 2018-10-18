@@ -13,11 +13,8 @@
       {% else %}
         <i class="fa fa-fw fa-cube"></i>
       {% endif %}
-      <a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">
-        {% autoescape off %}
-          {% get_project_title_html p %}
-        {% endautoescape %}
-      </a>
+      {% get_project_link project=p full_title=True request=request as project_link %}
+      {{ project_link|safe }}
       {% get_star p request.user as project_star %}
       {{ project_star|safe }}
     </div>

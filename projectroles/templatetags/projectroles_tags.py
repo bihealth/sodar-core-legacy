@@ -2,7 +2,7 @@ from django import template
 from django.conf import settings
 from django.utils import timezone
 
-from ..models import Project, RoleAssignment, SODAR_CONSTANTS, \
+from ..models import Project, RoleAssignment, RemoteProject, SODAR_CONSTANTS, \
     PROJECT_TAG_STARRED
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
@@ -18,6 +18,10 @@ PROJECT_TYPE_DISPLAY = {
     'PROJECT': 'Project',
     'CATEGORY': 'Category'}
 
+# Behaviour for certain levels has not been specified/implemented yet
+ACTIVE_LEVEL_TYPES = [
+    SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
 
 register = template.Library()
 
@@ -257,3 +261,67 @@ def get_login_info():
 
     ret += '.</p>'
     return ret
+
+
+@register.simple_tag
+def get_target_project_select(site, project):
+    """Get remote target project level selection HTML"""
+    current_level = None
+
+    try:
+        rp = RemoteProject.objects.get(
+            site__mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+            site=site,
+            project_uuid=project.sodar_uuid)
+        current_level = rp.level
+
+    except RemoteProject.DoesNotExist:
+        pass
+
+    ret = '<select class="form-control form-control-sm" ' \
+          'name="remote_access_{project}" ' \
+          'id="sodar-pr-remote-project-select-{project}">\n'.format(
+            project=project.sodar_uuid)
+
+    for level in ACTIVE_LEVEL_TYPES:
+        selected = False
+        legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
+
+        if (level == current_level or (
+                level == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and
+                not current_level)):
+            selected = True
+
+        ret += '<option value="{}" {}>{}</option>\n'.format(
+            level, 'selected' if selected else '', legend)
+
+    ret += '</select>\n'
+    return ret
+
+
+@register.simple_tag
+def get_remote_access_legend(level):
+    if level not in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS']:
+        return 'N/A'
+
+    return SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
+
+
+@register.simple_tag
+def get_remote_project_obj(site, project):
+    try:
+        return RemoteProject.objects.get(
+            site=site, project_uuid=project.sodar_uuid)
+
+    except RemoteProject.DoesNotExist:
+        return None
+
+
+@register.simple_tag
+def allow_project_creation():
+    if (settings.PROJECTROLES_SITE_MODE ==
+            SODAR_CONSTANTS['SITE_MODE_TARGET'] and
+            not settings.PROJECTROLES_TARGET_CREATE):
+        return False
+
+    return True

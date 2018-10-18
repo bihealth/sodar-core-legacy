@@ -1,0 +1,31 @@
+{% load rules %}
+{% load projectroles_common_tags %}
+
+<div class="btn-group sodar-edit-button-group sodar-pr-btn-grp-remote-site"
+     role="group" id="sodar-pr-btn-grp-remote-site-{{ site.sodar_uuid }}">
+  <button class="btn btn-secondary dropdown-toggle btn-sm sodar-edit-dropdown"
+      type="button" data-toggle="dropdown"
+      aria-haspopup="true" aria-expanded="false">
+    <i class="fa fa-cog"></i>
+  </button>
+  <div class="dropdown-menu dropdown-menu-right">
+    <a class="dropdown-item"
+       href="{% url 'projectroles:remote_projects' remotesite=site.sodar_uuid %}">
+      <i class="fa fa-fw fa-cubes"></i> View{% if site_mode == 'SOURCE' %}/Edit{% endif %} Projects
+    </a>
+    {% if site_mode == 'TARGET' and site.mode == 'SOURCE' %}
+      <a class="dropdown-item" href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">
+        <i class="fa fa-fw fa-cloud-download"></i>
+        Synchronize
+      </a>
+    {% endif %}
+    <a class="dropdown-item"
+       href="{% url 'projectroles:remote_site_update' remotesite=site.sodar_uuid %}">
+      <i class="fa fa-fw fa-pencil"></i> Update Site
+    </a>
+    <a class="dropdown-item"
+       href="{% url 'projectroles:remote_site_delete' remotesite=site.sodar_uuid %}">
+      <i class="fa fa-fw fa-times"></i> Remove Site
+    </a>
+  </div>
+</div>

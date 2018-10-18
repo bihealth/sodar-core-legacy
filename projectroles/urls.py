@@ -6,6 +6,7 @@ from . import views
 app_name = 'projectroles'
 
 urlpatterns = [
+    # General project views
     url(
         regex=r'^(?P<project>[0-9a-f-]+)$',
         view=views.ProjectDetailView.as_view(),
@@ -26,11 +27,13 @@ urlpatterns = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
+    # Search view
     url(
         regex=r'^search/$',
         view=views.ProjectSearchView.as_view(),
         name='search',
     ),
+    # Project role views
     url(
         regex=r'^members/(?P<project>[0-9a-f-]+)$',
         view=views.ProjectRoleView.as_view(),
@@ -56,6 +59,7 @@ urlpatterns = [
         view=views.RoleAssignmentImportView.as_view(),
         name='role_import',
     ),
+    # Project invite views
     url(
         regex=r'^invites/(?P<project>[0-9a-f-]+)$',
         view=views.ProjectInviteView.as_view(),
@@ -81,13 +85,55 @@ urlpatterns = [
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
     ),
-    # Javascript API Views
+    # Remote site and project views
+    url(
+        regex=r'^remote/sites$',
+        view=views.RemoteSiteListView.as_view(),
+        name='remote_sites',
+    ),
+    url(
+        regex=r'^remote/site/add$',
+        view=views.RemoteSiteCreateView.as_view(),
+        name='remote_site_create',
+    ),
+    url(
+        regex=r'^remote/site/update/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteSiteUpdateView.as_view(),
+        name='remote_site_update',
+    ),
+    url(
+        regex=r'^remote/site/delete/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteSiteDeleteView.as_view(),
+        name='remote_site_delete',
+    ),
+    url(
+        regex=r'^remote/site/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteProjectListView.as_view(),
+        name='remote_projects',
+    ),
+    url(
+        regex=r'^remote/site/access/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteProjectsBatchUpdateView.as_view(),
+        name='remote_projects_update',
+    ),
+    url(
+        regex=r'^remote/site/sync/(?P<remotesite>[0-9a-f-]+)$',
+        view=views.RemoteProjectsSyncView.as_view(),
+        name='remote_projects_sync',
+    ),
+    # SODAR API views
+    url(
+        regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',
+        view=views.RemoteProjectGetAPIView.as_view(),
+        name='api_remote_get',
+    ),
+    # Ajax API views
     url(
         regex=r'^star/(?P<project>[0-9a-f-]+)',
         view=views.ProjectStarringAPIView.as_view(),
         name='star',
     ),
-    # Taskflow API Views
+    # Taskflow API views
     url(
         regex=r'^taskflow/get$',
         view=views.ProjectGetAPIView.as_view(),

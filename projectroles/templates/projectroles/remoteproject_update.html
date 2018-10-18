@@ -1,0 +1,84 @@
+{% extends "projectroles/base.html" %}
+
+{% load crispy_forms_filters %}
+
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+{% block title %}Update Remote Access for {{ site.name }} {% endblock %}
+
+{% block projectroles %}
+
+{% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+
+<div class="row sodar-subtitle-container">
+  <h2>Update Remote Access for {{ site.name }}</h2>
+  <a role="button" class="btn btn-secondary ml-auto"
+     href="{% url 'projectroles:remote_projects' remotesite=site.sodar_uuid %}">
+    <i class="fa fa-arrow-circle-left"></i> Back to Site
+  </a>
+</div>
+
+<div class="container-fluid sodar-page-container">
+
+  <div class="alert alert-warning">
+    Are you sure you want to update project access for the site
+    "<strong>{{ site.name }}</strong>"? Please review the following
+    changes and click "Confirm" to proceed.
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="update-confirmed" value="1" />
+
+    <div class="card mb-3">
+      <div class="card-header">
+        <h4><i class="fa fa-pencil"></i> Modified Access</h4>
+      </div>
+      <div class="card-body p-0">
+        <table class="table table-striped sodar-card-table"
+               id="sodar-pr-remote-update-table">
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Old Access</th>
+              <th></th>
+              <th>New Access</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in modifying_access %}
+              <tr>
+                <td class="text-nowrap">
+                 <div class="sodar-overflow-container">
+                   <a href="{% url 'projectroles:detail' project=a.project.sodar_uuid %}" target="_blank">
+                     {% get_project_title_html a.project %}
+                   </a>
+                  </div>
+                </td>
+                <td class="text-nowrap text-danger">{% get_remote_access_legend a.old_level %}</td>
+                <td><i class="fa fa-arrow-right text-secondary"></i></td>
+                <td class="text-nowrap text-success">
+                  {% get_remote_access_legend a.new_level %}
+                  <input type="hidden"
+                         id="omics-pr-remote-project-confirm-{{ a.project.sodar_uuid }}"
+                         name="remote_access_{{ a.project.sodar_uuid }}" value="{{ a.new_level }}" />
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="container-fluid text-right">
+      <button type="submit" class="btn btn-primary">
+        <i class="fa fa-check"></i> Confirm
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+{% endblock projectroles %}
