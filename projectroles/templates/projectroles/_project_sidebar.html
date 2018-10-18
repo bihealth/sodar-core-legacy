@@ -81,8 +81,7 @@
       </a>
     </li>
   {% endif %}
-{# TODO: Fix "create" page check after rebase #}
-{% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
+{% elif request.resolver_match.url_name == 'home' or request.resolver_match.app_name == 'projectroles' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if allow_creation and can_create_project %}
     <li id="sodar-pr-nav-project-create" class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">

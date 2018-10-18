@@ -48,6 +48,8 @@ Fixed
 
 - **General**
     - Pillow dependency typo in ``requirements/base.txt`` (#33)
+- **Projectroles**
+    - Sidebar create project visible for site apps if URL name was "create" (#36)
 
 
 v0.2.1 (2018-09-20)
