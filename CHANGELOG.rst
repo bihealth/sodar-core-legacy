@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Adminalerts**
+    - Add app based on SODAR v0.3.1 (#27)
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
     - ``RemoteSiteAppPlugin`` site plugin (#3)
