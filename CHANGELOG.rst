@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **Adminalerts**
+    - Add app based on SODAR v0.3.1 (#27)
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
     - ``RemoteSiteAppPlugin`` site plugin (#3)
@@ -32,6 +34,8 @@ Added
 Changed
 -------
 
+- **Adminalerts**
+    - Make ``ADMINALERTS_PAGINATION`` setting optional
 - **Projectroles**
     - Allow ``LoggedInPermissionMixin`` to work without a permission object for superusers
     - Enable short/full title selection and remote project icon in ``get_project_link()`` template tag

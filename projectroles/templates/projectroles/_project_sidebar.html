@@ -81,6 +81,7 @@
       </a>
     </li>
   {% endif %}
+{# TODO: Fix "create" page check after rebase #}
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if allow_creation and can_create_project %}

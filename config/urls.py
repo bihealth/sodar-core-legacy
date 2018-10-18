@@ -34,6 +34,9 @@ urlpatterns = [
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
 
+    # Admin Alerts URLs
+    url(r'^alerts/', include('adminalerts.urls')),
+
     # Example project app URLs
     url(r'^examples/project/', include('example_project_app.urls')),
 
