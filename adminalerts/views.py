@@ -51,9 +51,8 @@ class AdminAlertModifyMixin(ModelFormMixin):
         return HttpResponseRedirect(reverse('adminalerts:list'))
 
 
-# TODO: Re-add LoggedInPermissionMixin after rebasing from feature/remote
 class AdminAlertCreateView(
-        AdminAlertModifyMixin, HTTPRefererMixin,
+        LoggedInPermissionMixin, AdminAlertModifyMixin, HTTPRefererMixin,
         CurrentUserFormMixin, CreateView):
     """AdminAlert creation view"""
     model = AdminAlert

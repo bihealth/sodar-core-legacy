@@ -30,8 +30,6 @@ class TestAdminAlertPermissions(TestPermissionBase, AdminAlertMixin):
             description='description',
             active=True)
 
-    # TODO: Re-enable after rebasing with feature/remote
-    '''
     def test_alert_create(self):
         url = reverse('adminalerts:create')
         good_users = [
@@ -41,7 +39,6 @@ class TestAdminAlertPermissions(TestPermissionBase, AdminAlertMixin):
             self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
-    '''
 
     def test_alert_update(self):
         url = reverse(
