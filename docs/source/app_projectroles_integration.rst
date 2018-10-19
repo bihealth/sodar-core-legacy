@@ -263,6 +263,12 @@ Projectroles Settings
 Fill out projectroles app settings to fit your site. The settings variables are
 explained below:
 
+* ``PROJECTROLES_SITE_MODE``: Site mode for remote project metadata
+  synchronization, either ``SOURCE`` (allow others to read local projects) or
+  ``TARGET`` (read projects from another site)
+* ``PROJECTROLES_TARGET_CREATE``: Whether or not local projects can be created
+  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this setting
+  has no effect.
 * ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
   projectroles (int)
 * ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire (int)
@@ -277,6 +283,8 @@ Example:
 .. code-block:: python
 
     # Projectroles app settings
+    PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
+    PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_SECRET_LENGTH = 32
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
