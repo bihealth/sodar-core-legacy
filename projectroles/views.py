@@ -2024,7 +2024,7 @@ class TaskflowAPIPermission(BasePermission):
 
     def has_permission(self, request, view):
         # Only allow accessing Taskflow API views if Taskflow is used
-        return True if get_backend_api('taskflow') else False
+        return True if 'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
 
 
 class BaseTaskflowAPIView(APIView):

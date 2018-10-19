@@ -12,7 +12,7 @@ Added
 -----
 
 - **Adminalerts**
-    - Add app based on SODAR v0.3.1 (#27)
+    - Add app based on SODAR v0.3.3 (#27)
     - ``TASKFLOW_TARGETS`` setting
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
@@ -30,7 +30,7 @@ Added
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
     - ``is_remote()`` and ``get_source_site()`` helpers in the ``Project`` model (#3)
 - **Taskflowbackend**
-    - Add app based on SODAR v0.3.1 (#38)
+    - Add app based on SODAR v0.3.3 (#38)
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 

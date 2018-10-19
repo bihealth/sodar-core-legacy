@@ -159,6 +159,9 @@ class TestViewsBase(TestCase):
         self.user.save()
 
 
+# General view tests -----------------------------------------------------------
+
+
 class TestHomeView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the home view"""
 
@@ -1230,6 +1233,10 @@ class TestProjectStarringAPIView(
         self.assertEqual(response.status_code, 200)
 
 
+# Taskflow API view tests ------------------------------------------------------
+
+
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the project retrieve API view"""
 
@@ -1257,6 +1264,7 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
 
         self.assertEqual(response.data, expected)
 
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_get_pending(self):
         """Test POST request to get a pending project"""
         pd_project = self._make_project(
@@ -1273,6 +1281,7 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         self.assertEqual(response.status_code, 404)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectUpdateAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the project updating API view"""
@@ -1309,6 +1318,7 @@ class TestProjectUpdateAPIView(
         self.assertEqual(self.project.readme.raw, readme)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment getting API view"""
@@ -1340,6 +1350,7 @@ class TestRoleAssignmentGetAPIView(
         self.assertEqual(response.data, expected)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentSetAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment setting API view"""
@@ -1396,6 +1407,7 @@ class TestRoleAssignmentSetAPIView(
         self.assertEqual(new_as.role.pk, self.role_contributor.pk)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentDeleteAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment deletion API view"""
@@ -1442,6 +1454,40 @@ class TestRoleAssignmentDeleteAPIView(
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
+
+
+@override_settings(ENABLED_BACKEND_PLUGINS=[])
+class TestDisabledTaskflowAPIViews(
+        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+    """Tests for taskflow API views without taskflow enabled"""
+
+    def setUp(self):
+        super(TestDisabledTaskflowAPIViews, self).setUp()
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+    def test_disable_api_views(self):
+        """Test to make sure API views are disabled without taskflow"""
+
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 401)
+
+
+# Remote view tests ------------------------------------------------------------
 
 
 class TestRemoteSiteListView(
@@ -1916,33 +1962,3 @@ class TestRemoteProjectsBatchUpdateView(
                 reverse(
                     'projectroles:remote_projects',
                     kwargs={'remotesite': self.target_site.sodar_uuid}))
-
-
-class TestTaskflowAPIViews(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
-    """Tests for taskflow API views without taskflow enabled"""
-
-    def setUp(self):
-        super(TestTaskflowAPIViews, self).setUp()
-        self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
-        self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
-
-    @override_settings(ENABLED_BACKEND_PLUGINS=[])
-    def test_disable_api_views(self):
-        """Test to make sure API views are disabled without taskflow"""
-
-        urls = [
-            reverse('projectroles:taskflow_project_get'),
-            reverse('projectroles:taskflow_project_update'),
-            reverse('projectroles:taskflow_role_get'),
-            reverse('projectroles:taskflow_role_set'),
-            reverse('projectroles:taskflow_role_delete'),
-            reverse('projectroles:taskflow_settings_get'),
-            reverse('projectroles:taskflow_settings_set')]
-
-        for url in urls:
-            response = self.client.post(url)
-            self.assertEqual(response.status_code, 401)
