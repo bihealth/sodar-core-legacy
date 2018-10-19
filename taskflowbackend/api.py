@@ -13,9 +13,6 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 # Local constants
-TASKFLOW_URL = '{}:{}'.format(
-    settings.TASKFLOW_BACKEND_HOST,
-    settings.TASKFLOW_BACKEND_PORT)
 HEADERS = {'Content-Type': 'application/json'}
 TARGETS = settings.TASKFLOW_TARGETS if \
     hasattr(settings, 'TASKFLOW_TARGETS') else ['sodar']
@@ -33,7 +30,8 @@ class TaskflowAPI:
         pass
 
     def __init__(self):
-        pass
+        self.taskflow_url = '{}:{}'.format(
+            settings.TASKFLOW_BACKEND_HOST, settings.TASKFLOW_BACKEND_PORT)
 
     def submit(
             self, project_uuid, flow_name, flow_data, request=None,
@@ -52,7 +50,7 @@ class TaskflowAPI:
         :param sodar_url: URL of SODAR server (optional, for testing)
         :return: Boolean, status info if failure (string)
         """
-        url = TASKFLOW_URL + '/submit'
+        url = self.taskflow_url + '/submit'
 
         # Format UUIDs in flow_data
         for k, v in flow_data.items():
@@ -103,7 +101,7 @@ class TaskflowAPI:
         """Send a cleanup command to SODAR Taskflow. NOTE: only to be used with
         a test db!"""
         # TODO: Security measures
-        url = TASKFLOW_URL + '/cleanup'
+        url = self.taskflow_url + '/cleanup'
         response = requests.get(url)
 
         if response.status_code == 200:
