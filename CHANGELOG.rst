@@ -28,6 +28,8 @@ Added
     - Predicates in rules for handling remote projects (#3)
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
     - ``is_remote()`` and ``get_source_site()`` helpers in the ``Project`` model (#3)
+- **Taskflowbackend**
+    - Add app based on SODAR v0.3.1 (#38)
 - **Timeline**
     - ``RemoteSite`` model in ``api.get_event_description()`` (#3)
 
