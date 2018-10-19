@@ -31,11 +31,11 @@ to set up your site.
     Currently, SODAR Core only supports Django 1.11.x, while the latest versions
     of cookiecutter-django set up Django 2.0.x by default. It is strongly
     recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
-    upwards is not guaranteed! **Integration into the last official
+    upwards is not guaranteed! Integration into the last official
     `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-    of cookiecutter-django has been tested and verified to be working.**
-    However, from this install it is recommended to upgrade the Django version
-    to the latest 1.11 release (1.11.15 at the time of writing).
+    of cookiecutter-django has been tested and verified to be working. However,
+    from this install it is recommended to upgrade the Django version to the
+    latest 1.11 release (1.11.16 at the time of writing).
 
 Make sure to set up a virtual Python environment for development with required
 dependencies.
@@ -45,6 +45,12 @@ dependencies.
     If in doubt about what prerequisites to install, see the cookiecutter-django
     manual. Usually ``requirements/local.txt`` must be installed to run the site
     locally.
+
+.. note::
+
+    The latest cookiecutter-django 1.11 release has dependencies which are
+    already out of date. Please update them to match the requirements of the
+    django-sodar-core package.
 
 .. note::
 
@@ -518,8 +524,8 @@ line:
 .. note::
 
     The container structure defined in the example base.html, along with
-    including the ``{STATIC}/projectroles/css/project.css`` are **mandatory** for
-    Projectroles-based views to work without modifications.
+    including the ``{STATIC}/projectroles/css/projectroles.css`` are
+    **mandatory** for Projectroles-based views to work without modifications.
 
 
 Customizing Your Site
@@ -533,8 +539,8 @@ Project CSS
 While it is strongly recommended to use the Projectroles layout and styles,
 there are of course many possibilities for customization.
 
-If some of the CSS definitions in ``{STATIC}/projectroles/css/project.css`` do
-not suit your purposes, it is of course possible to override them in your own
+If some of the CSS definitions in ``{STATIC}/projectroles/css/projectroles.css``
+do not suit your purposes, it is of course possible to override them in your own
 includes. It is still recommended to include the *"Flexbox page setup"* section
 as is.
 
@@ -587,3 +593,7 @@ Or, run the standard Django ``runserver`` command:
 You can now browse your site locally at ``http://127.0.0.1:8000``. You are
 expected to log in to view the site. Use e.g. the superuser account you created
 when setting up your cookiecutter-django site.
+
+You can now continue on to create apps or modify your existing apps to be
+compatible with the SODAR Core framework. See the
+:ref:`development section <development>` for app development guides.

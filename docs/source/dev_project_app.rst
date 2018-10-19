@@ -119,6 +119,13 @@ Below is an example of a projectroles-compatible Django model:
             unique=True,
             help_text='SomeModel SODAR UUID')
 
+.. note::
+
+    The ``related_name`` field is optional, but recommended as it provides an
+    easy way to lookup objects of a certain type related to a project. For
+    example the ``project`` foreign key in a model called ``Document`` could
+    feature e.g. ``related_name='documents'``.
+
 
 Rules File
 ==========
