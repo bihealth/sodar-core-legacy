@@ -45,6 +45,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    getting_started
    breaking_changes
    app_projectroles
+   app_adminalerts
    app_userprofile
    app_timeline
    development
