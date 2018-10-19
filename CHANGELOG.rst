@@ -13,6 +13,7 @@ Added
 
 - **Adminalerts**
     - Add app based on SODAR v0.3.1 (#27)
+    - ``TASKFLOW_TARGETS`` setting
 - **Projectroles**
     - ``RemoteSite`` and ``RemoteProject`` models (#3)
     - ``RemoteSiteAppPlugin`` site plugin (#3)

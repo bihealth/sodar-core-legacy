@@ -5,11 +5,12 @@ from projectroles.models import Project, Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins, get_backend_api
 
 
-# Omics constants
+# SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
-TARGETS = ['irods']     # Submit to iRODS, data already in Omics Data Access
+TARGETS = settings.TASKFLOW_TARGETS
+TARGETS.remove('sodar')  # Exclude SODAR from sync as data is already here
 
 
 class Command(BaseCommand):
@@ -32,13 +33,13 @@ class Command(BaseCommand):
         def submit_sync(app_name, sync_data, raise_exception=False):
             """Submit flows found in an app's sync_data structure"""
             for item in sync_data:
-                project = Project.objects.get(omics_uuid=item['project_uuid'])
+                project = Project.objects.get(sodar_uuid=item['project_uuid'])
 
                 print_msg('Syncing flow "{}" by {} for "{}" ({})'.format(
                     item['flow_name'],
                     app_name,
                     project.title,
-                    project.omics_uuid))
+                    project.sodar_uuid))
 
                 try:
                     taskflow.submit(
@@ -59,7 +60,7 @@ class Command(BaseCommand):
         print_msg('Target(s) = ' + ', '.join([t for t in TARGETS]))
 
         # Only sync PROJECT type projects as we (currently) don't have any
-        # use for CATEGORY projects in iRODS
+        # use for CATEGORY projects in taskflow
         projects = Project.objects.filter(
             type=PROJECT_TYPE_PROJECT).order_by('pk')
 
@@ -80,21 +81,21 @@ class Command(BaseCommand):
 
             # Create project
             project_sync_data.append({
-                'project_uuid': str(project.omics_uuid),
+                'project_uuid': str(project.sodar_uuid),
                 'project_title': project.title,
                 'flow_name': 'project_create',
                 'flow_data': {
                     'project_title': project.title,
                     'project_description': project.description,
-                    'parent_uuid': str(project.parent.omics_uuid) if
+                    'parent_uuid': str(project.parent.sodar_uuid) if
                     project.parent else 0,
                     'owner_username': owner_as.user.username,
-                    'owner_uuid': str(owner_as.user.omics_uuid),
+                    'owner_uuid': str(owner_as.user.sodar_uuid),
                     'owner_role_pk': owner_as.role.pk}})
 
             # Set up roles
             role_sync_data.append({
-                'project_uuid': str(project.omics_uuid),
+                'project_uuid': str(project.sodar_uuid),
                 'project_title': project.title,
                 'flow_name': 'role_sync_delete_all',
                 'flow_data': {
@@ -104,12 +105,12 @@ class Command(BaseCommand):
                     role=Role.objects.get(
                         name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])):
                 role_sync_data.append({
-                    'project_uuid': str(project.omics_uuid),
+                    'project_uuid': str(project.sodar_uuid),
                     'project_title': project.title,
                     'flow_name': 'role_update',
                     'flow_data': {
                         'username': role_as.user.username,
-                        'user_uuid': str(role_as.user.omics_uuid),
+                        'user_uuid': str(role_as.user.sodar_uuid),
                         'role_pk': str(role_as.role.pk)}})
 
         try:

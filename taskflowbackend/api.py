@@ -1,4 +1,4 @@
-"""Omics Taskflow API for Django apps"""
+"""SODAR Taskflow API for Django apps"""
 import requests
 from uuid import UUID
 
@@ -8,7 +8,7 @@ from django.conf import settings
 from projectroles.models import SODAR_CONSTANTS
 
 
-# Omics constants
+# SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
@@ -17,18 +17,19 @@ TASKFLOW_URL = '{}:{}'.format(
     settings.TASKFLOW_BACKEND_HOST,
     settings.TASKFLOW_BACKEND_PORT)
 HEADERS = {'Content-Type': 'application/json'}
-TARGETS = ['irods', 'omics']
+TARGETS = settings.TASKFLOW_TARGETS if \
+    hasattr(settings, 'TASKFLOW_TARGETS') else ['sodar']
 
 
 class TaskflowAPI:
     """Taskflow API to be used by Django apps"""
 
     class FlowSubmitException(Exception):
-        """Omics Taskflow submission exception"""
+        """SODAR Taskflow submission exception"""
         pass
 
     class CleanupException(Exception):
-        """Omics Taskflow cleanup exception"""
+        """SODAR Taskflow cleanup exception"""
         pass
 
     def __init__(self):
@@ -37,7 +38,7 @@ class TaskflowAPI:
     def submit(
             self, project_uuid, flow_name, flow_data, request=None,
             targets=TARGETS, request_mode='sync', timeline_uuid=None,
-            force_fail=False, omics_url=None):
+            force_fail=False, sodar_url=None):
         """
         Submit taskflow for project data modification.
         :param project_uuid: UUID of the project (UUID object or string)
@@ -48,7 +49,7 @@ class TaskflowAPI:
         :param request_mode: "sync" or "async"
         :param timeline_uuid: UUID of corresponding timeline event (optional)
         :param force_fail: Make flow fail on purpose (boolean, default False)
-        :param omics_url: URL of omics_data_mgmt server (optional, for testing)
+        :param sodar_url: URL of SODAR server (optional, for testing)
         :return: Boolean, status info if failure (string)
         """
         url = TASKFLOW_URL + '/submit'
@@ -69,14 +70,14 @@ class TaskflowAPI:
 
         # HACK: Add overriding URL for test server
         if request:
-            if request.POST and 'omics_url' in request.POST:
-                data['omics_url'] = request.POST['omics_url']
+            if request.POST and 'sodar_url' in request.POST:
+                data['sodar_url'] = request.POST['sodar_url']
 
-            elif request.GET and 'omics_url' in request.GET:
-                data['omics_url'] = request.GET['omics_url']
+            elif request.GET and 'sodar_url' in request.GET:
+                data['sodar_url'] = request.GET['sodar_url']
 
-        elif omics_url:
-            data['omics_url'] = omics_url
+        elif sodar_url:
+            data['sodar_url'] = sodar_url
 
         # print('DATA: {}'.format(data))  # DEBUG
         response = requests.post(url, json=data, headers=HEADERS)
@@ -99,9 +100,9 @@ class TaskflowAPI:
         return True if project.type == PROJECT_TYPE_PROJECT else False
 
     def cleanup(self):
-        """Clean up everything from the iRODS iCAT server database. NOTE: only
-        to be used with a test db!"""
-        # TODO: Some security measures preventing using this on a prod icat..
+        """Send a cleanup command to SODAR Taskflow. NOTE: only to be used with
+        a test db!"""
+        # TODO: Security measures
         url = TASKFLOW_URL + '/cleanup'
         response = requests.get(url)
 
@@ -109,9 +110,9 @@ class TaskflowAPI:
             return True
 
         else:
-            print('Cleanup Response: {}'.format(response.text))  # DEBUG
+            # print('Cleanup Response: {}'.format(response.text))  # DEBUG
             raise self.FlowSubmitException(response.text)
 
     def get_error_msg(self, flow_name, submit_info):
-        return 'iRODS taskflow "{}" failed! Reason: "{}"'.format(
+        return 'Taskflow "{}" failed! Reason: "{}"'.format(
             flow_name, submit_info[:256])
