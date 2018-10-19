@@ -77,6 +77,9 @@ LOCAL_APPS = [
     # Admin Alerts site app
     'adminalerts.apps.AdminalertsConfig',
 
+    # SODAR Taskflow backend app
+    'taskflowbackend.apps.TaskflowbackendConfig',
+
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
 

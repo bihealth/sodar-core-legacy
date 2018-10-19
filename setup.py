@@ -63,6 +63,7 @@ setup(
         'userprofile',
         'timeline',
         'adminalerts',
+        'taskflowbackend'
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.txt'),
