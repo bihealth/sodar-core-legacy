@@ -47,6 +47,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    app_projectroles
    app_adminalerts
    app_userprofile
+   app_taskflow
    app_timeline
    development
 
