@@ -27,10 +27,22 @@ If your site is set in ``TARGET`` mode, the boolean setting
 creation of local projects is allowed. If your site is in ``SOURCE`` mode, this
 setting can be included but will have no effect.
 
-Example:
+Furthermore, if your site is in ``TARGET`` mode you must include the
+``PROJECTROLES_ADMIN_OWNER`` setting, which must point to an existing local
+superuser account on your site.
+
+Example for a ``SOURCE`` site:
+
+.. code-block:: python
+
+    # Projectroles app settings
+    PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
+
+Example for a ``TARGET`` site:
 
 .. code-block:: python
 
     # Projectroles app settings
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
+    PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')

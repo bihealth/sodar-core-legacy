@@ -43,13 +43,13 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    :caption: Contents:
 
    getting_started
-   breaking_changes
    app_projectroles
    app_adminalerts
    app_userprofile
    app_taskflow
    app_timeline
    development
+   breaking_changes
 
 
 Indices and tables
