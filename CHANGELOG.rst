@@ -37,6 +37,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Update documentation for v0.3 changes, projectroles usage and fixes to v0.2 docs (#26)
 - **Adminalerts**
     - Make ``ADMINALERTS_PAGINATION`` setting optional
 - **Projectroles**
