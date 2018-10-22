@@ -26,7 +26,11 @@ to the relevant view for the object on your Django site.
 Admin users are able to see certain *"classified"* level events hidden from
 normal users.
 
-**TODO:** Screenshots etc.
+.. figure:: _static/app_timeline/sodar_timeline.png
+    :align: center
+    :scale: 50%
+
+    Timeline event list view
 
 
 Backend API for Event Logging
@@ -38,8 +42,6 @@ The API for logging events is located in ``timeline.api``.
 
     For the best in-depth instructions on how to use the API, see the docstrings
     in the API class code.
-
-**TODO:** Hook up the API doc here
 
 Invoking the API
 ----------------
