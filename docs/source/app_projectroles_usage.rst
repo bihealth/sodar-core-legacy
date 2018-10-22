@@ -29,6 +29,12 @@ One can either log in using a local Django user or, if LDAP/AD is enabled, their
 LDAP/AD credentials from a supported site. In the latter case, the user domain
 must be appended to the user name in form of ``user@DOMAIN``.
 
+.. figure:: _static/app_projectroles/sodar_login.png
+    :align: center
+    :scale: 75%
+
+    SODAR login form
+
 
 User Interface
 ==============
@@ -48,6 +54,18 @@ the general view of your site is split into the following elements:
 - **Content**: Actual app content goes in this element
 - **Footer**: Optional footer with e.g. site info and version
 
+.. figure:: _static/app_projectroles/sodar_home.png
+    :align: center
+    :scale: 50%
+
+    Home view
+
+.. figure:: _static/app_projectroles/sodar_user_dropdown.png
+    :align: center
+    :scale: 75%
+
+    User dropdown
+
 Home View
 ---------
 
@@ -56,20 +74,26 @@ the home view displays a tree view of categories and projects to choose from.
 You can filter the list with a search term or restrict display to your starred
 projects.
 
-Project Overview
-----------------
+Project Detail View
+-------------------
 
-The project overview page dynamically imports elements from installed project
-apps, usually showing e.g. latest additions to app data, some statistics and/or
-shortcuts to functionality. Here you can also access project apps from the
-project sidebar. For project apps, the sidebar link leads to the app entry point
-view as defined in the app plugin.
+The project detail page dynamically imports elements from installed project
+apps, usually showing e.g. overview of latest additions to app data, statistics
+and/or shortcuts to app functionalities. Here you can also access project apps
+from the project sidebar. For project apps, the sidebar link leads to the app
+entry point view as defined in the app plugin.
 
 For each page in a project app which extends the default projectroles template
 layout, the **project title bar** is displayed on the top of the page. This
 contains the project title and description and a link to "star" the project into
 your favourites. Below this, the **project app title bar** with possible
 app-specific controls is usually displayed.
+
+.. figure:: _static/app_projectroles/sodar_project_detail.png
+    :align: center
+    :scale: 50%
+
+    Project detail view
 
 
 Category and Project Management
@@ -103,6 +127,12 @@ modified later.
     and can currently only be done via the admin view or directly in the Django
     shell.
 
+.. figure:: _static/app_projectroles/sodar_category_create.png
+    :align: center
+    :scale: 50%
+
+    Category/project creation form
+
 Creating Projects
 -----------------
 
@@ -118,6 +148,12 @@ Updating Projects
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
 before will be presented to the user.
+
+.. figure:: _static/app_projectroles/sodar_project_update.png
+    :align: center
+    :scale: 50%
+
+    Category/project updating form
 
 Project Settings
 ----------------
@@ -140,6 +176,12 @@ Project member roles can be viewed and modified through the **Project Members**
 link on the sidebar. Modification requires a sufficient role in the project
 (owner or delegate) or superuser status.
 
+.. figure:: _static/app_projectroles/sodar_role_list.png
+    :align: center
+    :scale: 50%
+
+    Project member list view
+
 Adding Members
 --------------
 
@@ -150,7 +192,8 @@ There are two ways to add new members to a project:
   in the system.
 
 Addition or modification of users sends an email notification to the user in
-question if email sending is enabled on your Django server.
+question if email sending is enabled on your Django server. The emails can be
+previewed in corresponding forms.
 
 Modifying Members
 -----------------
@@ -189,6 +232,12 @@ from which project data can be retrieved from.
 To enable remote project data reading, you must first set up either a target
 or a source site depending on the role of your own SODAR site.
 
+.. figure:: _static/app_projectroles/sodar_remote_sites.png
+    :align: center
+    :scale: 50%
+
+    Remote site list in source mode
+
 As Source Site
 --------------
 
@@ -224,6 +273,12 @@ two are currently implemented:
 
 Once desired access to specific projects has been granted and confirmed, the
 target site will sync the data by sending a request to the source site.
+
+.. figure:: _static/app_projectroles/sodar_remote_projects.png
+    :align: center
+    :scale: 50%
+
+    Remote project list in source mode
 
 As Target Site
 --------------
