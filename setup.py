@@ -53,7 +53,7 @@ setup(
     name='django-sodar-core',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
-    description="""SODAR project management and core tools""",
+    description="""SODAR Core framework and project management apps""",
     long_description=README + '\n\n' + CHANGELOG,
     author='Mikko Nieminen',
     author_email='mikko.nieminen@bihealth.de',
