@@ -1,6 +1,8 @@
 {% load projectroles_common_tags %}
 
+{% get_setting 'SITE_TITLE' as site_title %}
+
 <div class="text-sm-center">
   Set the content for your footer in include/_footer.html.
-  Example Site v{% site_version %} / SODAR Core v{% core_version %}
+  {{ site_title }} v{% site_version %} / SODAR Core v{% core_version %}
 </div>
