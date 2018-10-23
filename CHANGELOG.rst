@@ -57,6 +57,12 @@ Fixed
 - **Projectroles**
     - Sidebar create project visible for site apps if URL name was "create" (#36)
 
+Removed
+-------
+
+- **General**
+    - iRODS specific CSS classes from ``projectroles.css``
+
 
 v0.2.1 (2018-09-20)
 ===================
