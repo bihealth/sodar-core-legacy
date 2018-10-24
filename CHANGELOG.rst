@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Test config and script for SODAR Taskflow testing
 - **Adminalerts**
     - Add app based on SODAR v0.3.3 (#27)
     - ``TASKFLOW_TARGETS`` setting
