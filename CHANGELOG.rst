@@ -58,6 +58,7 @@ Fixed
     - Pillow dependency typo in ``requirements/base.txt`` (#33)
 - **Projectroles**
     - Sidebar create project visible for site apps if URL name was "create" (#36)
+    - Enabling LDAP without a secondary backend caused a crash (#39)
 
 Removed
 -------
