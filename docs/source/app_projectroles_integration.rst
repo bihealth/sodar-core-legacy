@@ -354,7 +354,8 @@ This part of the setup is **optional**.
             ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
         AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
         AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
-        AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
+        AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
+            'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN)
 
         AUTHENTICATION_BACKENDS = tuple(itertools.chain(
            ('projectroles.auth_backends.PrimaryLDAPBackend',),
@@ -373,7 +374,7 @@ This part of the setup is **optional**.
             AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
             AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
             AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
-                'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
+                'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN)
 
             AUTHENTICATION_BACKENDS = tuple(itertools.chain(
                 ('projectroles.auth_backends.SecondaryLDAPBackend',),

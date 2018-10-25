@@ -57,6 +57,7 @@ Fixed
 
 - **General**
     - Pillow dependency typo in ``requirements/base.txt`` (#33)
+    - Login page crash if ``AUTH_LDAP*_DOMAIN_PRINTABLE`` not found (#43)
 - **Projectroles**
     - Sidebar create project visible for site apps if URL name was "create" (#36)
     - Enabling LDAP without a secondary backend caused a crash (#39)
