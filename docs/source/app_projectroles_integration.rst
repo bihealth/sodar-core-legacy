@@ -567,6 +567,22 @@ separately:
 
 See the templates themselves for further instructions.
 
+Additional Title Bar Links
+--------------------------
+
+If you want to add additional links *not* related to apps in the title bar, you
+can implement in the template file
+``{SITE_NAME}/templates/include/_titlebar_nav.html``. This can be done for e.g.
+documentation links or linking to external sites. Example:
+
+.. code-block:: django
+
+    {# Example extra link #}
+    <li class="nav-item">
+      <a href="#" class="nav-link" id="site-extra-link-x" target="_blank">
+        <i class="fa fa-fw fa-question-circle"></i> Extra Link
+      </a>
+    </li>
 
 Site Icon
 ---------

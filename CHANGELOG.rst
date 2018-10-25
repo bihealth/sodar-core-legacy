@@ -31,6 +31,7 @@ Added
     - Predicates in rules for handling remote projects (#3)
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
     - ``is_remote()`` and ``get_source_site()`` helpers in the ``Project`` model (#3)
+    - Include template ``_titlebar_nav.html`` for additional title bar links
 - **Taskflowbackend**
     - Add app based on SODAR v0.3.3 (#38)
 - **Timeline**
