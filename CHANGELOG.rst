@@ -68,6 +68,7 @@ Removed
 - **General**
     - iRODS specific CSS classes from ``projectroles.css``
     - App content width limit in ``projectroles.css``
+    - Domain-specific Login JQuery
 
 
 v0.2.1 (2018-09-20)
