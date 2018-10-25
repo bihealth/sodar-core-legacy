@@ -39,7 +39,7 @@
     </div>
     <div class="card-body p-0">
      <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
-       <thead>
+       <thead id="sodar-pr-project-list-header">
          {% include 'projectroles/_project_list_header.html' %}
        </thead>
        <tbody>
@@ -81,7 +81,7 @@
     tour.addStep('home_project', {
         title: 'Available Projects',
         text: 'Projects available to you are listed in this table.',
-        attachTo: '#sodar-pr-project-list top',
+        attachTo: '#sodar-pr-project-list-header top',
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
