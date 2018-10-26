@@ -3,13 +3,13 @@
 {% load projectroles_tags %}
 
 {% block title %}
-  Confirm removal of member {{ object.user.username }} from {{ object.project.title }}
+  Confirm Removal of Member {{ object.user.username }} from {{ object.project.title }}
 {% endblock title %}
 
 {% block projectroles_extend %}
 
 <div class="container-fluid sodar-page-container">
-  <h3>Confirm removal of member {{ object.user.username }}</h3>
+  <h3>Confirm Removal of Member {{ object.user.username }}</h3>
 
   <div class="alert alert-warning" role="alert">
     Do you really want to remove the role of "{{ object.role.name }}"

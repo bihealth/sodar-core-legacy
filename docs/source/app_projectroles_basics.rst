@@ -59,6 +59,29 @@ projects:
     Currently, only superusers can assign owner roles for top-level categories.
 
 
+Remote Project Sync
+===================
+
+SODAR Core allows optionally reading and synchronizing project metadata between
+multiple SODAR-based Django sites. A superuser is able to set desired levels of
+remote access for specific sites on a per-project basis.
+
+A SODAR site must be set in either **source** or **target** mode.
+
+- **Source** site is one expecting to (potentially) serve project metadata to
+  an arbitrary number of other SODAR sites.
+- **Target** site can be linked with exactly one source site, from which it
+  can retrieve project metadata. Creation of local projects can be enabled or
+  disabled according to local configuration.
+
+Among the data which can be synchronized:
+
+- General project information such as title, description and readme
+- Project category structure
+- User roles in projects
+- User accounts for LDAP/AD users (required for the previous step)
+
+
 Rule System
 ===========
 

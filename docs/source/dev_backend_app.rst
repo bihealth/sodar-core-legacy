@@ -44,15 +44,15 @@ Declaring the Plugin
 
 Create a file ``plugins.py`` in your app's directory. In the file, declare a
 ``BackendAppPlugin`` class implementing
-``projectroles.plugins.BackendAppPluginPoint``. Within the class, implement
+``projectroles.plugins.BackendPluginPoint``. Within the class, implement
 member variables and functions as instructed in comments and docstrings.
 
 .. code-block:: python
 
-    from projectroles.plugins import BackendAppPluginPoint
+    from projectroles.plugins import BackendPluginPoint
     from .urls import urlpatterns
 
-    class BackendAppPlugin(BackendAppPluginPoint):
+    class BackendAppPlugin(BackendPluginPoint):
         """Plugin for registering a backend app"""
         name = 'example_backend_app'
         title = 'Example Backend App'

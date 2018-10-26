@@ -16,9 +16,11 @@ Repository Contents
 The following Django apps will be installed when installing the
 ``django-sodar-core`` package:
 
-- **projectroles**: Base app for project access management and
-  dynamic app content management. All other apps require the integration of
-  projectroles.
+- **projectroles**: Base app for project access management and dynamic app
+  content management. All other apps require the integration of projectroles.
+- **adminalerts**: Site app for displaying site-wide messages to all users.
+- **taskflowbackend**: Backend app providing an API for the optional
+  ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
 - **userprofile**: Site app for viewing user profiles.
 

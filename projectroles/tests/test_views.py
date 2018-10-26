@@ -1,23 +1,27 @@
 """Tests for views in the projectroles Django app"""
 
 import base64
+import json
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.forms.models import model_to_dict
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 from django.utils import timezone
 
 from test_plus.test import TestCase
 
 from .. import views
 from ..models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectUserTag, SODAR_CONSTANTS, PROJECT_TAG_STARRED
+    ProjectUserTag, RemoteSite, RemoteProject, SODAR_CONSTANTS, \
+    PROJECT_TAG_STARRED
 from ..plugins import change_plugin_status, get_backend_api, \
     get_active_plugins, ProjectAppPluginPoint
+from ..remote_projects import RemoteProjectAPI
+from ..utils import build_secret
 from .test_models import ProjectMixin, RoleAssignmentMixin, \
-    ProjectInviteMixin, ProjectUserTagMixin
+    ProjectInviteMixin, ProjectUserTagMixin, RemoteSiteMixin, RemoteProjectMixin
 from projectroles.utils import get_user_display_name
 
 
@@ -31,11 +35,21 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
+REMOTE_SITE_NAME = 'Test site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_DESC = 'description'
+REMOTE_SITE_SECRET = build_secret()
+
+REMOTE_SITE_NEW_NAME = 'New name'
+REMOTE_SITE_NEW_URL = 'https://new.url'
+REMOTE_SITE_NEW_DESC = 'New description'
+REMOTE_SITE_NEW_SECRET = build_secret()
 
 
 class ProjectSettingMixin:
@@ -145,6 +159,9 @@ class TestViewsBase(TestCase):
         self.user.is_staff = True
         self.user.is_superuser = True
         self.user.save()
+
+
+# General view tests -----------------------------------------------------------
 
 
 class TestHomeView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
@@ -1218,6 +1235,10 @@ class TestProjectStarringAPIView(
         self.assertEqual(response.status_code, 200)
 
 
+# Taskflow API view tests ------------------------------------------------------
+
+
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the project retrieve API view"""
 
@@ -1245,6 +1266,7 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
 
         self.assertEqual(response.data, expected)
 
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_get_pending(self):
         """Test POST request to get a pending project"""
         pd_project = self._make_project(
@@ -1261,6 +1283,7 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         self.assertEqual(response.status_code, 404)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectUpdateAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the project updating API view"""
@@ -1297,6 +1320,7 @@ class TestProjectUpdateAPIView(
         self.assertEqual(self.project.readme.raw, readme)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment getting API view"""
@@ -1328,6 +1352,7 @@ class TestRoleAssignmentGetAPIView(
         self.assertEqual(response.data, expected)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentSetAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment setting API view"""
@@ -1384,6 +1409,7 @@ class TestRoleAssignmentSetAPIView(
         self.assertEqual(new_as.role.pk, self.role_contributor.pk)
 
 
+@override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentDeleteAPIView(
         TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for the role assignment deletion API view"""
@@ -1430,3 +1456,572 @@ class TestRoleAssignmentDeleteAPIView(
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
+
+
+@override_settings(ENABLED_BACKEND_PLUGINS=[])
+class TestDisabledTaskflowAPIViews(
+        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+    """Tests for taskflow API views without taskflow enabled"""
+
+    def setUp(self):
+        super(TestDisabledTaskflowAPIViews, self).setUp()
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+    def test_disable_api_views(self):
+        """Test to make sure API views are disabled without taskflow"""
+
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            response = self.client.post(url)
+            self.assertEqual(response.status_code, 401)
+
+
+# Remote view tests ------------------------------------------------------------
+
+
+class TestRemoteSiteListView(
+        TestViewsBase, RemoteSiteMixin):
+    """Tests for remote site list view"""
+
+    def setUp(self):
+        super(TestRemoteSiteListView, self).setUp()
+
+        # Create target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render_as_source(self):
+        """Test rendering the remote site list view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote_sites'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['sites'].count(), 1)  # 1 target site
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_render_as_target(self):
+        """Test rendering the remote site list view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote_sites'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['sites'].count(), 0)  # 1 source sites
+
+
+class TestRemoteSiteCreateView(
+        TestViewsBase, RemoteSiteMixin):
+    """Tests for remote site create view"""
+
+    def setUp(self):
+        super(TestRemoteSiteCreateView, self).setUp()
+
+    def test_render_as_source(self):
+        """Test rendering the remote site create view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:remote_site_create'))
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertIsNotNone(form.fields['secret'].initial)
+        self.assertEqual(form.fields['secret'].widget.attrs['readonly'], True)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_render_as_target(self):
+        """Test rendering the remote site create view as target"""
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:remote_site_create'))
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertIsNone(form.fields['secret'].initial)
+        self.assertNotIn('readonly', form.fields['secret'].widget.attrs)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_render_as_target_existing(self):
+        """Test rendering the remote site create view as target with an existing source (should fail)"""
+
+        # Create source site
+        self.source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=REMOTE_SITE_SECRET)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:remote_site_create'))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+    def test_create_target(self):
+        """Test creating a target site"""
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 0)
+
+        values = {
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'description': REMOTE_SITE_DESC,
+            'secret': REMOTE_SITE_SECRET}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:remote_site_create'),
+                values)
+
+        # Assert site state after creation
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+        site = RemoteSite.objects.first()
+
+        expected = {
+            'id': site.pk,
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'mode': SITE_MODE_TARGET,
+            'description': REMOTE_SITE_DESC,
+            'secret': REMOTE_SITE_SECRET,
+            'sodar_uuid': site.sodar_uuid}
+
+        model_dict = model_to_dict(site)
+        self.assertEqual(model_dict, expected)
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_source(self):
+        """Test creating a source site as target"""
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 0)
+
+        values = {
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'description': REMOTE_SITE_DESC,
+            'secret': REMOTE_SITE_SECRET}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:remote_site_create'),
+                values)
+
+        # Assert site state after creation
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+        site = RemoteSite.objects.first()
+
+        expected = {
+            'id': site.pk,
+            'name': REMOTE_SITE_NAME,
+            'url': REMOTE_SITE_URL,
+            'mode': SITE_MODE_SOURCE,
+            'description': REMOTE_SITE_DESC,
+            'secret': REMOTE_SITE_SECRET,
+            'sodar_uuid': site.sodar_uuid}
+
+        model_dict = model_to_dict(site)
+        self.assertEqual(model_dict, expected)
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+    def test_create_target_existing_name(self):
+        """Test creating a target site with an existing name"""
+
+        # Set up existing site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
+        values = {
+            'name': REMOTE_SITE_NAME,   # Old name
+            'url': REMOTE_SITE_NEW_URL,
+            'description': REMOTE_SITE_NEW_DESC,
+            'secret': build_secret()}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:remote_site_create'),
+                values)
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
+
+class TestRemoteSiteUpdateView(
+        TestViewsBase, RemoteSiteMixin):
+    """Tests for remote site update view"""
+
+    def setUp(self):
+        super(TestRemoteSiteUpdateView, self).setUp()
+
+        # Set up target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render(self):
+        """Test rendering the remote site create view as source"""
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:remote_site_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertEqual(form['name'].initial, REMOTE_SITE_NAME)
+        self.assertEqual(form['url'].initial, REMOTE_SITE_URL)
+        self.assertEqual(form['description'].initial, REMOTE_SITE_DESC)
+        self.assertEqual(form['secret'].initial, REMOTE_SITE_SECRET)
+        self.assertEqual(form.fields['secret'].widget.attrs['readonly'], True)
+
+    def test_update(self):
+        """Test creating a target site as source"""
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
+        values = {
+            'name': REMOTE_SITE_NEW_NAME,
+            'url': REMOTE_SITE_NEW_URL,
+            'description': REMOTE_SITE_NEW_DESC,
+            'secret': REMOTE_SITE_SECRET}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_site_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+        # Assert site state after creation
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+        site = RemoteSite.objects.first()
+
+        expected = {
+            'id': site.pk,
+            'name': REMOTE_SITE_NEW_NAME,
+            'url': REMOTE_SITE_NEW_URL,
+            'mode': SITE_MODE_TARGET,
+            'description': REMOTE_SITE_NEW_DESC,
+            'secret': REMOTE_SITE_SECRET,
+            'sodar_uuid': site.sodar_uuid}
+
+        model_dict = model_to_dict(site)
+        self.assertEqual(model_dict, expected)
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+    def test_update_existing_name(self):
+        """Test creating a target site with an existing name as source (should fail)"""
+
+        # Create new site
+        new_target_site = self._make_site(
+            name=REMOTE_SITE_NEW_NAME,
+            url=REMOTE_SITE_NEW_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_NEW_DESC,
+            secret=REMOTE_SITE_NEW_SECRET)
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+        values = {
+            'name': REMOTE_SITE_NAME,   # Old name
+            'url': REMOTE_SITE_NEW_URL,
+            'description': REMOTE_SITE_NEW_DESC,
+            'secret': REMOTE_SITE_SECRET}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_site_update',
+                    kwargs={'remotesite': new_target_site.sodar_uuid}),
+                values)
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+
+class TestRemoteSiteDeleteView(TestViewsBase, RemoteSiteMixin):
+    """Tests for remote site delete view"""
+    def setUp(self):
+        super(TestRemoteSiteDeleteView, self).setUp()
+
+        # Set up target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render(self):
+        """Test rendering the remote site delete view"""
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:remote_site_delete',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_delete(self):
+        """Test deleting the remote site"""
+
+        # Assert precondition
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_site_delete',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+            self.assertRedirects(response, reverse('projectroles:remote_sites'))
+
+        # Assert site status
+        self.assertEqual(RemoteSite.objects.all().count(), 0)
+
+
+class TestRemoteProjectsBatchUpdateView(
+        TestViewsBase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin):
+    """Tests for remote project batch update view"""
+
+    def setUp(self):
+        super(TestRemoteProjectsBatchUpdateView, self).setUp()
+
+        # Set up project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+        # Set up target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+    def test_render_confirm(self):
+        """Test rendering the remote project update view in confirm mode"""
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.context['site'], self.target_site)
+            self.assertIsNotNone(response.context['modifying_access'])
+
+    def test_render_confirm_no_change(self):
+        """Test rendering the remote project update view without changes (should redirect)"""
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+    def test_post_create(self):
+        """Test updating remote project access by adding a new RemoteProject"""
+
+        # Assert precondition
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+            'update-confirmed': 1}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(RemoteProject.objects.all().count(), 1)
+            rp = RemoteProject.objects.first()
+            self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
+            self.assertEqual(
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+    def test_post_update(self):
+        """Test updating remote project access by modifying an existing RemoteProject"""
+
+        rp = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'])
+
+        # Assert precondition
+        self.assertEqual(RemoteProject.objects.all().count(), 1)
+
+        access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
+        values = {
+            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+            'update-confirmed': 1}
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:remote_projects_update',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}),
+                values)
+
+            # Assert postconditions
+            self.assertEqual(RemoteProject.objects.all().count(), 1)
+            rp.refresh_from_db()
+            self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
+            self.assertEqual(
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+
+
+class TestRemoteProjectGetAPIView(
+        TestViewsBase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin):
+    """Tests for remote project getting API view"""
+
+    def setUp(self):
+        super(TestRemoteProjectGetAPIView, self).setUp()
+
+        # Set up projects
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+        self.cat_owner_as = self._make_assignment(
+            self.category, self.user, self.role_owner)
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+        self.project_owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner)
+
+        # Create target site
+        self.target_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET)
+
+        # Create remote project
+        self.remote_project = self._make_remote_project(
+            site=self.target_site,
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+
+        self.remote_api = RemoteProjectAPI()
+
+    def test_get(self):
+        """Test retrieving project data to the target site"""
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}))
+
+        self.assertEqual(response.status_code, 200)
+
+        expected = self.remote_api.get_target_data(self.target_site)
+        response_dict = json.loads(response.content.decode('utf-8'))
+
+        self.assertEqual(response_dict, expected)
+
+    def test_get_invalid_secret(self):
+        """Test retrieving project data with an invalid secret (should fail)"""
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': build_secret()}))
+
+        self.assertEqual(response.status_code, 401)

@@ -25,6 +25,10 @@ which wants to make use of the following features:
 - Dynamic app content management
 - Advanced project activity logging
 
+Basics of Django site setup and instructions for third party packages used are
+considered out of scope for this documentation. Please refer instead to official
+documentation of Django and/or the packages in question.
+
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
 
@@ -40,9 +44,12 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
 
    getting_started
    app_projectroles
+   app_adminalerts
    app_userprofile
+   app_taskflow
    app_timeline
    development
+   breaking_changes
 
 
 Indices and tables

@@ -8,7 +8,7 @@ from django.utils import timezone
 from pagedown.widgets import PagedownWidget
 
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectSetting, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
+    RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
 from .plugins import ProjectAppPluginPoint
 from .utils import get_user_display_name, build_secret
 from projectroles.project_settings import validate_project_setting, \
@@ -23,6 +23,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 # Local constants and settings
 APP_NAME = 'projectroles'
@@ -32,7 +34,7 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 User = auth.get_user_model()
 
 
-# Project form -----------------------------------------------------------
+# Project form -----------------------------------------------------------------
 
 
 class ProjectForm(forms.ModelForm):
@@ -237,7 +239,7 @@ class ProjectForm(forms.ModelForm):
         return self.cleaned_data
 
 
-# RoleAssignment form ----------------------------------------------------
+# RoleAssignment form ----------------------------------------------------------
 
 
 class RoleAssignmentForm(forms.ModelForm):
@@ -365,7 +367,7 @@ class RoleAssignmentForm(forms.ModelForm):
         return self.cleaned_data
 
 
-# ProjectInvite form -----------------------------------------------------
+# ProjectInvite form -----------------------------------------------------------
 
 
 class ProjectInviteForm(forms.ModelForm):
@@ -444,7 +446,56 @@ class ProjectInviteForm(forms.ModelForm):
         return obj
 
 
-# Helper functions -------------------------------------------------------
+# RemoteSite form --------------------------------------------------------------
+
+
+class RemoteSiteForm(forms.ModelForm):
+    """Form for RemoteSite creation/updating"""
+
+    class Meta:
+        model = RemoteSite
+        fields = ['name', 'url', 'description', 'secret']
+
+    def __init__(self, current_user=None, *args, **kwargs):
+        """Override for form initialization"""
+        super(RemoteSiteForm, self).__init__(*args, **kwargs)
+
+        self.current_user = current_user
+
+        # Default field modifications
+        self.fields['description'].required = False
+        self.fields['secret'].widget = forms.TextInput(
+            attrs={'class': "sodar-code-input"})
+
+        # Special cases for SOURCE
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            self.fields['secret'].widget.attrs['readonly'] = True
+
+        # Creation
+        if not self.instance.pk:
+            # Generate secret token for target site
+            if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+                self.fields['secret'].initial = build_secret()
+
+        # Updating
+        else:   # self.instance.pk
+            pass
+
+    def save(self, *args, **kwargs):
+        """Override of form saving function"""
+        obj = super(RemoteSiteForm, self).save(commit=False)
+
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            obj.mode = SITE_MODE_TARGET
+
+        else:
+            obj.mode = SITE_MODE_SOURCE
+
+        obj.save()
+        return obj
+
+
+# Helper functions -------------------------------------------------------------
 
 
 def force_select_value(field, choice):

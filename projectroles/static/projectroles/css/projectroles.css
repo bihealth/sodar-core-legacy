@@ -75,7 +75,6 @@ html,
 
 .sodar-app-content {
   padding: 28px;
-  max-width: 1500px;
   flex: auto;
 }
 
@@ -329,38 +328,6 @@ tr.sodar-pr-project-list-item td:nth-child(2) {
 }
 
 
-/* iRODS table -------------------------------------------------------------- */
-
-/* TODO: Move this into the irodsbackend app in SODAR */
-
-/* Size column */
-table.sodar-irods-obj-table thead tr th:nth-child(2) {
-  min-width: 60px;
-  text-align: right;
-}
-
-table.sodar-irods-obj-table tbody tr td:nth-child(2) {
-  text-align: right;
-  white-space: nowrap;
-}
-
-/* Date column */
-table.sodar-irods-obj-table tbody tr td:nth-child(3) {
-  width: 5%;
-  white-space: nowrap;
-}
-
-/* MD5 column */
-table.sodar-irods-obj-table thead tr th:nth-child(4) {
-  width: 40px;
-  text-align: center;
-}
-
-table.sodar-irods-obj-table tbody tr td:nth-child(4) {
-  text-align: center;
-}
-
-
 /* Popups ------------------------------------------------------------------- */
 
 
@@ -536,6 +503,11 @@ a.sodar-nav-link-last {
   height: 32px;
 }
 
+.sodar-form-control-table {
+  height: 28px !important;
+  font-size: 85% !important;
+}
+
 .sodar-horizontal-radio {
   padding-right: 18px;
 }
@@ -553,6 +525,11 @@ a.sodar-nav-link-last {
 
 .text-strikethrough {
   text-decoration: line-through;
+}
+
+.text-monospace {
+  font-size: 85%;
+  padding-top: 1.15em !important;
 }
 
 

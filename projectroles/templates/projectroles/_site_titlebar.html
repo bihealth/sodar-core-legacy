@@ -41,13 +41,11 @@
           </li>
         {% endif %}
 
-        {# TODO: Add optional template for external links #}
-        {% comment TODO %}
-          {# Manual link #}
-          <li class="nav-item">
-            <a href="/manual/" class="nav-link" id="site-manual-link" target="_blank"><i class="fa fa-fw fa-map-o"></i> Manual</a>
-          </li>
-        {% endcomment %}
+        {# Optional template for additional links #}
+        {% template_exists 'include/_titlebar_nav.html' as add_links_exist %}
+        {% if add_links_exist %}
+          {% include 'include/_titlebar_nav.html' %}
+        {% endif %}
 
         {# Help link #}
         <li class="nav-item">

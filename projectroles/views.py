@@ -1,6 +1,7 @@
 import json
 import re
 import requests
+import urllib.request
 
 from django.apps import apps
 from django.conf import settings
@@ -17,20 +18,26 @@ from django.views.generic import TemplateView, DetailView, UpdateView,\
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
+from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
+from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
+
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
 from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
     send_expiry_note, get_invite_subject, get_invite_body, get_invite_message, \
     get_email_footer, get_role_change_body, get_role_change_subject
-from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm
+from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm, \
+    RemoteSiteForm
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    SODAR_CONSTANTS, PROJECT_TAG_STARRED
+    RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_settings import set_project_setting, get_project_setting, \
     get_all_settings
 from .project_tags import get_tag_state, set_tag_state, remove_tag
+from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date
 
 # Access Django user model
@@ -50,6 +57,12 @@ SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
     'SUBMIT_STATUS_PENDING_TASKFLOW']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
+REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
+REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -112,6 +125,18 @@ class ProjectAccessMixin:
 class LoggedInPermissionMixin(PermissionRequiredMixin):
     """Mixin for handling redirection for both unlogged users and authenticated
     users without permissions"""
+    def has_permission(self):
+        """Override has_permission() for this mixin also to work with admin
+        users without a permission object"""
+        try:
+            return super(LoggedInPermissionMixin, self).has_permission()
+
+        except AttributeError:
+            if self.request.user.is_superuser:
+                return True
+
+        return False
+
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
         if self.request.user.is_authenticated():
@@ -121,7 +146,6 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
             return redirect(reverse('home'))
 
         else:
-            messages.error(self.request, 'Please log in')
             return redirect_to_login(self.request.get_full_path())
 
 
@@ -131,11 +155,37 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         return self._get_project(self.request, self.kwargs)
 
 
-class RolePermissionMixin(LoggedInPermissionMixin, ProjectAccessMixin):
+class ProjectModifyPermissionMixin(
+        LoggedInPermissionMixin, ProjectPermissionMixin):
+    """Mixin for handling access to project modifying views, denying access even
+    for local superusers if the project is remote and thus immutable"""
+
+    def has_permission(self):
+        """Override has_permission() to check remote project status"""
+        perm = super(ProjectModifyPermissionMixin, self).has_permission()
+        project = self._get_project(self.request, self.kwargs)
+        return False if project.is_remote() else perm
+
+    def handle_no_permission(self):
+        """Override handle_no_permission to redirect user"""
+        if self.request.user.is_authenticated():
+            messages.error(
+                self.request,
+                'Modifications are not allowed for remote projects')
+            return redirect(reverse('home'))
+
+        else:
+            return redirect_to_login(self.request.get_full_path())
+
+
+class RolePermissionMixin(ProjectModifyPermissionMixin):
     """Mixin to ensure permissions for RoleAssignment according to user role in
     project"""
     def has_permission(self):
         """Override has_permission to check perms depending on role"""
+        if not super(RolePermissionMixin, self).has_permission():
+            return False
+
         try:
             obj = RoleAssignment.objects.get(
                 sodar_uuid=self.kwargs['roleassignment'])
@@ -624,6 +674,14 @@ class ProjectCreateView(
 
     def get(self, request, *args, **kwargs):
         """Override get() to limit project creation under other projects"""
+
+        # If site is in target mode and target creation is not allowed, redirect
+        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
+                not settings.PROJECTROLES_TARGET_CREATE):
+            messages.error(
+                request, 'Creating local projects not allowed')
+            return HttpResponseRedirect(reverse('home'))
+
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
 
@@ -639,7 +697,7 @@ class ProjectCreateView(
 
 
 class ProjectUpdateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
         ProjectModifyMixin, UpdateView):
     """Project updating view"""
     permission_required = 'projectroles.update_project'
@@ -796,8 +854,8 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
 
 
 class RoleAssignmentCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, RoleAssignmentModifyMixin, CreateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        RoleAssignmentModifyMixin, CreateView):
     """RoleAssignment creation view"""
     permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
@@ -812,9 +870,10 @@ class RoleAssignmentCreateView(
 
 
 class RoleAssignmentUpdateView(
-        LoginRequiredMixin, RolePermissionMixin, ProjectContextMixin,
-        RoleAssignmentModifyMixin, UpdateView):
+        LoginRequiredMixin, RolePermissionMixin,
+        ProjectContextMixin, RoleAssignmentModifyMixin, UpdateView):
     """RoleAssignment updating view"""
+    permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     form_class = RoleAssignmentForm
     slug_url_kwarg = 'roleassignment'
@@ -828,9 +887,10 @@ class RoleAssignmentUpdateView(
 
 
 class RoleAssignmentDeleteView(
-        LoginRequiredMixin, RolePermissionMixin, ProjectContextMixin,
-        DeleteView):
+        LoginRequiredMixin, RolePermissionMixin, ProjectModifyPermissionMixin,
+        ProjectContextMixin, DeleteView):
     """RoleAssignment deletion view"""
+    permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
@@ -919,10 +979,10 @@ class RoleAssignmentDeleteView(
 
 
 class RoleAssignmentImportView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        TemplateView):
     """View for importing roles from an existing project"""
-    # TODO: Add taskflow functionality in v0.3
+    # TODO: Add taskflow functionality
     http_method_names = ['get', 'post']
     template_name = 'projectroles/roleassignment_import.html'
     permission_required = 'projectroles.import_roles'
@@ -1231,6 +1291,7 @@ class ProjectInviteMixin:
             messages.error(request, status_desc)
 
 
+# TODO: Disable access if remote project
 class ProjectInviteView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
         TemplateView):
@@ -1262,6 +1323,7 @@ class ProjectInviteView(
         return context
 
 
+# TODO: Disable access if remote project
 class ProjectInviteCreateView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
         ProjectContextMixin, ProjectInviteMixin, CreateView):
@@ -1307,8 +1369,7 @@ class ProjectInviteCreateView(
             kwargs={'project': self.object.project.sodar_uuid}))
 
 
-class ProjectInviteAcceptView(
-        LoginRequiredMixin, View):
+class ProjectInviteAcceptView(LoginRequiredMixin, View):
     """View to handle accepting a project invite"""
 
     def get(self, *args, **kwargs):
@@ -1451,8 +1512,8 @@ class ProjectInviteAcceptView(
 
 
 class ProjectInviteResendView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectInviteMixin, View):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin,
+        View):
     """View to handle resending a project invite"""
     permission_required = 'projectroles.invite_users'
 
@@ -1484,8 +1545,8 @@ class ProjectInviteResendView(
 
 
 class ProjectInviteRevokeView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
+        TemplateView):
     """Batch delete/move confirm view"""
     template_name = 'projectroles/invite_revoke_confirm.html'
     permission_required = 'projectroles.invite_users'
@@ -1538,7 +1599,392 @@ class ProjectInviteRevokeView(
             kwargs={'project': project.sodar_uuid}))
 
 
-# Javascript API Views ---------------------------------------------------
+# Remote site and project views ------------------------------------------------
+
+
+class RemoteSiteListView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Main view for displaying remote site list"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remote_sites.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteSiteListView, self).get_context_data(
+            *args, **kwargs)
+
+        # TODO: Do this nicer
+        site_mode = (SITE_MODE_TARGET if
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE else
+                SITE_MODE_SOURCE)
+
+        sites = RemoteSite.objects.filter(
+            mode=site_mode).order_by('name')
+
+        if (sites.count() > 0 and
+                settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET):
+            sites = sites[:1]
+
+        context['sites'] = sites
+        return context
+
+
+class RemoteSiteModifyMixin(ModelFormMixin):
+    def form_valid(self, form):
+        if self.object:
+            form_action = 'updated'
+
+        elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
+            form_action = 'set'
+
+        else:
+            form_action = 'created'
+
+        self.object = form.save()
+
+        messages.success(self.request, '{} site "{}" {}'.format(
+            self.object.mode.capitalize(),
+            self.object.name,
+            form_action))
+        return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+
+
+class RemoteSiteCreateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, CreateView):
+    """RemoteSite creation view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+
+    def get(self, request, *args, **kwargs):
+        """Override get() to disallow rendering this view if current site is
+        in TARGET mode and a source site already exists"""
+        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
+                RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0):
+            messages.error(request, 'Source site has already been set')
+            return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+
+        return super(RemoteSiteCreateView, self).get(request, args, kwargs)
+
+
+class RemoteSiteUpdateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, UpdateView):
+    """RemoteSite updating view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+    slug_url_kwarg = 'remotesite'
+    slug_field = 'sodar_uuid'
+
+
+class RemoteSiteDeleteView(
+        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
+        HTTPRefererMixin, CurrentUserFormMixin, DeleteView):
+    """RemoteSite deletion view"""
+    model = RemoteSite
+    form_class = RemoteSiteForm
+    permission_required = 'projectroles.update_remote'
+    slug_url_kwarg = 'remotesite'
+    slug_field = 'sodar_uuid'
+
+    def get_success_url(self):
+        messages.success(
+            self.request, '{} site "{}" deleted'.format(
+                self.object.mode.capitalize(),
+                self.object.name))
+
+        return reverse('projectroles:remote_sites')
+
+
+class RemoteProjectListView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Main view for displaying a remote site's project list"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remote_projects.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectListView, self).get_context_data(
+            *args, **kwargs)
+
+        site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
+        context['site'] = site
+
+        # Projects in SOURCE mode: all local projects of type PROJECT
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
+
+        # Projects in TARGET mode: retrieve from source
+        else:   # SITE_MODE_TARGET
+            remote_uuids = [
+                p.project_uuid for p in site.projects.all()]
+            projects = Project.objects.filter(
+                type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids)
+
+        if projects:
+            context['projects'] = sorted(
+                [p for p in projects], key=lambda x: x.get_full_title())
+
+        return context
+
+
+class RemoteProjectsBatchUpdateView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Manually created form view for updating project access in batch for a
+    remote target site"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remoteproject_update.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectsBatchUpdateView, self).get_context_data(
+            *args, **kwargs)
+
+        # Current site
+        try:
+            context['site'] = RemoteSite.objects.get(
+                sodar_uuid=kwargs['remotesite'])
+
+        except RemoteSite.DoesNotExist:
+            pass
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        site = context['site']
+        post_data = request.POST
+        confirmed = True if 'update-confirmed' in post_data else False
+        timeline = get_backend_api('timeline_backend')
+
+        redirect_url = reverse(
+            'projectroles:remote_projects',
+            kwargs={'remotesite': site.sodar_uuid})
+
+        # Ensure site is in SOURCE mode
+        if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
+            messages.error(
+                request, 'Site in TARGET mode, cannot update project access')
+            return HttpResponseRedirect(redirect_url)
+
+        access_fields = {
+            k: v for k, v in post_data.items() if k.startswith('remote_access')}
+
+        ######################
+        # Confirmation needed
+        ######################
+
+        if not confirmed:
+            # Pass on (only) changed projects to confirmation form
+            modifying_access = []
+
+            for k, v in access_fields.items():
+                remote_obj = None
+                project_uuid = k.split('_')[2]
+
+                try:
+                    remote_obj = RemoteProject.objects.get(
+                        site=site, project_uuid=project_uuid)
+
+                except RemoteProject.DoesNotExist:
+                    pass
+
+                if ((not remote_obj and v != REMOTE_LEVEL_NONE) or (
+                        remote_obj and remote_obj.level != v)):
+                    modifying_access.append({
+                        'project': Project.objects.get(sodar_uuid=project_uuid),
+                        'old_level': REMOTE_LEVEL_NONE if
+                        not remote_obj else remote_obj.level,
+                        'new_level': v})
+
+            if not modifying_access:
+                messages.warning(
+                    request, 'No changes to project access detected')
+                return HttpResponseRedirect(redirect_url)
+
+            context['modifying_access'] = modifying_access
+
+            return super(TemplateView, self).render_to_response(context)
+
+        ############
+        # Confirmed
+        ############
+
+        for k, v in access_fields.items():
+            project_uuid = k.split('_')[2]
+
+            # Update or create a RemoteProject object
+            try:
+                rp = RemoteProject.objects.get(
+                    site=site, project_uuid=project_uuid)
+                rp.level = v
+
+            except RemoteProject.DoesNotExist:
+                rp = RemoteProject(
+                    site=site,
+                    project_uuid=project_uuid,
+                    level=v)
+
+            rp.save()
+
+            if timeline:
+                project = Project.objects.get(sodar_uuid=project_uuid)
+
+                tl_event = timeline.add_event(
+                    project=project,
+                    app_name=APP_NAME,
+                    user=request.user,
+                    event_name='update_remote',
+                    description=
+                    'update remote access for site {{{}}} to {})'.format(
+                        'site', v,
+                        SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower()),
+                    classified=True,
+                    status_type='OK')
+
+                tl_event.add_object(
+                    obj=site,
+                    label='site',
+                    name=site.name)
+
+        # All OK
+        messages.success(
+            request,
+            'Access level updated for {} project{} in site "{}"'.format(
+                len(access_fields.items()),
+                's' if len(access_fields.items()) > 1 else '',
+                context['site'].name))
+        return HttpResponseRedirect(redirect_url)
+
+
+class RemoteProjectsSyncView(
+        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    """Synchronize remote projects from a source site"""
+    permission_required = 'projectroles.update_remote'
+    template_name = 'projectroles/remoteproject_sync.html'
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(RemoteProjectsSyncView, self).get_context_data(
+            *args, **kwargs)
+
+        # Current site
+        try:
+            context['site'] = RemoteSite.objects.get(
+                sodar_uuid=kwargs['remotesite'])
+
+        except RemoteSite.DoesNotExist:
+            pass
+
+        return context
+
+    def get(self, request, *args, **kwargs):
+        """Override get() for a confirmation view"""
+        remote_api = RemoteProjectAPI()
+        redirect_url = reverse('projectroles:remote_sites')
+
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            messages.error(
+                request, 'Site in SOURCE mode, remote sync not allowed')
+            return HttpResponseRedirect(redirect_url)
+
+        context = self.get_context_data(*args, **kwargs)
+        site = context['site']
+
+        api_url = site.url + reverse(
+            'projectroles:api_remote_get',
+            kwargs={'secret': site.secret})
+
+        try:
+            response = urllib.request.urlopen(api_url)
+            remote_data = json.loads(response.read().decode('utf-8'))
+
+        except Exception as ex:
+            ex_str = str(ex)
+
+            if len(ex_str) >= 255:
+                ex_str = ex_str[:255]
+
+            messages.error(
+                request, 'Unable to synchronize projects: {}'.format(ex_str))
+            return HttpResponseRedirect(redirect_url)
+
+        # Sync data
+        update_data = remote_api.sync_source_data(site, remote_data, request)
+
+        # Check for updates
+        user_count = len([
+            v for v in update_data['users'].values() if 'status' in v])
+        project_count = len([
+            v for v in update_data['projects'].values() if 'status' in v])
+        role_count = 0
+
+        for p in [p for p in update_data['projects'].values() if 'roles' in p]:
+            for _ in [r for r in p['roles'].values() if 'status' in r]:
+                role_count += 1
+
+        # Redirect if no changes were detected
+        if user_count == 0 and project_count == 0 and role_count == 0:
+            messages.warning(
+                request,
+                'No changes in remote site detected, nothing to synchronize')
+            return HttpResponseRedirect(redirect_url)
+
+        context['update_data'] = update_data
+        context['user_count'] = user_count
+        context['project_count'] = project_count
+        context['role_count'] = role_count
+        messages.success(
+            request, 'Project data updated according to source site')
+        return super(TemplateView, self).render_to_response(context)
+
+
+# Base SODAR API Views ---------------------------------------------------------
+
+
+class SODARAPIVersioning(AcceptHeaderVersioning):
+    default_version = settings.SODAR_API_DEFAULT_VERSION
+    allowed_versions = [settings.SODAR_API_DEFAULT_VERSION]
+    version_param = 'version'
+
+
+class SODARAPIRenderer(JSONRenderer):
+    media_type = 'application/vnd.bihealth.sodar+json'
+
+
+class BaseAPIView(APIView):
+    """Base SODAR API View with accept header versioning"""
+    versioning_class = SODARAPIVersioning
+    renderer_classes = [SODARAPIRenderer]
+
+
+# SODAR API Views --------------------------------------------------------------
+
+
+# TODO: TBD: Use Knox auth? Requires user and logging in
+class RemoteProjectGetAPIView(BaseAPIView):
+    """API view for retrieving remote projects from a source site"""
+    permission_classes = (AllowAny,)    # We check the secret in get()/post()
+
+    def get(self, request, *args, **kwargs):
+        remote_api = RemoteProjectAPI()
+        secret = kwargs['secret']
+
+        try:
+            target_site = RemoteSite.objects.get(
+                mode=SITE_MODE_TARGET,
+                secret=secret)
+
+        except RemoteSite.DoesNotExist:
+            return Response('Remote site not found, unauthorized', status=401)
+
+        sync_data = remote_api.get_target_data(target_site)
+
+        # Update access date for target site remote projects
+        target_site.projects.all().update(date_access=timezone.now())
+        
+        return Response(sync_data, status=200)
+
+
+# Ajax API Views ---------------------------------------------------------------
 
 
 class ProjectStarringAPIView(
@@ -1571,14 +2017,27 @@ class ProjectStarringAPIView(
         return Response(0 if tag_state else 1, status=200)
 
 
-# Taskflow API Views -----------------------------------------------------
+# Taskflow API Views -----------------------------------------------------------
 
 
-# TODO: Limit access to localhost
+# TODO: Proper access control (TBD, must also be implemented in sodar_taskflow)
+
+
+class TaskflowAPIPermission(BasePermission):
+    """Taskflow API permission handling"""
+
+    def has_permission(self, request, view):
+        # Only allow accessing Taskflow API views if Taskflow is used
+        return True if 'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
+
+
+class BaseTaskflowAPIView(APIView):
+    """Base Taskflow API view"""
+    permission_classes = [TaskflowAPIPermission]
 
 
 # TODO: Use GET instead of POST
-class ProjectGetAPIView(APIView):
+class ProjectGetAPIView(BaseTaskflowAPIView):
     """API view for getting a project"""
     def post(self, request):
         try:
@@ -1597,7 +2056,7 @@ class ProjectGetAPIView(APIView):
         return Response(ret_data, status=200)
 
 
-class ProjectUpdateAPIView(APIView):
+class ProjectUpdateAPIView(BaseTaskflowAPIView):
     """API view for updating a project"""
     def post(self, request):
         try:
@@ -1615,7 +2074,7 @@ class ProjectUpdateAPIView(APIView):
 
 
 # TODO: Use GET instead of POST
-class RoleAssignmentGetAPIView(APIView):
+class RoleAssignmentGetAPIView(BaseTaskflowAPIView):
     """API view for getting a role assignment for user and project"""
     def post(self, request):
         try:
@@ -1641,7 +2100,7 @@ class RoleAssignmentGetAPIView(APIView):
             return Response(str(ex), status=404)
 
 
-class RoleAssignmentSetAPIView(APIView):
+class RoleAssignmentSetAPIView(BaseTaskflowAPIView):
     """View for creating or updating a role assignment based on params"""
     def post(self, request):
         try:
@@ -1666,7 +2125,7 @@ class RoleAssignmentSetAPIView(APIView):
         return Response('ok', status=200)
 
 
-class RoleAssignmentDeleteAPIView(APIView):
+class RoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -1687,7 +2146,7 @@ class RoleAssignmentDeleteAPIView(APIView):
 
 
 # TODO: Use GET instead of POST
-class ProjectSettingsGetAPIView(APIView):
+class ProjectSettingsGetAPIView(BaseTaskflowAPIView):
     """API view for getting project settings"""
     def post(self, request):
         try:
@@ -1704,7 +2163,7 @@ class ProjectSettingsGetAPIView(APIView):
         return Response(ret_data, status=200)
 
 
-class ProjectSettingsSetAPIView(APIView):
+class ProjectSettingsSetAPIView(BaseTaskflowAPIView):
     """API view for updating project settings"""
     def post(self, request):
         try:

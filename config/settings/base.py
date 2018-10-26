@@ -74,6 +74,12 @@ LOCAL_APPS = [
     # User Profile site app
     'userprofile.apps.UserprofileConfig',
 
+    # Admin Alerts site app
+    'adminalerts.apps.AdminalertsConfig',
+
+    # SODAR Taskflow backend app
+    'taskflowbackend.apps.TaskflowbackendConfig',
+
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
 
@@ -280,6 +286,13 @@ REST_FRAMEWORK = {
     ),
 }
 
+# Knox settings
+TOKEN_TTL = None
+
+# Settings for HTTP AuthBasic
+BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
+BASICAUTH_DISABLE = False
+
 
 # LDAP configuration
 # ------------------------------------------------------------------------------
@@ -312,7 +325,8 @@ if ENABLE_LDAP:
         ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
     AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
     AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
-    AUTH_LDAP_DOMAIN_PRINTABLE = env.str('AUTH_LDAP_DOMAIN_PRINTABLE', None)
+    AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
+        'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN)
 
     AUTHENTICATION_BACKENDS = tuple(itertools.chain(
         ('projectroles.auth_backends.PrimaryLDAPBackend',),
@@ -331,7 +345,7 @@ if ENABLE_LDAP:
         AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
         AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
         AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
-            'AUTH_LDAP2_DOMAIN_PRINTABLE', None)
+            'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN)
 
         AUTHENTICATION_BACKENDS = tuple(itertools.chain(
             ('projectroles.auth_backends.SecondaryLDAPBackend',),
@@ -395,6 +409,17 @@ SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
 
 
 # Projectroles app settings
+
+# Remote access mode: SOURCE or TARGET
+PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
+
+# Enable or disable project creation if site is in TARGET mode
+PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
+
+# Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
+PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+
+# General projectroles settings
 PROJECTROLES_SECRET_LENGTH = 32
 PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
 PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
@@ -404,6 +429,10 @@ PROJECTROLES_SEARCH_PAGINATION = 5
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15
+
+
+# Adminalerts app settings
+ADMINALERTS_PAGINATION = 15
 
 
 # Settings for HTTP AuthBasic
