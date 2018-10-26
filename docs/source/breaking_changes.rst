@@ -46,3 +46,12 @@ Example for a ``TARGET`` site:
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+
+
+DataTables Includes
+===================
+
+Includes for the DataTables Javascript library are no longer included in
+templates by default. If you want to use DataTables, include the required CSS
+and Javascript in relevant templates. See the ``projectroles/search.html``
+template for an example.

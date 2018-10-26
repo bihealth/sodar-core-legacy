@@ -49,6 +49,7 @@ Changed
     - Enable short/full title selection and remote project icon in ``get_project_link()`` template tag
     - Refactor rules
     - Disable Taskflow API views if Taskflow backend is not enabled (#37)
+    - DataTables CSS and JS includes loaded in the search template (#45)
 - **Timeline**
     - Minor refactoring of ``api.get_event_description()`` (#30)
 
@@ -69,6 +70,7 @@ Removed
     - iRODS specific CSS classes from ``projectroles.css``
     - App content width limit in ``projectroles.css``
     - Domain-specific Login JQuery
+    - DataTables CSS and JS includes from base template (#45)
 
 
 v0.2.1 (2018-09-20)
