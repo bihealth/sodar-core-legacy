@@ -434,8 +434,3 @@ TIMELINE_PAGINATION = 15
 
 # Adminalerts app settings
 ADMINALERTS_PAGINATION = 15
-
-
-# Settings for HTTP AuthBasic
-BASICAUTH_REALM = 'Log in with user@DOMAIN and your password.'
-BASICAUTH_DISABLE = False
