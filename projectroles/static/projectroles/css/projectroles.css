@@ -48,7 +48,7 @@ html,
 
 .sodar-content-left {
   height: 100%;
-  flex: 0 0 90px;
+  flex: 0 0 auto;
   overflow: hidden;
 }
 
@@ -139,10 +139,10 @@ div.sodar-subtitle-shadow {
 
 .sodar-pr-sidebar {
   width: 90px;
-  max-width: 90px;
   padding-top: 2px;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 0;
+  padding-right: 0;
+  word-break: break-all;
 }
 
 div.sodar-pr-content-title {
@@ -461,7 +461,7 @@ dl dd {
 .sodar-pr-sidebar-nav-ul li.active:after {
     content: "";
     position: absolute;
-    right: -10px;
+    right: 0;
     top: 10px;
     width: 0;
     height: 0;

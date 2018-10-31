@@ -5,6 +5,22 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Make sidebar resizeable in CSS (#71)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Long words in app names breaking sidebar (#71)
+
+
 v0.3.0 (2018-10-26)
 ===================
 
