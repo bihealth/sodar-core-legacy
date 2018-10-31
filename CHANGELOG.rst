@@ -8,11 +8,19 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
+
+
 Changed
 -------
 
 - **Projectroles**
     - Make sidebar resizeable in CSS (#71)
+    - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
 
 Fixed
 -----

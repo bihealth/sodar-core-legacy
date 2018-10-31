@@ -267,14 +267,17 @@ explained below:
   synchronization, either ``SOURCE`` (allow others to read local projects) or
   ``TARGET`` (read projects from another site)
 * ``PROJECTROLES_TARGET_CREATE``: Whether or not local projects can be created
-  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this setting
-  has no effect.
+  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this
+  setting has no effect.
 * ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
   projectroles (int)
-* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire (int)
+* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
+  (int)
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
 * ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
   users (int)
+* ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
+  your site (boolean)
 * ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
   display on one page (int)
 
@@ -289,6 +292,7 @@ Example:
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
     PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
+    PROJECTROLES_ENABLE_SEARCH = True
     PROJECTROLES_SEARCH_PAGINATION = 5
 
 Backend App Settings

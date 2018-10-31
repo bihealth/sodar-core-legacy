@@ -252,6 +252,14 @@ class TestProjectSearchView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             self.assertRedirects(
                 response, reverse('home'))
 
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_disable_search(self):
+        """Test redirecting the view due to search being disabled"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'}))
+            self.assertRedirects(response, reverse('home'))
+
 
 class TestProjectDetailView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
     """Tests for Project detail view"""
