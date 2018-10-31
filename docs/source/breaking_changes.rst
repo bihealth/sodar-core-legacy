@@ -14,6 +14,11 @@ be missing. Please click "display source" if you want to read this in GitLab.
 Django Settings
 ===============
 
+The following Django settings have changed.
+
+Remote Site Setup
+-----------------
+
 For specifying the role of your site in remote project metadata synchronization,
 you will need to add two new settings to your Django site configuration:
 
@@ -46,6 +51,17 @@ Example for a ``TARGET`` site:
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+
+General API Settings
+--------------------
+
+Add the following lines to your configuration to enable the general API
+settings:
+
+.. code-block:: python
+
+    SODAR_API_DEFAULT_VERSION = '0.1'
+    SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
 
 
 DataTables Includes
