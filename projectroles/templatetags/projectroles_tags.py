@@ -325,3 +325,9 @@ def allow_project_creation():
         return False
 
     return True
+
+
+@register.simple_tag
+def get_sidebar_app_legend(title):
+    """Return sidebar link legend HTML"""
+    return '<br />'.join(title.split(' '))
