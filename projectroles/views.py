@@ -423,11 +423,16 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        if (hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH') and
+                not settings.PROJECTROLES_ENABLE_SEARCH):
+            messages.error(request, 'Search not enabled')
+            return redirect('home')
+
         context = self.get_context_data(*args, **kwargs)
 
         # Check input, redirect if unwanted characters are found
         if not bool(re.match(SEARCH_REGEX, context['search_input'])):
-            messages.error(self.request, 'Please check your search input')
+            messages.error(request, 'Please check your search input')
             return redirect('home')
 
         return super(TemplateView, self).render_to_response(context)
@@ -1980,7 +1985,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
 
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
-        
+
         return Response(sync_data, status=200)
 
 

@@ -36,9 +36,12 @@
 
         {# Search #}
         {% if request.user.is_authenticated %}
-          <li class="nav-item">
-            {% include 'projectroles/_site_titlebar_search.html' %}
-          </li>
+          {% get_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+          {% if enable_search %}
+            <li class="nav-item">
+              {% include 'projectroles/_site_titlebar_search.html' %}
+            </li>
+          {% endif %}
         {% endif %}
 
         {# Optional template for additional links #}
