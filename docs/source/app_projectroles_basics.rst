@@ -28,7 +28,7 @@ The default setup of role types used in SODAR sites:
 
 - **project owner**
     - Full read/write access to project data and roles
-    - Can create sub-projects under owned projects
+    - Can create sub-projects under owned categories
     - One per project
     - Must be specified upon project creation
 - **project delegate**
