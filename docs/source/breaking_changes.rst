@@ -3,18 +3,40 @@
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
-This document details potentially breaking changes from **SODAR Core v0.2**, in
-case you are upgrading an existing site from an older version. For a complete
-list of changes, see the ``CHANGELOG.rst`` file.
+This document details potentially breaking changes from previous SODAR Core
+releases, in case you are upgrading an existing site from an older version. For
+a complete list of changes, see the ``CHANGELOG.rst`` file.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-Django Settings
-===============
+From v0.3.0 to Dev
+==================
 
-The following Django settings have changed.
+
+List Button Classes in Templates
+--------------------------------
+
+Custom small button and dropdown classes for including buttons within tables and
+lists have been modified. The naming has also been unified. The following
+classes should now be used:
+
+- Button group: ``sodar-list-btn-group`` (formerly ``sodar-edit-button-group``)
+- Button: ``sodar-list-btn``
+- Dropdown: ``sodar-list-dropdown`` (formerly ``sodar-edit-dropdown``)
+
+See projectroles templates for examples.
+
+.. warning::
+
+    The standard bootstrap class ``btn-sm`` should **not** be used with these
+    custom classes!
+
+
+From v0.2.1 to v0.3.0
+=====================
+
 
 Remote Site Setup
 -----------------
@@ -63,9 +85,8 @@ settings:
     SODAR_API_DEFAULT_VERSION = '0.1'
     SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
 
-
 DataTables Includes
-===================
+-------------------
 
 Includes for the DataTables Javascript library are no longer included in
 templates by default. If you want to use DataTables, include the required CSS
