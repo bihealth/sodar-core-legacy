@@ -18,6 +18,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Improve list button and dropdown styles (#72)
 - **Projectroles**
     - Make sidebar resizeable in CSS (#71)
     - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
