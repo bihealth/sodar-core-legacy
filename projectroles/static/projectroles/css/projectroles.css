@@ -378,14 +378,14 @@ dl dd {
   height: 2.35em;
 }
 
-.sodar-edit-button-group {
-  height: 1.75em;
+.sodar-list-btn-group {
+  height: 1.65em;
 }
 
 .sodar-list-btn {
-  padding-top: 0.5px !important;
-  padding-left: 5px !important;
-  padding-right: 5px !important;
+  padding-top: 0.5px;
+  padding-left: 5px;
+  padding-right: 5px;
   height: 1.65em;
 }
 
@@ -407,10 +407,10 @@ dl dd {
   line-height: 24px;
 }
 
-.sodar-edit-dropdown {
-  height: 2.0em !important;
+.sodar-list-dropdown {
+  height: 1.65em;
   margin-bottom: 0;
-  padding-top: 2px;
+  padding-top: 1px;
 }
 
 .sodar-details-app-button {
