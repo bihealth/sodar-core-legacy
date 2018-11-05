@@ -29,6 +29,7 @@ Fixed
 
 - **Projectroles**
     - Long words in app names breaking sidebar (#71)
+    - Member modification buttons visible for superuser in remote projects (#73)
 
 
 v0.3.0 (2018-10-26)
