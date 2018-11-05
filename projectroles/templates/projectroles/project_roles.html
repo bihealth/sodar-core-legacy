@@ -78,7 +78,7 @@
              <td><a href="mailto:{{ delegate.user.email }}">{{ delegate.user.email }}</a></td>
              <td><strong>project delegate <i class="fa fa-star-half-o" aria-hidden="true"></i></strong></td>
              <td>
-               {% if can_update_delegate %}
+               {% if not project.is_remote and can_update_delegate %}
                  {% include 'projectroles/_project_roles_buttons.html' with user=delegate.user assignment_id=delegate.sodar_uuid %}
                {% endif %}
              </td>
@@ -91,7 +91,7 @@
              <td><a href="mailto:{{ member.user.email }}">{{ member.user.email }}</a></td>
              <td>{{ member.role.name }}</td>
              <td>
-               {% if can_update_members %}
+               {% if not project.is_remote and can_update_members %}
                  {% include 'projectroles/_project_roles_buttons.html' with user=member.user assignment_id=member.sodar_uuid %}
                {% endif %}
              </td>
