@@ -13,6 +13,8 @@ Added
 
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
+- **Taskflowbackend**
+    - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
 
 
 Changed
