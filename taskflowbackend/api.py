@@ -66,6 +66,11 @@ class TaskflowAPI:
             'force_fail': force_fail,
             'timeline_uuid': str(timeline_uuid)}
 
+        # Add the "testing" parameters
+        if (hasattr(settings, 'TASKFLOW_TEST_MODE') and
+                settings.TASKFLOW_TEST_MODE):
+            data['test_mode'] = True
+
         # HACK: Add overriding URL for test server
         if request:
             if request.POST and 'sodar_url' in request.POST:
