@@ -32,6 +32,15 @@ follows:
         'timeline.apps.TimelineConfig',
     ]
 
+You also need to add the timeline backend plugin in enabled backend plugins.
+
+.. code-block:: python
+
+    ENABLED_BACKEND_PLUGINS = [
+        # ...
+        'timeline_backend',
+    ]
+
 
 Optional Settings
 =================
