@@ -31,6 +31,7 @@ Fixed
 
 - **General**
     - Potential inheritance issues in test classes (#74)
+    - LDAP dependency script execution (#75)
 - **Projectroles**
     - Long words in app names breaking sidebar (#71)
     - Member modification buttons visible for superuser in remote projects (#73)
