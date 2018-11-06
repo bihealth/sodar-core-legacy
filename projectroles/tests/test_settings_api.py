@@ -28,7 +28,7 @@ EXAMPLE_APP_NAME = 'example_project_app'
 
 
 class TestProjectSettingAPI(
-        TestCase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase):
     """Tests for the ProjectSetting API"""
     # NOTE: This assumes an example app is available
 

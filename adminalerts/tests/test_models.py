@@ -27,7 +27,7 @@ class AdminAlertMixin:
         return alert
 
 
-class TestAdminAlert(TestCase, AdminAlertMixin):
+class TestAdminAlert(AdminAlertMixin, TestCase):
     """Tests for AdminAlert model"""
 
     def setUp(self):

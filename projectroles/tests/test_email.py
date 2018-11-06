@@ -25,7 +25,7 @@ MESSAGE_BODY = 'Test message'
 INVALID_EMAIL = 'ahch0La8lo0eeT8u'
 
 
-class TestEmailSending(TestCase, ProjectMixin, RoleAssignmentMixin):
+class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 

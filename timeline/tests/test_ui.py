@@ -22,7 +22,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestListView(
-        TestUIBase, ProjectEventMixin, ProjectEventStatusMixin):
+        ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
     """Tests for the timeline list view UI"""
 
     def setUp(self):

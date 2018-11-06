@@ -63,7 +63,7 @@ class LiveUserMixin:
 
 
 class TestUIBase(
-        LiveServerTestCase, LiveUserMixin, ProjectMixin, RoleAssignmentMixin):
+        LiveUserMixin, ProjectMixin, RoleAssignmentMixin, LiveServerTestCase):
     """Base class for UI tests"""
 
     def setUp(self):
@@ -404,7 +404,7 @@ class TestProjectDetail(TestUIBase):
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
 
-class TestProjectRoles(TestUIBase, RemoteTargetMixin):
+class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     """Tests for the project roles page UI functionalities"""
 
     def test_list_buttons(self):
@@ -536,7 +536,7 @@ class TestProjectRoles(TestUIBase, RemoteTargetMixin):
             self.selenium.find_element_by_id('sodar-email-body'))
 
 
-class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
+class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
     """Tests for the project invite list page UI functionalities"""
 
     def test_list_buttons(self):
@@ -627,7 +627,7 @@ class TestPlugins(TestUIBase):
         self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
-class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
+class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     """Tests for the project sidebar"""
 
     def setUp(self):

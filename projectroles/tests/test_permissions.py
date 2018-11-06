@@ -635,7 +635,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
 
 class TestTargetProjectViews(
-        TestProjectPermissionBase, RemoteSiteMixin, RemoteProjectMixin):
+        RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase):
     """Tests for Project updating views on a TARGET site"""
 
     def setUp(self):
@@ -862,7 +862,7 @@ class TestTargetProjectViews(
         self.assert_redirect(url, bad_users)
 
 
-class TestRemoteSiteApp(TestPermissionBase, RemoteSiteMixin):
+class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
     """Tests for remote site management views"""
 
     def setUp(self):
