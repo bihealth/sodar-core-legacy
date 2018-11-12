@@ -13,6 +13,7 @@ Added
 
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
+    - Re-enable "home" link in project breadcrumb (#80)
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
 
@@ -36,7 +37,7 @@ Fixed
 - **Projectroles**
     - Long words in app names breaking sidebar (#71)
     - Member modification buttons visible for superuser in remote projects (#73)
-    - Fixed breadcrumb project detail link display issue in ``base.html`` (#77)
+    - Breadcrumb project detail link display issue in ``base.html`` (#77)
 
 
 v0.3.0 (2018-10-26)

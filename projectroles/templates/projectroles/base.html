@@ -38,7 +38,7 @@
         <div class="sodar-sub-navbar-container">
           <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
             <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
-              <li><i class="fa fa-angle-right"></i></li>
+              <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
               {% if project.get_parents %}
                 {% for p in project.get_parents %}
                   <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a></li>
