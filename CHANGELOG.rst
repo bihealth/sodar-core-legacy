@@ -32,6 +32,8 @@ Added
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
     - ``is_remote()`` and ``get_source_site()`` helpers in the ``Project`` model (#3)
     - Include template ``_titlebar_nav.html`` for additional title bar links
+    - Fixed small display issue in ``base.html`` (#77).
+    - Allowing to put items behind project name in breadcrumb (#78).
 - **Taskflowbackend**
     - Add app based on SODAR v0.3.3 (#38)
 - **Timeline**
