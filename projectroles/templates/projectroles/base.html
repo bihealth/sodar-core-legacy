@@ -33,29 +33,31 @@
   <div class="sodar-content-right">
 
     {# Project breadcrumb #}
-    {% if project %}
-      <div class="sodar-sub-navbar-container">
-        <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
-          <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
-            <li><i class="fa fa-angle-right"></i></li>
-            {% if project.get_parents %}
-              {% for p in project.get_parents %}
-                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a></li>
-              {% endfor %}
-            {% endif %}
-            {% url 'projectroles:detail' project=project.sodar_uuid as detail_url %}
-            {% if request.path == detail_url %}
-              <li class="breadcrumb-item active">{{ project.title }}</li>
-            {% else %}
-              <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">{{ project.title }}</a></li>
-            {% endif %}
-            {% block navi_sub_project_extend %}
-              {# Override to display items behind the project in the bread crumb #}
-            {% endblock %}
-          </ol>
+    {% block navi_sub_project %}
+      {% if project %}
+        <div class="sodar-sub-navbar-container">
+          <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
+            <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
+              <li><i class="fa fa-angle-right"></i></li>
+              {% if project.get_parents %}
+                {% for p in project.get_parents %}
+                  <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a></li>
+                {% endfor %}
+              {% endif %}
+              {% url 'projectroles:detail' project=project.sodar_uuid as detail_url %}
+              {% if request.path == detail_url %}
+                <li class="breadcrumb-item active">{{ project.title }}</li>
+              {% else %}
+                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">{{ project.title }}</a></li>
+              {% endif %}
+              {% block navi_sub_project_extend %}
+                 {# Override to display items behind the project in the bread crumb #}
+              {% endblock %}
+            </ol>
+          </div>
         </div>
-      </div>
-    {% endif %}
+      {% endif %}
+    {% endblock navi_sub_project %}
 
     <div class="sodar-app-container">
 

@@ -107,6 +107,16 @@ An optional site icon can be placed into ``{STATIC}/images/logo_navbar.png`` to
 be displayed in the default Projectroles title bar.
 
 
+Project Breadcrumb
+==================
+
+To add custom content in the end of the default project breadcrumb, use
+``{% block nav_sub_project_extend %}`` in your app template.
+
+The entire breadcrumb element can be overridden by declaring
+``{% block nav_sub_project %}`` block in your app template.
+
+
 Footer
 ======
 

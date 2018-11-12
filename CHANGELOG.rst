@@ -16,7 +16,6 @@ Added
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
 
-
 Changed
 -------
 
@@ -25,6 +24,8 @@ Changed
 - **Projectroles**
     - Make sidebar resizeable in CSS (#71)
     - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
+    - Allow appending custom items in project breadcrumb with ``nav_sub_project_extend`` block (#78)
+    - Allow replacing project breadcrumb with ``nav_sub_project`` block (#79)
 
 Fixed
 -----
@@ -36,7 +37,6 @@ Fixed
     - Long words in app names breaking sidebar (#71)
     - Member modification buttons visible for superuser in remote projects (#73)
     - Fixed breadcrumb project detail link display issue in ``base.html`` (#77)
-    - Allowing to put items behind project name in breadcrumb (#78)
 
 
 v0.3.0 (2018-10-26)
