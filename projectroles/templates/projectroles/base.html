@@ -43,12 +43,11 @@
                 <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a></li>
               {% endfor %}
             {% endif %}
-            {% if project %}
-              {% if request.resolver_match.url_name == 'detail' %}
-                <li class="breadcrumb-item active">{{ project.title }}</li>
-              {% else %}
-                <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">{{ project.title }}</a></li>
-              {% endif %}
+            {% url 'projectroles:detail' project=project.sodar_uuid as detail_url %}
+            {% if request.path == detail_url %}
+              <li class="breadcrumb-item active">{{ project.title }}</li>
+            {% else %}
+              <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=project.sodar_uuid %}">{{ project.title }}</a></li>
             {% endif %}
             {% block navi_sub_project_extend %}
               {# Override to display items behind the project in the bread crumb #}

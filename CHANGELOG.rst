@@ -35,6 +35,8 @@ Fixed
 - **Projectroles**
     - Long words in app names breaking sidebar (#71)
     - Member modification buttons visible for superuser in remote projects (#73)
+    - Fixed breadcrumb project detail link display issue in ``base.html`` (#77)
+    - Allowing to put items behind project name in breadcrumb (#78)
 
 
 v0.3.0 (2018-10-26)
@@ -64,8 +66,6 @@ Added
     - ``ProjectModifyPermissionMixin`` for access control for remote projects (#3)
     - ``is_remote()`` and ``get_source_site()`` helpers in the ``Project`` model (#3)
     - Include template ``_titlebar_nav.html`` for additional title bar links
-    - Fixed small display issue in ``base.html`` (#77).
-    - Allowing to put items behind project name in breadcrumb (#78).
 - **Taskflowbackend**
     - Add app based on SODAR v0.3.3 (#38)
 - **Timeline**
