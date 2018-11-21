@@ -124,13 +124,19 @@ class TimelineAPI:
         for r in ref_ids:
 
             # Get reference object or return an unknown label if not found
-            try:
-                ref_obj = ProjectEventObjectRef.objects.get(
-                    event=event, label=r)
-
-            except ProjectEventObjectRef.DoesNotExist:
-                refs[r] = unknown_label
+            if r.startswith('extra-'):
+                app_plugin = ProjectAppPluginPoint.get_plugin(
+                    name=event.app)
+                refs[r] = app_plugin.get_extra_data_link(event.extra_data, r)
                 continue
+            else:
+                try:
+                    ref_obj = ProjectEventObjectRef.objects.get(
+                        event=event, label=r)
+
+                except ProjectEventObjectRef.DoesNotExist:
+                    refs[r] = unknown_label
+                    continue
 
             # Get history link
             history_url = reverse('timeline:list_object', kwargs={

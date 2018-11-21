@@ -14,8 +14,11 @@ Added
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)
+    - ``get_extra_data_link()`` in ProjectAppPluginPoint for timeline extra data (#6)
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
+- **Timeline**
+    - Display of extra data using ``{extra-NAME}`` (see documentation) (#6)
 
 Changed
 -------
