@@ -75,14 +75,18 @@ SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 class ProjectAccessMixin:
     """Mixin for providing access to a Project object from request kwargs"""
 
+    #: The model class to use for projects.  You can override this to replace it
+    #: with a proxy model, for example.
+    project_class = Project
+
     @classmethod
     def _get_project(cls, request, kwargs):
         # "project" kwarg is a special case
         if 'project' in kwargs:
             try:
-                return Project.objects.get(sodar_uuid=kwargs['project'])
+                return cls.project_class.objects.get(sodar_uuid=kwargs['project'])
 
-            except Project.DoesNotExist:
+            except cls.project_class.DoesNotExist:
                 return None
 
         # Other object types
