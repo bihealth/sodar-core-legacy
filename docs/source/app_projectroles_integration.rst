@@ -310,12 +310,16 @@ Add a variable to list enabled backend plugins implemented using
 SODAR API Settings
 ------------------
 
-Also make sure to configure the SODAR API.
+Also make sure to configure the SODAR API. The ``SODAR_API_DEFAULT_HOST``
+setting should post to the externally visible host of your server and be
+configured in your environment settings.
 
 .. code-block:: python
 
     SODAR_API_DEFAULT_VERSION = '0.1'
     SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
+    SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
+
 
 Logging
 -------

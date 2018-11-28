@@ -11,6 +11,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - ``SODAR_API_DEFAULT_HOST`` setting for server host for API View URLs (sodar#396)
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)
