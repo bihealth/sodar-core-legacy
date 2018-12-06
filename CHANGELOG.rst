@@ -35,6 +35,7 @@ Changed
     - Allow appending custom items in project breadcrumb with ``nav_sub_project_extend`` block (#78)
     - Allow replacing project breadcrumb with ``nav_sub_project`` block (#79)
     - Disable remote site access if ``PROJECTROLES_DISABLE_CATEGORIES`` is set (#87), pending #76
+    - Disable access to invite views for remote projects (#89)
 
 Fixed
 -----
