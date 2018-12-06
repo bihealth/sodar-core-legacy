@@ -192,10 +192,15 @@ class ProjectForm(forms.ModelForm):
                     user in get_selectable_users(current_user).order_by(
                         'username')]
 
-                # Limit project type choice to category
-                force_select_value(
-                    self.fields['type'],
-                    (PROJECT_TYPE_CATEGORY, 'Category'))
+                # Force project type
+                if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
+                        settings.PROJECTROLES_DISABLE_CATEGORIES):
+                    forced_type = (PROJECT_TYPE_PROJECT, 'Project')
+
+                else:
+                    forced_type = (PROJECT_TYPE_CATEGORY, 'Category')
+
+                force_select_value(self.fields['type'], forced_type)
 
                 # Set up parent field
                 self.initial['parent'] = None

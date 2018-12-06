@@ -296,6 +296,24 @@ Example:
     PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
     PROJECTROLES_ENABLE_SEARCH = True
     PROJECTROLES_SEARCH_PAGINATION = 5
+    PROJECTROLES_DISABLE_CATEGORIES = False
+
+Optional Projectroles Settings
+------------------------------
+
+If you want to disable categories and only allow a list of projects on the
+root level, set the following variable:
+
+.. code-block:: python
+
+    PROJECTROLES_DISABLE_CATEGORIES = True
+
+.. warning::
+
+    In the current SODAR core version remote site access and remote project
+    synchronization are disabled if this option is used! Use only if a simple
+    project list is specifically required in your site.
+
 
 Backend App Settings
 --------------------
@@ -319,7 +337,6 @@ configured in your environment settings.
     SODAR_API_DEFAULT_VERSION = '0.1'
     SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
     SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
-
 
 Logging
 -------

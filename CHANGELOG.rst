@@ -18,6 +18,7 @@ Added
     - Re-enable "home" link in project breadcrumb (#80)
     - ``get_extra_data_link()`` in ProjectAppPluginPoint for timeline extra data (#6)
     - Allow overriding project class in ProjectAccessMixin
+    - Optional disabling of categories and nesting with ``PROJECTROLES_DISABLE_CATEGORIES`` (#87)
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
 - **Timeline**
@@ -33,6 +34,7 @@ Changed
     - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
     - Allow appending custom items in project breadcrumb with ``nav_sub_project_extend`` block (#78)
     - Allow replacing project breadcrumb with ``nav_sub_project`` block (#79)
+    - Disable remote site access if ``PROJECTROLES_DISABLE_CATEGORIES`` is set (#87), pending #76
 
 Fixed
 -----

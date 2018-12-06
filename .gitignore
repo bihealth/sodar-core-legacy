@@ -41,6 +41,7 @@ npm-debug.log*
 nosetests.xml
 htmlcov
 coverage.xml
+.pytest_cache
 
 # Translations
 *.mo
