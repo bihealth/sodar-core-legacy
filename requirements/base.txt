@@ -60,3 +60,6 @@ markdown>=2.6.11, <2.7
 django-markupfield>=1.5.0, <1.6
 django-pagedown>=1.0.6, <1.1
 mistune>=0.8.3, <0.9
+
+# Database file storage for filesfolders
+django-db-file-storage==0.5.3
