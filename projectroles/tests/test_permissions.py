@@ -831,16 +831,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:invite_create',
             kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
+            self.superuser,
             self.anonymous,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -849,16 +847,14 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:invites',
             kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser]
         bad_users = [
+            self.superuser,
             self.anonymous,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
             self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
 

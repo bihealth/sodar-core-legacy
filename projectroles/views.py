@@ -1302,23 +1302,12 @@ class ProjectInviteMixin:
 
 # TODO: Disable access if remote project
 class ProjectInviteView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
+        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
         TemplateView):
     """View for displaying and modifying project invites"""
     permission_required = 'projectroles.invite_users'
     template_name = 'projectroles/project_invites.html'
     model = ProjectInvite
-
-    # TODO: is this needed?
-    def get_object(self):
-        """Override get_object to provide a Project object for both template
-        and permission checking"""
-        try:
-            obj = Project.objects.get(sodar_uuid=self.kwargs['project'])
-            return obj
-
-        except Project.DoesNotExist:
-            return None
 
     def get_context_data(self, *args, **kwargs):
         context = super(ProjectInviteView, self).get_context_data(
@@ -1332,10 +1321,9 @@ class ProjectInviteView(
         return context
 
 
-# TODO: Disable access if remote project
 class ProjectInviteCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, ProjectInviteMixin, CreateView):
+        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
+        ProjectInviteMixin, CreateView):
     """ProjectInvite creation view"""
     model = ProjectInvite
     form_class = ProjectInviteForm
