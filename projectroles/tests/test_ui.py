@@ -735,6 +735,29 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-alt-link-project-create', False)
 
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_create_link_disable_categories(self):
+        """Test visibility of create link with categories disabled"""
+        expected_true = [
+            self.superuser]
+        expected_false = [
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False)
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target(self):
         """Test visibility of create link as target"""

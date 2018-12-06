@@ -1636,6 +1636,18 @@ class RemoteSiteListView(
         context['sites'] = sites
         return context
 
+    # TODO: Remove this once implementing #76
+    def get(self, request, *args, **kwargs):
+        if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
+                settings.PROJECTROLES_DISABLE_CATEGORIES):
+            messages.warning(
+                request,
+                'Project categories and nesting disabled, '
+                'remote project sync disabled')
+            return redirect('home')
+
+        return super(RemoteSiteListView, self).get(request, *args, **kwargs)
+
 
 class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):

@@ -1533,6 +1533,15 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['sites'].count(), 0)  # 1 source sites
 
+    # TODO: Remove this once #76 is done
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_render_disable_categories(self):
+        """Test rendering the remote site list view with categories disabled"""
+
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote_sites'))
+            self.assertRedirects(response, reverse('home'))
+
 
 class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site create view"""

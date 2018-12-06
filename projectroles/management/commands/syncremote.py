@@ -25,6 +25,12 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
+        if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
+                settings.PROJECTROLES_DISABLE_CATEGORIES):
+            sys.exit(
+                'Project categories and nesting disabled, '
+                'remote sync disabled')
+
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_TARGET:
             sys.exit('Site not in TARGET mode, unable to sync')
 
