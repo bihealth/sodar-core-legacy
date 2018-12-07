@@ -62,6 +62,7 @@ setup(
         'projectroles',
         'userprofile',
         'timeline',
+        'filesfolders',
         'adminalerts',
         'taskflowbackend'
     ],

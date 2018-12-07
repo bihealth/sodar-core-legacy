@@ -4,13 +4,14 @@ SODAR Core Changelog
 Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
-
 Unreleased
 ==========
 
 Added
 -----
 
+- **Filesfolders**
+    - Add app based on SODAR v0.4.0 (#86)
 - **General**
     - ``SODAR_API_DEFAULT_HOST`` setting for server host for API View URLs (sodar#396)
 - **Projectroles**
