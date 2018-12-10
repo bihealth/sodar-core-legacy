@@ -109,9 +109,9 @@ Creating a Top Level Category
 
 Currently, only users with a superuser status can create a top level category.
 This can be done by navigating to the *home view* and clicking the
-**Create Category** link. To create a category, a name, description and owner
-must be supplied, along with an optional readme document. All of these may be
-modified later.
+**Create Category** link. To create a category, a name and owner must be
+supplied, along with optional description and/or a readme document. All of these
+may be modified later.
 
 .. note::
 
@@ -322,7 +322,7 @@ Search results are split into results from different apps. For example, entering
 Alternatively, entering ``test type:project`` will provide results from any app
 configured to produce results of type *project*. By default, this will result in
 the projectroles app listing projects which contain the search string in their
-name and/or description
+name and/or description.
 
 .. note::
 

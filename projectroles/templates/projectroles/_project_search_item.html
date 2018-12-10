@@ -15,11 +15,15 @@
       </a>
     </div>
   </td>
-  <td>
-    <div class="sodar-overflow-container">
-      {% autoescape off %}
-        {% highlight_search_term p.description search_term %}
-      {% endautoescape %}
-    </div>
-  </td>
+  {% if p.description %}
+    <td>
+      <div class="sodar-overflow-container">
+        {% autoescape off %}
+          {% highlight_search_term p.description search_term %}
+        {% endautoescape %}
+      </div>
+    </td>
+  {% else %}
+    <td class="text-muted">N/A</td>
+  {% endif %}
 </tr>
