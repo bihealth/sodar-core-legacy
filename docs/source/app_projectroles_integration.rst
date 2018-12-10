@@ -301,8 +301,8 @@ Example:
 Optional Projectroles Settings
 ------------------------------
 
-If you want to disable categories and only allow a list of projects on the
-root level, set the following variable:
+**Disabling categories:** If you want to disable categories and only allow a
+list of projects on the root level, set the following variable:
 
 .. code-block:: python
 
@@ -314,6 +314,16 @@ root level, set the following variable:
     synchronization are disabled if this option is used! Use only if a simple
     project list is specifically required in your site.
 
+**Hiding app links from the project menu:** To hide project app links from the
+project sidebar and dropdown menus for normal users, add their names as a list
+in ``PROJECTROLES_HIDE_APP_LINKS``. Please note that the name must correspond to
+the ``name`` attribute in the app plugin. The apps themselves will remain active
+and accessible according to project rights. For superuser, the links will also
+still be visible.
+
+.. code-block:: python
+
+    PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
 
 Backend App Settings
 --------------------

@@ -20,6 +20,7 @@ Added
     - ``get_extra_data_link()`` in ProjectAppPluginPoint for timeline extra data (#6)
     - Allow overriding project class in ProjectAccessMixin
     - Optional disabling of categories and nesting with ``PROJECTROLES_DISABLE_CATEGORIES`` (#87)
+    - Optional hiding of apps from project menus using ``PROJECTROLES_HIDE_APP_LINKS`` (#92)
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
 - **Timeline**
