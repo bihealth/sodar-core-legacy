@@ -50,6 +50,7 @@ Fixed
     - Member modification buttons visible for superuser in remote projects (#73)
     - Breadcrumb project detail link display issue in ``base.html`` (#77)
     - "None" string displayed for empty project description (#91)
+    - Crash in search from empty project description
 
 
 v0.3.0 (2018-10-26)
