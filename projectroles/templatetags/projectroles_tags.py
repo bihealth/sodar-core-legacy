@@ -331,3 +331,14 @@ def allow_project_creation():
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
+
+
+@register.simple_tag
+def is_app_hidden(plugin, user):
+    """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
+    if (hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS') and
+            plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS and
+            not user.is_superuser):
+        return True
+
+    return False

@@ -668,6 +668,19 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         self.assert_element_count(
             expected, url, 'sodar-pr-nav-app-plugin')
 
+    @override_settings(PROJECTROLES_HIDE_APP_LINKS=['timeline'])
+    def test_app_links_hide(self):
+        """Test visibility of app links with timeline hidden"""
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
+        expected = [
+            (self.superuser, len(get_active_plugins())),
+            (self.user_owner, len(get_active_plugins()) - 1)]
+
+        self.assert_element_count(
+            expected, url, 'sodar-pr-nav-app-plugin')
+
     def test_update_link(self):
         """Test visibility of update link"""
         expected_true = [

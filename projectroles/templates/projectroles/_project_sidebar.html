@@ -33,7 +33,8 @@
   {% if project.type != PROJECT_TYPE_CATEGORY %}
     {% for plugin in app_plugins %}
       {% has_perm plugin.app_permission request.user project as can_view_app %}
-      {% if can_view_app %}
+      {% is_app_hidden plugin request.user as app_hidden %}
+      {% if can_view_app and not app_hidden %}
         {% get_sidebar_app_legend plugin.title as app_legend %}
         <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
             class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
