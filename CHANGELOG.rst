@@ -31,6 +31,8 @@ Changed
 
 - **General**
     - Improve list button and dropdown styles (#72)
+    - Move pagedown CSS overrrides into ``projectroles.css``
+    - Reduce default textarea height (#96)
 - **Projectroles**
     - Make sidebar resizeable in CSS (#71)
     - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
@@ -38,6 +40,8 @@ Changed
     - Allow replacing project breadcrumb with ``nav_sub_project`` block (#79)
     - Disable remote site access if ``PROJECTROLES_DISABLE_CATEGORIES`` is set (#87), pending #76
     - Disable access to invite views for remote projects (#89)
+    - Set "project guest" as the default role for new members (#94)
+    - Make noncritical settings variables optional (#14)
 
 Fixed
 -----
