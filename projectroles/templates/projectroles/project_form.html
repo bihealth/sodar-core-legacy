@@ -22,18 +22,6 @@
   {{ form.media }}
 {% endblock head_extend %}
 
-{% block css %}
-  {{ block.super }}
-  <style type="text/css">
-    /* Fix for default pagedown css */
-    div.wmd-panel {
-      margin-left: 0;
-      margin-right: 0;
-      width: 100%;
-    }
-  </style>
-{% endblock css %}
-
 {% block projectroles %}
   {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 

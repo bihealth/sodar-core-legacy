@@ -519,6 +519,17 @@ a.sodar-nav-link-last {
   border-bottom-left-radius: 0;
 }
 
+textarea {
+  height: 125px; /* The "rows" attribute does not work for pagedown */
+}
+
+/* Pagedown layout fixes */
+div.wmd-panel {
+  margin-left: 0;
+  margin-right: 0;
+  width: 100%;
+}
+
 
 /* Text --------------------------------------------------------------------- */
 
