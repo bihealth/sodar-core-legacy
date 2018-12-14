@@ -41,6 +41,7 @@ Changed
     - Disable remote site access if ``PROJECTROLES_DISABLE_CATEGORIES`` is set (#87), pending #76
     - Disable access to invite views for remote projects (#89)
     - Set "project guest" as the default role for new members (#94)
+    - Make noncritical settings variables optional (#14)
 
 Fixed
 -----

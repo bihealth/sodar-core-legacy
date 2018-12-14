@@ -7,7 +7,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 # Settings
-SECRET_LENGTH = settings.PROJECTROLES_SECRET_LENGTH
+SECRET_LENGTH = settings.PROJECTROLES_SECRET_LENGTH if \
+    hasattr(settings, 'PROJECTROLES_SECRET_LENGTH') else 32
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 SYSTEM_USER_GROUP = 'system'
 

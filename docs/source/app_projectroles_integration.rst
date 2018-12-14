@@ -271,17 +271,11 @@ explained below:
 * ``PROJECTROLES_TARGET_CREATE``: Whether or not local projects can be created
   if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this
   setting has no effect.
-* ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
-  projectroles (int)
 * ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
   (int)
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
-* ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
-  users (int)
 * ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
   your site (boolean)
-* ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
-  display on one page (int)
 
 Example:
 
@@ -290,40 +284,46 @@ Example:
     # Projectroles app settings
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
-    PROJECTROLES_SECRET_LENGTH = 32
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
-    PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
     PROJECTROLES_ENABLE_SEARCH = True
-    PROJECTROLES_SEARCH_PAGINATION = 5
-    PROJECTROLES_DISABLE_CATEGORIES = False
 
 Optional Projectroles Settings
 ------------------------------
 
-**Disabling categories:** If you want to disable categories and only allow a
-list of projects on the root level, set the following variable:
+The following settings are **optional**:
+
+* ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
+  projectroles (int)
+* ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
+  display on one page (int)
+* ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
+  users (int)
+* ``PROJECTROLES_DISABLE_CATEGORIES``: If set True, disable categories and only
+  allow a list of projects on the root level (boolean) (see note)
+* ``PROJECTROLES_HIDE_APP_LINKS``: Apps hidden from the project sidebar and
+  dropdown menus for non-superusers. The app views and URLs are still
+  accessible. The names should correspond to the ``name`` property in each
+  project app's plugin (list)
+
+Example of optional settings:
 
 .. code-block:: python
 
+    # Projectroles app settings
+    # ...
+    PROJECTROLES_SECRET_LENGTH = 32
+    PROJECTROLES_SEARCH_PAGINATION = 5
+    PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
     PROJECTROLES_DISABLE_CATEGORIES = True
+    PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
 
 .. warning::
 
-    In the current SODAR core version remote site access and remote project
-    synchronization are disabled if this option is used! Use only if a simple
-    project list is specifically required in your site.
-
-**Hiding app links from the project menu:** To hide project app links from the
-project sidebar and dropdown menus for normal users, add their names as a list
-in ``PROJECTROLES_HIDE_APP_LINKS``. Please note that the name must correspond to
-the ``name`` attribute in the app plugin. The apps themselves will remain active
-and accessible according to project rights. For superuser, the links will also
-still be visible.
-
-.. code-block:: python
-
-    PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
+    Regarding ``PROJECTROLES_DISABLE_CATEGORIES``: In the current SODAR core
+    version remote site access and remote project synchronization are disabled
+    if this option is used! Use only if a simple project list is specifically
+    required in your site.
 
 Backend App Settings
 --------------------

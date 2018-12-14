@@ -9,7 +9,8 @@ from ..project_tags import get_tag_state
 
 
 # Settings
-HELP_HIGHLIGHT_DAYS = settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
+HELP_HIGHLIGHT_DAYS = settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS if \
+    hasattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS') else 7
 
 # Local constants
 INDENT_PX = 25
