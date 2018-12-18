@@ -10,10 +10,12 @@ Unreleased
 Added
 -----
 
-- **Filesfolders**
-    - Add app based on SODAR v0.4.0 (#86)
 - **General**
     - ``SODAR_API_DEFAULT_HOST`` setting for server host for API View URLs (sodar#396)
+- **Bgjobs**
+    - Add app from varfish-web (#95)
+- **Filesfolders**
+    - Add app based on django-sodar-core v0.4.0 (#86)
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)
