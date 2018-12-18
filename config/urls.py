@@ -43,6 +43,9 @@ urlpatterns = [
     # Admin Alerts URLs
     url(r'^alerts/', include('adminalerts.urls')),
 
+    # Background Jobs URLs
+    url(r'^bgjobs/', include('bgjobs.urls')),
+
     # Example project app URLs
     url(r'^examples/project/', include('example_project_app.urls')),
 

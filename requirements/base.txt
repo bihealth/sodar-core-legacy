@@ -63,3 +63,6 @@ mistune>=0.8.3, <0.9
 
 # Database file storage for filesfolders
 django-db-file-storage==0.5.3
+
+# Backround Jobs requirements
+celery<4.2  # pyup: <4.2  # blocker: https://github.com/celery/celery/issues/4878

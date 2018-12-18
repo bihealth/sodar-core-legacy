@@ -25,6 +25,7 @@ which wants to make use of the following features:
 - Dynamic app content management
 - Advanced project activity logging
 - Small file uploading and browsing
+- Managing server-side background jobs
 
 Basics of Django site setup and instructions for third party packages used are
 considered out of scope for this documentation. Please refer instead to official
