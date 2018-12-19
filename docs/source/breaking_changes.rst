@@ -11,8 +11,8 @@ a complete list of changes, see the ``CHANGELOG.rst`` file.
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-From v0.3.0 to Dev
-==================
+From v0.3.0 to v0.4.0
+=====================
 
 
 List Button Classes in Templates

@@ -4,8 +4,11 @@ SODAR Core Changelog
 Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
-Unreleased
-==========
+Note that the issue IDs here refer to ones in the private CUBI GitLab.
+
+
+v0.4.0 (2018-12-19)
+===================
 
 Added
 -----
@@ -15,7 +18,7 @@ Added
 - **Bgjobs**
     - Add app from varfish-web (#95)
 - **Filesfolders**
-    - Add app based on django-sodar-core v0.4.0 (#86)
+    - Add app from django-sodar-core v0.4.0 (#86)
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)

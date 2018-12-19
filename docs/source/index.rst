@@ -47,6 +47,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    getting_started
    app_projectroles
    app_adminalerts
+   app_bgjobs
    app_filesfolders
    app_userprofile
    app_taskflow
