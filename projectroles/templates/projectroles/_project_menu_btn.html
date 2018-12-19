@@ -1,10 +1,12 @@
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 {% load rules %}
 
 {% allow_project_creation as allow_creation %}
+{% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
 <div class="btn-group sodar-sidebar-alt-btn pull-left" role="group" id="sodar-pr-sidebar-alt-btn">
-  <button class="btn btn-dark dropdown-toggle btn-sm sodar-edit-dropdown" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <button class="btn btn-dark dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     <i class="fa fa-bars"></i>
   </button>
   <div class="dropdown-menu">
@@ -32,7 +34,8 @@
       {% if project.type != PROJECT_TYPE_CATEGORY %}
         {% for plugin in app_plugins %}
           {% has_perm plugin.app_permission request.user project as can_view_app %}
-          {% if can_view_app %}
+          {% is_app_hidden plugin request.user as app_hidden %}
+          {% if can_view_app and not app_hidden %}
             <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
                href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
                title="{{ plugin.title }}"
@@ -75,6 +78,12 @@
            <i class="fa fa-fw fa-plus"></i> Create Project or Category
          </a>
       {% endif %}
+    {% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
+      <a class="dropdown-item"
+         href="{% url 'projectroles:create' %}"
+         id="sodar-pr-alt-link-project-create">
+       <i class="fa fa-fw fa-plus"></i> Create Project
+     </a>
     {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
       {% has_perm 'projectroles.create_project' request.user as can_create_project %}
       {% if allow_creation and can_create_project %}

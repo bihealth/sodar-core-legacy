@@ -75,14 +75,18 @@ SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 class ProjectAccessMixin:
     """Mixin for providing access to a Project object from request kwargs"""
 
+    #: The model class to use for projects.  You can override this to replace it
+    #: with a proxy model, for example.
+    project_class = Project
+
     @classmethod
     def _get_project(cls, request, kwargs):
         # "project" kwarg is a special case
         if 'project' in kwargs:
             try:
-                return Project.objects.get(sodar_uuid=kwargs['project'])
+                return cls.project_class.objects.get(sodar_uuid=kwargs['project'])
 
-            except Project.DoesNotExist:
+            except cls.project_class.DoesNotExist:
                 return None
 
         # Other object types
@@ -423,11 +427,16 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
+        if (hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH') and
+                not settings.PROJECTROLES_ENABLE_SEARCH):
+            messages.error(request, 'Search not enabled')
+            return redirect('home')
+
         context = self.get_context_data(*args, **kwargs)
 
         # Check input, redirect if unwanted characters are found
         if not bool(re.match(SEARCH_REGEX, context['search_input'])):
-            messages.error(self.request, 'Please check your search input')
+            messages.error(request, 'Please check your search input')
             return redirect('home')
 
         return super(TemplateView, self).render_to_response(context)
@@ -1293,23 +1302,12 @@ class ProjectInviteMixin:
 
 # TODO: Disable access if remote project
 class ProjectInviteView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
+        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
         TemplateView):
     """View for displaying and modifying project invites"""
     permission_required = 'projectroles.invite_users'
     template_name = 'projectroles/project_invites.html'
     model = ProjectInvite
-
-    # TODO: is this needed?
-    def get_object(self):
-        """Override get_object to provide a Project object for both template
-        and permission checking"""
-        try:
-            obj = Project.objects.get(sodar_uuid=self.kwargs['project'])
-            return obj
-
-        except Project.DoesNotExist:
-            return None
 
     def get_context_data(self, *args, **kwargs):
         context = super(ProjectInviteView, self).get_context_data(
@@ -1323,10 +1321,9 @@ class ProjectInviteView(
         return context
 
 
-# TODO: Disable access if remote project
 class ProjectInviteCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, ProjectInviteMixin, CreateView):
+        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
+        ProjectInviteMixin, CreateView):
     """ProjectInvite creation view"""
     model = ProjectInvite
     form_class = ProjectInviteForm
@@ -1626,6 +1623,18 @@ class RemoteSiteListView(
 
         context['sites'] = sites
         return context
+
+    # TODO: Remove this once implementing #76
+    def get(self, request, *args, **kwargs):
+        if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
+                settings.PROJECTROLES_DISABLE_CATEGORIES):
+            messages.warning(
+                request,
+                'Project categories and nesting disabled, '
+                'remote project sync disabled')
+            return redirect('home')
+
+        return super(RemoteSiteListView, self).get(request, *args, **kwargs)
 
 
 class RemoteSiteModifyMixin(ModelFormMixin):
@@ -1980,7 +1989,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
 
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())
-        
+
         return Response(sync_data, status=200)
 
 
@@ -2020,9 +2029,6 @@ class ProjectStarringAPIView(
 # Taskflow API Views -----------------------------------------------------------
 
 
-# TODO: Proper access control (TBD, must also be implemented in sodar_taskflow)
-
-
 class TaskflowAPIPermission(BasePermission):
     """Taskflow API permission handling"""
 
@@ -2034,6 +2040,18 @@ class TaskflowAPIPermission(BasePermission):
 class BaseTaskflowAPIView(APIView):
     """Base Taskflow API view"""
     permission_classes = [TaskflowAPIPermission]
+
+    def dispatch(self, request, *args, **kwargs):
+        """Ensure correct secret string is returned by sodar_taskflow"""
+
+        # TODO: Handle GET requests once we implement #47
+        if (not hasattr(settings, 'TASKFLOW_SODAR_SECRET') or
+                'sodar_secret' not in request.POST or
+                request.POST['sodar_secret'] != settings.TASKFLOW_SODAR_SECRET):
+            return Response('Not authorized', status=403)
+
+        return super(
+            BaseTaskflowAPIView, self).dispatch(request, *args, **kwargs)
 
 
 # TODO: Use GET instead of POST

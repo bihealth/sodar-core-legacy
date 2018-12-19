@@ -22,9 +22,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestViewsBase(
-        TestProjectEventBase, ProjectEventMixin, ProjectEventStatusMixin,
-        ProjectMixin, RoleAssignmentMixin):
-    """Base class for view testing"""
+        ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
+    """Base class for timeline view testing"""
 
     def setUp(self):
         super(TestViewsBase, self).setUp()

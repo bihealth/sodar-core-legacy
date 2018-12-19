@@ -17,6 +17,7 @@ from projectroles.project_settings import validate_project_setting, \
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CHOICES = SODAR_CONSTANTS['PROJECT_TYPE_CHOICES']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
@@ -192,10 +193,15 @@ class ProjectForm(forms.ModelForm):
                     user in get_selectable_users(current_user).order_by(
                         'username')]
 
-                # Limit project type choice to category
-                force_select_value(
-                    self.fields['type'],
-                    (PROJECT_TYPE_CATEGORY, 'Category'))
+                # Force project type
+                if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
+                        settings.PROJECTROLES_DISABLE_CATEGORIES):
+                    forced_type = (PROJECT_TYPE_PROJECT, 'Project')
+
+                else:
+                    forced_type = (PROJECT_TYPE_CATEGORY, 'Category')
+
+                force_select_value(self.fields['type'], forced_type)
 
                 # Set up parent field
                 self.initial['parent'] = None
@@ -315,6 +321,9 @@ class RoleAssignmentForm(forms.ModelForm):
                 get_selectable_users(current_user).exclude(
                     pk__in=project_users).order_by('name')]
 
+            self.fields['role'].initial = Role.objects.get(
+                name=PROJECT_ROLE_GUEST).pk
+
     def clean(self):
         """Function for custom form validation and cleanup"""
         role = self.cleaned_data.get('role')
@@ -399,6 +408,9 @@ class ProjectInviteForm(forms.ModelForm):
             self.project,
             self.current_user,
             allow_delegate=False)   # NOTE: Inviting delegate here not allowed
+
+        self.fields['role'].initial = Role.objects.get(
+            name=PROJECT_ROLE_GUEST).pk
 
     def clean(self):
         # Check if user email is already in users

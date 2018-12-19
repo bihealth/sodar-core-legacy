@@ -208,7 +208,7 @@ class SodarUserMixin:
         return user
 
 
-class TestProject(TestCase, ProjectMixin):
+class TestProject(ProjectMixin, TestCase):
     """Tests for model.Project"""
 
     def setUp(self):
@@ -370,7 +370,7 @@ class RoleAssignmentMixin:
         return result
 
 
-class TestRoleAssignment(TestCase, ProjectMixin, RoleAssignmentMixin):
+class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     """Tests for model.RoleAssignment"""
 
     def setUp(self):
@@ -536,7 +536,7 @@ class TestRoleAssignment(TestCase, ProjectMixin, RoleAssignmentMixin):
 
 
 class TestProjectInvite(
-        TestCase, ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase):
     """Tests for model.ProjectInvite"""
 
     def setUp(self):
@@ -595,7 +595,7 @@ class TestProjectInvite(
         self.assertEqual(repr(self.invite), expected)
 
 
-class TestProjectManager(TestCase, ProjectMixin, RoleAssignmentMixin):
+class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
     """Tests for ProjectManager"""
 
     def setUp(self):
@@ -645,7 +645,7 @@ class TestProjectManager(TestCase, ProjectMixin, RoleAssignmentMixin):
 
 
 class TestProjectSetting(
-        TestCase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase):
     """Tests for model.ProjectSetting"""
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -745,7 +745,7 @@ class TestProjectSetting(
 
 
 class TestProjectUserTag(
-        TestCase, ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestCase):
     """Tests for model.ProjectUserTag"""
 
     def setUp(self):
@@ -789,7 +789,7 @@ class TestProjectUserTag(
 
 
 class TestRemoteSite(
-        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase):
     """Tests for model.RemoteSite"""
 
     def setUp(self):
@@ -853,8 +853,8 @@ class TestRemoteSite(
 
 
 class TestRemoteProject(
-        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, RemoteProjectMixin,
+        TestCase):
     """Tests for model.RemoteProject"""
 
     def setUp(self):

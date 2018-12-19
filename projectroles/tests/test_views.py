@@ -41,6 +41,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 # Local constants
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
+TASKFLOW_SECRET_INVALID = 'Not a valid secret'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'description'
@@ -164,7 +165,7 @@ class TestViewsBase(TestCase):
 # General view tests -----------------------------------------------------------
 
 
-class TestHomeView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the home view"""
 
     def setUp(self):
@@ -194,7 +195,7 @@ class TestHomeView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         self.assertEqual(response.context['count_assignments'], 1)
 
 
-class TestProjectSearchView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search view"""
 
     def setUp(self):
@@ -252,8 +253,16 @@ class TestProjectSearchView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
             self.assertRedirects(
                 response, reverse('home'))
 
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_disable_search(self):
+        """Test redirecting the view due to search being disabled"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'}))
+            self.assertRedirects(response, reverse('home'))
 
-class TestProjectDetailView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+
+class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project detail view"""
 
     def setUp(self):
@@ -275,7 +284,7 @@ class TestProjectDetailView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
 
 
 class TestProjectCreateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase):
     """Tests for Project creation view"""
 
     def test_render_top(self):
@@ -405,7 +414,7 @@ class TestProjectCreateView(
 
 
 class TestProjectUpdateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase):
     """Tests for Project updating view"""
 
     def setUp(self):
@@ -485,7 +494,7 @@ class TestProjectUpdateView(
                     kwargs={'project': project.sodar_uuid}))
 
 
-class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for project roles view"""
 
     def setUp(self):
@@ -554,7 +563,7 @@ class TestProjectRoleView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
 
 
 class TestRoleAssignmentCreateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for RoleAssignment creation view"""
 
     def setUp(self):
@@ -643,7 +652,7 @@ class TestRoleAssignmentCreateView(
 
 
 class TestRoleAssignmentUpdateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for RoleAssignment update view"""
 
     def setUp(self):
@@ -731,7 +740,7 @@ class TestRoleAssignmentUpdateView(
 
 
 class TestRoleAssignmentDeleteView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for RoleAssignment delete view"""
 
     def setUp(self):
@@ -780,7 +789,7 @@ class TestRoleAssignmentDeleteView(
 
 
 class TestRoleAssignmentImportView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for RoleAssignment importing view"""
 
     def setUp(self):
@@ -930,7 +939,7 @@ class TestRoleAssignmentImportView(
 
 
 class TestProjectInviteCreateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
     """Tests for ProjectInvite creation view"""
 
     def setUp(self):
@@ -1091,7 +1100,7 @@ class TestProjectInviteCreateView(
 
 
 class TestProjectInviteListView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
     """Tests for ProjectInvite list view"""
 
     def setUp(self):
@@ -1122,7 +1131,7 @@ class TestProjectInviteListView(
 
 
 class TestProjectInviteRevokeView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
     """Tests for ProjectInvite revocation view"""
 
     def setUp(self):
@@ -1171,7 +1180,7 @@ class TestProjectInviteRevokeView(
 
 
 class TestProjectStarringAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin):
+        ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase):
     """Tests for project starring API view"""
 
     def setUp(self):
@@ -1239,7 +1248,7 @@ class TestProjectStarringAPIView(
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project retrieve API view"""
 
     def setUp(self):
@@ -1255,7 +1264,8 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(self.project.sodar_uuid)})
+                'project_uuid': str(self.project.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1278,14 +1288,15 @@ class TestProjectGetAPIView(TestViewsBase, ProjectMixin, RoleAssignmentMixin):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(pd_project.sodar_uuid)})
+                'project_uuid': str(pd_project.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectUpdateAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project updating API view"""
 
     def setUp(self):
@@ -1310,7 +1321,8 @@ class TestProjectUpdateAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
                 'description': desc,
-                'readme': readme})
+                'readme': readme,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1322,7 +1334,7 @@ class TestProjectUpdateAPIView(
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the role assignment getting API view"""
 
     def setUp(self):
@@ -1339,7 +1351,8 @@ class TestRoleAssignmentGetAPIView(
             reverse('projectroles:taskflow_role_get'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(self.user.sodar_uuid)})
+                'user_uuid': str(self.user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.RoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1354,7 +1367,7 @@ class TestRoleAssignmentGetAPIView(
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentSetAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the role assignment setting API view"""
 
     def setUp(self):
@@ -1377,7 +1390,8 @@ class TestRoleAssignmentSetAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'role_pk': self.role_contributor.pk})
+                'role_pk': self.role_contributor.pk,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1399,7 +1413,8 @@ class TestRoleAssignmentSetAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'role_pk': self.role_contributor.pk})
+                'role_pk': self.role_contributor.pk,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1411,7 +1426,7 @@ class TestRoleAssignmentSetAPIView(
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentDeleteAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the role assignment deletion API view"""
 
     def setUp(self):
@@ -1434,7 +1449,8 @@ class TestRoleAssignmentDeleteAPIView(
             reverse('projectroles:taskflow_role_delete'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(new_user.sodar_uuid)})
+                'user_uuid': str(new_user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1451,20 +1467,20 @@ class TestRoleAssignmentDeleteAPIView(
             reverse('projectroles:taskflow_role_delete'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(new_user.sodar_uuid)})
+                'user_uuid': str(new_user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
 
-@override_settings(ENABLED_BACKEND_PLUGINS=[])
-class TestDisabledTaskflowAPIViews(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin):
-    """Tests for taskflow API views without taskflow enabled"""
+class TestTaskflowAPIViewAccess(
+        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    """Tests for taskflow API view access"""
 
     def setUp(self):
-        super(TestDisabledTaskflowAPIViews, self).setUp()
+        super(TestTaskflowAPIViewAccess, self).setUp()
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
@@ -1472,9 +1488,9 @@ class TestDisabledTaskflowAPIViews(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner)
 
-    def test_disable_api_views(self):
-        """Test to make sure API views are disabled without taskflow"""
-
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
+    def test_access_invalid_token(self):
+        """Test access with an invalid token"""
         urls = [
             reverse('projectroles:taskflow_project_get'),
             reverse('projectroles:taskflow_project_update'),
@@ -1485,15 +1501,51 @@ class TestDisabledTaskflowAPIViews(
             reverse('projectroles:taskflow_settings_set')]
 
         for url in urls:
-            response = self.client.post(url)
+            request = self.req_factory.post(
+                url, data={'sodar_secret': TASKFLOW_SECRET_INVALID})
+            response = views.ProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
+
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
+    def test_access_no_token(self):
+        """Test access with no token"""
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            request = self.req_factory.post(url)
+            response = views.ProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
+
+    @override_settings(ENABLED_BACKEND_PLUGINS=[])
+    def test_disable_api_views(self):
+        """Test to make sure API views are disabled without taskflow"""
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            request = self.req_factory.post(
+                url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+            response = views.ProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 401)
 
 
 # Remote view tests ------------------------------------------------------------
 
 
-class TestRemoteSiteListView(
-        TestViewsBase, RemoteSiteMixin):
+class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site list view"""
 
     def setUp(self):
@@ -1526,9 +1578,17 @@ class TestRemoteSiteListView(
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['sites'].count(), 0)  # 1 source sites
 
+    # TODO: Remove this once #76 is done
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_render_disable_categories(self):
+        """Test rendering the remote site list view with categories disabled"""
 
-class TestRemoteSiteCreateView(
-        TestViewsBase, RemoteSiteMixin):
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:remote_sites'))
+            self.assertRedirects(response, reverse('home'))
+
+
+class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site create view"""
 
     def setUp(self):
@@ -1687,8 +1747,7 @@ class TestRemoteSiteCreateView(
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
 
-class TestRemoteSiteUpdateView(
-        TestViewsBase, RemoteSiteMixin):
+class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site update view"""
 
     def setUp(self):
@@ -1793,7 +1852,7 @@ class TestRemoteSiteUpdateView(
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
 
-class TestRemoteSiteDeleteView(TestViewsBase, RemoteSiteMixin):
+class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site delete view"""
     def setUp(self):
         super(TestRemoteSiteDeleteView, self).setUp()
@@ -1835,8 +1894,8 @@ class TestRemoteSiteDeleteView(TestViewsBase, RemoteSiteMixin):
 
 
 class TestRemoteProjectsBatchUpdateView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin, TestViewsBase):
     """Tests for remote project batch update view"""
 
     def setUp(self):
@@ -1967,8 +2026,8 @@ class TestRemoteProjectsBatchUpdateView(
 
 
 class TestRemoteProjectGetAPIView(
-        TestViewsBase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
+        RemoteProjectMixin, TestViewsBase):
     """Tests for remote project getting API view"""
 
     def setUp(self):

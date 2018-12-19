@@ -107,10 +107,9 @@ class ProjectManager(models.Manager):
             projects = projects.filter(type=project_type)
 
         # NOTE: Can't use a custom function in filter()
-        result = [
-            p for p in projects if (
-                search_term in p.get_full_title().lower() or
-                search_term in p.description.lower())]
+        result = [p for p in projects if (
+            search_term in p.get_full_title().lower() or (
+                p.description and search_term in p.description.lower()))]
 
         return sorted(result, key=lambda x: x.get_full_title())
 

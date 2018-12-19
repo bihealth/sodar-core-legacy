@@ -63,7 +63,7 @@ class LiveUserMixin:
 
 
 class TestUIBase(
-        LiveServerTestCase, LiveUserMixin, ProjectMixin, RoleAssignmentMixin):
+        LiveUserMixin, ProjectMixin, RoleAssignmentMixin, LiveServerTestCase):
     """Base class for UI tests"""
 
     def setUp(self):
@@ -404,7 +404,7 @@ class TestProjectDetail(TestUIBase):
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
 
-class TestProjectRoles(TestUIBase, RemoteTargetMixin):
+class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     """Tests for the project roles page UI functionalities"""
 
     def test_list_buttons(self):
@@ -536,7 +536,7 @@ class TestProjectRoles(TestUIBase, RemoteTargetMixin):
             self.selenium.find_element_by_id('sodar-email-body'))
 
 
-class TestProjectInviteList(TestUIBase, ProjectInviteMixin):
+class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
     """Tests for the project invite list page UI functionalities"""
 
     def test_list_buttons(self):
@@ -627,7 +627,7 @@ class TestPlugins(TestUIBase):
         self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
-class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
+class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     """Tests for the project sidebar"""
 
     def setUp(self):
@@ -664,6 +664,19 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
             'projectroles:detail',
             kwargs={'project': self.project.sodar_uuid})
         expected = [(self.superuser, len(get_active_plugins()))]
+
+        self.assert_element_count(
+            expected, url, 'sodar-pr-nav-app-plugin')
+
+    @override_settings(PROJECTROLES_HIDE_APP_LINKS=['timeline'])
+    def test_app_links_hide(self):
+        """Test visibility of app links with timeline hidden"""
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
+        expected = [
+            (self.superuser, len(get_active_plugins())),
+            (self.user_owner, len(get_active_plugins()) - 1)]
 
         self.assert_element_count(
             expected, url, 'sodar-pr-nav-app-plugin')
@@ -725,6 +738,29 @@ class TestProjectSidebar(TestUIBase, ProjectInviteMixin, RemoteTargetMixin):
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.category.sodar_uuid})
+
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False)
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_create_link_disable_categories(self):
+        """Test visibility of create link with categories disabled"""
+        expected_true = [
+            self.superuser]
+        expected_false = [
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user]
+        url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project.sodar_uuid})
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-nav-project-create', True)

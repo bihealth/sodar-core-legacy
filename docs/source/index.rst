@@ -24,6 +24,8 @@ which wants to make use of the following features:
 - Project-based user access control
 - Dynamic app content management
 - Advanced project activity logging
+- Small file uploading and browsing
+- Managing server-side background jobs
 
 Basics of Django site setup and instructions for third party packages used are
 considered out of scope for this documentation. Please refer instead to official
@@ -45,6 +47,8 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    getting_started
    app_projectroles
    app_adminalerts
+   app_bgjobs
+   app_filesfolders
    app_userprofile
    app_taskflow
    app_timeline

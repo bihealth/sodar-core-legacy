@@ -62,8 +62,10 @@ setup(
         'projectroles',
         'userprofile',
         'timeline',
+        'filesfolders',
         'adminalerts',
-        'taskflowbackend'
+        'taskflowbackend',
+        'bgjobs'
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.txt'),

@@ -67,8 +67,8 @@ TARGET_SITE_SECRET = build_secret()
 
 
 class TestGetTargetData(
-        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin, SodarUserMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, RemoteProjectMixin,
+        SodarUserMixin, TestCase):
     """Tests for the get_target_data() API function"""
 
     def setUp(self):
@@ -282,8 +282,8 @@ class TestGetTargetData(
 
 
 class TestSyncSourceData(
-        TestCase, ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin, SodarUserMixin):
+        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, RemoteProjectMixin,
+        SodarUserMixin, TestCase):
     """Tests for the sync_source_data() API function"""
 
     def setUp(self):

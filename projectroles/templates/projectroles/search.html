@@ -158,7 +158,13 @@
 
   <!-- Settings for Javascript -->
   <script type="text/javascript">
-    window.searchPagination = {% get_setting 'PROJECTROLES_SEARCH_PAGINATION' %};
+    {% get_setting 'PROJECTROLES_SEARCH_PAGINATION' as search_pagination %}
+
+    {% if search_pagination %}
+      window.searchPagination = {{ search_pagination }};
+    {% else %}
+      window.searchPagination = 5;
+    {% endif %}
     window.refreshCellOverflow = true;
   </script>
 

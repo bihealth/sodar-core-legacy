@@ -30,7 +30,7 @@
   </div>
   {# Secondary title #}
   <div class="sodar-pr-content-title-secondary text-muted">
-    {{ project.description }}
+    {% if project.description %}{{ project.description }}{% endif %}
   </div>
   {% if project.is_remote and request.user.is_superuser %}
     <div class="ml-auto">

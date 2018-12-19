@@ -127,6 +127,11 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return None
 
+    def get_extra_data_link(self, _extra_data, _name):
+        """Return link for the given label that started with ``"extra:"``."""
+        # TODO: Implement this in your app plugin
+        return '(unknown)'
+
     def search(self, search_term, user, search_type=None, keywords=None):
         """
         Return app items based on a search term, user, optional type and

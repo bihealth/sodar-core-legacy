@@ -1,8 +1,10 @@
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 {% allow_project_creation as allow_creation %}
+{% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
 {# Project nav #}
 
@@ -12,6 +14,7 @@
   {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
 
   {# Overview #}
+
   <li id="sodar-pr-nav-project-detail"
       class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'detail' %}">
     <a class="nav-link sodar-pr-sidebar-nav-link"
@@ -22,7 +25,7 @@
       {% else %}
         <i class="fa fa-cube"></i>
       {% endif %}
-      <br />{% get_project_type_str project %} Overview
+      <br />{% get_project_type_str project %}<br />Overview
     </a>
   </li>
 
@@ -30,13 +33,15 @@
   {% if project.type != PROJECT_TYPE_CATEGORY %}
     {% for plugin in app_plugins %}
       {% has_perm plugin.app_permission request.user project as can_view_app %}
-      {% if can_view_app %}
+      {% is_app_hidden plugin request.user as app_hidden %}
+      {% if can_view_app and not app_hidden %}
+        {% get_sidebar_app_legend plugin.title as app_legend %}
         <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
             class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
           <a class="nav-link"
              href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
              id="sodar-pr-link-app-plugin-{{ plugin.name }}">
-            <i class="fa fa-{{ plugin.icon }}"></i><br />{{ plugin.title }}
+            <i class="fa fa-{{ plugin.icon }}"></i><br />{{ app_legend | safe }}
           </a>
         </li>
       {% endif %}
@@ -60,7 +65,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
-        <i class="fa fa-pencil"></i><br />Update {% get_project_type_str project %}
+        <i class="fa fa-pencil"></i><br />Update<br />{% get_project_type_str project %}
       </a>
     </li>
   {% endif %}
@@ -68,7 +73,6 @@
 {% endif %}
 
 {# Project and Category Creation #}
-
 {% if project and project.type == 'CATEGORY' %}
   {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
   {% if allow_creation and can_create_project %}
@@ -77,10 +81,19 @@
       <a class="nav-link"
          href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
-        <i class="fa fa-plus"></i><br />Create Project or Category
+          <i class="fa fa-plus"></i><br />Create<br />Project or<br />Category
       </a>
     </li>
   {% endif %}
+{% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
+  <li id="sodar-pr-nav-project-create"
+      class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
+    <a class="nav-link"
+       href="{% url 'projectroles:create' %}"
+       id="sodar-pr-link-project-create">
+      <i class="fa fa-plus"></i><br />Create<br />Project
+    </a>
+  </li>
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.app_name == 'projectroles' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if allow_creation and can_create_project %}
@@ -88,7 +101,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-home-link-create">
-        <i class="fa fa-plus"></i><br />Create Category
+        <i class="fa fa-plus"></i><br />Create<br />Category
       </a>
     </li>
   {% endif %}

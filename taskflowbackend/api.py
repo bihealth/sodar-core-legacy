@@ -1,4 +1,5 @@
 """SODAR Taskflow API for Django apps"""
+
 import requests
 from uuid import UUID
 
@@ -16,6 +17,9 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 HEADERS = {'Content-Type': 'application/json'}
 TARGETS = settings.TASKFLOW_TARGETS if \
     hasattr(settings, 'TASKFLOW_TARGETS') else ['sodar']
+TEST_MODE = True if (
+    hasattr(settings, 'TASKFLOW_TEST_MODE') and
+    settings.TASKFLOW_TEST_MODE) else False
 
 
 class TaskflowAPI:
@@ -64,7 +68,11 @@ class TaskflowAPI:
             'request_mode': request_mode,
             'targets': targets,
             'force_fail': force_fail,
-            'timeline_uuid': str(timeline_uuid)}
+            'timeline_uuid': str(timeline_uuid),
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
+
+        # Add the "test_mode" parameter
+        data['test_mode'] = TEST_MODE
 
         # HACK: Add overriding URL for test server
         if request:
@@ -98,11 +106,11 @@ class TaskflowAPI:
         return True if project.type == PROJECT_TYPE_PROJECT else False
 
     def cleanup(self):
-        """Send a cleanup command to SODAR Taskflow. NOTE: only to be used with
-        a test db!"""
-        # TODO: Security measures
+        """Send a cleanup command to SODAR Taskflow"""
         url = self.taskflow_url + '/cleanup'
-        response = requests.get(url)
+        data = {'test_mode': TEST_MODE}
+
+        response = requests.post(url, json=data, headers=HEADERS)
 
         if response.status_code == 200:
             return True

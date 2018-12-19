@@ -69,7 +69,7 @@ class ProjectEventStatusMixin:
         return result
 
 
-class TestProjectEventBase(TestCase, ProjectMixin, RoleAssignmentMixin):
+class TestProjectEventBase(ProjectMixin, RoleAssignmentMixin, TestCase):
     def setUp(self):
         # Make owner user
         self.user_owner = self.make_user('owner')
@@ -86,7 +86,7 @@ class TestProjectEventBase(TestCase, ProjectMixin, RoleAssignmentMixin):
 
 
 class TestProjectEvent(
-        TestProjectEventBase, ProjectEventMixin, ProjectEventStatusMixin):
+        ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
         super(TestProjectEvent, self).setUp()
@@ -125,7 +125,7 @@ class TestProjectEvent(
 
 
 class TestProjectEventObjectRef(
-        TestProjectEventBase, ProjectEventMixin, ProjectEventObjectRefMixin):
+        ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase):
 
     def setUp(self):
         super(TestProjectEventObjectRef, self).setUp()
@@ -204,7 +204,7 @@ class TestProjectEventObjectRef(
 
 
 class TestProjectEventStatus(
-        TestProjectEventBase, ProjectEventMixin, ProjectEventStatusMixin):
+        ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
         super(TestProjectEventStatus, self).setUp()

@@ -4,6 +4,65 @@ SODAR Core Changelog
 Changelog for the SODAR Core Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
+Note that the issue IDs here refer to ones in the private CUBI GitLab.
+
+
+v0.4.0 (2018-12-19)
+===================
+
+Added
+-----
+
+- **General**
+    - ``SODAR_API_DEFAULT_HOST`` setting for server host for API View URLs (sodar#396)
+- **Bgjobs**
+    - Add app from varfish-web (#95)
+- **Filesfolders**
+    - Add app from django-sodar-core v0.4.0 (#86)
+- **Projectroles**
+    - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
+    - Re-enable "home" link in project breadcrumb (#80)
+    - ``get_extra_data_link()`` in ProjectAppPluginPoint for timeline extra data (#6)
+    - Allow overriding project class in ProjectAccessMixin
+    - Optional disabling of categories and nesting with ``PROJECTROLES_DISABLE_CATEGORIES`` (#87)
+    - Optional hiding of apps from project menus using ``PROJECTROLES_HIDE_APP_LINKS`` (#92)
+    - Secure SODAR Taskflow API views with ``TASKFLOW_SODAR_SECRET`` (#46)
+- **Taskflowbackend**
+    - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
+    - Submit ``sodar_secret`` for securing Taskflow API views (#46)
+- **Timeline**
+    - Display of extra data using ``{extra-NAME}`` (see documentation) (#6)
+
+Changed
+-------
+
+- **General**
+    - Improve list button and dropdown styles (#72)
+    - Move pagedown CSS overrrides into ``projectroles.css``
+    - Reduce default textarea height (#96)
+- **Projectroles**
+    - Make sidebar resizeable in CSS (#71)
+    - Disable search if ``PROJECTROLES_ENABLE_SEARCH`` is set False (#70)
+    - Allow appending custom items in project breadcrumb with ``nav_sub_project_extend`` block (#78)
+    - Allow replacing project breadcrumb with ``nav_sub_project`` block (#79)
+    - Disable remote site access if ``PROJECTROLES_DISABLE_CATEGORIES`` is set (#87), pending #76
+    - Disable access to invite views for remote projects (#89)
+    - Set "project guest" as the default role for new members (#94)
+    - Make noncritical settings variables optional (#14)
+
+Fixed
+-----
+
+- **General**
+    - Potential inheritance issues in test classes (#74)
+    - LDAP dependency script execution (#75)
+- **Projectroles**
+    - Long words in app names breaking sidebar (#71)
+    - Member modification buttons visible for superuser in remote projects (#73)
+    - Breadcrumb project detail link display issue in ``base.html`` (#77)
+    - "None" string displayed for empty project description (#91)
+    - Crash in search from empty project description
+
 
 v0.3.0 (2018-10-26)
 ===================

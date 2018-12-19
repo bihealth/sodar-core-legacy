@@ -2,12 +2,17 @@
 {% load rules %}
 {% load crispy_forms_filters %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% block title %}
+  {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+
   {% if object.pk %}
     Update {% get_project_type_str object %} {{ object.title }}
   {% elif parent.pk %}
     Create Project or Category Under {{ parent.title }}
+  {% elif disable_categories %}
+    Create Project
   {% else %}
     Create Top Level Category
   {% endif %}
@@ -17,55 +22,46 @@
   {{ form.media }}
 {% endblock head_extend %}
 
-{% block css %}
-  {{ block.super }}
-  <style type="text/css">
-    /* Fix for default pagedown css */
-    div.wmd-panel {
-      margin-left: 0;
-      margin-right: 0;
-      width: 100%;
-    }
-  </style>
-{% endblock css %}
-
 {% block projectroles %}
+  {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
   {% if object.pk %}
     {% include 'projectroles/_project_header.html' %}
   {% endif %}
 
-<div class="row sodar-subtitle-container">
-  {% if object.pk %}
-    <h3>Update {% get_project_type_str object %}</h3>
-  {% elif parent.pk %}
-    <h2>Create Project or Category Under {{ parent.title }}</h2>
-  {% else %}
-    <h2>Create Top Level Category</h2>
-  {% endif %}
-</div>
+  <div class="row sodar-subtitle-container">
+    {% if object.pk %}
+      <h3>Update {% get_project_type_str object %}</h3>
+    {% elif parent.pk %}
+      <h2>Create Project or Category Under {{ parent.title }}</h2>
+    {% elif disable_categories %}
+      <h2>Create Project</h2>
+    {% else %}
+      <h2>Create Top Level Category</h2>
+    {% endif %}
+  </div>
 
-<div class="container-fluid sodar-page-container">
-  <form method="post">
-    {% csrf_token %}
-    {{ form | crispy }}
-    <div class="row">
-      <div class="btn-group ml-auto" role="group">
-        <a role="button" class="btn btn-secondary"
-           href="{{ request.session.real_referer }}">
-          <i class="fa fa-arrow-circle-left"></i> Cancel
-        </a>
-        <button type="submit" class="btn btn-primary">
-          <i class="fa fa-check"></i>
-          {% if object.pk %}
-            Update
-          {% else %}
-            Create
-          {% endif %}
-        </button>
+  <div class="container-fluid sodar-page-container">
+    <form method="post">
+      {% csrf_token %}
+      {{ form | crispy }}
+      <div class="row">
+        <div class="btn-group ml-auto" role="group">
+          <a role="button" class="btn btn-secondary"
+             href="{{ request.session.real_referer }}">
+            <i class="fa fa-arrow-circle-left"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-check"></i>
+            {% if object.pk %}
+              Update
+            {% else %}
+              Create
+            {% endif %}
+          </button>
+        </div>
       </div>
-    </div>
-  </form>
-</div>
+    </form>
+  </div>
 
 {% endblock projectroles %}

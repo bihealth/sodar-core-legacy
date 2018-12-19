@@ -31,11 +31,20 @@ urlpatterns = [
     # Timeline URLs
     url(r'^timeline/', include('timeline.urls')),
 
+    # Filesfolders URLs
+    url(r'^files/', include('filesfolders.urls')),
+
+    # django-db-file-storage URLs (obfuscated for users)
+    url(r'^naFieng1Lai8heg2/', include('db_file_storage.urls')),
+
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
 
     # Admin Alerts URLs
     url(r'^alerts/', include('adminalerts.urls')),
+
+    # Background Jobs URLs
+    url(r'^bgjobs/', include('bgjobs.urls')),
 
     # Example project app URLs
     url(r'^examples/project/', include('example_project_app.urls')),

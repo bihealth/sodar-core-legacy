@@ -18,7 +18,7 @@ PLUGIN_URL_ID = 'adminalerts:list'
 # NOTE: Setting up the plugin is done during migration
 
 
-class TestPlugins(TestCase, AdminAlertMixin):
+class TestPlugins(AdminAlertMixin, TestCase):
     """Test adminalerts plugin"""
 
     def setUp(self):

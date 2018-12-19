@@ -416,8 +416,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
                 kwargs={'project': self.project.sodar_uuid}))
 
 
-class TestProjectInviteAcceptView(
-        TestTaskflowBase, ProjectInviteMixin):
+class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
     """Tests for ProjectInvite accepting view with taskflow"""
 
     def setUp(self):

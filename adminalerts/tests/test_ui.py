@@ -9,7 +9,7 @@ from projectroles.tests.test_ui import TestUIBase
 from .test_models import AdminAlertMixin
 
 
-class TestAlertUIBase(TestUIBase, AdminAlertMixin):
+class TestAlertUIBase(AdminAlertMixin, TestUIBase):
 
     def setUp(self):
         super(TestAlertUIBase, self).setUp()

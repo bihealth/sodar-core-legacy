@@ -24,7 +24,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestTimelineAPI(
-        TestProjectEventBase, ProjectEventMixin, ProjectEventStatusMixin):
+        ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
         super(TestTimelineAPI, self).setUp()

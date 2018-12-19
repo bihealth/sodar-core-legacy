@@ -9,7 +9,8 @@ from ..project_tags import get_tag_state
 
 
 # Settings
-HELP_HIGHLIGHT_DAYS = settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
+HELP_HIGHLIGHT_DAYS = settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS if \
+    hasattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS') else 7
 
 # Local constants
 INDENT_PX = 25
@@ -325,3 +326,20 @@ def allow_project_creation():
         return False
 
     return True
+
+
+@register.simple_tag
+def get_sidebar_app_legend(title):
+    """Return sidebar link legend HTML"""
+    return '<br />'.join(title.split(' '))
+
+
+@register.simple_tag
+def is_app_hidden(plugin, user):
+    """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
+    if (hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS') and
+            plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS and
+            not user.is_superuser):
+        return True
+
+    return False

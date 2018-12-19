@@ -8,7 +8,7 @@ from projectroles.tests.test_permissions import TestPermissionBase
 from .test_models import AdminAlertMixin
 
 
-class TestAdminAlertPermissions(TestPermissionBase, AdminAlertMixin):
+class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
     """Tests for AdminAlert views"""
 
     def setUp(self):

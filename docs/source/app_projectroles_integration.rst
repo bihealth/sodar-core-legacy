@@ -3,28 +3,43 @@
 Projectroles Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-This document provides instructions and guidelines for integrating the
-projectroles and other SODAR Core apps into your Django site.
+This document provides instructions and guidelines for integrating projectroles
+and other SODAR Core apps into your Django site.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
 
-.. warning::
 
-    In order to successfully set up Projectroles, you are expected to **follow
-    all the instructions here in the order they are presented**. Please note
-    that leaving out steps may result in a non-working Django site!
+Installation on a New Site
+**************************
+
+If you want to set up a new site for integrating projectroles, see the
+recommended options in this section.
 
 
-Django Site Guidelines
-======================
-
-New Django Site
----------------
+SODAR Django Site Template
+==========================
 
 If you are *not* integrating projectroles into an existing Django site, it is
-recommended to use `cookiecutter-django <https://github.com/pydanny/cookiecutter-django>`_
-to set up your site.
+strongly recommended to use `sodar_django_site <https://cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_django_site>`_
+as a template. This project contains a minimal Django site pre-configured with
+projecroles and other SODAR Core apps. The master branch version of this project
+always integrates the latest stable release of SODAR Core and projectroles.
+
+To set up your site with this template, clone the repository and follow the
+installation instructions in the README.rst file.
+
+Once you have your site set up, you can look into :ref:`customization tips <app_projectroles_custom>`
+and start :ref:`developing your SODAR Core compatible apps <development>`.
+
+
+Cookiecutter-Django
+===================
+
+If the SODAR Django site template does not suit your needs, it is also possible
+to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+In this case, follow the instructions in the following section as if you were
+integrating SODAR Core to an existing Django site.
 
 .. warning::
 
@@ -33,18 +48,7 @@ to set up your site.
     recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
     upwards is not guaranteed! Integration into the last official
     `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-    of cookiecutter-django has been tested and verified to be working. However,
-    from this install it is recommended to upgrade the Django version to the
-    latest 1.11 release (1.11.16 at the time of writing).
-
-Make sure to set up a virtual Python environment for development with required
-dependencies.
-
-.. note::
-
-    If in doubt about what prerequisites to install, see the cookiecutter-django
-    manual. Usually ``requirements/local.txt`` must be installed to run the site
-    locally.
+    of cookiecutter-django has been tested and verified to be working.
 
 .. note::
 
@@ -54,21 +58,23 @@ dependencies.
 
 .. note::
 
-    Make sure to create a superuser for your site using
-    ``./manage.py createsuperuser``.
-
-
-.. note::
-
     For any other issues regarding the cookiecutter-django setup, see the
     cookiecutter-django documentation.
 
-Existing Django Site
---------------------
 
-If integrating into an existing Django site, please see
-``requirements/base.txt`` in the projectroles repository to ensure no
-requirements clash between projectroles and your site.
+Installation on an Existing Site
+********************************
+
+
+Instructions for setting up projectroles and SODAR Core on an existing Django
+site or a fresh site generated with cookiecutter-django are detailed in this
+chapter.
+
+.. warning::
+
+    In order to successfully set up projectroles, you are expected to **follow
+    all the instructions here in the order they are presented**. Please note
+    that leaving out steps may result in a non-working Django site!
 
 .. warning::
 
@@ -76,10 +82,6 @@ requirements clash between projectroles and your site.
     up using a `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
     Otherwise details such as directory structures and settings variables may
     differ.
-
-
-Installation
-============
 
 First, add the ``django-sodar-core`` and ``djangoplugins`` package requirements
 into your ``requirements/base.txt`` file.
@@ -267,16 +269,13 @@ explained below:
   synchronization, either ``SOURCE`` (allow others to read local projects) or
   ``TARGET`` (read projects from another site)
 * ``PROJECTROLES_TARGET_CREATE``: Whether or not local projects can be created
-  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this setting
-  has no effect.
-* ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
-  projectroles (int)
-* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire (int)
+  if site is in ``TARGET`` mode. If your site is in ``SOURCE`` mode, this
+  setting has no effect.
+* ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
+  (int)
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
-* ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
-  users (int)
-* ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
-  display on one page (int)
+* ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
+  your site (boolean)
 
 Example:
 
@@ -285,11 +284,46 @@ Example:
     # Projectroles app settings
     PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'TARGET')
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
-    PROJECTROLES_SECRET_LENGTH = 32
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
-    PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
+    PROJECTROLES_ENABLE_SEARCH = True
+
+Optional Projectroles Settings
+------------------------------
+
+The following settings are **optional**:
+
+* ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
+  projectroles (int)
+* ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
+  display on one page (int)
+* ``PROJECTROLES_HELP_HIGHLIGHT_DAYS``: Days for highlighting tour help for new
+  users (int)
+* ``PROJECTROLES_DISABLE_CATEGORIES``: If set True, disable categories and only
+  allow a list of projects on the root level (boolean) (see note)
+* ``PROJECTROLES_HIDE_APP_LINKS``: Apps hidden from the project sidebar and
+  dropdown menus for non-superusers. The app views and URLs are still
+  accessible. The names should correspond to the ``name`` property in each
+  project app's plugin (list)
+
+Example of optional settings:
+
+.. code-block:: python
+
+    # Projectroles app settings
+    # ...
+    PROJECTROLES_SECRET_LENGTH = 32
     PROJECTROLES_SEARCH_PAGINATION = 5
+    PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
+    PROJECTROLES_DISABLE_CATEGORIES = True
+    PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
+
+.. warning::
+
+    Regarding ``PROJECTROLES_DISABLE_CATEGORIES``: In the current SODAR core
+    version remote site access and remote project synchronization are disabled
+    if this option is used! Use only if a simple project list is specifically
+    required in your site.
 
 Backend App Settings
 --------------------
@@ -300,6 +334,19 @@ Add a variable to list enabled backend plugins implemented using
 .. code-block:: python
 
     ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
+
+SODAR API Settings
+------------------
+
+Also make sure to configure the SODAR API. The ``SODAR_API_DEFAULT_HOST``
+setting should post to the externally visible host of your server and be
+configured in your environment settings.
+
+.. code-block:: python
+
+    SODAR_API_DEFAULT_VERSION = '0.1'
+    SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
+    SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
 
 Logging
 -------
@@ -537,67 +584,6 @@ line:
     **mandatory** for Projectroles-based views to work without modifications.
 
 
-Customizing Your Site
-=====================
-
-Here you can find some hints for customizing your site.
-
-Project CSS
------------
-
-While it is strongly recommended to use the Projectroles layout and styles,
-there are of course many possibilities for customization.
-
-If some of the CSS definitions in ``{STATIC}/projectroles/css/projectroles.css``
-do not suit your purposes, it is of course possible to override them in your own
-includes. It is still recommended to include the *"Flexbox page setup"* section
-as is.
-
-Title Bar
----------
-
-You can implement your own title bar by replacing the default base.html include
-of ``projectroles/_site_titlebar.html`` with your own HTML or include.
-
-When doing this, it is possible to include elements from the default title bar
-separately:
-
-- Search form: ``projectroles/_site_titlebar_search.html``
-- Site app and user operation dropdown:
-  ``projectroles/_site_titlebar_dropdown.html``
-
-See the templates themselves for further instructions.
-
-Additional Title Bar Links
---------------------------
-
-If you want to add additional links *not* related to apps in the title bar, you
-can implement in the template file
-``{SITE_NAME}/templates/include/_titlebar_nav.html``. This can be done for e.g.
-documentation links or linking to external sites. Example:
-
-.. code-block:: django
-
-    {# Example extra link #}
-    <li class="nav-item">
-      <a href="#" class="nav-link" id="site-extra-link-x" target="_blank">
-        <i class="fa fa-fw fa-question-circle"></i> Extra Link
-      </a>
-    </li>
-
-Site Icon
----------
-
-An optional site icon can be placed into ``{STATIC}/images/logo_navbar.png`` to
-be displayed in the default Projectroles title bar.
-
-Footer
-------
-
-Footer content can be specified in the optional template file
-``{SITE_NAME}/templates/include/_footer.html``.
-
-
 All Done!
 =========
 
@@ -621,4 +607,6 @@ when setting up your cookiecutter-django site.
 
 You can now continue on to create apps or modify your existing apps to be
 compatible with the SODAR Core framework. See the
-:ref:`development section <development>` for app development guides.
+:ref:`development section <development>` for app development guides. Also see the
+:ref:`customization documentation <app_projectroles_custom>` for tips for
+modifying the default appearance of SODAR Core.
