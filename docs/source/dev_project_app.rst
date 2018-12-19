@@ -169,7 +169,8 @@ member variables and functions as instructed in comments and docstrings.
 
 The following variables and functions are **mandatory**:
 
-- ``name``: App name (ideally should correspond to the app package name)
+- ``name``: App name (**NOTE:** should correspond to the app package name or
+  some functionality may not work as expected)
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
 - ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
@@ -480,6 +481,57 @@ Example of a simple results template, in case of a single ``all`` category:
     {% include 'projectroles/_search_footer.html' %}
 
   {% endif %}
+
+
+Tour Help
+=========
+
+SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
+to present an optional interactive tour for a rendered page. To enable the tour
+in your template, set it up inside the ``javascript`` template block. Within an
+inline javascript strucure, set the ``tourEnabled`` variable to ``true`` and add
+steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
+
+Example:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {{ block.super }}
+
+      {# Tour content #}
+      <script type="text/javascript">
+        tourEnabled = true;
+
+        /* Normal step */
+        tour.addStep('id_of_step', {
+            title: 'Step Title',
+            text: 'Description of the step',
+            attachTo: '#some-element top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+
+        /* Conditional step */
+        if ($('.potentially-existing-element').length) {
+            tour.addStep('id_of_another_step', {
+                title: 'Another Title',
+                text: 'Another description here',
+                attachTo: '.potentially-existing-element right',
+                advanceOn: '.docs-link click',
+                showCancelLink: true
+            });
+        }
+
+      </script>
+    {% endblock javascript %}
+
+
+.. warning::
+
+    Make sure you call ``{{ block.super }}`` at the start of the declared
+    ``javascript`` block or you will overwrite the site's default Javascript
+    setup!
 
 
 TODO
