@@ -64,6 +64,7 @@ configuration.
     # Taskflow backend settings
     TASKFLOW_BACKEND_HOST = env.str('TASKFLOW_BACKEND_HOST', 'http://0.0.0.0')
     TASKFLOW_BACKEND_PORT = env.int('TASKFLOW_BACKEND_PORT', 5005)
+    TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
     TASKFLOW_TARGETS = [
         'sodar',
         # ..

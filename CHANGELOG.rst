@@ -26,8 +26,10 @@ Added
     - Allow overriding project class in ProjectAccessMixin
     - Optional disabling of categories and nesting with ``PROJECTROLES_DISABLE_CATEGORIES`` (#87)
     - Optional hiding of apps from project menus using ``PROJECTROLES_HIDE_APP_LINKS`` (#92)
+    - Secure SODAR Taskflow API views with ``TASKFLOW_SODAR_SECRET`` (#46)
 - **Taskflowbackend**
     - ``test_mode`` flag configured with ``TASKFLOW_TEST_MODE`` in settings (#67)
+    - Submit ``sodar_secret`` for securing Taskflow API views (#46)
 - **Timeline**
     - Display of extra data using ``{extra-NAME}`` (see documentation) (#6)
 

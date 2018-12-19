@@ -14,7 +14,6 @@ be missing. Please click "display source" if you want to read this in GitLab.
 From v0.3.0 to v0.4.0
 =====================
 
-
 List Button Classes in Templates
 --------------------------------
 
@@ -33,10 +32,22 @@ See projectroles templates for examples.
     The standard bootstrap class ``btn-sm`` should **not** be used with these
     custom classes!
 
+SODAR Taskflow v0.3.1 Required
+------------------------------
+
+If using SODAR Taskflow, this release requires release v0.3.1 or higher due to
+mandatory support of the ``TASKFLOW_SODAR_SECRET`` setting.
+
+Taskflow Secret String
+----------------------
+
+If you are using the ``taskflow`` backend app, you **must** set the value of
+``TASKFLOW_SODAR_SECRET`` in your Django settings. Note that this must match the
+similarly named setting in your SODAR Taskflow instance!
+
 
 From v0.2.1 to v0.3.0
 =====================
-
 
 Remote Site Setup
 -----------------
