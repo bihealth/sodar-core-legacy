@@ -41,6 +41,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 # Local constants
 INVITE_EMAIL = 'test@example.com'
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
+TASKFLOW_SECRET_INVALID = 'Not a valid secret'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'description'
@@ -1263,7 +1264,8 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(self.project.sodar_uuid)})
+                'project_uuid': str(self.project.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1286,7 +1288,8 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
-                'project_uuid': str(pd_project.sodar_uuid)})
+                'project_uuid': str(pd_project.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
@@ -1318,7 +1321,8 @@ class TestProjectUpdateAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
                 'description': desc,
-                'readme': readme})
+                'readme': readme,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.ProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1347,7 +1351,8 @@ class TestRoleAssignmentGetAPIView(
             reverse('projectroles:taskflow_role_get'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(self.user.sodar_uuid)})
+                'user_uuid': str(self.user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
         response = views.RoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1385,7 +1390,8 @@ class TestRoleAssignmentSetAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'role_pk': self.role_contributor.pk})
+                'role_pk': self.role_contributor.pk,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1407,7 +1413,8 @@ class TestRoleAssignmentSetAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'role_pk': self.role_contributor.pk})
+                'role_pk': self.role_contributor.pk,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1442,7 +1449,8 @@ class TestRoleAssignmentDeleteAPIView(
             reverse('projectroles:taskflow_role_delete'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(new_user.sodar_uuid)})
+                'user_uuid': str(new_user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1459,20 +1467,20 @@ class TestRoleAssignmentDeleteAPIView(
             reverse('projectroles:taskflow_role_delete'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'user_uuid': str(new_user.sodar_uuid)})
+                'user_uuid': str(new_user.sodar_uuid),
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
         response = views.RoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
 
-@override_settings(ENABLED_BACKEND_PLUGINS=[])
-class TestDisabledTaskflowAPIViews(
+class TestTaskflowAPIViewAccess(
         ProjectMixin, RoleAssignmentMixin, TestViewsBase):
-    """Tests for taskflow API views without taskflow enabled"""
+    """Tests for taskflow API view access"""
 
     def setUp(self):
-        super(TestDisabledTaskflowAPIViews, self).setUp()
+        super(TestTaskflowAPIViewAccess, self).setUp()
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
@@ -1480,9 +1488,9 @@ class TestDisabledTaskflowAPIViews(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner)
 
-    def test_disable_api_views(self):
-        """Test to make sure API views are disabled without taskflow"""
-
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
+    def test_access_invalid_token(self):
+        """Test access with an invalid token"""
         urls = [
             reverse('projectroles:taskflow_project_get'),
             reverse('projectroles:taskflow_project_update'),
@@ -1493,7 +1501,44 @@ class TestDisabledTaskflowAPIViews(
             reverse('projectroles:taskflow_settings_set')]
 
         for url in urls:
-            response = self.client.post(url)
+            request = self.req_factory.post(
+                url, data={'sodar_secret': TASKFLOW_SECRET_INVALID})
+            response = views.ProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
+
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
+    def test_access_no_token(self):
+        """Test access with no token"""
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            request = self.req_factory.post(url)
+            response = views.ProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
+
+    @override_settings(ENABLED_BACKEND_PLUGINS=[])
+    def test_disable_api_views(self):
+        """Test to make sure API views are disabled without taskflow"""
+        urls = [
+            reverse('projectroles:taskflow_project_get'),
+            reverse('projectroles:taskflow_project_update'),
+            reverse('projectroles:taskflow_role_get'),
+            reverse('projectroles:taskflow_role_set'),
+            reverse('projectroles:taskflow_role_delete'),
+            reverse('projectroles:taskflow_settings_get'),
+            reverse('projectroles:taskflow_settings_set')]
+
+        for url in urls:
+            request = self.req_factory.post(
+                url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+            response = views.ProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 401)
 
 

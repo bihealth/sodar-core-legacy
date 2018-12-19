@@ -2029,9 +2029,6 @@ class ProjectStarringAPIView(
 # Taskflow API Views -----------------------------------------------------------
 
 
-# TODO: Proper access control (TBD, must also be implemented in sodar_taskflow)
-
-
 class TaskflowAPIPermission(BasePermission):
     """Taskflow API permission handling"""
 
@@ -2043,6 +2040,18 @@ class TaskflowAPIPermission(BasePermission):
 class BaseTaskflowAPIView(APIView):
     """Base Taskflow API view"""
     permission_classes = [TaskflowAPIPermission]
+
+    def dispatch(self, request, *args, **kwargs):
+        """Ensure correct secret string is returned by sodar_taskflow"""
+
+        # TODO: Handle GET requests once we implement #47
+        if (not hasattr(settings, 'TASKFLOW_SODAR_SECRET') or
+                'sodar_secret' not in request.POST or
+                request.POST['sodar_secret'] != settings.TASKFLOW_SODAR_SECRET):
+            return Response('Not authorized', status=403)
+
+        return super(
+            BaseTaskflowAPIView, self).dispatch(request, *args, **kwargs)
 
 
 # TODO: Use GET instead of POST

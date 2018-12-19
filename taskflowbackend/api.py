@@ -1,4 +1,5 @@
 """SODAR Taskflow API for Django apps"""
+
 import requests
 from uuid import UUID
 
@@ -19,6 +20,7 @@ TARGETS = settings.TASKFLOW_TARGETS if \
 TEST_MODE = True if (
     hasattr(settings, 'TASKFLOW_TEST_MODE') and
     settings.TASKFLOW_TEST_MODE) else False
+
 
 class TaskflowAPI:
     """Taskflow API to be used by Django apps"""
@@ -66,7 +68,8 @@ class TaskflowAPI:
             'request_mode': request_mode,
             'targets': targets,
             'force_fail': force_fail,
-            'timeline_uuid': str(timeline_uuid)}
+            'timeline_uuid': str(timeline_uuid),
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
 
         # Add the "test_mode" parameter
         data['test_mode'] = TEST_MODE
