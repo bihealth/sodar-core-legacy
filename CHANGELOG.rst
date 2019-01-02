@@ -15,6 +15,9 @@ Changed
 
 - **General**
     - Upgrade minimum Python version requirement to 3.6 (#102)
+    - Update and cleanup Gitlab-CI setup (#85)
+    - Update Chrome Driver for UI tests
+    - Cleanup Chrome setup
 
 
 v0.4.0 (2018-12-19)

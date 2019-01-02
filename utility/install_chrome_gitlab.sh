@@ -5,12 +5,10 @@ echo "Installing Chrome + Driver for UI Testing"
 echo "***********************************************"
 
 # Version
-CHROME_DRIVER_VERSION=2.36
+CHROME_DRIVER_VERSION=2.45
 
 # Install dependencies
-apt-get -y install default-jre unzip
-apt-get -y install libxpm4 libxrender1 libgtk2.0-0 libnss3 libgconf-2-4
-apt-get -y install xvfb gtk2-engines-pixbuf
+apt-get -y install unzip libgconf-2-4 xvfb gtk2-engines-pixbuf
 
 # Install Chrome Driver
 wget -N http://chromedriver.storage.googleapis.com/$CHROME_DRIVER_VERSION/chromedriver_linux64.zip -P ~/
