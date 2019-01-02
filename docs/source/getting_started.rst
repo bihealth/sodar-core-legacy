@@ -50,7 +50,7 @@ in the repository.
   project)
 - Python 3.6+ (**NOTE:** Python 3.5 no longer supported)
 - Django 1.11.15+ (**NOTE:** 2.x not currently supported)
-- PostgreSQL 9.4+ and psycopg2-binary
+- PostgreSQL 9.6+ and psycopg2-binary
 - Bootstrap 4.1.1
 - JQuery 3.2.1
 - Shepherd 1.8.1 with Tether 1.4.4

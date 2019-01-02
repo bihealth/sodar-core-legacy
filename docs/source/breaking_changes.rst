@@ -11,6 +11,18 @@ a complete list of changes, see the ``CHANGELOG.rst`` file.
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+From v0.4.0 to Dev
+==================
+
+System Prerequisites
+--------------------
+
+Changes in system requirements:
+
+- **Python 3.6 or newer required**: 3.5 and older releases no longer supported.
+- **PostgreSQL 9.6** is the recommended minimum version for the database.
+
+
 From v0.3.0 to v0.4.0
 =====================
 
