@@ -7,6 +7,16 @@ Changelog for the SODAR Core Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Python version requirement to 3.6 (#102)
+
+
 v0.4.0 (2018-12-19)
 ===================
 
