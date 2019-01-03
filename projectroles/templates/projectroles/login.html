@@ -10,6 +10,9 @@
 {% block content %}
 <div class="container-fluid">
 
+  {# Django messages / site app messages #}
+  {% include 'projectroles/_messages.html' %}
+
   {# Display error if login was unsuccessful. #}
   {% if request.POST %}
   <div class="alert alert-danger sodar-alert-top">

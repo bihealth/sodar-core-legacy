@@ -51,6 +51,11 @@ class AdminAlert(models.Model):
         default=True,
         help_text='Alert status (for disabling the alert before expiration)')
 
+    #: Require authorization to view alert
+    require_auth = models.BooleanField(
+        default=True,
+        help_text='Require authorization to view alert')
+
     #: Adminalerts SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4,

@@ -211,13 +211,13 @@ def get_site_apps():
 
 
 @register.simple_tag
-def get_site_app_messages():
+def get_site_app_messages(user):
     """Get messages from site apps"""
     plugins = get_active_plugins('site_app')
     ret = []
 
     for p in plugins:
-        ret += p.get_messages()
+        ret += p.get_messages(user)
 
     return ret
 

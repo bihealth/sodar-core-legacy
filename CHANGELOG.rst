@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **Adminalerts**
+    - Option to display alert to unauthenticated users with ``require_auth`` (#105)
 - **Projectroles**
     - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
     - Handle ``GET`` requests for Taskflow API views (#47)
@@ -25,6 +27,7 @@ Changed
     - Update and cleanup Gitlab-CI setup (#85)
     - Update Chrome Driver for UI tests
     - Cleanup Chrome setup
+    - Enable site message display in login view (#105)
 - **Projectroles**
     - Refactor ``BaseTaskflowAPIView`` (#47)
     - Rename Taskflow specific API views (#104)

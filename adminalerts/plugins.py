@@ -37,7 +37,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         """
         Return a list of messages to be shown to users.
         :param user: User object (optional)
-        :return: List of dicts or and empty list if no messages
+        :return: List of dicts or empty list if no messages
         """
         messages = []
         alerts = AdminAlert.objects.filter(
@@ -46,7 +46,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
         for a in alerts:
             content = '<i class="fa fa-exclamation-triangle"></i> ' + a.message
 
-            if a.description.raw:
+            if a.description.raw and user and user.is_authenticated:
                 content += \
                     '<span class="pull-right"><a href="{}" class="text-info">' \
                     '<i class="fa fa-arrow-circle-right"></i> ' \
@@ -58,6 +58,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
             messages.append({
                 'content': content,
                 'color': 'info',
-                'dismissable': False})
+                'dismissable': False,
+                'require_auth': a.require_auth})
 
         return messages
