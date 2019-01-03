@@ -1266,7 +1266,7 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectGetAPIView.as_view()(request)
+        response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
@@ -1290,7 +1290,7 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             data={
                 'project_uuid': str(pd_project.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectGetAPIView.as_view()(request)
+        response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
 
@@ -1323,7 +1323,7 @@ class TestProjectUpdateAPIView(
                 'description': desc,
                 'readme': readme,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectUpdateAPIView.as_view()(request)
+        response = views.TaskflowProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         self.project.refresh_from_db()
@@ -1353,7 +1353,7 @@ class TestRoleAssignmentGetAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(self.user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.RoleAssignmentGetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
@@ -1393,7 +1393,7 @@ class TestRoleAssignmentSetAPIView(
                 'role_pk': self.role_contributor.pk,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentSetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
@@ -1416,7 +1416,7 @@ class TestRoleAssignmentSetAPIView(
                 'role_pk': self.role_contributor.pk,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentSetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
@@ -1452,7 +1452,7 @@ class TestRoleAssignmentDeleteAPIView(
                 'user_uuid': str(new_user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentDeleteAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
@@ -1470,7 +1470,7 @@ class TestRoleAssignmentDeleteAPIView(
                 'user_uuid': str(new_user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentDeleteAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
@@ -1503,7 +1503,7 @@ class TestTaskflowAPIViewAccess(
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': TASKFLOW_SECRET_INVALID})
-            response = views.ProjectGetAPIView.as_view()(request)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
     @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
@@ -1520,7 +1520,7 @@ class TestTaskflowAPIViewAccess(
 
         for url in urls:
             request = self.req_factory.post(url)
-            response = views.ProjectGetAPIView.as_view()(request)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
@@ -1538,8 +1538,8 @@ class TestTaskflowAPIViewAccess(
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-            response = views.ProjectGetAPIView.as_view()(request)
-            self.assertEqual(response.status_code, 401)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
 
 
 # Remote view tests ------------------------------------------------------------
