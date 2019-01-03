@@ -11,7 +11,8 @@ class AdminAlertForm(forms.ModelForm):
 
     class Meta:
         model = AdminAlert
-        fields = ['message', 'date_expire', 'active', 'description']
+        fields = [
+            'message', 'date_expire', 'active', 'require_auth', 'description']
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
