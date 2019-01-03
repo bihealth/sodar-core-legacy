@@ -18,6 +18,8 @@ from django.views.generic import TemplateView, DetailView, UpdateView,\
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -2029,6 +2031,26 @@ class ProjectStarringAPIView(
 # Taskflow API Views -----------------------------------------------------------
 
 
+# TODO: Integrate Taskflow API functionality with general SODAR API (see #47)
+
+
+class TaskflowAPIAuthentication(BaseAuthentication):
+    """Taskflow API authentication handling"""
+
+    def authenticate(self, request):
+        taskflow_secret = None
+
+        if request.method == 'POST' and 'sodar_secret' in request.POST:
+            taskflow_secret = request.POST['sodar_secret']
+
+        elif request.method == 'GET':
+            taskflow_secret = request.GET.get('sodar_secret', None)
+
+        if (not hasattr(settings, 'TASKFLOW_SODAR_SECRET') or
+                taskflow_secret != settings.TASKFLOW_SODAR_SECRET):
+            raise PermissionDenied('Not authorized')
+
+
 class TaskflowAPIPermission(BasePermission):
     """Taskflow API permission handling"""
 
@@ -2039,23 +2061,11 @@ class TaskflowAPIPermission(BasePermission):
 
 class BaseTaskflowAPIView(APIView):
     """Base Taskflow API view"""
+    authentication_classes = [TaskflowAPIAuthentication]
     permission_classes = [TaskflowAPIPermission]
 
-    def dispatch(self, request, *args, **kwargs):
-        """Ensure correct secret string is returned by sodar_taskflow"""
 
-        # TODO: Handle GET requests once we implement #47
-        if (not hasattr(settings, 'TASKFLOW_SODAR_SECRET') or
-                'sodar_secret' not in request.POST or
-                request.POST['sodar_secret'] != settings.TASKFLOW_SODAR_SECRET):
-            return Response('Not authorized', status=403)
-
-        return super(
-            BaseTaskflowAPIView, self).dispatch(request, *args, **kwargs)
-
-
-# TODO: Use GET instead of POST
-class ProjectGetAPIView(BaseTaskflowAPIView):
+class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
     """API view for getting a project"""
     def post(self, request):
         try:
@@ -2074,7 +2084,7 @@ class ProjectGetAPIView(BaseTaskflowAPIView):
         return Response(ret_data, status=200)
 
 
-class ProjectUpdateAPIView(BaseTaskflowAPIView):
+class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
     """API view for updating a project"""
     def post(self, request):
         try:
@@ -2091,8 +2101,7 @@ class ProjectUpdateAPIView(BaseTaskflowAPIView):
         return Response('ok', status=200)
 
 
-# TODO: Use GET instead of POST
-class RoleAssignmentGetAPIView(BaseTaskflowAPIView):
+class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
     """API view for getting a role assignment for user and project"""
     def post(self, request):
         try:
@@ -2118,7 +2127,7 @@ class RoleAssignmentGetAPIView(BaseTaskflowAPIView):
             return Response(str(ex), status=404)
 
 
-class RoleAssignmentSetAPIView(BaseTaskflowAPIView):
+class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
     """View for creating or updating a role assignment based on params"""
     def post(self, request):
         try:
@@ -2143,7 +2152,7 @@ class RoleAssignmentSetAPIView(BaseTaskflowAPIView):
         return Response('ok', status=200)
 
 
-class RoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
+class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2163,8 +2172,7 @@ class RoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
         return Response('ok', status=200)
 
 
-# TODO: Use GET instead of POST
-class ProjectSettingsGetAPIView(BaseTaskflowAPIView):
+class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
     """API view for getting project settings"""
     def post(self, request):
         try:
@@ -2181,7 +2189,7 @@ class ProjectSettingsGetAPIView(BaseTaskflowAPIView):
         return Response(ret_data, status=200)
 
 
-class ProjectSettingsSetAPIView(BaseTaskflowAPIView):
+class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
     """API view for updating project settings"""
     def post(self, request):
         try:

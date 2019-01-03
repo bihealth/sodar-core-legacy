@@ -83,7 +83,7 @@ class ObjectTimelineView(ProjectTimelineView):
 # Taskflow API Views -----------------------------------------------------------
 
 
-class TimelineEventStatusSetAPIView(APIView):
+class TaskflowEventStatusSetAPIView(APIView):
     def post(self, request):
         try:
             tl_event = ProjectEvent.objects.get(

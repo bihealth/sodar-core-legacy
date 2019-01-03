@@ -1,7 +1,7 @@
 SODAR Core Changelog
 ^^^^^^^^^^^^^^^^^^^^
 
-Changelog for the SODAR Core Django app package. Loosely follows the
+Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
@@ -9,6 +9,13 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 Unreleased
 ==========
+
+Added
+-----
+
+- **Projectroles**
+    - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
+    - Handle ``GET`` requests for Taskflow API views (#47)
 
 Changed
 -------
@@ -18,6 +25,17 @@ Changed
     - Update and cleanup Gitlab-CI setup (#85)
     - Update Chrome Driver for UI tests
     - Cleanup Chrome setup
+- **Projectroles**
+    - Refactor ``BaseTaskflowAPIView`` (#47)
+    - Rename Taskflow specific API views (#104)
+- **Timeline**
+    - Rename Taskflow specific API views (#104)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Potential Django crash from auth failure in Taskflow API views
 
 
 v0.4.0 (2018-12-19)
@@ -31,7 +49,7 @@ Added
 - **Bgjobs**
     - Add app from varfish-web (#95)
 - **Filesfolders**
-    - Add app from django-sodar-core v0.4.0 (#86)
+    - Add app from sodar v0.4.0 (#86)
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)

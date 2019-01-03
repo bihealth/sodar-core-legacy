@@ -136,37 +136,37 @@ urlpatterns = [
     # Taskflow API views
     url(
         regex=r'^taskflow/get$',
-        view=views.ProjectGetAPIView.as_view(),
+        view=views.TaskflowProjectGetAPIView.as_view(),
         name='taskflow_project_get',
     ),
     url(
         regex=r'^taskflow/update$',
-        view=views.ProjectUpdateAPIView.as_view(),
+        view=views.TaskflowProjectUpdateAPIView.as_view(),
         name='taskflow_project_update',
     ),
     url(
         regex=r'^taskflow/role/get$',
-        view=views.RoleAssignmentGetAPIView.as_view(),
+        view=views.TaskflowRoleAssignmentGetAPIView.as_view(),
         name='taskflow_role_get',
     ),
     url(
         regex=r'^taskflow/role/set$',
-        view=views.RoleAssignmentSetAPIView.as_view(),
+        view=views.TaskflowRoleAssignmentSetAPIView.as_view(),
         name='taskflow_role_set',
     ),
     url(
         regex=r'^taskflow/role/delete$',
-        view=views.RoleAssignmentDeleteAPIView.as_view(),
+        view=views.TaskflowRoleAssignmentDeleteAPIView.as_view(),
         name='taskflow_role_delete',
     ),
     url(
         regex=r'^taskflow/settings/get$',
-        view=views.ProjectSettingsGetAPIView.as_view(),
+        view=views.TaskflowProjectSettingsGetAPIView.as_view(),
         name='taskflow_settings_get',
     ),
     url(
         regex=r'^taskflow/settings/set$',
-        view=views.ProjectSettingsSetAPIView.as_view(),
+        view=views.TaskflowProjectSettingsSetAPIView.as_view(),
         name='taskflow_settings_set',
     ),
 ]
