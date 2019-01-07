@@ -18,6 +18,8 @@ Added
 - **Projectroles**
     - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
     - Handle ``GET`` requests for Taskflow API views (#47)
+- **Taskflowbackend**
+    - API logging
 
 Changed
 -------
@@ -28,9 +30,13 @@ Changed
     - Update Chrome Driver for UI tests
     - Cleanup Chrome setup
     - Enable site message display in login view (#105)
+    - Cleanup and refactoring for public release (#90)
+- **Filesfolders**
+    - Move inline javascript into ``filesfolders.js``
 - **Projectroles**
     - Refactor ``BaseTaskflowAPIView`` (#47)
     - Rename Taskflow specific API views (#104)
+    - Unify template tag names in ``projectroles_tags``
 - **Timeline**
     - Rename Taskflow specific API views (#104)
 
@@ -39,6 +45,20 @@ Fixed
 
 - **Projectroles**
     - Potential Django crash from auth failure in Taskflow API views
+    - Timeline description for updating a remote project
+- **Timeline**
+    - ``TaskflowEventStatusSetAPIView`` skipping ``sodar_token`` check (#109)
+
+Removed
+-------
+
+- **Filesfolders**
+    - Unused dropup app buttons mode in templates (#108)
+- **Projectroles**
+    - Unused arguments in ``email`` API
+    - Unused static file ``shepherd-theme-default.css``
+    - Disabled role importing functionality (#61, pending #17)
+    - Unused dropup app buttons mode in templates (#108)
 
 
 v0.4.0 (2018-12-19)

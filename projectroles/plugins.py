@@ -1,11 +1,10 @@
-"""Plugin point definitions for other apps which depend on projectroles"""
+"""Plugin point definitions for apps based on projectroles"""
 
 from django.conf import settings
 from djangoplugins.point import PluginPoint
 
 
 # Local costants
-
 PLUGIN_TYPES = {
     'project_app': 'ProjectAppPluginPoint',
     'backend': 'BackendPluginPoint',
@@ -30,7 +29,7 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Define project specific settings in your app plugin, example below
     project_settings = {
         'example_setting': {
-            'type': 'STRING',   # 'STRING'/'INTEGER'/'BOOLEAN' (TBD: more?)
+            'type': 'STRING',                   # STRING/INTEGER/BOOLEAN
             'default': 'example',
             'description': 'Example setting'    # Optional
         }
@@ -82,7 +81,6 @@ class ProjectAppPluginPoint(PluginPoint):
         Return data for syncing taskflow operations
         :return: List of dicts or None.
         """
-
         '''
         Return data format:
         [
@@ -281,9 +279,7 @@ def get_backend_api(plugin_name, force=False):
             return plugin.get_api() if plugin.is_active() else None
 
         except Exception as ex:
-            pass
-
-    return None
+            return None
 
 
 # Plugins within projectroles --------------------------------------------------

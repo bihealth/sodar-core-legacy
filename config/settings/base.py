@@ -409,6 +409,11 @@ def set_logging(debug):
                 'handlers': ['console', ],
                 'propagate': False,
             },
+            'taskflowbackend': {
+                'level': 'DEBUG' if debug else 'INFO',
+                'handlers': ['console', ],
+                'propagate': False,
+            },
         },
     }
 

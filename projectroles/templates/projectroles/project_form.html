@@ -1,4 +1,5 @@
 {% extends 'projectroles/base.html' %}
+
 {% load rules %}
 {% load crispy_forms_filters %}
 {% load projectroles_tags %}
@@ -8,7 +9,7 @@
   {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
   {% if object.pk %}
-    Update {% get_project_type_str object %} {{ object.title }}
+    Update {% get_project_type object %} {{ object.title }}
   {% elif parent.pk %}
     Create Project or Category Under {{ parent.title }}
   {% elif disable_categories %}
@@ -31,7 +32,7 @@
 
   <div class="row sodar-subtitle-container">
     {% if object.pk %}
-      <h3>Update {% get_project_type_str object %}</h3>
+      <h3>Update {% get_project_type object %}</h3>
     {% elif parent.pk %}
       <h2>Create Project or Category Under {{ parent.title }}</h2>
     {% elif disable_categories %}

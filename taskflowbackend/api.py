@@ -1,5 +1,6 @@
 """SODAR Taskflow API for Django apps"""
 
+import logging
 import requests
 from uuid import UUID
 
@@ -9,9 +10,10 @@ from django.conf import settings
 from projectroles.models import SODAR_CONSTANTS
 
 
+logger = logging.getLogger(__name__)
+
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-
 
 # Local constants
 HEADERS = {'Content-Type': 'application/json'}
@@ -85,15 +87,15 @@ class TaskflowAPI:
         elif sodar_url:
             data['sodar_url'] = sodar_url
 
-        # print('DATA: {}'.format(data))  # DEBUG
+        logger.debug('Submit data: {}'.format(data))
         response = requests.post(url, json=data, headers=HEADERS)
 
         if response.status_code == 200 and bool(response.text) is True:
+            logger.debug('Submit OK')
             return True
 
         else:
-            print('Submit Response (url={}): {}'.format(
-                url, response.text))    # DEBUG
+            logger.error('Submit failed: {}'.format(response.text))
             raise self.FlowSubmitException(
                 self.get_error_msg(flow_name, response.text))
 
@@ -113,10 +115,11 @@ class TaskflowAPI:
         response = requests.post(url, json=data, headers=HEADERS)
 
         if response.status_code == 200:
+            logger.debug('Cleanup OK')
             return True
 
         else:
-            # print('Cleanup Response: {}'.format(response.text))  # DEBUG
+            logger.debug('Cleanup failed: {}'.format(response.text))
             raise self.FlowSubmitException(response.text)
 
     def get_error_msg(self, flow_name, submit_info):

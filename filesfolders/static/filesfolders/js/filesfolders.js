@@ -22,3 +22,25 @@ $('input#id_file').change(function() {
             'disabled', 'disabled').prop('checked', false);
     }
 });
+
+/*****************
+ Manage checkboxes
+ *****************/
+function checkAll(elem) {
+    var checkboxes = document.getElementsByTagName('input');
+    if (elem.checked) {
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].type === 'checkbox') {
+                checkboxes[i].checked = true;
+            }
+        }
+    }
+
+    else {
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].type === 'checkbox') {
+                checkboxes[i].checked = false;
+            }
+        }
+    }
+}

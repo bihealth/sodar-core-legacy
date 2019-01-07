@@ -1,5 +1,3 @@
-import datetime as dt
-
 from django import forms
 from django.conf import settings
 from django.contrib import auth
@@ -8,11 +6,12 @@ from django.utils import timezone
 from pagedown.widgets import PagedownWidget
 
 from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
+    RemoteSite, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
 from .plugins import ProjectAppPluginPoint
 from .utils import get_user_display_name, build_secret
 from projectroles.project_settings import validate_project_setting, \
     get_project_setting, get_default_setting
+
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -76,12 +75,10 @@ class ProjectForm(forms.ModelForm):
                         **setting_kwargs)
 
                 elif s['type'] == 'INTEGER':
-                    self.fields[s_field] = forms.IntegerField(
-                        **setting_kwargs)
+                    self.fields[s_field] = forms.IntegerField(**setting_kwargs)
 
                 elif s['type'] == 'BOOLEAN':
-                    self.fields[s_field] = forms.BooleanField(
-                        **setting_kwargs)
+                    self.fields[s_field] = forms.BooleanField(**setting_kwargs)
 
                 # Set initial value
                 if self.instance.pk:
@@ -134,8 +131,7 @@ class ProjectForm(forms.ModelForm):
 
             # Only owner/superuser has rights to modify owner
             if (current_user.has_perm(
-                    'projectroles.update_project_owner',
-                    self.instance)):
+                    'projectroles.update_project_owner', self.instance)):
                 # Limit owner choices to users without non-owner role in project
                 project_users = RoleAssignment.objects.filter(
                     project=self.instance.pk).exclude(
@@ -190,8 +186,8 @@ class ProjectForm(forms.ModelForm):
             else:
                 self.fields['owner'].choices = [
                     (user.sodar_uuid, get_user_display_name(user, True)) for
-                    user in get_selectable_users(current_user).order_by(
-                        'username')]
+                    user in get_selectable_users(
+                        current_user).order_by('username')]
 
                 # Force project type
                 if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
@@ -214,6 +210,7 @@ class ProjectForm(forms.ModelForm):
             existing_project = Project.objects.get(
                 parent=self.cleaned_data.get('parent'),
                 title=self.cleaned_data.get('title'))
+
             if not self.instance or existing_project.pk != self.instance.pk:
                 self.add_error('title', 'Title must be unique within parent')
 
@@ -404,11 +401,9 @@ class ProjectInviteForm(forms.ModelForm):
             pass
 
         # Limit Role choices according to user permissions
+        # NOTE: Inviting delegate here not allowed
         self.fields['role'].choices = get_role_choices(
-            self.project,
-            self.current_user,
-            allow_delegate=False)   # NOTE: Inviting delegate here not allowed
-
+            self.project, self.current_user, allow_delegate=False)
         self.fields['role'].initial = Role.objects.get(
             name=PROJECT_ROLE_GUEST).pk
 
@@ -490,7 +485,7 @@ class RemoteSiteForm(forms.ModelForm):
                 self.fields['secret'].initial = build_secret()
 
         # Updating
-        else:   # self.instance.pk
+        else:
             pass
 
     def save(self, *args, **kwargs):

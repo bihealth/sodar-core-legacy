@@ -42,9 +42,9 @@ from .project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date
 
+
 # Access Django user model
 User = auth.get_user_model()
-
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -86,7 +86,8 @@ class ProjectAccessMixin:
         # "project" kwarg is a special case
         if 'project' in kwargs:
             try:
-                return cls.project_class.objects.get(sodar_uuid=kwargs['project'])
+                return cls.project_class.objects.get(
+                    sodar_uuid=kwargs['project'])
 
             except cls.project_class.DoesNotExist:
                 return None
@@ -131,6 +132,7 @@ class ProjectAccessMixin:
 class LoggedInPermissionMixin(PermissionRequiredMixin):
     """Mixin for handling redirection for both unlogged users and authenticated
     users without permissions"""
+
     def has_permission(self):
         """Override has_permission() for this mixin also to work with admin
         users without a permission object"""
@@ -147,8 +149,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         """Override handle_no_permission to redirect user"""
         if self.request.user.is_authenticated():
             messages.error(
-                self.request,
-                'User not authorized for requested action')
+                self.request, 'User not authorized for requested action')
             return redirect(reverse('home'))
 
         else:
@@ -157,6 +158,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
     """Mixin for providing a Project object for permission checking"""
+
     def get_permission_object(self):
         return self._get_project(self.request, self.kwargs)
 
@@ -187,6 +189,7 @@ class ProjectModifyPermissionMixin(
 class RolePermissionMixin(ProjectModifyPermissionMixin):
     """Mixin to ensure permissions for RoleAssignment according to user role in
     project"""
+
     def has_permission(self):
         """Override has_permission to check perms depending on role"""
         if not super(RolePermissionMixin, self).has_permission():
@@ -236,6 +239,7 @@ class HTTPRefererMixin:
 class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
     """Mixin for adding context data to Project base view and other views
     extending it. Includes HTTPRefererMixin for correct referer URL"""
+
     def get_context_data(self, *args, **kwargs):
         context = super(ProjectContextMixin, self).get_context_data(
             *args, **kwargs)
@@ -291,6 +295,7 @@ class APIPermissionMixin(PermissionRequiredMixin):
 
 class CurrentUserFormMixin(ModelFormMixin):
     """Mixin for passing current user to form as current_user"""
+
     def get_form_kwargs(self):
         kwargs = super(CurrentUserFormMixin, self).get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
@@ -302,6 +307,7 @@ class CurrentUserFormMixin(ModelFormMixin):
 
 class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
     """Home view"""
+
     template_name = 'projectroles/home.html'
 
     def get_context_data(self, *args, **kwargs):
@@ -333,6 +339,7 @@ class ProjectDetailView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
         DetailView):
     """Project details view"""
+
     permission_required = 'projectroles.view_project'
     model = Project
     slug_url_kwarg = 'project'
@@ -360,6 +367,7 @@ class ProjectDetailView(
 
 class ProjectSearchView(LoginRequiredMixin, TemplateView):
     """View for displaying results of search within projects"""
+
     template_name = 'projectroles/search.html'
 
     def get_context_data(self, *args, **kwargs):
@@ -378,6 +386,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
 
         for i in range(1, len(search_split)):
             s = search_split[i].strip()
+
             if ':' in s:
                 kw = s.split(':')[0].lower().strip()
                 val = s.split(':')[1].lower().strip()
@@ -406,8 +415,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         if search_type:
             search_apps = sorted([
                 p for p in plugins if (
-                    p.search_enable and
-                    search_type in p.search_types)],
+                    p.search_enable and search_type in p.search_types)],
                 key=lambda x: x.plugin_ordering)
 
         else:
@@ -421,9 +429,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
             context['app_search_data'].append({
                 'plugin': plugin,
                 'results': plugin.search(
-                    search_term,
-                    self.request.user,
-                    search_type,
+                    search_term, self.request.user, search_type,
                     search_keywords)})
 
         return context
@@ -448,6 +454,8 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
 
 
 class ProjectModifyMixin(ModelFormMixin):
+    """Mixin for Project creation/updating"""
+
     def form_valid(self, form):
         taskflow = get_backend_api('taskflow')
         timeline = get_backend_api('timeline_backend')
@@ -498,8 +506,8 @@ class ProjectModifyMixin(ModelFormMixin):
 
         owner = form.cleaned_data.get('owner')
         extra_data = {}
-        type_str = 'Project' if project.type == PROJECT_TYPE_PROJECT else \
-            'Category'
+        type_str = 'Project' if \
+            project.type == PROJECT_TYPE_PROJECT else 'Category'
 
         # Get settings
         project_settings = {}
@@ -543,6 +551,7 @@ class ProjectModifyMixin(ModelFormMixin):
                 for k, v in project_settings.items():
                     old_v = get_project_setting(
                         project, k.split('.')[1], k.split('.')[2])
+
                     if old_v != v:
                         extra_data[k] = v
                         upd_fields.append(k)
@@ -662,6 +671,7 @@ class ProjectCreateView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
         ProjectModifyMixin, ProjectContextMixin, HTTPRefererMixin, CreateView):
     """Project creation view"""
+
     permission_required = 'projectroles.create_project'
     model = Project
     form_class = ProjectForm
@@ -711,6 +721,7 @@ class ProjectUpdateView(
         LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
         ProjectModifyMixin, UpdateView):
     """Project updating view"""
+
     permission_required = 'projectroles.update_project'
     model = Project
     form_class = ProjectForm
@@ -730,13 +741,13 @@ class ProjectRoleView(
         LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
         ProjectContextMixin, TemplateView):
     """View for displaying project roles"""
+
     permission_required = 'projectroles.view_project_roles'
     template_name = 'projectroles/project_roles.html'
     model = Project
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectRoleView, self).get_context_data(
-            *args, **kwargs)
+        context = super(ProjectRoleView, self).get_context_data(*args, **kwargs)
         context['owner'] = context['project'].get_owner()
         context['delegate'] = context['project'].get_delegate()
         context['members'] = context['project'].get_members()
@@ -744,6 +755,8 @@ class ProjectRoleView(
 
 
 class RoleAssignmentModifyMixin(ModelFormMixin):
+    """Mixin for RoleAssignment creation and updating"""
+
     def get_context_data(self, *args, **kwargs):
         context = super(RoleAssignmentModifyMixin, self).get_context_data(
             *args, **kwargs)
@@ -773,11 +786,9 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
 
         form_action = 'update' if self.object else 'create'
         tl_event = None
-
         project = self.get_context_data()['project']
         user = form.cleaned_data.get('user')
         role = form.cleaned_data.get('role')
-
         use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
@@ -794,11 +805,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
                 user=self.request.user,
                 event_name='role_{}'.format(form_action),
                 description=tl_desc)
-
-            tl_event.add_object(
-                obj=user,
-                label='user',
-                name=user.username)
+            tl_event.add_object(user, 'user', user.username)
 
         # Submit with taskflow
         if use_taskflow:
@@ -868,6 +875,7 @@ class RoleAssignmentCreateView(
         LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
         RoleAssignmentModifyMixin, CreateView):
     """RoleAssignment creation view"""
+
     permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     form_class = RoleAssignmentForm
@@ -884,6 +892,7 @@ class RoleAssignmentUpdateView(
         LoginRequiredMixin, RolePermissionMixin,
         ProjectContextMixin, RoleAssignmentModifyMixin, UpdateView):
     """RoleAssignment updating view"""
+
     permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     form_class = RoleAssignmentForm
@@ -901,6 +910,7 @@ class RoleAssignmentDeleteView(
         LoginRequiredMixin, RolePermissionMixin, ProjectModifyPermissionMixin,
         ProjectContextMixin, DeleteView):
     """RoleAssignment deletion view"""
+
     permission_required = 'projectroles.update_project_members'
     model = RoleAssignment
     slug_url_kwarg = 'roleassignment'
@@ -909,14 +919,13 @@ class RoleAssignmentDeleteView(
     def post(self, *args, **kwargs):
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
-        tl_event = None
 
+        tl_event = None
         self.object = RoleAssignment.objects.get(
             sodar_uuid=kwargs['roleassignment'])
         project = self.object.project
         user = self.object.user
         role = self.object.role
-
         use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
@@ -928,11 +937,7 @@ class RoleAssignmentDeleteView(
                 event_name='role_delete',
                 description='delete role "{}" from {{{}}}'.format(
                     role.name, 'user'))
-
-            tl_event.add_object(
-                obj=user,
-                label='user',
-                name=user.username)
+            tl_event.add_object(user, 'user', user.username)
 
         # Submit with taskflow
         if use_taskflow:
@@ -966,8 +971,7 @@ class RoleAssignmentDeleteView(
             self.object.delete()
 
         if SEND_EMAIL:
-            send_role_change_mail(
-                'delete', project, user, None, self.request)
+            send_role_change_mail('delete', project, user, None, self.request)
 
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
@@ -976,8 +980,7 @@ class RoleAssignmentDeleteView(
             tl_event.set_status('OK')
 
         messages.success(
-            self.request, 'Membership of {} removed.'.format(
-                user.username))
+            self.request, 'Membership of {} removed.'.format(user.username))
 
         return HttpResponseRedirect(reverse(
             'projectroles:roles', kwargs={'project': project.sodar_uuid}))
@@ -987,256 +990,6 @@ class RoleAssignmentDeleteView(
         kwargs = super(RoleAssignmentDeleteView, self).get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
-
-
-class RoleAssignmentImportView(
-        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
-        TemplateView):
-    """View for importing roles from an existing project"""
-    # TODO: Add taskflow functionality
-    http_method_names = ['get', 'post']
-    template_name = 'projectroles/roleassignment_import.html'
-    permission_required = 'projectroles.import_roles'
-
-    def get(self, request, *args, **kwargs):
-        context = super(RoleAssignmentImportView, self).get_context_data(
-            *args, **kwargs)
-
-        if request.user.is_superuser:
-            projects = Project.objects.filter(
-                type=PROJECT_TYPE_PROJECT).exclude(
-                sodar_uuid=self.kwargs['project'])
-
-            context['owned_projects'] = sorted(
-                [p for p in projects],
-                key=lambda x: x.get_full_title())
-
-        else:
-            assignments = RoleAssignment.objects.filter(
-                project__type=PROJECT_TYPE_PROJECT,
-                user=self.request.user,
-                role__name=PROJECT_ROLE_OWNER).exclude(
-                    project__sodar_uuid=self.kwargs['project'])
-
-            if assignments.count() > 0:
-                context['owned_projects'] = sorted(
-                    [a.project for a in assignments],
-                    key=lambda x: x.get_full_title())
-
-        context['previous_page'] = reverse(
-            'projectroles:roles', kwargs={'project': self.kwargs['project']})
-
-        return super(TemplateView, self).render_to_response(context)
-
-    def post(self, request, **kwargs):
-        taskflow = get_backend_api('taskflow')
-        timeline = get_backend_api('timeline_backend')
-        context = self.get_context_data()
-        post_data = request.POST
-        confirmed = True if 'import-confirmed' in post_data else False
-        import_mode = post_data['import-mode'] if \
-            'import-mode' in post_data else None
-
-        dest_project = self.get_permission_object()
-        source_project = Project.objects.get(
-            sodar_uuid=post_data['source-project'])
-
-        use_taskflow = taskflow.use_taskflow(dest_project) if \
-            taskflow else False
-
-        ######################
-        # Confirmation needed
-        ######################
-
-        if not confirmed:
-            context['import_mode'] = import_mode
-
-            context['source_project'] = source_project
-            dest_users = dest_project.roles.all().values_list(
-                'user', flat=True)
-
-            assignments = source_project.roles.exclude(
-                role__name=PROJECT_ROLE_OWNER)
-
-            if import_mode == 'append':
-                assignments = assignments.exclude(user__in=dest_users)
-
-            context['import_assignments'] = assignments.order_by(
-                'user__username')
-
-            if import_mode == 'replace':
-                import_users = assignments.values_list(
-                    'user', flat=True)
-
-                context['del_assignments'] = dest_project.roles.exclude(
-                    role__name=PROJECT_ROLE_OWNER).exclude(
-                        user__in=import_users).order_by('user__username')
-
-            context['previous_page'] = reverse(
-                'projectroles:role_import',
-                kwargs={'project': dest_project.sodar_uuid})
-
-            return super(TemplateView, self).render_to_response(context)
-
-        ############
-        # Confirmed
-        ############
-
-        import_keys = [
-            key for key, val in post_data.items()
-            if key.startswith('import_field') and val == '1']
-        import_count = len(import_keys)
-
-        # Import/update
-        import_users = []
-
-        for key in import_keys:
-            source_as = RoleAssignment.objects.get(
-                sodar_uuid=key.split('_')[2])
-
-            try:
-                old_as = RoleAssignment.objects.get(
-                    project=dest_project, user=source_as.user)
-
-            except RoleAssignment.DoesNotExist:
-                old_as = None
-
-            # Save new
-            if import_mode == 'append' or not old_as:
-                dest_as = RoleAssignment(
-                    project=dest_project,
-                    role=source_as.role,
-                    user=source_as.user)
-                dest_as.save()
-
-                if SEND_EMAIL:
-                    send_role_change_mail(
-                        'create', dest_project, dest_as.user, dest_as.role,
-                        self.request)
-
-                import_users.append(dest_as.user)
-
-            # Update role
-            elif old_as and source_as.role != old_as.role:
-                old_as.role = source_as.role
-                old_as.save()
-
-                if SEND_EMAIL:
-                    send_role_change_mail(
-                        'update', dest_project, old_as.user, old_as.role,
-                        self.request)
-
-                import_users.append(old_as.user)
-
-        final_count = len(import_users)
-
-        # Add Timeline event for import
-        if timeline:
-            tl_users = []
-
-            for i in range(0, final_count):
-                tl_users.append('{user' + str(i) + '}')
-
-            tl_desc = 'import {} role{} from {{{}}}{}'.format(
-                final_count,
-                's' if final_count != 1 else '',
-                'project',
-                ' ({})'.format(', '.join(tl_users)) if
-                final_count > 0 else '')
-
-            tl_event = timeline.add_event(
-                project=dest_project,
-                app_name=APP_NAME,
-                user=self.request.user,
-                event_name='role_import',
-                description=tl_desc,
-                status_type='OK')
-
-            tl_event.add_object(
-                obj=source_project,
-                label='project',
-                name=source_project.title)
-
-            for i in range(0, final_count):
-                tl_event.add_object(
-                    obj=import_users[i],
-                    label='user{}'.format(i),
-                    name=import_users[i].username)
-
-        msg = 'Imported {} member{} from project "{}"{}.'.format(
-                final_count,
-                's' if final_count != 1 else '',
-                source_project.title,
-                ' ({})'.format(
-                    ', '.join([u.username for u in import_users])) if
-                import_users else '')
-
-        if final_count > 0:
-            messages.success(self.request, msg)
-
-        else:
-            messages.warning(self.request, msg)
-
-        # Delete
-        del_keys = [
-            key for key, val in post_data.items()
-            if key.startswith('delete_field') and val == '1']
-        del_count = len(del_keys)
-
-        if import_mode == 'replace' and del_count > 0:
-            del_uuids = [k.split('_')[2] for k in del_keys]
-            del_assignments = RoleAssignment.objects.filter(
-                sodar_uuid__in=del_uuids).order_by('user__username')
-            del_users = [a.user for a in del_assignments]
-
-            del_assignments.delete()
-
-            if SEND_EMAIL:
-                for u in del_users:
-                    send_role_change_mail(
-                        'delete', dest_project, u, None, self.request)
-
-            if timeline:
-                tl_users = []
-
-                for i in range(0, len(del_users)):
-                    tl_users.append('{user' + str(i) + '}')
-
-                tl_desc = 'delete {} role{} ({})'.format(
-                    del_count,
-                    's' if len(del_users) != 1 else '',
-                    ', '.join(tl_users))
-
-                tl_event = timeline.add_event(
-                    project=dest_project,
-                    app_name=APP_NAME,
-                    user=self.request.user,
-                    event_name='role_delete',
-                    description=tl_desc,
-                    status_type='OK')
-
-                for i in range(0, len(del_users)):
-                    tl_event.add_object(
-                        obj=del_users[i],
-                        label='user{}'.format(i),
-                        name=del_users[i].username)
-
-            messages.success(
-                self.request,
-                'Removed {} member{} ({}).'.format(
-                    del_count,
-                    's' if del_count != 1 else '',
-                    ', '.join([u.username for u in del_users])))
-
-        if import_count == 0 and del_count == 0:
-            messages.warning(
-                self.request,
-                'Nothing to {}, no changes made to project members.'.format(
-                    import_mode))
-
-        return redirect(reverse(
-            'projectroles:roles',
-            kwargs={'project': dest_project.sodar_uuid}))
 
 
 # ProjectInvite Views ----------------------------------------------------------
@@ -1281,9 +1034,7 @@ class ProjectInviteMixin:
                 user=request.user,
                 event_name='invite_{}'.format(send_str),
                 description='{} project invite with role "{}" to {}'.format(
-                    send_str,
-                    invite.role.name,
-                    invite.email),
+                    send_str, invite.role.name, invite.email),
                 status_type=status_type,
                 status_desc=status_desc)
 
@@ -1302,7 +1053,6 @@ class ProjectInviteMixin:
             messages.error(request, status_desc)
 
 
-# TODO: Disable access if remote project
 class ProjectInviteView(
         LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
         TemplateView):
@@ -1316,8 +1066,7 @@ class ProjectInviteView(
             *args, **kwargs)
 
         context['invites'] = ProjectInvite.objects.filter(
-            project=context['project'],
-            active=True,
+            project=context['project'], active=True,
             date_expire__gt=timezone.now())
 
         return context
@@ -1327,6 +1076,7 @@ class ProjectInviteCreateView(
         LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
         ProjectInviteMixin, CreateView):
     """ProjectInvite creation view"""
+
     model = ProjectInvite
     form_class = ProjectInviteForm
     permission_required = 'projectroles.invite_users'
@@ -1397,9 +1147,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
             invite = ProjectInvite.objects.get(secret=kwargs['secret'])
 
         except ProjectInvite.DoesNotExist:
-            messages.error(
-                self.request,
-                'Error: Invite does not exist!')
+            messages.error(self.request, 'Error: Invite does not exist!')
             return redirect(reverse('home'))
 
         # Check user does not already have a role
@@ -1408,11 +1156,9 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 user=self.request.user,
                 project=invite.project)
             messages.warning(
-                self.request,
-                'You already have roles set in this project.')
+                self.request, 'You already have roles set in this project.')
             revoke_invite(
-                invite,
-                failed=True,
+                invite, failed=True,
                 fail_desc='User already has roles in project')
             return redirect(reverse(
                 'projectroles:detail',
@@ -1427,8 +1173,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 self.request,
                 'Error: Your invite has expired! '
                 'Please contact the person who invited you: {} ({})'.format(
-                    invite.issuer.name,
-                    invite.issuer.email))
+                    invite.issuer.name, invite.issuer.email))
 
             # Send notification of expiry to issuer
             if SEND_EMAIL:
@@ -1471,8 +1216,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                     tl_event.set_status('FAILED', str(ex))
 
                 messages.error(self.request, str(ex))
-                return redirect(
-                    reverse('home'))
+                return redirect(reverse('home'))
 
             # Get object
             role_as = RoleAssignment.objects.get(
@@ -1502,9 +1246,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
         messages.success(
             self.request,
             'Welcome to project "{}"! You have been assigned the role of '
-            '{}.'.format(
-                invite.project.title,
-                invite.role.name))
+            '{}.'.format(invite.project.title, invite.role.name))
         return redirect(reverse(
             'projectroles:detail',
             kwargs={'project': invite.project.sodar_uuid}))
@@ -1514,13 +1256,13 @@ class ProjectInviteResendView(
         LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin,
         View):
     """View to handle resending a project invite"""
+
     permission_required = 'projectroles.invite_users'
 
     def get(self, *args, **kwargs):
         try:
             invite = ProjectInvite.objects.get(
-                sodar_uuid=self.kwargs['projectinvite'],
-                active=True)
+                sodar_uuid=self.kwargs['projectinvite'], active=True)
 
         except ProjectInvite.DoesNotExist:
             messages.error(
@@ -1547,6 +1289,7 @@ class ProjectInviteRevokeView(
         LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
         TemplateView):
     """Batch delete/move confirm view"""
+
     template_name = 'projectroles/invite_revoke_confirm.html'
     permission_required = 'projectroles.invite_users'
 
@@ -1604,6 +1347,7 @@ class ProjectInviteRevokeView(
 class RemoteSiteListView(
         LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     """Main view for displaying remote site list"""
+
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remote_sites.html'
 
@@ -1611,13 +1355,12 @@ class RemoteSiteListView(
         context = super(RemoteSiteListView, self).get_context_data(
             *args, **kwargs)
 
-        # TODO: Do this nicer
-        site_mode = (SITE_MODE_TARGET if
+        site_mode = (
+            SITE_MODE_TARGET if
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE else
-                SITE_MODE_SOURCE)
+            SITE_MODE_SOURCE)
 
-        sites = RemoteSite.objects.filter(
-            mode=site_mode).order_by('name')
+        sites = RemoteSite.objects.filter(mode=site_mode).order_by('name')
 
         if (sites.count() > 0 and
                 settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET):
@@ -1653,9 +1396,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
         self.object = form.save()
 
         messages.success(self.request, '{} site "{}" {}'.format(
-            self.object.mode.capitalize(),
-            self.object.name,
-            form_action))
+            self.object.mode.capitalize(), self.object.name, form_action))
         return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
 
@@ -1663,6 +1404,7 @@ class RemoteSiteCreateView(
         LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
         HTTPRefererMixin, CurrentUserFormMixin, CreateView):
     """RemoteSite creation view"""
+
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
@@ -1682,6 +1424,7 @@ class RemoteSiteUpdateView(
         LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
         HTTPRefererMixin, CurrentUserFormMixin, UpdateView):
     """RemoteSite updating view"""
+
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
@@ -1693,6 +1436,7 @@ class RemoteSiteDeleteView(
         LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
         HTTPRefererMixin, CurrentUserFormMixin, DeleteView):
     """RemoteSite deletion view"""
+
     model = RemoteSite
     form_class = RemoteSiteForm
     permission_required = 'projectroles.update_remote'
@@ -1702,8 +1446,7 @@ class RemoteSiteDeleteView(
     def get_success_url(self):
         messages.success(
             self.request, '{} site "{}" deleted'.format(
-                self.object.mode.capitalize(),
-                self.object.name))
+                self.object.mode.capitalize(), self.object.name))
 
         return reverse('projectroles:remote_sites')
 
@@ -1831,9 +1574,7 @@ class RemoteProjectsBatchUpdateView(
 
             except RemoteProject.DoesNotExist:
                 rp = RemoteProject(
-                    site=site,
-                    project_uuid=project_uuid,
-                    level=v)
+                    site=site, project_uuid=project_uuid, level=v)
 
             rp.save()
 
@@ -1852,10 +1593,7 @@ class RemoteProjectsBatchUpdateView(
                     classified=True,
                     status_type='OK')
 
-                tl_event.add_object(
-                    obj=site,
-                    label='site',
-                    name=site.name)
+                tl_event.add_object(site, 'site', site.name)
 
         # All OK
         messages.success(
@@ -1870,6 +1608,7 @@ class RemoteProjectsBatchUpdateView(
 class RemoteProjectsSyncView(
         LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     """Synchronize remote projects from a source site"""
+
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remoteproject_sync.html'
 
@@ -1970,9 +1709,10 @@ class BaseAPIView(APIView):
 # SODAR API Views --------------------------------------------------------------
 
 
-# TODO: TBD: Use Knox auth? Requires user and logging in
 class RemoteProjectGetAPIView(BaseAPIView):
     """API view for retrieving remote projects from a source site"""
+
+    # TODO: Create custom permission class for general API
     permission_classes = (AllowAny,)    # We check the secret in get()/post()
 
     def get(self, request, *args, **kwargs):
@@ -1981,8 +1721,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
 
         try:
             target_site = RemoteSite.objects.get(
-                mode=SITE_MODE_TARGET,
-                secret=secret)
+                mode=SITE_MODE_TARGET, secret=secret)
 
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
@@ -2002,6 +1741,7 @@ class ProjectStarringAPIView(
         LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin,
         APIView):
     """View to handle starring and unstarring a project via AJAX"""
+
     permission_required = 'projectroles.view_project'
 
     def post(self, request, *args, **kwargs):
@@ -2066,7 +1806,8 @@ class BaseTaskflowAPIView(APIView):
 
 
 class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
-    """API view for getting a project"""
+    """Taskflow API view for getting a project"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2085,7 +1826,8 @@ class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
-    """API view for updating a project"""
+    """Taskflow API view for updating a project"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2102,7 +1844,8 @@ class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
-    """API view for getting a role assignment for user and project"""
+    """Taskflow API view for getting a role assignment for user and project"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2113,8 +1856,7 @@ class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
             return Response(str(ex), status=404)
 
         try:
-            role_as = RoleAssignment.objects.get(
-                project=project, user=user)
+            role_as = RoleAssignment.objects.get(project=project, user=user)
             ret_data = {
                 'assignment_uuid': str(role_as.sodar_uuid),
                 'project_uuid': str(role_as.project.sodar_uuid),
@@ -2128,7 +1870,8 @@ class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
-    """View for creating or updating a role assignment based on params"""
+    """Taskflow API view for creating or updating a role assignment"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2153,6 +1896,8 @@ class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
+    """Taskflow API view for deleting a role assignment"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2173,7 +1918,8 @@ class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
-    """API view for getting project settings"""
+    """Taskflow API view for getting project settings"""
+
     def post(self, request):
         try:
             project = Project.objects.get(
@@ -2190,7 +1936,8 @@ class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
 
 
 class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
-    """API view for updating project settings"""
+    """Taskflow API view for updating project settings"""
+
     def post(self, request):
         try:
             project = Project.objects.get(

@@ -1,4 +1,5 @@
 {% load rules %}
+
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
@@ -13,12 +14,10 @@
   <div class="dropdown-menu dropdown-menu-right">
     {% if can_update_all or file.owner == request.user and can_update_own %}
       <a class="dropdown-item" href="{% url 'filesfolders:file_update' item=file.sodar_uuid %}">
-        <i class="fa fa-fw fa-pencil"></i>
-        Update File
+        <i class="fa fa-fw fa-pencil"></i> Update File
       </a>
       <a class="dropdown-item" href="{% url 'filesfolders:file_delete' item=file.sodar_uuid %}">
-        <i class="fa fa-fw fa-close"></i>
-        Delete File
+        <i class="fa fa-fw fa-close"></i> Delete File
       </a>
       {% get_history_dropdown project=file.project obj=file as history_item %}
       {{ history_item|safe }}
