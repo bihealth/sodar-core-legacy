@@ -1833,7 +1833,8 @@ class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
             project = Project.objects.get(
                 sodar_uuid=request.data['project_uuid'])
             project.title = request.data['title']
-            project.description = request.data['description']
+            project.description = request.data['description'] if \
+                'description' in request.data else ''
             project.readme.raw = request.data['readme']
             project.save()
 

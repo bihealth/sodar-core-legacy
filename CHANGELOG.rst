@@ -59,6 +59,7 @@ Removed
     - Unused static file ``shepherd-theme-default.css``
     - Disabled role importing functionality (#61, pending #17)
     - Unused dropup app buttons mode in templates (#108)
+    - Project update with Taskflow failure if description not set (#110)
 
 
 v0.4.0 (2018-12-19)

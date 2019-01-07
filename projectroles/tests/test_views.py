@@ -1181,6 +1181,30 @@ class TestProjectUpdateAPIView(
         self.assertEqual(self.project.description, desc)
         self.assertEqual(self.project.readme.raw, readme)
 
+    def test_post_no_description(self):
+        """Test POST request without a description field"""
+
+        # NOTE: Duplicate titles not checked here, not allowed in the form
+        title = 'New title'
+        desc = 'New desc'
+        readme = 'New readme'
+
+        request = self.req_factory.post(
+            reverse('projectroles:taskflow_project_update'),
+            data={
+                'project_uuid': str(self.project.sodar_uuid),
+                'title': title,
+                'readme': readme,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+        response = views.TaskflowProjectUpdateAPIView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title, title)
+        self.assertEqual(self.project.description, '')
+        self.assertEqual(self.project.readme.raw, readme)
+
+
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
