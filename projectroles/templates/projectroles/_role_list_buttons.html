@@ -1,9 +1,4 @@
-{% if up %}
-  <div class="row">
-  <div class="btn-group dropup ml-auto" id="sodar-pr-btn-role-list-up">
-{% else %}
-  <div class="btn-group ml-auto" id="sodar-pr-btn-role-list">
-{% endif %}
+<div class="btn-group ml-auto" id="sodar-pr-btn-role-list">
   <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
     Member Operations
   </button>
@@ -45,22 +40,5 @@
       </a>
     {% endif %}
 
-    {# Import Roles #}
-    {# TODO: Disabled until issue #152 is done #}
-    {% if can_import %}
-      <a class="dropdown-item disabled"
-         href="#"
-         {% comment %}
-         href="{% url 'projectroles:role_import' project=project.sodar_uuid %}"
-         {% endcomment %}
-         title="Import Members"
-         id="sodar-pr-btn-role-list-import">
-        <i class="fa fa-fw fa-copy"></i> Import Members
-      </a>
-    {% endif %}
-
   </div>
 </div>
-{% if up %}
-  </div>
-{% endif %}

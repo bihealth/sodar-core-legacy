@@ -1,8 +1,9 @@
 {% extends 'projectroles/base.html' %}
-{% load projectroles_tags %}
-{% load projectroles_common_tags %}
+
 {% load rules %}
 {% load static %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% block title %}
   Search Results for "{{ search_term }}"
@@ -51,7 +52,7 @@
         max-width: 200px;
     }
 
-    /* DataTables HACKS */
+    /* DataTables modifications */
 
     .dataTables_paginate {
       width: 100%;
@@ -146,7 +147,7 @@
   {% endif %}
 
   {% autoescape off %}
-    {% print_not_found_alert project_results app_search_data search_type %}
+    {% get_not_found_alert project_results app_search_data search_type %}
   {% endautoescape %}
 
 </div>

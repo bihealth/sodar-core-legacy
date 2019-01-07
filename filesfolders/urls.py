@@ -2,9 +2,8 @@ from django.conf.urls import url
 
 from . import views
 
-# NOTES:
-# - file/folder/hyperlink objects can be referred to as "item", but only if
-#   ObjectPermissionMixin is used in the view
+# NOTE: file/folder/hyperlink objects can be referred to as "item", but only if
+#       ObjectPermissionMixin is used in the view
 
 
 app_name = 'filesfolders'

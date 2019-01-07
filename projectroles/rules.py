@@ -2,7 +2,7 @@ import rules
 
 from django.conf import settings
 
-from projectroles.models import RoleAssignment, RemoteProject, SODAR_CONSTANTS
+from projectroles.models import RoleAssignment, SODAR_CONSTANTS
 
 
 # SODAR constants

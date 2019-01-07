@@ -508,23 +508,6 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
-    def test_role_import(self):
-        """Test access to role importing"""
-        url = reverse(
-            'projectroles:role_import',
-            kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user]
-        bad_users = [
-            self.anonymous,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
-            self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
-
     def test_role_invite_create(self):
         """Test access to role invite creation"""
         url = reverse(
@@ -799,22 +782,6 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:role_delete',
             kwargs={'roleassignment': self.as_delegate.sodar_uuid})
-        bad_users = [
-            self.anonymous,
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
-            self.user_no_roles]
-        self.assert_redirect(url, bad_users)
-
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_role_import(self):
-        """Test access to role importing as target"""
-        url = reverse(
-            'projectroles:role_import',
-            kwargs={'project': self.project.sodar_uuid})
         bad_users = [
             self.anonymous,
             self.superuser,

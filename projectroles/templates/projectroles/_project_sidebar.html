@@ -25,7 +25,7 @@
       {% else %}
         <i class="fa fa-cube"></i>
       {% endif %}
-      <br />{% get_project_type_str project %}<br />Overview
+      <br />{% get_project_type project %}<br />Overview
     </a>
   </li>
 
@@ -65,7 +65,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
-        <i class="fa fa-pencil"></i><br />Update<br />{% get_project_type_str project %}
+        <i class="fa fa-pencil"></i><br />Update<br />{% get_project_type project %}
       </a>
     </li>
   {% endif %}

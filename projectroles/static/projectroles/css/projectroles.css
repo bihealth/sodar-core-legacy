@@ -679,20 +679,14 @@ pre {
 /* Project list */
 
 @media screen and (max-width: 1000px) {
-  .table.sodar-pr-project-list-table tr th:nth-child(3) {
-    display: none;
-  }
-
+  .table.sodar-pr-project-list-table tr th:nth-child(3),
   .table.sodar-pr-project-list-table tr td:nth-child(3) {
     display: none;
   }
 }
 
 @media screen and (max-width: 800px) {
-  .table.sodar-pr-project-list-table tr th:nth-child(2) {
-    display: none;
-  }
-
+  .table.sodar-pr-project-list-table tr th:nth-child(2),
   .table.sodar-pr-project-list-table tr td:nth-child(2) {
     display: none;
   }

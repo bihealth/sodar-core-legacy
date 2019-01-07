@@ -1,4 +1,5 @@
 {# Django messages / site app messages #}
+
 {% load rules %}
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
@@ -21,7 +22,8 @@
       </div>
     {% endif %}
   {% endfor %}
-   {# Regular Django messages #}
+
+  {# Regular Django messages #}
   {% for message in messages %}
     <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} sodar-alert-top">
       <div class="sodar-alert-top-content">

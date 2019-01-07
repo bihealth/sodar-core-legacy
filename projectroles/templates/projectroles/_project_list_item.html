@@ -40,7 +40,7 @@
   {% endif %}
   <td>
     {% autoescape off %}
-      {% get_user_role_str p request.user %}
+      {% get_user_role_html p request.user %}
     {% endautoescape %}
   </td>
 </tr>

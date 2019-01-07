@@ -1,5 +1,4 @@
-"""API for the timeline app, used by other apps to add and update events"""
-
+"""Timeline API for adding and updating events"""
 import re
 
 from django.contrib.auth import get_user_model
@@ -36,7 +35,7 @@ class TimelineAPI:
         Create and save a ProjectEvent
         :param project: Project object
         :param app_name: ID string of app from which event was invoked (NOTE:
-                         should correspond to member "name" in app plugin!)
+            should correspond to member "name" in app plugin!)
         :param user: User invoking the event
         :param event_name: Event ID string (must match schema)
         :param description: Description of status change (may include {object
@@ -51,14 +50,12 @@ class TimelineAPI:
         """
         if app_name not in APP_NAMES:
             raise ValueError('Unknown app name "{}" (active apps: {})'.format(
-                app_name,
-                ', '.join(x for x in APP_NAMES)))
+                app_name, ', '.join(x for x in APP_NAMES)))
 
         if status_type and status_type not in EVENT_STATUS_TYPES:
             raise ValueError(
                 'Unknown status type "{}" (valid types: {})'.format(
-                    status_type,
-                    ', '.join(x for x in EVENT_STATUS_TYPES)))
+                    status_type, ', '.join(x for x in EVENT_STATUS_TYPES)))
 
         event = ProjectEvent()
         event.project = project
@@ -88,7 +85,7 @@ class TimelineAPI:
         """
         Return ProjectEvent objects for project
         :param project: Project object
-        :param classified: Include classified
+        :param classified: Include classified (boolean)
         :return: QuerySet
         """
         events = ProjectEvent.objects.filter(project=project)
@@ -104,7 +101,7 @@ class TimelineAPI:
         desc = event.description
         unknown_label = '(unknown)'
 
-        ref_ids = re.findall("{'?(.*?)'?\}", desc)
+        ref_ids = re.findall("{'?(.*?)'?}", desc)
 
         if len(ref_ids) == 0:
             return event.description
@@ -118,15 +115,14 @@ class TimelineAPI:
             return label
 
         def get_not_found_label(ref_obj, history_link):
+            """Get label for object which is not found in db"""
             return '<span class="text-danger">{}</span> {}'.format(
                 get_label(ref_obj.name), history_link)
 
         for r in ref_ids:
-
             # Get reference object or return an unknown label if not found
             if r.startswith('extra-'):
-                app_plugin = ProjectAppPluginPoint.get_plugin(
-                    name=event.app)
+                app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
                 refs[r] = app_plugin.get_extra_data_link(event.extra_data, r)
                 continue
             else:
@@ -143,9 +139,9 @@ class TimelineAPI:
                 'project': event.project.sodar_uuid,
                 'object_model': ref_obj.object_model,
                 'object_uuid': ref_obj.object_uuid})
-            history_link = '<a href="{}" class="sodar-tl-object-link">' \
-                           '<i class="fa fa-clock-o"></i></a>'.format(
-                            history_url)
+            history_link = \
+                '<a href="{}" class="sodar-tl-object-link">' \
+                '<i class="fa fa-clock-o"></i></a>'.format(history_url)
 
             # Special case: User model
             if ref_obj.object_model == 'User':
@@ -172,9 +168,9 @@ class TimelineAPI:
                             get_label(project.title))
 
                     else:
-                        refs[r] = '<span class="text-danger">' \
-                                  '{}</span>'.format(
-                            get_label(project.title))
+                        refs[r] = \
+                            '<span class="text-danger">{}</span>'.format(
+                                get_label(project.title))
 
                 except Project.DoesNotExist:
                     refs[r] = ref_obj.name
@@ -205,8 +201,7 @@ class TimelineAPI:
 
             # Apps with plugins
             else:
-                app_plugin = ProjectAppPluginPoint.get_plugin(
-                    name=event.app)
+                app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
 
                 link_data = app_plugin.get_object_link(
                     ref_obj.object_model, ref_obj.object_uuid)
@@ -230,7 +225,7 @@ class TimelineAPI:
         """
         Return URL for object history in timeline
         :param project_uuid: UUID of the related project
-        :param obj: Django postgres database object
+        :param obj: Django database object
         :return: String
         """
         return reverse('timeline:list_object', kwargs={
@@ -243,7 +238,7 @@ class TimelineAPI:
         """
         Return inline HTML icon link for object history in timeline.
         :param project_uuid: UUID of the related project
-        :param obj: Django postgres database object
+        :param obj: Django database object
         :return: String
         """
         return '<a href="{}" class="sodar-tl-object-link">' \

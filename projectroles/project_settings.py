@@ -1,6 +1,6 @@
 """Helper functions for Project settings"""
 
-from projectroles.models import ProjectSetting, PROJECT_SETTING_TYPES, Project
+from projectroles.models import ProjectSetting, PROJECT_SETTING_TYPES
 from projectroles.plugins import ProjectAppPluginPoint, get_app_plugin
 
 
@@ -52,8 +52,7 @@ def get_all_settings(project=None):
     """
     ret = {}
     app_plugins = [
-        p for p in ProjectAppPluginPoint.get_plugins() if
-        p.project_settings]
+        p for p in ProjectAppPluginPoint.get_plugins() if p.project_settings]
 
     for p in app_plugins:
         for s_key in p.project_settings:

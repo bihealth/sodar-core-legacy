@@ -1,28 +1,21 @@
-{% extends "projectroles/base.html" %}
+{% extends 'projectroles/base.html' %}
 
 {% load crispy_forms_filters %}
-
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% block title %}Synchronize Projects from {{ site.name }} {% endblock %}
+{% block title %}Synchronize Projects from {{ site.name }}{% endblock %}
 
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    .table.sodar-pr-remote-update-table thead tr th:last-child {
-      width: 120px;
-    }
-
+    .table.sodar-pr-remote-update-table thead tr th:last-child,
     .table.sodar-pr-remote-update-table tbody tr td:last-child {
       width: 120px;
     }
 
     @media screen and (max-width: 800px) {
-      .table#sodar-pr-remote-update-table-roles thead tr th:nth-child(3) {
-        display: none;
-      }
-
+      .table#sodar-pr-remote-update-table-roles thead tr th:nth-child(3),
       .table#sodar-pr-remote-update-table-roles tbody tr td:nth-child(3) {
         display: none;
       }

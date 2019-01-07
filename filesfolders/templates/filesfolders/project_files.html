@@ -1,8 +1,11 @@
-{# Projectroles dependency #}
 {% extends 'projectroles/project_base.html' %}
-{% load projectroles_common_tags %}
 
 {% load rules %}
+{% load static %}
+
+{# Projectroles dependency #}
+{% load projectroles_common_tags %}
+
 {% load filesfolders_tags %}
 
 {% block title %}
@@ -38,40 +41,28 @@
 
     /* Responsive modifications */
     @media screen and (max-width: 1200px) {
-      .table#sodar-ff-list-table tr th:nth-child(4) {
-        display: none;
-      }
-
+      .table#sodar-ff-list-table tr th:nth-child(4),
       .table#sodar-ff-list-table tr td:nth-child(5) {
         display: none;
       }
     }
 
     @media screen and (max-width: 900px) {
-      .table#sodar-ff-list-table tr th:nth-child(5) {
-        display: none;
-      }
-
+      .table#sodar-ff-list-table tr th:nth-child(5),
       .table#sodar-ff-list-table tr td:nth-child(6) {
         display: none;
       }
     }
 
     @media screen and (max-width: 750px) {
-      .table#sodar-ff-list-table tr th:nth-child(3) {
-        display: none;
-      }
-
-      .table#sodar-ff-list-table tr td:nth-child(4) {
+      .table#sodar-ff-list-table tr th:nth-child(3),
+      .table#sodar-ff-list-table tr td:nth-child(4){
         display: none;
       }
     }
 
     @media screen and (max-width: 500px) {
-      .table#sodar-ff-list-table tr th:nth-child(2) {
-        display: none;
-      }
-
+      .table#sodar-ff-list-table tr th:nth-child(2),
       .table#sodar-ff-list-table tr td:nth-child(3) {
         display: none;
       }
@@ -237,25 +228,8 @@
 {% block javascript %}
   {{ block.super }}
 
-  <script type="text/javascript">
-    // Script for checking/unchecking all checkboxes
-    function checkAll(ele) {
-         var checkboxes = document.getElementsByTagName('input');
-         if (ele.checked) {
-             for (var i = 0; i < checkboxes.length; i++) {
-                 if (checkboxes[i].type === 'checkbox') {
-                     checkboxes[i].checked = true;
-                 }
-             }
-         } else {
-             for (var i = 0; i < checkboxes.length; i++) {
-                 if (checkboxes[i].type === 'checkbox') {
-                     checkboxes[i].checked = false;
-                 }
-             }
-         }
-     }
-  </script>
+  <!-- Filesfolders Javascript -->
+  <script type="text/javascript" src="{% static 'filesfolders/js/filesfolders.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">

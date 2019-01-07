@@ -25,7 +25,7 @@ ADMIN_RECIPIENT = settings.ADMINS[0]
 logger = logging.getLogger(__name__)
 
 
-# Generic Elements -------------------------------------------------------
+# Generic Elements -------------------------------------------------------------
 
 
 MESSAGE_HEADER = r'''
@@ -46,7 +46,7 @@ contact {admin_name} ({admin_email}).
 '''
 
 
-# Role Change Template ---------------------------------------------------
+# Role Change Template ---------------------------------------------------------
 
 
 SUBJECT_ROLE_CREATE = 'Membership granted for project "{}"'
@@ -77,7 +77,7 @@ from project "{project}".
 '''.lstrip()
 
 
-# Invite Template --------------------------------------------------------
+# Invite Template --------------------------------------------------------------
 
 
 SUBJECT_INVITE = 'Invitation for project "{}"'
@@ -101,7 +101,7 @@ Message from the sender of this invitation:
 '''
 
 
-# Invite Acceptance Notification Template --------------------------------
+# Invite Acceptance Notification Template --------------------------------------
 
 
 SUBJECT_ACCEPT = 'Invitation accepted by {user_name} for project "{project}"'
@@ -113,7 +113,7 @@ They have been granted access in the project accordingly.
 '''.lstrip()
 
 
-# Invite Expiry Notification Template ------------------------------------
+# Invite Expiry Notification Template ------------------------------------------
 
 
 SUBJECT_EXPIRY = 'Expired invitation used by {user_name} in "{project}"'
@@ -130,11 +130,11 @@ to grant the user access to the project.
 '''.lstrip()
 
 
-# Email composing helpers ------------------------------------------------
+# Email composing helpers ------------------------------------------------------
 
 
 def get_invite_body(
-        project, issuer, role_name, invite_url, date_expire_str, message=None):
+        project, issuer, role_name, invite_url, date_expire_str):
     """
     Return the invite content header.
     :param project: Project object
@@ -142,7 +142,6 @@ def get_invite_body(
     :param role_name: Display name of the Role object
     :param invite_url: Generated URL for the invite
     :param date_expire_str: Expiry date as a pre-formatted string
-    :param message: Optional user message as string
     :return: string
     """
     body = MESSAGE_HEADER_NO_RECIPIENT.format(site_title=SITE_TITLE)
@@ -256,13 +255,14 @@ def get_role_change_body(
     return body
 
 
-def send_mail(subject, message, recipient_list, request, fail_silently=False):
+def send_mail(subject, message, recipient_list, request):
     """
     Wrapper for send_mail() with logging and error messaging
-    :param subject: String
-    :param message: String
-    :param recipient_list: List
-    :return: send_mail() (int)
+    :param subject: Message subject (string)
+    :param message: Message body (string)
+    :param recipient_list: Recipients of email (list)
+    :param request: Request object
+    :return: Amount of sent email (int)
     """
     try:
         ret = _send_mail(
@@ -289,7 +289,7 @@ def send_mail(subject, message, recipient_list, request, fail_silently=False):
         return 0
 
 
-# Sending functions ------------------------------------------------------
+# Sending functions ------------------------------------------------------------
 
 
 def send_role_change_mail(change_type, project, user, role, request):
@@ -300,7 +300,7 @@ def send_role_change_mail(change_type, project, user, role, request):
     :param user: User object
     :param role: Role object (can be None for deletion)
     :param request: HTTP request
-    :return: 1 or 0 depending on email sending success
+    :return: Amount of sent email (int)
     """
     project_url = request.build_absolute_uri(reverse(
         'projectroles:detail',
@@ -323,7 +323,7 @@ def send_invite_mail(invite, request):
     Send an email invitation to user not yet registered in the system.
     :param invite: ProjectInvite object
     :param request: HTTP request
-    :return: 1 or 0 depending on email sending success
+    :return: Amount of sent email (int)
     """
     invite_url = build_invite_url(invite, request)
 
@@ -348,7 +348,7 @@ def send_accept_note(invite, request):
     accepts the invitation.
     :param invite: ProjectInvite object
     :param request: HTTP request
-    :return: 1 or 0 depending on email sending success
+    :return: Amount of sent email (int)
     """
     subject = SUBJECT_PREFIX + ' ' + SUBJECT_ACCEPT.format(
         user_name=request.user.get_full_name(),
@@ -374,7 +374,7 @@ def send_expiry_note(invite, request):
     attempts to accept an expired invitation.
     :param invite: ProjectInvite object
     :param request: HTTP request
-    :return: 1 or 0 depending on email sending success
+    :return: Amount of sent email (int)
     """
     subject = SUBJECT_PREFIX + ' ' + SUBJECT_EXPIRY.format(
         user_name=request.user.get_full_name(),

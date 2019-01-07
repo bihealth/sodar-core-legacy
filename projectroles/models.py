@@ -45,8 +45,7 @@ SODAR_CONSTANTS = {
     'REMOTE_LEVEL_NONE': 'NONE',
     'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
     'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
-    'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'
-}
+    'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'}
 
 # Choices for forms/admin with project type
 SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
@@ -89,6 +88,7 @@ PROJECT_TAG_STARRED = 'STARRED'
 
 class ProjectManager(models.Manager):
     """Manager for custom table-level Project queries"""
+
     def find(self, search_term, keywords=None, project_type=None):
         """
         Return projects with a partial match in full title or, including titles
@@ -351,6 +351,7 @@ class Role(models.Model):
 
 class RoleAssignmentManager(models.Manager):
     """Manager for custom table-level RoleAssignment queries"""
+
     def get_assignment(self, user, project):
         """Return assignment of user to project, or None if not found"""
         try:
@@ -465,6 +466,7 @@ class RoleAssignment(models.Model):
 
 class ProjectSettingManager(models.Manager):
     """Manager for custom table-level ProjectSetting queries"""
+
     def get_setting_value(self, project, app_name, setting_name):
         """
         Return value of setting_name for app_name in project

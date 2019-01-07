@@ -17,15 +17,15 @@
     {% endif %}
   </td>
 
-    {% if site_mode == 'SOURCE' %}
-      <td class="align-middle py-0">
-        {% autoescape off %}
-          {% get_target_project_select site project %}
-        {% endautoescape %}
-      </td>
-    {% else %}
-      <td class="text-nowrap">
-        {% get_remote_access_legend remote_project.level %}
-      </td>
-    {% endif %}
+  {% if site_mode == 'SOURCE' %}
+    <td class="align-middle py-0">
+      {% autoescape off %}
+        {% get_target_project_select site project %}
+      {% endautoescape %}
+    </td>
+  {% else %}
+    <td class="text-nowrap">
+      {% get_remote_access_legend remote_project.level %}
+    </td>
+  {% endif %}
 </tr>

@@ -9,12 +9,10 @@
   </button>
   <div class="dropdown-menu dropdown-menu-right">
     <a class="dropdown-item" href="{% url 'projectroles:role_update' roleassignment=assignment_id %}">
-      <i class="fa fa-fw fa-pencil"></i>
-      Update Member
+      <i class="fa fa-fw fa-pencil"></i> Update Member
     </a>
     <a class="dropdown-item" href="{% url 'projectroles:role_delete' roleassignment=assignment_id %}">
-      <i class="fa fa-fw fa-user-times"></i>
-      Remove Member
+      <i class="fa fa-fw fa-user-times"></i> Remove Member
     </a>
     {% get_history_dropdown project=project obj=user as history_item %}
       {{ history_item|safe }}

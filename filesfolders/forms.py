@@ -97,8 +97,7 @@ class FolderForm(FilesfoldersItemForm):
         if not self.instance.pk:
             try:
                 Folder.objects.get(
-                    project=self.project,
-                    folder=self.folder,
+                    project=self.project, folder=self.folder,
                     name=self.cleaned_data['name'])
 
                 self.add_error('name', 'Folder already exists')
@@ -221,8 +220,7 @@ class FileForm(FilesfoldersItemForm):
                 self.add_error(
                     'file',
                     'File too large, maximum size is {} bytes '
-                    '(file size is {} bytes)'.format(
-                        limit, file_size))
+                    '(file size is {} bytes)'.format(limit, file_size))
                 return False
 
             return True
@@ -305,9 +303,7 @@ class FileForm(FilesfoldersItemForm):
             if not unpack_archive:
                 try:
                     File.objects.get(
-                        project=project,
-                        folder=self.folder,
-                        name=file.name)
+                        project=project, folder=self.folder, name=file.name)
                     self.add_error('file', 'File already exists')
 
                 except File.DoesNotExist:
@@ -331,9 +327,7 @@ class FileForm(FilesfoldersItemForm):
             if old_file and self.instance.name != str(file):
                 try:
                     File.objects.get(
-                        project=self.instance.project,
-                        folder=folder,
-                        name=file)  # THIS FAILES
+                        project=self.instance.project, folder=folder, name=file)
                     self.add_error('file', 'File already exists')
 
                 except File.DoesNotExist:
@@ -438,8 +432,7 @@ class HyperLinkForm(FilesfoldersItemForm):
         if not self.instance.pk:
             try:
                 HyperLink.objects.get(
-                    project=self.project,
-                    folder=self.folder,
+                    project=self.project, folder=self.folder,
                     name=self.cleaned_data['name'])
                 self.add_error('name', 'Link already exists')
 

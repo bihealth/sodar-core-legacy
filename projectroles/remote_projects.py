@@ -11,6 +11,7 @@ from projectroles.models import Project, Role, RoleAssignment, RemoteProject, \
     SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
+
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
 
@@ -46,9 +47,7 @@ class RemoteProjectAPI:
         :return: Dict
         """
 
-        sync_data = {
-            'users': {},
-            'projects': {}}
+        sync_data = {'users': {}, 'projects': {}}
 
         def add_user(user):
             if user.username not in [
@@ -142,9 +141,9 @@ class RemoteProjectAPI:
                 username=settings.PROJECTROLES_ADMIN_OWNER)
 
         except User.DoesNotExist:
-            error_msg = 'Local user "{}" defined in ' \
-                        'PROJECTROLES_ADMIN_OWNER not found'.format(
-                            settings.PROJECTROLES_ADMIN_OWNER)
+            error_msg = \
+                'Local user "{}" defined in PROJECTROLES_ADMIN_OWNER ' \
+                'not found'.format(settings.PROJECTROLES_ADMIN_OWNER)
             logger.error(error_msg)
             raise ValueError(error_msg)
 
@@ -243,8 +242,7 @@ class RemoteProjectAPI:
         def update_project(uuid, p, remote_data):
             """Create or update project and its parents"""
 
-            def handle_project_error(
-                    error_msg, uuid, p, action, remote_data):
+            def handle_project_error(error_msg, uuid, p, action, remote_data):
                 """Add and log project error"""
                 logger.error('{} {} "{}" ({}): {}'.format(
                     action.capitalize(), p['type'].lower(), p['title'],
@@ -312,9 +310,10 @@ class RemoteProjectAPI:
                     remote_data['projects'][uuid]['status'] = 'updated'
 
                     if timeline:
-                        tl_desc = 'update project from remote site ' \
-                                  '"{{{}}}" ({})'.format(
-                                    'site', ', '.format(updated_fields))
+                        tl_desc = \
+                            'update project from remote site ' \
+                            '"{{{}}}" ({})'.format(
+                                'site', ', '.join(updated_fields))
                         # TODO: Add extra_data
                         tl_event = timeline.add_event(
                             project=project,
@@ -323,10 +322,7 @@ class RemoteProjectAPI:
                             event_name='remote_project_update',
                             description=tl_desc,
                             status_type='OK')
-                        tl_event.add_object(
-                            obj=site,
-                            label='site',
-                            name=site.name)
+                        tl_event.add_object(site, 'site', site.name)
 
                     logger.info('Updated {}: {}'.format(
                         p['type'].lower(), ', '.join(sorted(updated_fields))))
@@ -342,10 +338,11 @@ class RemoteProjectAPI:
                         parent=parent, title=p['title'])
 
                     # Handle error
-                    error_msg = '{} with the title "{}" exists under the ' \
-                                'same parent, unable to create'.format(
-                                    old_project.type.capitalize(),
-                                    old_project.title)
+                    error_msg = \
+                        '{} with the title "{}" exists under the same ' \
+                        'parent, unable to create'.format(
+                            old_project.type.capitalize(),
+                            old_project.title)
                     remote_data = handle_project_error(
                         error_msg, uuid, p, action, remote_data)
                     return remote_data
@@ -372,10 +369,7 @@ class RemoteProjectAPI:
                         description='create project from remote site {site}',
                         status_type='OK')
                     # TODO: Add extra_data
-                    tl_event.add_object(
-                        obj=site,
-                        label='site',
-                        name=site.name)
+                    tl_event.add_object(site, 'site', site.name)
 
                 logger.info('Created {}'.format(p['type'].lower()))
 
@@ -416,8 +410,9 @@ class RemoteProjectAPI:
                     role = Role.objects.get(name=r['role'])
 
                 except Role.DoesNotExist:
-                    error_msg = 'Role object "{}" not found (assignment ' \
-                                '{})'.format(r['role'], r_uuid)
+                    error_msg = \
+                        'Role object "{}" not found (assignment {})'.format(
+                            r['role'], r_uuid)
                     logger.error(error_msg)
                     remote_data[
                         'projects'][project.sodar_uuid]['roles'][r_uuid][
@@ -433,9 +428,9 @@ class RemoteProjectAPI:
                     role_user = default_owner
 
                     # Notify of assigning role to default owner
-                    status_msg = 'Non-LDAP/AD user "{}" set as owner, ' \
-                                 'assigning role to user "{}"'.format(
-                                    r['user'], default_owner.username)
+                    status_msg = \
+                        'Non-LDAP/AD user "{}" set as owner, assigning role ' \
+                        'to user "{}"'.format(r['user'], default_owner.username)
 
                     remote_data['projects'][uuid]['roles'][
                         r_uuid]['user'] = default_owner.username
@@ -496,9 +491,9 @@ class RemoteProjectAPI:
                         r_uuid]['status'] = 'updated'
 
                     if timeline:
-                        tl_desc = 'update role to "{}" for {{{}}} ' \
-                                  'from site {{{}}}'.format(
-                                    role.name, 'user', 'site')
+                        tl_desc = \
+                            'update role to "{}" for {{{}}} from site ' \
+                            '{{{}}}'.format(role.name, 'user', 'site')
                         tl_event = timeline.add_event(
                             project=project,
                             app_name=APP_NAME,
@@ -507,13 +502,8 @@ class RemoteProjectAPI:
                             description=tl_desc,
                             status_type='OK')
                         tl_event.add_object(
-                            obj=role_user,
-                            label='user',
-                            name=role_user.username)
-                        tl_event.add_object(
-                            obj=site,
-                            label='site',
-                            name=site.name)
+                            role_user, 'user', role_user.username)
+                        tl_event.add_object(site, 'site', site.name)
 
                     logger.info('Updated role {}: {} = {}'.format(
                         r_uuid, role_user.username, role.name))
@@ -525,16 +515,16 @@ class RemoteProjectAPI:
                         'project': project,
                         'role': role,
                         'user': role_user}
-                    role_as = RoleAssignment.objects.create(**role_values)
+                    RoleAssignment.objects.create(**role_values)
 
                     remote_data[
                         'projects'][str(project.sodar_uuid)]['roles'][r_uuid][
                         'status'] = 'created'
 
                     if timeline:
-                        tl_desc = 'add role "{}" for {{{}}} ' \
-                                  'from site {{{}}}'.format(
-                                    role.name, 'user', 'site')
+                        tl_desc = \
+                            'add role "{}" for {{{}}} from site {{{}}}'.format(
+                                role.name, 'user', 'site')
                         tl_event = timeline.add_event(
                             project=project,
                             app_name=APP_NAME,
@@ -543,13 +533,8 @@ class RemoteProjectAPI:
                             description=tl_desc,
                             status_type='OK')
                         tl_event.add_object(
-                            obj=role_user,
-                            label='user',
-                            name=role_user.username)
-                        tl_event.add_object(
-                            obj=site,
-                            label='site',
-                            name=site.name)
+                            role_user, 'user', role_user.username)
+                        tl_event.add_object(site, 'site', site.name)
 
                     logger.info('Created role {}: {} -> {}'.format(
                         r_uuid, role_user.username, role.name))
@@ -578,9 +563,9 @@ class RemoteProjectAPI:
                         'status': 'deleted'}
 
                     if timeline:
-                        tl_desc = 'remove role "{}" from {{{}}} ' \
-                                  'by site {{{}}}'.format(
-                                    del_role.name, 'user', 'site')
+                        tl_desc = \
+                            'remove role "{}" from {{{}}} by site ' \
+                            '{{{}}}'.format(del_role.name, 'user', 'site')
                         tl_event = timeline.add_event(
                             project=project,
                             app_name=APP_NAME,
@@ -588,14 +573,8 @@ class RemoteProjectAPI:
                             event_name='remote_role_delete',
                             description=tl_desc,
                             status_type='OK')
-                        tl_event.add_object(
-                            obj=del_user,
-                            label='user',
-                            name=del_user.username)
-                        tl_event.add_object(
-                            obj=site,
-                            label='site',
-                            name=site.name)
+                        tl_event.add_object(del_user, 'user', del_user.username)
+                        tl_event.add_object(site, 'site', site.name)
 
                 logger.info(
                     'Deleted {} removed role{} for: {}'.format(

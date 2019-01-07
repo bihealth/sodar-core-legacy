@@ -9,10 +9,7 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    .table#sodar-aa-list-table tr td:nth-child(3) {
-      white-space: nowrap;
-    }
-
+    .table#sodar-aa-list-table tr td:nth-child(3),
     .table#sodar-aa-list-table tr td:nth-child(4) {
       white-space: nowrap;
     }
@@ -27,30 +24,21 @@
 
     /* Responsive modifications */
     @media screen and (max-width: 1100px) {
-      .table#sodar-aa-list-table tr th:nth-child(3) {
-        display: none;
-      }
-
+      .table#sodar-aa-list-table tr th:nth-child(3),
       .table#sodar-aa-list-table tr td:nth-child(3) {
         display: none;
       }
     }
 
     @media screen and (max-width: 900px) {
-      .table#sodar-aa-list-table tr th:nth-child(2) {
-        display: none;
-      }
-
+      .table#sodar-aa-list-table tr th:nth-child(2),
       .table#sodar-aa-list-table tr td:nth-child(2) {
         display: none;
       }
     }
 
     @media screen and (max-width: 750px) {
-      .table#sodar-aa-list-table tr th:nth-child(4) {
-        display: none;
-      }
-
+      .table#sodar-aa-list-table tr th:nth-child(4),
       .table#sodar-aa-list-table tr td:nth-child(4) {
         display: none;
       }

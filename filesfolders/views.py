@@ -143,7 +143,6 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
 
     def form_valid(self, form):
         view_action = self.get_view_action()
-        timeline = get_backend_api('timeline_backend')
         old_data = {}
 
         update_attrs = ['name', 'folder', 'description', 'flag']
@@ -298,11 +297,7 @@ class FileServeMixin:
                     description='serve file {file}',
                     classified=True,
                     status_type='INFO')
-
-                tl_event.add_object(
-                    obj=file,
-                    label='file',
-                    name=file.name)
+                tl_event.add_object(file, 'file', file.name)
 
         return response
 
@@ -356,8 +351,7 @@ class ProjectFileView(
     template_name = 'filesfolders/project_files.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectFileView, self).get_context_data(
-            *args, **kwargs)
+        context = super(ProjectFileView, self).get_context_data(*args, **kwargs)
 
         project = self._get_project(self.request, self.kwargs)
         context['project'] = project
@@ -558,7 +552,7 @@ class FileCreateView(
                 view_action='create')
 
         if timeline:
-            tl_event = timeline.add_event(
+            timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
                 user=self.request.user,
@@ -815,7 +809,6 @@ class BatchEditView(
 
                 elif batch_action == 'move':
                     item.folder = target_folder
-
                     item.save()
                     edit_count += 1
 
@@ -873,9 +866,8 @@ class BatchEditView(
 
                 if batch_action == 'move' and target_folder:
                     tl_event.add_object(
-                        obj=target_folder,
-                        label='target_folder',
-                        name=target_folder.get_path())
+                        target_folder, 'target_folder',
+                        target_folder.get_path())
 
             if 'folder' in kwargs:
                 re_kwargs = {'folder': kwargs['folder']}
@@ -907,8 +899,8 @@ class BatchEditView(
                 for i in items:
                     exclude_list += [
                         x.sodar_uuid for x in Folder.objects.filter(
-                            project__sodar_uuid=project.sodar_uuid) if
-                                x.has_in_path(i)]
+                            project__sodar_uuid=project.sodar_uuid)
+                        if x.has_in_path(i)]
 
                 # Exclude current folder
                 if 'folder' in kwargs:
