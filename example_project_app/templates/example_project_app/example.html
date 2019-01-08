@@ -1,5 +1,6 @@
-{# Projectroles dependency #}
 {% extends 'projectroles/project_base.html' %}
+
+{# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
 {# Access Django rules #}
@@ -10,27 +11,25 @@
 {% endblock title %}
 
 {% block head_extend %}
-  {# Add extra stuff under <head> here #}
-  {# This block can be left out if not used #}
+  {# OPTIONAL: extra content under <head> goes here #}
 {% endblock head_extend %}
 
 {% block css %}
   {{ block.super }}
-  {# Extend CSS here if needed #}
-  {# This block can be left out if not used #}
+  {# OPTIONAL: Extend or override CSS here #}
 {% endblock css %}
 
 {% block projectroles_extend %}
 
-  {# Actual app content goes here #}
+  {# Content of your app goes here #}
 
-  {# Example of the page subtitle #}
+  {# Page subtitle example #}
   {# Using the example CSS classes is recommended #}
   <div class="container-fluid sodar-subtitle-container">
     <h3><i class="fa fa-rocket"></i> Example Project App</h3>
   </div>
 
-  {# Example of page content #}
+  {# Page content example #}
   {# Using the example CSS classes is recommended #}
   <div class="container-fluid sodar-page-container">
 
@@ -45,12 +44,12 @@
         Data retrieved from example backend app plugin: <code>{{ backend_data }}</code>
       </div>
     {% endif %}
-  </div>
+
+  </div> <!-- sodar-page-container -->
 
 {% endblock projectroles_extend %}
 
 {% block javascript %}
   {{ block.super }}
-  {# Add more Javascript here if needed #}
-  {# This block can be left out if not used #}
+  {# OPTIONAL: include additional Javascript here #}
 {% endblock javascript %}

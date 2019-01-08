@@ -74,7 +74,7 @@ The following variables and functions are **mandatory**:
     app, there's no requirement to declare your backend as a separate Django
     app. You can just include the ``BackendAppPlugin`` in your app's
     ``plugins.py`` along with your ``ProjectAppPlugin``. See the
-    :ref:`timeline app <app_timeline>` for a nice example of this.
+    :ref:`timeline app <app_timeline>` for an example of this.
 
 Using the Plugin
 ----------------
