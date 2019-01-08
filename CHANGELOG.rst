@@ -18,6 +18,7 @@ Added
 - **Projectroles**
     - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
     - Handle ``GET`` requests for Taskflow API views (#47)
+    - API version settings ``SODAR_API_ALLOWED_VERSIONS`` and ``SODAR_API_MEDIA_TYPE`` (#111)
 - **Taskflowbackend**
     - API logging
 
@@ -37,6 +38,7 @@ Changed
     - Refactor ``BaseTaskflowAPIView`` (#47)
     - Rename Taskflow specific API views (#104)
     - Unify template tag names in ``projectroles_tags``
+    - Change default SODAR API media type into ``application/vnd.bihealth.sodar-core+json`` (#111)
 - **Timeline**
     - Rename Taskflow specific API views (#104)
 

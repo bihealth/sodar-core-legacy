@@ -70,6 +70,14 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 
+SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+SODAR_API_MEDIA_TYPE = settings.SODAR_API_MEDIA_TYPE if \
+    hasattr(settings, 'SODAR_API_MEDIA_TYPE') else SODAR_API_DEFAULT_MEDIA_TYPE
+SODAR_API_DEFAULT_VERSION = settings.SODAR_API_DEFAULT_VERSION if hasattr(
+    settings, 'SODAR_API_DEFAULT_VERSION') else '0.1'
+SODAR_API_ALLOWED_VERSIONS = settings.SODAR_API_ALLOWED_VERSIONS if hasattr(
+    settings, 'SODAR_API_ALLOWED_VERSIONS') else [SODAR_API_DEFAULT_VERSION]
+
 
 # General mixins ---------------------------------------------------------------
 
@@ -1691,13 +1699,13 @@ class RemoteProjectsSyncView(
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
-    default_version = settings.SODAR_API_DEFAULT_VERSION
-    allowed_versions = [settings.SODAR_API_DEFAULT_VERSION]
+    default_version = SODAR_API_DEFAULT_VERSION
+    allowed_versions = SODAR_API_ALLOWED_VERSIONS
     version_param = 'version'
 
 
 class SODARAPIRenderer(JSONRenderer):
-    media_type = 'application/vnd.bihealth.sodar+json'
+    media_type = SODAR_API_MEDIA_TYPE
 
 
 class BaseAPIView(APIView):

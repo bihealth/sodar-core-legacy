@@ -52,6 +52,11 @@ REMOTE_SITE_NEW_URL = 'https://new.url'
 REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 
+SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
+SODAR_API_VERSION = '0.1'
+SODAR_API_VERSION_INVALID = '9.9'
+
 
 class ProjectSettingMixin:
     """Helper mixin for Project settings"""
@@ -1205,7 +1210,6 @@ class TestProjectUpdateAPIView(
         self.assertEqual(self.project.readme.raw, readme)
 
 
-
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
         ProjectMixin, RoleAssignmentMixin, TestViewsBase):
@@ -1958,3 +1962,42 @@ class TestRemoteProjectGetAPIView(
                 kwargs={'secret': build_secret()}))
 
         self.assertEqual(response.status_code, 401)
+
+    def test_api_versioning(self):
+        """Test SODAR API Access with correct version headers"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_versioning_invalid_version(self):
+        """Test SODAR API Access with unsupported version (should fail)"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID))
+
+        self.assertEqual(response.status_code, 406)
+
+    def test_api_versioning_invalid_media_type(self):
+        """Test SODAR API Access with unsupported media type (should fail)"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION))
+
+        self.assertEqual(response.status_code, 406)
