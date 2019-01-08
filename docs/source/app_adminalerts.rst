@@ -15,8 +15,8 @@ Basics
 ======
 
 The app displays un-dismissable small alerts on the top of page content to all
-users. They can be used to e.g. warn users of upcoming downtime thanks to an
-update or highlight recently deployed changes.
+users. They can be used to e.g. warn users of upcoming downtime or highlight
+recently deployed changes.
 
 Upon creation, an expiration date is set for each alert. Alerts can also be
 freely enabled, disabled or deleted by superuser on the app UI. Additional

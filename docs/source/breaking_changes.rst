@@ -3,16 +3,17 @@
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
-This document details potentially breaking changes from previous SODAR Core
-releases, in case you are upgrading an existing site from an older version. For
-a complete list of changes, see the ``CHANGELOG.rst`` file.
+This document details breaking changes from previous SODAR Core releases. It is
+recommended to review these notes whenever upgrading from an older SODAR Core
+version. For a complete list of changes in the current release, see the
+``CHANGELOG.rst`` file.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-From v0.4.0 to Dev
-==================
+v0.4.1
+======
 
 System Prerequisites
 --------------------
@@ -22,9 +23,29 @@ Changes in system requirements:
 - **Python 3.6 or newer required**: 3.5 and older releases no longer supported.
 - **PostgreSQL 9.6** is the recommended minimum version for the database.
 
+Site Messages in Login Template
+-------------------------------
 
-From v0.3.0 to v0.4.0
-=====================
+If your site overrides the default login template in
+``projectroles/login.html``, make sure your overridden version contains an
+include for ``projectroles/_messages.html``. Following the SODAR Core template
+conventions, it should be placed as the first element under the
+``container-fluid`` div in the ``content`` block. Otherwise, site app messages
+not requiring user authorization will not be visible on the login page. Example:
+
+.. code-block:: django
+
+  {% block content %}
+    <div class="container-fluid">
+      {# Django messages / site app messages #}
+      {% include 'projectroles/_messages.html' %}
+      {# ... #}
+    </div>
+  {% endblock content %}
+
+
+v0.4.0
+======
 
 List Button Classes in Templates
 --------------------------------
@@ -58,8 +79,8 @@ If you are using the ``taskflow`` backend app, you **must** set the value of
 similarly named setting in your SODAR Taskflow instance!
 
 
-From v0.2.1 to v0.3.0
-=====================
+v0.3.0
+======
 
 Remote Site Setup
 -----------------

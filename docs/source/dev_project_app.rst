@@ -6,7 +6,7 @@ Project App Development
 
 This document details instructions and guidelines for developing
 **project apps** to be used with the SODAR Core framework. This also applies for
-modifying existing apps into project apps.
+modifying existing Django apps into project apps.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -222,8 +222,8 @@ of this document.
 Views
 =====
 
-Certain guidelines must be followed in developing views for them to be
-successfully used by projectroles.
+Certain guidelines must be followed in developing Django web UI views for them
+to be successfully used with projectroles.
 
 URL Keyword Arguments
 ---------------------
@@ -279,8 +279,6 @@ The most commonly used mixins:
 
 See ``example_project_app.views.ExampleView`` for an example.
 
-**TODO:** Provide a proper auto-generated docstring reference?
-
 
 Templates
 =========
@@ -295,33 +293,22 @@ project app templates. Just start your template with the following line:
 
     {% extends 'projectroles/project_base.html' %}
 
-The following **template blocks** are available for overriding or extending:
+The following **template blocks** are available for overriding or extending when
+applicable:
 
 - ``title``: Page title
 - ``css``: Custom CSS (extend with ``{{ block.super }}``)
 - ``projectroles_extend``: Your app content goes here!
 - ``javascript``: Custom Javascript (extend with ``{{ block.super }}``)
-- ``head_extend``: Optional block if you need something extra inside the HTML ``<head>`` element
+- ``head_extend``: Optional block if you need to include additional content
+  inside the HTML ``<head>`` element
 
-Recommended CSS classes for wrapping your page title and actual content:
+Within the ``projectroles_extend`` block, it is recommended to use the
+following ``div`` classes, both extending the Bootstrap 4 ``container-fluid``
+class:
 
-.. code-block:: html
-
-    <div class="row sodar-subtitle-container">
-      <h3><i class="fa fa-{ICON}"></i> App/Functionality Title</h3>
-    </div>
-
-    <div class="container-fluid sodar-page-container">
-      <p>Content goes here!</p>
-    </div>
-
-See ``example_project_app/example.html`` for a minimal commented template example.
-
-.. hint::
-
-    If you include some controls on your ``sodar-subtitle-container`` class and
-    want it to remain sticky on top of the page while scrolling, add the
-    ``bg-white sticky-top`` classes to the element.
+- ``sodar-subtitle-container``: Container for the page title
+- ``sodar-content-container``: Container for the actual content of your app
 
 Rules
 -----
@@ -346,6 +333,60 @@ template as follows:
 .. code-block:: django
 
     {% load projectroles_common_tags %}
+
+Example
+-------
+
+Minimal example for a project app template:
+
+.. code-block:: django
+
+    {% extends 'projectroles/project_base.html' %}
+
+    {% load projectroles_common_tags %}
+    {% load rules %}
+
+    {% block title %}
+      Page Title
+    {% endblock title %}
+
+    {% block head_extend %}
+      {# OPTIONAL: extra content under <head> goes here #}
+    {% endblock head_extend %}
+
+    {% block css %}
+      {{ block.super }}
+      {# OPTIONAL: Extend or override CSS here #}
+    {% endblock css %}
+
+    {% block projectroles_extend %}
+
+      {# Page subtitle #}
+      <div class="container-fluid sodar-subtitle-container">
+        <h3><i class="fa fa-rocket"></i> App and/or Page Title/h3>
+      </div>
+
+      {# App content #}
+      <div class="container-fluid sodar-page-container">
+        <p>Your app content goes here!</p>
+      </div>
+
+    {% endblock projectroles_extend %}
+
+    {% block javascript %}
+      {{ block.super }}
+      {# OPTIONAL: include additional Javascript here #}
+    {% endblock javascript %}
+
+See ``example_project_app/example.html`` for a working and fully commented
+example of a minimal template.
+
+.. hint::
+
+    If you include some controls on your ``sodar-subtitle-container`` class and
+    want it to remain sticky on top of the page while scrolling, use ``row``
+    instead of ``container-fluid`` and add the ``bg-white sticky-top`` classes
+    to the element.
 
 
 Specific Views and Templates
@@ -382,6 +423,7 @@ It is expected to have the content in a ``card-body`` container:
    <div class="card-body">
      {# Content goes here #}
    </div>
+
 
 Project Search Function and Template
 ====================================
@@ -436,8 +478,6 @@ the result:
            'items': []              # The actual objects returned
            }
        }
-
-**TODO:** Example of an implemented function
 
 Search Template
 ----------------
@@ -534,9 +574,42 @@ Example:
     setup!
 
 
+API Views
+=========
+
+API View usage will be explained in this chapter, currently under construction.
+
+.. warning::
+
+    A unified SODAR API is currently under development and will be documented
+    once stable. Current practices and base classes for API views are subject to
+    change!
+
+Ajax API Views
+--------------
+
+To set up Ajax API views for the UI, you can use the standard login and project
+permission mixins along with ``APIPermissionMixin`` together with any Django
+Rest Framework view class. Permissions can be managed as with normal Django
+views. Example with generic ``APIView``:
+
+.. code-block:: python
+
+    from rest_framework.views import APIView
+    from projectroles.views import LoginRequiredMixin, ProjectPermissionMixin, \
+        APIPermissionMixin
+
+    class ExampleAjaxAPIView(
+            LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin,
+            APIView):
+
+    permission_required = 'projectroles.view_project'
+
+    def get(self, request):
+        # ...
+
 TODO
 ====
 
 - Naming conventions
-- Template design guidelines
-- Examples of common things (e.g. forms)
+- Examples of recurring template styles (e.g. forms)

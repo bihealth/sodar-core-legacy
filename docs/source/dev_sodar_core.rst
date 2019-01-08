@@ -125,33 +125,10 @@ If you want to only run a certain subset of tests, use e.g.:
     $ ./test.sh projectroles.tests.test_views
 
 
-Development Conventions
-=======================
+Contributing
+============
 
-Some development conventions are listed here.
-
-Git Branches
-------------
-
-.. note::
-
-    Make sure to always use the ``dev`` branch of the repository for
-    development.
-
-- ``master``
-    - Intended for stable and production quality release code only
-    - The ``dev`` branch is merged into it for freezing releases
-- ``dev``
-    - The bleeding edge development branch with (mostly) stable new features
-- Temporary development branches
-    - Base on ``dev``
-    - Please use a consistent naming such as ``feature/x`` and ``fix/y``
-    - These will be merged into ``dev`` when finished/stable
-
-Commits
--------
-
-- Please refer to issues by their ids in comments, as it makes things easier to
-  track
-- SODAR Core issues should go to the ``sodar_core`` repo, omics apps specific
-  issues to the ``sodar`` repo.
+SODAR Core is currently in active development in a private BIH repository. The
+public GitHub repository is primarily intended for publishing stable releases.
+Furthermore, the issue IDs within the code and documentation point to our
+private issue tracker unless otherwise mentioned.
