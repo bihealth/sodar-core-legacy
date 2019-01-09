@@ -6,7 +6,7 @@ from django.utils.timezone import localtime
 from projectroles.plugins import ProjectAppPluginPoint
 
 from timeline.api import TimelineAPI
-from timeline.models import ProjectEvent
+from timeline.models import ProjectEvent, ProjectEventStatus
 
 register = template.Library()
 
@@ -23,9 +23,9 @@ STATUS_STYLES = {
 
 
 @register.simple_tag
-def get_timestamp(obj):
-    """Return event timestamp"""
-    return localtime(obj.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
+def get_timestamp(event):
+    """Return printable timestamp of event in local timezone"""
+    return localtime(event.get_timestamp()).strftime('%Y-%m-%d %H:%M:%S')
 
 
 @register.simple_tag
@@ -88,13 +88,14 @@ def get_event_details(event):
     status_changes = event.get_status_changes(reverse=True)
 
     for status in status_changes:
-        ret += '\n<tr><td>{}</td>\n<td>{}</td>\n' \
-               '<td class="{}">{}</td>\n</tr>'.format(
-                    get_timestamp(status),
-                    status.description[:256] + (
-                        '<em class="text-muted"> (...)</em>'
-                        if len(status.description) > 256 else ''),
-                    get_status_style(status),
-                    status.status_type)
+        ret += \
+            '\n<tr><td>{}</td>\n<td>{}</td>\n' \
+            '<td class="{}">{}</td>\n</tr>'.format(
+                localtime(status.timestamp).strftime('%Y-%m-%d %H:%M:%S'),
+                status.description[:256] + (
+                    '<em class="text-muted"> (...)</em>'
+                    if len(status.description) > 256 else ''),
+                get_status_style(status),
+                status.status_type)
     ret += '\n</tbody>\n</table>'
     return ret

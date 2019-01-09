@@ -34,12 +34,13 @@ class ProjectEventManager(models.Manager):
     def get_object_events(
             self, project, object_model, object_uuid, order_by='-pk'):
         """
-        Return events with object reference linked
+        Return events which are linked to an object reference.
+
         :param project: Project object
         :param object_model: Object model (string)
         :param object_uuid: sodar_uuid of the original object
         :param order_by: Ordering (default = pk descending)
-        :return: Queryset
+        :return: QuerySet
         """
         return ProjectEvent.objects.filter(
             project=project,
@@ -112,24 +113,25 @@ class ProjectEvent(models.Model):
         return 'ProjectEvent({})'.format(', '.join(repr(v) for v in values))
 
     def get_current_status(self):
-        """Return current status of event"""
+        """Return the current event status"""
         return self.status_changes.order_by('-timestamp').first()
 
     def get_timestamp(self):
-        """Return timestamp of current status"""
+        """Return the timestamp of current status"""
         return self.status_changes.order_by('-timestamp').first().timestamp
 
     def get_status_changes(self, reverse=False):
-        """Return all status changes for event"""
+        """Return all status changes for the event"""
         return self.status_changes.order_by('{}pk'.format(
             '-' if reverse else ''))
 
     def add_object(self, obj, label, name, extra_data=None):
         """
-        Add object reference to an event
-        :param obj: Object that's being referred to
-        :param label: Label for the object
-        :param name: Name or title of the object
+        Add object reference to an event.
+
+        :param obj: Django object to which we want to refer
+        :param label: Label for the object in the event description (string)
+        :param name: Name or title of the object (string)
         :param extra_data: Additional data related to object (dict, optional)
         :return: ProjectEventObjectRef object
         """
@@ -148,7 +150,8 @@ class ProjectEvent(models.Model):
 
     def set_status(self, status_type, status_desc=None, extra_data=None):
         """
-        Set status of an existing ProjectEvent
+        Set event status.
+
         :param status_type: Status type string (see EVENT_STATUS_TYPES)
         :param status_desc: Description string (optional)
         :param extra_data: Extra data for the status (dict, optional)
@@ -279,7 +282,3 @@ class ProjectEventStatus(models.Model):
             self.status_type)
         return 'ProjectEventStatus({})'.format(
             ', '.join(repr(v) for v in values))
-
-    def get_timestamp(self):
-        """Return timestamp of status"""
-        return self.timestamp

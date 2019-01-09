@@ -105,3 +105,13 @@ the following management command:
 .. code-block:: console
 
     ./manage.py synctaskflow
+
+
+API Documentation
+=================
+
+The ``TaskflowAPI`` class contains the SODAR Taskflow backend API. It should be
+initialized using the ``Projectroles.plugins.get_backend_api()`` function.
+
+.. autoclass:: taskflowbackend.api.TaskflowAPI
+    :members:

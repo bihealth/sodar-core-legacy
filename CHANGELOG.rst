@@ -19,6 +19,7 @@ Added
     - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
     - Handle ``GET`` requests for Taskflow API views (#47)
     - API version settings ``SODAR_API_ALLOWED_VERSIONS`` and ``SODAR_API_MEDIA_TYPE`` (#111)
+    - Site app support in ``change_plugin_status()``
 - **Taskflowbackend**
     - API logging
 
@@ -62,6 +63,8 @@ Removed
     - Unused static file ``shepherd-theme-default.css``
     - Disabled role importing functionality (#61, pending #17)
     - Unused dropup app buttons mode in templates (#108)
+- **Timeline**
+    - ``ProjectEventStatus.get_timestamp()`` helper
 
 
 v0.4.0 (2018-12-19)

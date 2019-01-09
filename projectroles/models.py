@@ -97,7 +97,7 @@ class ProjectManager(models.Manager):
         :param search_term: Search term (string)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
-        :return: Python list of Project objects
+        :return: List of Project objects
         """
         search_term = search_term.lower()
         projects = super(
@@ -115,10 +115,12 @@ class ProjectManager(models.Manager):
 
 
 class Project(models.Model):
-    """A SODAR project. Can have one parent category in case of nested
+    """
+    A SODAR project. Can have one parent category in case of nested
     projects. The project must be of a specific type, of which "CATEGORY" and
     "PROJECT" are currently implemented. "CATEGORY" projects are used as
-    containers for other projects"""
+    containers for other projects
+    """
 
     #: Project title
     title = models.CharField(
@@ -363,9 +365,11 @@ class RoleAssignmentManager(models.Manager):
 
 
 class RoleAssignment(models.Model):
-    """Assignment of an user to a role in a project. One role per user is
+    """
+    Assignment of an user to a role in a project. One role per user is
     allowed for each project. Roles of project owner and project delegate are
-    limited to one assignment per project."""
+    limited to one assignment per project.
+    """
 
     #: Project in which role is assigned
     project = models.ForeignKey(
@@ -469,7 +473,8 @@ class ProjectSettingManager(models.Manager):
 
     def get_setting_value(self, project, app_name, setting_name):
         """
-        Return value of setting_name for app_name in project
+        Return value of setting_name for app_name in project.
+
         :param project: Project object or pk
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
@@ -482,8 +487,10 @@ class ProjectSettingManager(models.Manager):
 
 
 class ProjectSetting(models.Model):
-    """Project settings variable. These are generated based on the
-    'project_settings' definition in app plugins (plugins.py)"""
+    """
+    Project settings variable. These are generated based on the
+    "project_settings" definition in app plugins (plugins.py)
+    """
 
     #: App to which the setting belongs
     app_plugin = models.ForeignKey(
@@ -572,8 +579,10 @@ class ProjectSetting(models.Model):
 
 
 class ProjectInvite(models.Model):
-    """Invite which is sent to a non-logged in user, determining their role in
-    the project."""
+    """
+    Invite which is sent to a non-logged in user, determining their role in
+    the project.
+    """
 
     #: Email address of the person to be invited
     email = models.EmailField(
@@ -863,6 +872,7 @@ class RemoteProject(models.Model):
 
 
 class SODARUser(AbstractUser):
+    """SODAR compatible abstract user model"""
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
@@ -896,7 +906,7 @@ class SODARUser(AbstractUser):
 
 
 def handle_ldap_login(sender, user, **kwargs):
-    """Handle LDAP logins here as needed"""
+    """Signal for LDAP login handling"""
 
     if hasattr(user, 'ldap_username'):
 
@@ -912,12 +922,11 @@ def handle_ldap_login(sender, user, **kwargs):
             if user.first_name != '':
                 user.name = user.first_name + (
                     ' ' + user.last_name if user.last_name != '' else '')
-
                 user.save()
 
 
 def assign_user_group(sender, user, **kwargs):
-    """Assign user to group if not yet set"""
+    """Signal for user group assignment"""
     set_user_group(user)
 
 
