@@ -36,12 +36,8 @@ normal users.
 Backend API for Event Logging
 =============================
 
-The API for logging events is located in ``timeline.api``.
-
-.. hint::
-
-    For the best in-depth instructions on how to use the API, see the docstrings
-    in the API class code.
+The API for logging events is located in ``timeline.api``. For the full API
+documentation, see `here <app_timeline_api>`_.
 
 Invoking the API
 ----------------

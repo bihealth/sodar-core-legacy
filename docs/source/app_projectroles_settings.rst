@@ -343,12 +343,6 @@ This part of the setup is **optional**.
                 ('projectroles.auth_backends.SecondaryLDAPBackend',),
                 AUTHENTICATION_BACKENDS,))
 
-Logging (Optional)
-==================
-
-It is also recommended to add "projectroles" under ``LOGGING['loggers']``. For
-production, ``INFO`` debug level is recommended.
-
 
 Modifying SODAR_CONSTANTS (Optional)
 ====================================
@@ -376,3 +370,10 @@ the following snippet:
     Modifying existing default constants may result in unwanted issues,
     especially on a site which already contains created projects. Proceed with
     caution!
+
+
+Logging (Optional)
+==================
+
+It is recommended to add "projectroles" under ``LOGGING['loggers']``. For
+production, ``INFO`` debug level is recommended.

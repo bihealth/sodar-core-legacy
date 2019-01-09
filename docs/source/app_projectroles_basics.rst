@@ -52,8 +52,7 @@ projects:
 - Inviting people not yet using the site by email
 - Importing members from other projects (**NOTE:** disabled pending update)
 - Automated emailing of users regarding role changes
-- **TODO:** Mirroring user roles to/from an external projectroles-enabled site
-  (will be added in SODAR Core v0.3)
+- Mirroring user roles to/from an external projectroles-enabled site
 
 .. note::
     Currently, only superusers can assign owner roles for top-level categories.
@@ -129,8 +128,6 @@ Other features in the projectroles app:
 - **SODAR Taskflow and SODAR Timeline integration**: Included but disabled
   unless backend apps for Taskflow and Timeline are integrated in the Django
   site
-
-**TODO**: Describe these in :ref:`app_projectroles_usage`.
 
 
 Templates and Styles

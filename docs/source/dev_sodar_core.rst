@@ -14,8 +14,6 @@ Core package.
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
 
-**TODO:** Add alternate instructions if installing things under e.g. conda?
-
 
 Installation
 ============
