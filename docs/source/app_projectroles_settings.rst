@@ -343,8 +343,36 @@ This part of the setup is **optional**.
                 ('projectroles.auth_backends.SecondaryLDAPBackend',),
                 AUTHENTICATION_BACKENDS,))
 
-Logging
-=======
+Logging (Optional)
+==================
 
 It is also recommended to add "projectroles" under ``LOGGING['loggers']``. For
 production, ``INFO`` debug level is recommended.
+
+
+Modifying SODAR_CONSTANTS (Optional)
+====================================
+
+String identifiers used globally in SODAR project management are defined in the
+``SODAR_CONSTANTS`` dictionary. It can be imported into your app code with the
+import:
+
+.. code-block:: python
+
+    from projectroles.models import SODAR_CONSTANTS
+
+If you need to update or extend the constants for use your site, you can import
+the default dictionary into your Django settings and modify it as necessary with
+the following snippet:
+
+.. code-block:: python
+
+    from projectroles.constants import get_sodar_constants
+    SODAR_CONSTANTS = get_sodar_constants(default=True)
+    # Your changes here..
+
+.. warning::
+
+    Modifying existing default constants may result in unwanted issues,
+    especially on a site which already contains created projects. Proceed with
+    caution!

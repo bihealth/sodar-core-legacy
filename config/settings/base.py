@@ -1,5 +1,5 @@
 """
-Django settings for the SODAR Core Example project.
+Django settings for the SODAR Core Example Site project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
@@ -8,6 +8,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import environ
+
+from projectroles.constants import get_sodar_constants
+
 
 SITE_PACKAGE = 'example_site'
 
@@ -490,3 +493,7 @@ ADMINALERTS_PAGINATION = 15
 
 # Taskflow backend settings
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
+
+
+# SODAR constants
+SODAR_CONSTANTS = get_sodar_constants(default=True)

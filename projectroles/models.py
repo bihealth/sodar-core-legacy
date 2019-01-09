@@ -13,56 +13,15 @@ from django.utils.translation import ugettext_lazy as _
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
 
-
+from .constants import get_sodar_constants
 from .utils import set_user_group
 
 
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
-# Global constants
-SODAR_CONSTANTS = {
-    # Project roles
-    'PROJECT_ROLE_OWNER': 'project owner',
-    'PROJECT_ROLE_DELEGATE': 'project delegate',
-    'PROJECT_ROLE_CONTRIBUTOR': 'project contributor',
-    'PROJECT_ROLE_GUEST': 'project guest',
-
-    # Project types
-    'PROJECT_TYPE_CATEGORY': 'CATEGORY',
-    'PROJECT_TYPE_PROJECT': 'PROJECT',
-
-    # Submission status
-    'SUBMIT_STATUS_OK': 'OK',
-    'SUBMIT_STATUS_PENDING': 'PENDING',
-    'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW',
-
-    # RemoteSite mode
-    'SITE_MODE_SOURCE': 'SOURCE',
-    'SITE_MODE_TARGET': 'TARGET',
-
-    # RemoteProject access types
-    'REMOTE_LEVEL_NONE': 'NONE',
-    'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
-    'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
-    'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'}
-
-# Choices for forms/admin with project type
-SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
-    (SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'], 'Category'),
-    (SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], 'Project')]
-
-# RemoteSite modes
-SODAR_CONSTANTS['SITE_MODES'] = [
-    SODAR_CONSTANTS['SITE_MODE_SOURCE'],
-    SODAR_CONSTANTS['SITE_MODE_TARGET']]
-
-# RemoteProject access levels
-SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = {
-    SODAR_CONSTANTS['REMOTE_LEVEL_NONE']: 'No access',
-    SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']: 'View availability',
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']: 'Read information',
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']: 'Read members'}
+# Global SODAR constants
+SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_SETTING_TYPES = [
@@ -76,10 +35,7 @@ PROJECT_SETTING_TYPE_CHOICES = [
     ('STRING', 'String')]
 
 PROJECT_SETTING_VAL_MAXLENGTH = 255
-
-PROJECT_SEARCH_TYPES = [
-    'project']
-
+PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 
 

@@ -20,6 +20,7 @@ Added
     - Handle ``GET`` requests for Taskflow API views (#47)
     - API version settings ``SODAR_API_ALLOWED_VERSIONS`` and ``SODAR_API_MEDIA_TYPE`` (#111)
     - Site app support in ``change_plugin_status()``
+    - ``get_sodar_constants()`` helper (#112)
 - **Taskflowbackend**
     - API logging
 
@@ -40,6 +41,8 @@ Changed
     - Rename Taskflow specific API views (#104)
     - Unify template tag names in ``projectroles_tags``
     - Change default SODAR API media type into ``application/vnd.bihealth.sodar-core+json`` (#111)
+    - Allow importing ``SODAR_CONSTANTS`` into settings for modification (#112)
+    - Move ``SODAR_CONSTANTS`` to ``constants.py`` (#112)
 - **Timeline**
     - Rename Taskflow specific API views (#104)
 
