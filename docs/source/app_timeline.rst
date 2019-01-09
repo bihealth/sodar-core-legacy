@@ -28,3 +28,4 @@ to use these, see the :ref:`timeline usage documentation <app_timeline_usage>`.
 
    Installation <app_timeline_install>
    Usage <app_timeline_usage>
+   API Documentation <app_timeline_api>

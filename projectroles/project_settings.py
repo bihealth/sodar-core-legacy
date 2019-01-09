@@ -6,7 +6,8 @@ from projectroles.plugins import ProjectAppPluginPoint, get_app_plugin
 
 def get_default_setting(app_name, setting_name):
     """
-    Get default setting value from an app plugin
+    Get default setting value from an app plugin.
+
     :param app_name: App name (string, must correspond to "name" in app plugin)
     :param setting_name: Setting name (string)
     :return: Setting value (string, integer or boolean)
@@ -26,6 +27,7 @@ def get_default_setting(app_name, setting_name):
 def get_project_setting(project, app_name, setting_name):
     """
     Return setting value for a project and an app. If not set, return default.
+
     :param project: Project object (can be None)
     :param app_name: App name (string, must correspond to "name" in app plugin)
     :param setting_name: Setting name (string)
@@ -47,6 +49,7 @@ def get_all_settings(project=None):
     """
     Return all setting values for project. If the project or some setting has
     not been set, return the default.
+
     :param project: Project object (can be None)
     :return: Dict
     """
@@ -66,6 +69,7 @@ def set_project_setting(project, app_name, setting_name, value, validate=True):
     """
     Set value of an existing project settings variable. Creates the object if
     not found.
+
     :param project: Project object
     :param app_name: App name (string, must correspond to "name" in app plugin)
     :param setting_name: Setting name (string)
@@ -113,7 +117,8 @@ def set_project_setting(project, app_name, setting_name, value, validate=True):
 
 def validate_project_setting(setting_type, setting_value):
     """
-    Validate setting value according to its type
+    Validate setting value according to its type.
+
     :param setting_type: Setting type
     :param setting_value: Setting value
     :raise: ValueError if setting_type or setting_value is invalid

@@ -26,3 +26,4 @@ be missing. Please click "display source" if you want to read this in GitLab.
    Settings <app_projectroles_settings>
    Usage <app_projectroles_usage>
    Customization <app_projectroles_custom>
+   API Documentation <app_projectroles_api>

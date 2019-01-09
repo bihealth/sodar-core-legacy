@@ -24,7 +24,7 @@ User = get_user_model()
 
 
 class TimelineAPI:
-    """Timeline API to be used by Django apps"""
+    """Timeline backend API to be used by Django apps."""
 
     @staticmethod
     def add_event(
@@ -32,7 +32,8 @@ class TimelineAPI:
             classified=False, extra_data=None, status_type=None,
             status_desc=None, status_extra_data=None):
         """
-        Create and save a ProjectEvent
+        Create and save a timeline event.
+
         :param project: Project object
         :param app_name: ID string of app from which event was invoked (NOTE:
             should correspond to member "name" in app plugin!)
@@ -83,7 +84,8 @@ class TimelineAPI:
     @staticmethod
     def get_project_events(project, classified=False):
         """
-        Return ProjectEvent objects for project
+        Return timeline events for a project.
+
         :param project: Project object
         :param classified: Include classified (boolean)
         :return: QuerySet
@@ -97,10 +99,15 @@ class TimelineAPI:
 
     @staticmethod
     def get_event_description(event, request=None):
-        """Return printable version of event description"""
+        """
+        Return the description of a timeline event as HTML.
+
+        :param event: ProjectEvent object
+        :param request: Request object (optional)
+        :return: String (contains HTML)
+        """
         desc = event.description
         unknown_label = '(unknown)'
-
         ref_ids = re.findall("{'?(.*?)'?}", desc)
 
         if len(ref_ids) == 0:
@@ -223,7 +230,8 @@ class TimelineAPI:
     @staticmethod
     def get_object_url(project_uuid, obj):
         """
-        Return URL for object history in timeline
+        Return the URL for a timeline event object history.
+
         :param project_uuid: UUID of the related project
         :param obj: Django database object
         :return: String
@@ -236,10 +244,11 @@ class TimelineAPI:
     @staticmethod
     def get_object_link(project_uuid, obj):
         """
-        Return inline HTML icon link for object history in timeline.
+        Return an inline HTML icon link for a timeline event object history.
+
         :param project_uuid: UUID of the related project
         :param obj: Django database object
-        :return: String
+        :return: String (contains HTML)
         """
         return '<a href="{}" class="sodar-tl-object-link">' \
                '<i class="fa fa-clock-o"></i></a>'.format(

@@ -6,7 +6,8 @@ from .models import ProjectUserTag, PROJECT_TAG_STARRED
 
 def get_tag_state(project, user, name=PROJECT_TAG_STARRED):
     """
-    Get current starring status of a project/user
+    Get current starring status of a project/user.
+
     :param project: Project object
     :param user: User object
     :param name: Tag name (string)
@@ -24,7 +25,8 @@ def get_tag_state(project, user, name=PROJECT_TAG_STARRED):
 def set_tag_state(project, user, name=PROJECT_TAG_STARRED):
     """
     Set starring status of a project/user to true/false depending on the current
-    status
+    status.
+
     :param project: Project object
     :param user: User object
     :param name: Tag name (string)
@@ -44,7 +46,8 @@ def set_tag_state(project, user, name=PROJECT_TAG_STARRED):
 
 def remove_tag(project, user, name=PROJECT_TAG_STARRED):
     """
-    Remove ProjectUserTag object from project and user if it exists
+    Remove ProjectUserTag object from project and user if it exists.
+
     :param project: Project object
     :param user: User object
     :param name: Tag name (string)

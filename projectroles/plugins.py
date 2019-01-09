@@ -1,4 +1,4 @@
-"""Plugin point definitions for apps based on projectroles"""
+"""Plugin point definitions and plugin API for apps based on projectroles"""
 
 from django.conf import settings
 from djangoplugins.point import PluginPoint
@@ -78,11 +78,12 @@ class ProjectAppPluginPoint(PluginPoint):
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
         """
-        Return data for syncing taskflow operations
+        Return data for synchronizing taskflow operations.
+
         :return: List of dicts or None.
         """
         '''
-        Return data format:
+        Example of valid return data:
         [
             {
                 'flow_name': ''
@@ -96,13 +97,13 @@ class ProjectAppPluginPoint(PluginPoint):
 
     def get_object(self, model, uuid):
         """
-        Return object based on the model class string and the object's UUID.
+        Return object based on the model class and the object's SODAR UUID.
+
         :param model: Object model class
         :param uuid: sodar_uuid of the referred object
         :return: Model object or None if not found
-        :raise: NameError if model corresponding to class_str is not found
+        :raise: NameError if model is not found
         """
-        # NOTE: we raise NameError because it shouldn't happen (missing import)
         try:
             return model.objects.get(sodar_uuid=uuid)
 
@@ -111,8 +112,9 @@ class ProjectAppPluginPoint(PluginPoint):
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL for referring to a object used by the app, along with a
+        Return the URL for referring to a object used by the app, along with a
         label to be shown to the user for linking.
+
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
         :return: Dict or None if not found
@@ -126,14 +128,17 @@ class ProjectAppPluginPoint(PluginPoint):
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
-        """Return link for the given label that started with ``"extra:"``."""
+        """
+        Return a link for the given timeline label that stars with ``"extra:"``.
+        """
         # TODO: Implement this in your app plugin
         return '(unknown)'
 
     def search(self, search_term, user, search_type=None, keywords=None):
         """
         Return app items based on a search term, user, optional type and
-        optional keywords
+        optional keywords.
+
         :param search_term: String
         :param user: User object for user initiating the search
         :param search_type: String
@@ -194,19 +199,19 @@ class SiteAppPluginPoint(PluginPoint):
     def get_messages(self, user=None):
         """
         Return a list of messages to be shown to users.
+
         :param user: User object (optional)
         :return: List of dicts or and empty list if no messages
         """
-        # TODO: Implement this in your site app plugin
-
         '''
-        # Output example:
+        Example of valid return data:
         return [{
             'content': 'Message content in here, can contain html',
             'color': 'info',        # Corresponds to bg-* in Bootstrap
             'dismissable': True     # False for non-dismissable
         }]
         '''
+        # TODO: Implement this in your site app plugin
         return []
 
 
@@ -215,12 +220,12 @@ class SiteAppPluginPoint(PluginPoint):
 
 def get_active_plugins(plugin_type='project_app'):
     """
-    Return active plugins of a specific type
-    :param plugin_type: 'project_app', 'site_app' or 'backend' (string)
+    Return active plugins of a specific type.
+
+    :param plugin_type: "project_app", "site_app" or "backend" (string)
     :return: List or None
     :raise: ValueError if plugin_type is not recognized
     """
-    # TODO: Replace code doing this same thing in views
     if plugin_type not in PLUGIN_TYPES.keys():
         raise ValueError(
             'Invalid value for plugin_type. Accepted values: {}'.format(
@@ -239,23 +244,40 @@ def get_active_plugins(plugin_type='project_app'):
 
 
 def change_plugin_status(name, status, plugin_type='app'):
-    """Disable selected plugin in the database"""
+    """
+    Change the status of a selected plugin in the database.
+
+    :param name: Plugin name (string)
+    :param status: Status (int, see djangoplugins)
+    :param plugin_type: Type of plugin ("app", "backend" or "site")
+    :raise: ValueError if plugin_type is invalid or plugin with name not found
+    """
     # NOTE: Used to forge plugin to a specific status for e.g. testing
     if plugin_type == 'app':
         plugin = ProjectAppPluginPoint.get_plugin(name)
 
-    else:
+    elif plugin_type == 'backend':
         plugin = BackendPluginPoint.get_plugin(name)
 
-    if plugin:
-        plugin = plugin.get_model()
-        plugin.status = status
-        plugin.save()
+    elif plugin_type == 'site':
+        plugin = SiteAppPluginPoint.get_plugin(name)
+
+    else:
+        raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
+
+    if not plugin:
+        raise ValueError('Plugin of type "{}" not found with name "{}"'.format(
+            plugin_type, name))
+
+    plugin = plugin.get_model()
+    plugin.status = status
+    plugin.save()
 
 
 def get_app_plugin(plugin_name):
     """
-    Return active app plugin
+    Return active app plugin.
+
     :param plugin_name: Plugin name (string)
     :return: ProjectAppPlugin object or None if not found
     """
@@ -268,8 +290,9 @@ def get_app_plugin(plugin_name):
 
 def get_backend_api(plugin_name, force=False):
     """
-    Return backend API object
-    :param plugin_name: Name of plugin
+    Return backend API object.
+
+    :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
     :return: Plugin object or None if not found
     """
@@ -278,8 +301,10 @@ def get_backend_api(plugin_name, force=False):
             plugin = BackendPluginPoint.get_plugin(plugin_name)
             return plugin.get_api() if plugin.is_active() else None
 
-        except Exception as ex:
-            return None
+        except Exception:
+            pass
+
+    return None
 
 
 # Plugins within projectroles --------------------------------------------------
