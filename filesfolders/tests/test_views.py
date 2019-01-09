@@ -302,7 +302,7 @@ class TestFileCreateView(TestViewsBase):
         self.assertEqual(new_folder2.folder, new_folder1)
 
     def test_unpack_archive_overwrite(self):
-        """Test uploading a zip file with existing file (should fail)"""
+        """Test unpacking a zip file with existing file (should fail)"""
 
         ow_folder = self._make_folder(
             name='dir1',
@@ -350,7 +350,7 @@ class TestFileCreateView(TestViewsBase):
         self.assertEqual(Folder.objects.all().count(), 2)
 
     def test_unpack_archive_empty(self):
-        """Test uploading a zip file with an empty archive (should fail)"""
+        """Test unpacking a zip file with an empty archive (should fail)"""
 
         with open(ZIP_PATH_NO_FILES, 'rb') as zip_file:
             post_data = {
@@ -370,6 +370,54 @@ class TestFileCreateView(TestViewsBase):
                     post_data)
 
                 self.assertEqual(response.status_code, 200)
+
+    def test_upload_archive_existing(self):
+        """Test uploading a zip file with existing file (no unpack)"""
+
+        ow_folder = self._make_folder(
+            name='dir1',
+            project=self.project,
+            folder=None,
+            owner=self.user,
+            description='')
+
+        ow_file = self._make_file(
+            name='zip_test1.txt',
+            file_name='zip_test1.txt',
+            file_content=self.file_content,
+            project=self.project,
+            folder=ow_folder,
+            owner=self.user,
+            description='',
+            public_url=False,
+            secret='xxxxxxxxx')
+
+        # Assert preconditions
+        self.assertEqual(File.objects.all().count(), 2)
+        self.assertEqual(Folder.objects.all().count(), 2)
+
+        with open(ZIP_PATH, 'rb') as zip_file:
+            post_data = {
+                'name': 'unpack_test.zip',
+                'file': zip_file,
+                'folder': '',
+                'description': '',
+                'flag': '',
+                'public_url': False,
+                'unpack_archive': False}
+
+            with self.login(self.user):
+                response = self.client.post(
+                    reverse(
+                        'filesfolders:file_create',
+                        kwargs={'project': self.project.sodar_uuid}),
+                    post_data)
+
+                self.assertEqual(response.status_code, 302)
+
+        # Assert postconditions
+        self.assertEqual(File.objects.all().count(), 3)
+        self.assertEqual(Folder.objects.all().count(), 2)
 
 
 class TestFileUpdateView(TestViewsBase):

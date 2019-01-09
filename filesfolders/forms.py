@@ -248,7 +248,7 @@ class FileForm(FilesfoldersItemForm):
                 return self.cleaned_data
 
         # Zip archive handling
-        else:
+        elif unpack_archive:
             # Ensure max archive size is not exceeded
             if not check_size(size, MAX_ARCHIVE_SIZE):
                 return self.cleaned_data

@@ -49,6 +49,8 @@ Changed
 Fixed
 -----
 
+- **Filesfolders**
+    - Overwrite check for zip archive upload if unarchiving was unset (#113)
 - **Projectroles**
     - Potential Django crash from auth failure in Taskflow API views
     - Timeline description for updating a remote project
