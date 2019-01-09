@@ -56,7 +56,7 @@ Clone the repository and setup the virtual environment inside:
 
 .. code-block:: console
 
-    $ git clone git@cubi-gitlab.bihealth.org:CUBI_Engineering/CUBI_Data_Mgmt/sodar_core.git
+    $ git clone git+https://github.com/bihealth/sodar_core.git
     $ cd sodar_core
     $ virtualenv -p python3.6 .venv
     $ source .venv/bin/activate

@@ -23,7 +23,7 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = 'SODAR Core'
-copyright = '2018, Mikko Nieminen'
+copyright = '2019, Berlin Institute of Health'
 author = 'Mikko Nieminen'
 
 # The short X.Y version

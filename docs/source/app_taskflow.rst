@@ -22,6 +22,11 @@ communicate with an external SODAR Taskflow service to manage large-scale data
 transactions. It has no views or database models and only provides an API for
 other apps to use.
 
+.. note::
+
+    At the time of writing, SODAR Taskflow is in development and has not been
+    made public.
+
 
 Installation
 ============

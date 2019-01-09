@@ -21,7 +21,7 @@ SODAR Django Site Template (Recommended)
 ========================================
 
 When setting up a new SODAR Core based site, it is strongly recommended to use
-`sodar_django_site <https://cubi-gitlab.bihealth.org/CUBI_Engineering/CUBI_Data_Mgmt/sodar_django_site>`_
+`sodar_django_site <https://github.com/bihealth/sodar_django_site>`_
 as a template. The repository contains a minimal Django site pre-configured with
 projectroles and other SODAR Core apps. The master branch of this project always
 integrates the latest stable release of SODAR Core and projectroles.
