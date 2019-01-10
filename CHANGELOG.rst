@@ -34,6 +34,8 @@ Changed
     - Cleanup Chrome setup
     - Enable site message display in login view (#105)
     - Cleanup and refactoring for public release (#90)
+    - Drop support for Ubuntu Jessie and Trusty
+    - Update installation utility scripts (#90)
 - **Filesfolders**
     - Move inline javascript into ``filesfolders.js``
 - **Projectroles**

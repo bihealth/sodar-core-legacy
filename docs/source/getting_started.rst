@@ -46,7 +46,7 @@ your Django site and/or participating in development are listed below. For a
 complete requirement list, see the ``requirements`` and ``utility`` directories
 in the repository.
 
-- Ubuntu Linux
+- Ubuntu 16.04 Xenial (**NOTE:** Older releases no longer supported)
 - Library requirements (see the ``utility`` directory and/or your own Django
   project)
 - Python 3.6+ (**NOTE:** Python 3.5 no longer supported)

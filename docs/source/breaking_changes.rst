@@ -20,6 +20,7 @@ System Prerequisites
 
 Changes in system requirements:
 
+- **Ubuntu 16.04 Xenial** is the target OS version.
 - **Python 3.6 or newer required**: 3.5 and older releases no longer supported.
 - **PostgreSQL 9.6** is the recommended minimum version for the database.
 

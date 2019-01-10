@@ -4,10 +4,6 @@
 SODAR Core Development
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning::
-
-   Under construction!
-
 This document details instructions and guidelines for development of the SODAR
 Core package.
 
@@ -18,15 +14,28 @@ be missing. Please click "display source" if you want to read this in GitLab.
 Installation
 ============
 
-Instructions on how to install the repo for developing SODAR Core itself.
+Instructions on how to install a local development version of SODAR Core.
+Ubuntu 16.04 LTS (Xenial) is the supported OS at this time. System dependencies
+may vary for different OS versions or distributions.
+
+System Library Installation
+---------------------------
+
+First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
+
+.. code-block:: console
+
+    $ sudo utility/install_os_dependencies.sh
+    $ sudo utility/install_python.sh
+    $ sudo utility/install_postgres.sh
 
 Database Setup
 --------------
 
-First, create a postgresql user and a database for your application.
-For example, use ``sodar_core`` for the database, user name and password.
-Also, make sure to give the user the permission to create further Postgres
-databases (used for testing).
+Create a PostgreSQL user and a database for your application. In the example,
+we use ``sodar_core`` for the database, user name and password. Make sure to
+give the user the permission to create further PostgreSQL databases (used for
+testing).
 
 .. code-block:: console
 
@@ -40,38 +49,32 @@ databases (used for testing).
 
 You have to add the credentials in the environment variable ``DATABASE_URL``.
 For development it is recommended to place this variable in an ``.env`` file and
-set ``DJANGO_READ_DOT_ENV_FILE`` to True in your actual environment. See
+set ``DJANGO_READ_DOT_ENV_FILE=1`` in your actual environment. See
 ``config/settings/base.py`` for more information.
 
 .. code-block:: console
 
     $ export DATABASE_URL='postgres://sodar_core:sodar_core@127.0.0.1/sodar_core'
 
-Virtualenv Setup
-----------------
+Project Setup
+-------------
 
-Clone the repository and setup the virtual environment inside:
+Clone the repository, setup and activate the virtual environment. Once in
+the environment, install Python requirements for the project:
 
 .. code-block:: console
 
     $ git clone git+https://github.com/bihealth/sodar_core.git
     $ cd sodar_core
+    $ pip install virtualenv
     $ virtualenv -p python3.6 .venv
     $ source .venv/bin/activate
+    $ pip install -r requirements/local.txt
 
-System Library Installation
----------------------------
+LDAP Setup (Optional)
+---------------------
 
-Install the dependencies:
-
-.. code-block:: console
-
-    $ sudo utility/install_os_dependencies.sh install
-    $ sudo utility/install_chrome.sh
-    $ pip install --upgrade pip
-    $ utility/install_python_dependencies.sh install
-
-If you are using LDAP/AD, make sure to also run:
+If you will be using LDAP/AD auth on your site, make sure to also run:
 
 .. code-block:: console
 
@@ -104,11 +107,12 @@ Testing
 =======
 
 To run unit tests, you have to install the headless Chrome driver (if not yet
-present on your system):
+present on your system), followed by the Python test requirements:
 
 .. code-block:: console
 
     $ sudo utility/install_chrome.sh
+    $ pip install -r requirements/test.txt
 
 Now you can run all tests with the following script:
 
@@ -121,6 +125,13 @@ If you want to only run a certain subset of tests, use e.g.:
 .. code-block:: console
 
     $ ./test.sh projectroles.tests.test_views
+
+For running tests with SODAR Taskflow (not currently publicly available), you
+can use the supplied shortcut script:
+
+.. code-block:: console
+
+    $ ./test_taskflow.sh
 
 
 Contributing
