@@ -23,7 +23,8 @@ before_script:
   - pip3 install virtualenv
   - virtualenv env
   - source env/bin/activate
-  - sh ./utility/install_python_dependencies.sh
+  - pip3 install -r requirements/local.txt
+  - pip3 install -r requirements/test.txt
 
 all_tests:
   script:
