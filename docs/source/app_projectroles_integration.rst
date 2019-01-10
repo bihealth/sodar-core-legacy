@@ -88,13 +88,14 @@ chapter.
     Otherwise details such as directory structures and settings variables may
     differ.
 
-First, add the ``django-sodar-core`` package requirement into your
-``requirements/base.txt`` file. Make sure you are pointing to the desired
-release tag.
+First, add the ``django-plugins`` and ``django-sodar-core`` package requirements
+into your ``requirements/base.txt`` file. Make sure you are pointing to the
+desired release tag.
 
 .. code-block:: console
 
-    -e git+https://github.com/bihealth/sodar_core.git@v0.4.1#egg=django-sodar-core
+    -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
+    -e git://github.com/bihealth/sodar_core.git@v0.4.1#egg=django-sodar-core
 
 Install the requirements for development:
 

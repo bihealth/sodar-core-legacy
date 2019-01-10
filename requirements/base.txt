@@ -43,7 +43,7 @@ versioneer>=0.18
 # Project app imports
 ######################
 
-# Django-plugins (with self-made Django 1.10 support)
+# Django-plugins (with Django 1.10 support)
 -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
 
 # Rules for permissions
