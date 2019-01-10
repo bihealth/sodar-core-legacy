@@ -18,8 +18,8 @@ Instructions on how to install a local development version of SODAR Core.
 Ubuntu 16.04 LTS (Xenial) is the supported OS at this time. System dependencies
 may vary for different OS versions or distributions.
 
-System Library Installation
----------------------------
+System Installation
+-------------------
 
 First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
 
