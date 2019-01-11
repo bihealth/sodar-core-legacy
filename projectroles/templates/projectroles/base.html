@@ -7,6 +7,9 @@
 
 {% block content %}
 
+  {# Ensure passing CSRF token to Ajax API views #}
+  {% csrf_token %}
+
   {# Sidebar #}
   <div class="sodar-content-left">
 

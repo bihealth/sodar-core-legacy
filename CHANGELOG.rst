@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Automatically pass CSRF token to unsafe Ajax HTTP methods (#116)
+
+
 v0.4.1 (2019-01-11)
 ===================
 
