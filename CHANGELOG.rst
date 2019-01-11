@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Travis-CI configuration (#90)
 - **Adminalerts**
     - Option to display alert to unauthenticated users with ``require_auth`` (#105)
 - **Projectroles**
@@ -33,7 +35,7 @@ Changed
     - Update Chrome Driver for UI tests
     - Cleanup Chrome setup
     - Enable site message display in login view (#105)
-    - Cleanup and refactoring for public release (#90)
+    - Cleanup and refactoring for public GitHub release (#90)
     - Drop support for Ubuntu Jessie and Trusty
     - Update installation utility scripts (#90)
 - **Filesfolders**
