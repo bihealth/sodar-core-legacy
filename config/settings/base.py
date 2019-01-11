@@ -1,5 +1,5 @@
 """
-Django settings for the SODAR Core Example project.
+Django settings for the SODAR Core Example Site project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
@@ -8,6 +8,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/dev/ref/settings/
 """
 import environ
+
+from projectroles.constants import get_sodar_constants
+
 
 SITE_PACKAGE = 'example_site'
 
@@ -409,6 +412,11 @@ def set_logging(debug):
                 'handlers': ['console', ],
                 'propagate': False,
             },
+            'taskflowbackend': {
+                'level': 'DEBUG' if debug else 'INFO',
+                'handlers': ['console', ],
+                'propagate': False,
+            },
         },
     }
 
@@ -435,9 +443,10 @@ ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [
     'example_backend_app',
 ])
 
-# General API settings
+# SODAR API settings
 SODAR_API_DEFAULT_VERSION = '0.1'
-SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar+json'
+SODAR_API_ALLOWED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
+SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 SODAR_API_DEFAULT_HOST = env.url(
     'SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
 
@@ -484,3 +493,7 @@ ADMINALERTS_PAGINATION = 15
 
 # Taskflow backend settings
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
+
+
+# SODAR constants
+SODAR_CONSTANTS = get_sodar_constants(default=True)

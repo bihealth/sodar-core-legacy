@@ -19,6 +19,7 @@ The following Django apps will be installed when installing the
 - **projectroles**: Base app for project access management and dynamic app
   content management. All other apps require the integration of projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
+- **bgjobs**: Project app for managing background jobs.
 - **taskflowbackend**: Backend app providing an API for the optional
   ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
@@ -45,12 +46,12 @@ your Django site and/or participating in development are listed below. For a
 complete requirement list, see the ``requirements`` and ``utility`` directories
 in the repository.
 
-- Ubuntu Linux
+- Ubuntu 16.04 Xenial (**NOTE:** Older releases no longer supported)
 - Library requirements (see the ``utility`` directory and/or your own Django
   project)
-- Python 3.5/3.6
+- Python 3.6+ (**NOTE:** Python 3.5 no longer supported)
 - Django 1.11.15+ (**NOTE:** 2.x not currently supported)
-- PostgreSQL 9.4+ and psycopg2-binary
+- PostgreSQL 9.6+ and psycopg2-binary
 - Bootstrap 4.1.1
 - JQuery 3.2.1
 - Shepherd 1.8.1 with Tether 1.4.4

@@ -10,7 +10,7 @@ including with django-plugins, models and tools for SODAR-compatible apps plus a
 default template and CSS layout.
 
 Other Django apps which intend to use aforementioned functionalities depend on
-projectroles. While the Django app configuration can be dynamic, having
+projectroles. While inclusion of other SODAR Core apps can be optional, having
 projectroles installed is **mandatory** for working with the SODAR project and
 app structure.
 
@@ -23,5 +23,7 @@ be missing. Please click "display source" if you want to read this in GitLab.
 
    Basics <app_projectroles_basics>
    Integration <app_projectroles_integration>
+   Settings <app_projectroles_settings>
    Usage <app_projectroles_usage>
    Customization <app_projectroles_custom>
+   API Documentation <app_projectroles_api>

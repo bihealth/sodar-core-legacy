@@ -1,3 +1,5 @@
+{# Filtered project list item #}
+
 {% load rules %}
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
@@ -26,7 +28,7 @@
   {% endif %}
   <td>
     {% autoescape off %}
-      {% get_user_role_str p request.user %}
+      {% get_user_role_html p request.user %}
     {% endautoescape %}
   </td>
 </tr>

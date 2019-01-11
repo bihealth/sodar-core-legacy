@@ -14,6 +14,7 @@ import projectroles
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
+
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
@@ -23,22 +24,114 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 register = template.Library()
 
 
+# SODAR and site operations ----------------------------------------------------
+
+
 @register.simple_tag
 def site_version():
-    if hasattr(site, '__version__'):
-        return site.__version__
-
-    return '[UNKNOWN]'
+    """Return the site version"""
+    return site.__version__ if hasattr(site, '__version__') else '[UNKNOWN]'
 
 
 @register.simple_tag
 def core_version():
+    """Return the SODAR Core version"""
     return projectroles.__version__
 
 
 @register.simple_tag
-def render_markdown(raw_markdown):
-    return mistune.markdown(raw_markdown)
+def check_backend(name):
+    """Return True if backend app is available, else False"""
+    return True if get_backend_api(name) else False
+
+
+@register.simple_tag
+def get_project_by_uuid(sodar_uuid):
+    """Return Project by sodar_uuid"""
+    try:
+        return Project.objects.get(sodar_uuid=sodar_uuid)
+
+    except Project.DoesNotExist:
+        return None
+
+
+@register.simple_tag
+def get_user_by_username(username):
+    """Return User by username"""
+    try:
+        return User.objects.get(username=username)
+
+    except User.DoesNotExist:
+        return None
+
+
+# Django helpers ---------------------------------------------------------------
+
+
+@register.simple_tag
+def get_setting(name):
+    """Return value of Django setting by name or None if it is not found"""
+    return getattr(settings, name) if hasattr(settings, name) else None
+
+
+@register.simple_tag
+def static_file_exists(path):
+    """Return True/False based on whether a static file exists"""
+    return True if finders.find(path) else False
+
+
+@register.simple_tag
+def template_exists(path):
+    """Return True/False based on whether a template exists"""
+    try:
+        get_template(path)
+        return True
+
+    except template.TemplateDoesNotExist:
+        return False
+
+
+@register.simple_tag
+def get_full_url(request, url):
+    """Get full URL based on a local URL"""
+    return request.scheme + '://' + request.get_host() + url
+
+
+# Template rendering -----------------------------------------------------------
+
+
+@register.simple_tag
+def get_project_title_html(project):
+    """Return HTML version of the full project title including parents"""
+    ret = ''
+
+    if project.get_parents():
+        ret += ' / '.join(project.get_full_title().split(' / ')[:-1]) + ' / '
+
+    ret += project.title
+    return ret
+
+
+@register.simple_tag
+def get_project_link(project, full_title=False, request=None):
+    """Return link to project with a simple or full title"""
+    remote_icon = ''
+
+    if request:
+        remote_icon = get_remote_icon(project, request)
+
+    return '<a href="{}">{}</a> {}'.format(
+        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
+        project.get_full_title() if full_title else project.title,
+        remote_icon)
+
+
+@register.simple_tag
+def get_user_html(user):
+    """Return standard HTML representation for a User object"""
+    return '<a title="{}" href="mailto:{}" data-toggle="tooltip" ' \
+           'data-placement="top">{}</a>'.format(
+                user.get_full_name(), user.email, user.username)
 
 
 @register.simple_tag
@@ -71,44 +164,9 @@ def highlight_search_term(item, term):
 
         if len(item[pos + tl:]) > 0:
             ret += get_highlights(item[pos + tl:])
-
         return ret
 
     return get_highlights(item)
-
-
-@register.simple_tag
-def get_project_title_html(project):
-    """Return HTML version of the full project title including parents"""
-    ret = ''
-
-    if project.get_parents():
-        ret += ' / '.join(project.get_full_title().split(' / ')[:-1]) + ' / '
-
-    ret += project.title
-    return ret
-
-
-@register.simple_tag
-def get_user_html(user):
-    """Return standard HTML representation for a User object"""
-    return '<a title="{}" href="mailto:{}" data-toggle="tooltip" ' \
-           'data-placement="top">{}</a>'.format(
-                user.get_full_name(), user.email, user.username)
-
-
-@register.simple_tag
-def get_project_link(project, full_title=False, request=None):
-    """Return link to project with a simple or full title"""
-    remote_icon = ''
-
-    if request:
-        remote_icon = get_remote_icon(project, request)
-
-    return '<a href="{}">{}</a> {}'.format(
-        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
-        project.get_full_title() if full_title else project.title,
-        remote_icon)
 
 
 @register.simple_tag
@@ -129,72 +187,26 @@ def get_remote_icon(project, request):
 
 
 @register.simple_tag
-def get_class(obj, lower=False):
-    """Return object class as string"""
-    c = obj.__class__.__name__
-    return c.lower() if lower else c
+def render_markdown(raw_markdown):
+    """Markdown field rendering helper"""
+    return mistune.markdown(raw_markdown)
 
 
 @register.filter
 def force_wrap(s, length):
+    """Force wrapping of string"""
     # If string contains spaces or hyphens, leave wrapping to browser
     if not {' ', '-'}.intersection(s) and len(s) > length:
         return '<wbr />'.join(
             [s[i:i + length] for i in range(0, len(s), length)])
-
     return s
 
 
-@register.simple_tag
-def get_full_url(request, url):
-    """Get full URL based on a local URL"""
-    return request.scheme + '://' + request.get_host() + url
+# General helpers  -------------------------------------------------------------
 
 
 @register.simple_tag
-def check_backend(name):
-    """Return True if backend app is available, else False"""
-    return True if get_backend_api(name) else False
-
-
-@register.simple_tag
-def get_setting(name):
-    """Return value of Django setting by name or None if it is not found"""
-    return getattr(settings, name) if hasattr(settings, name) else None
-
-
-@register.simple_tag
-def static_file_exists(path):
-    """Return True/False based on whether a static file exists"""
-    return True if finders.find(path) else False
-
-
-@register.simple_tag
-def template_exists(path):
-    """Return True/False based on whether a template exists"""
-    try:
-        get_template(path)
-        return True
-
-    except template.TemplateDoesNotExist:
-        return False
-
-
-@register.simple_tag
-def get_project_by_uuid(sodar_uuid):
-    """Return Project by sodar_uuid"""
-    try:
-        return Project.objects.get(sodar_uuid=sodar_uuid)
-
-    except Project.DoesNotExist:
-        return None
-
-
-@register.simple_tag
-def get_user_by_username(username):
-    """Return User by username"""
-    try:
-        return User.objects.get(username=username)
-
-    except User.DoesNotExist:
-        return None
+def get_class(obj, lower=False):
+    """Return object class as string"""
+    c = obj.__class__.__name__
+    return c.lower() if lower else c

@@ -1,4 +1,5 @@
 {% extends 'projectroles/project_base.html' %}
+
 {% load rules %}
 {% block title %}Member Invites for {{ project.title }}{% endblock title %}
 
@@ -7,20 +8,14 @@
   <style type="text/css">
     /* Responsive modifications */
     @media screen and (max-width: 800px) {
-      .table#sodar-pr-role-invite-table thead tr th:nth-child(3) {
-        display: none;
-      }
-
+      .table#sodar-pr-role-invite-table thead tr th:nth-child(3),
       .table#sodar-pr-role-invite-table tbody tr td:nth-child(3) {
         display: none;
       }
     }
 
     @media screen and (max-width: 600px) {
-      .table#sodar-pr-role-invite-table thead tr th:nth-child(4) {
-        display: none;
-      }
-
+      .table#sodar-pr-role-invite-table thead tr th:nth-child(4),
       .table#sodar-pr-role-invite-table tbody tr td:nth-child(4) {
         display: none;
       }

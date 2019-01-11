@@ -13,57 +13,15 @@ from django.utils.translation import ugettext_lazy as _
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
 
-
+from .constants import get_sodar_constants
 from .utils import set_user_group
 
 
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
-# Global constants
-SODAR_CONSTANTS = {
-    # Project roles
-    'PROJECT_ROLE_OWNER': 'project owner',
-    'PROJECT_ROLE_DELEGATE': 'project delegate',
-    'PROJECT_ROLE_CONTRIBUTOR': 'project contributor',
-    'PROJECT_ROLE_GUEST': 'project guest',
-
-    # Project types
-    'PROJECT_TYPE_CATEGORY': 'CATEGORY',
-    'PROJECT_TYPE_PROJECT': 'PROJECT',
-
-    # Submission status
-    'SUBMIT_STATUS_OK': 'OK',
-    'SUBMIT_STATUS_PENDING': 'PENDING',
-    'SUBMIT_STATUS_PENDING_TASKFLOW': 'PENDING-TASKFLOW',
-
-    # RemoteSite mode
-    'SITE_MODE_SOURCE': 'SOURCE',
-    'SITE_MODE_TARGET': 'TARGET',
-
-    # RemoteProject access types
-    'REMOTE_LEVEL_NONE': 'NONE',
-    'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
-    'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
-    'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES'
-}
-
-# Choices for forms/admin with project type
-SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'] = [
-    (SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'], 'Category'),
-    (SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], 'Project')]
-
-# RemoteSite modes
-SODAR_CONSTANTS['SITE_MODES'] = [
-    SODAR_CONSTANTS['SITE_MODE_SOURCE'],
-    SODAR_CONSTANTS['SITE_MODE_TARGET']]
-
-# RemoteProject access levels
-SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'] = {
-    SODAR_CONSTANTS['REMOTE_LEVEL_NONE']: 'No access',
-    SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']: 'View availability',
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']: 'Read information',
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']: 'Read members'}
+# Global SODAR constants
+SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_SETTING_TYPES = [
@@ -77,10 +35,7 @@ PROJECT_SETTING_TYPE_CHOICES = [
     ('STRING', 'String')]
 
 PROJECT_SETTING_VAL_MAXLENGTH = 255
-
-PROJECT_SEARCH_TYPES = [
-    'project']
-
+PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 
 
@@ -89,6 +44,7 @@ PROJECT_TAG_STARRED = 'STARRED'
 
 class ProjectManager(models.Manager):
     """Manager for custom table-level Project queries"""
+
     def find(self, search_term, keywords=None, project_type=None):
         """
         Return projects with a partial match in full title or, including titles
@@ -97,7 +53,7 @@ class ProjectManager(models.Manager):
         :param search_term: Search term (string)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
-        :return: Python list of Project objects
+        :return: List of Project objects
         """
         search_term = search_term.lower()
         projects = super(
@@ -115,10 +71,12 @@ class ProjectManager(models.Manager):
 
 
 class Project(models.Model):
-    """A SODAR project. Can have one parent category in case of nested
+    """
+    A SODAR project. Can have one parent category in case of nested
     projects. The project must be of a specific type, of which "CATEGORY" and
     "PROJECT" are currently implemented. "CATEGORY" projects are used as
-    containers for other projects"""
+    containers for other projects
+    """
 
     #: Project title
     title = models.CharField(
@@ -351,6 +309,7 @@ class Role(models.Model):
 
 class RoleAssignmentManager(models.Manager):
     """Manager for custom table-level RoleAssignment queries"""
+
     def get_assignment(self, user, project):
         """Return assignment of user to project, or None if not found"""
         try:
@@ -362,9 +321,11 @@ class RoleAssignmentManager(models.Manager):
 
 
 class RoleAssignment(models.Model):
-    """Assignment of an user to a role in a project. One role per user is
+    """
+    Assignment of an user to a role in a project. One role per user is
     allowed for each project. Roles of project owner and project delegate are
-    limited to one assignment per project."""
+    limited to one assignment per project.
+    """
 
     #: Project in which role is assigned
     project = models.ForeignKey(
@@ -465,9 +426,11 @@ class RoleAssignment(models.Model):
 
 class ProjectSettingManager(models.Manager):
     """Manager for custom table-level ProjectSetting queries"""
+
     def get_setting_value(self, project, app_name, setting_name):
         """
-        Return value of setting_name for app_name in project
+        Return value of setting_name for app_name in project.
+
         :param project: Project object or pk
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
@@ -480,8 +443,10 @@ class ProjectSettingManager(models.Manager):
 
 
 class ProjectSetting(models.Model):
-    """Project settings variable. These are generated based on the
-    'project_settings' definition in app plugins (plugins.py)"""
+    """
+    Project settings variable. These are generated based on the
+    "project_settings" definition in app plugins (plugins.py)
+    """
 
     #: App to which the setting belongs
     app_plugin = models.ForeignKey(
@@ -570,8 +535,10 @@ class ProjectSetting(models.Model):
 
 
 class ProjectInvite(models.Model):
-    """Invite which is sent to a non-logged in user, determining their role in
-    the project."""
+    """
+    Invite which is sent to a non-logged in user, determining their role in
+    the project.
+    """
 
     #: Email address of the person to be invited
     email = models.EmailField(
@@ -861,6 +828,7 @@ class RemoteProject(models.Model):
 
 
 class SODARUser(AbstractUser):
+    """SODAR compatible abstract user model"""
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
@@ -894,7 +862,7 @@ class SODARUser(AbstractUser):
 
 
 def handle_ldap_login(sender, user, **kwargs):
-    """Handle LDAP logins here as needed"""
+    """Signal for LDAP login handling"""
 
     if hasattr(user, 'ldap_username'):
 
@@ -910,12 +878,11 @@ def handle_ldap_login(sender, user, **kwargs):
             if user.first_name != '':
                 user.name = user.first_name + (
                     ' ' + user.last_name if user.last_name != '' else '')
-
                 user.save()
 
 
 def assign_user_group(sender, user, **kwargs):
-    """Assign user to group if not yet set"""
+    """Signal for user group assignment"""
     set_user_group(user)
 
 

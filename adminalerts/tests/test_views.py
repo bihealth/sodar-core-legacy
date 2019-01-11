@@ -29,7 +29,8 @@ class TestViewsBase(TestCase, AdminAlertMixin):
             message='alert',
             user=self.superuser,
             description='description',
-            active=True)
+            active=True,
+            require_auth=True)
 
         self.expiry_str = (timezone.now() + timezone.timedelta(
                 days=1)).strftime('%Y-%m-%d')
@@ -81,7 +82,8 @@ class TestAdminAlertCreateView(TestViewsBase):
             'message': 'new alert',
             'description': 'description',
             'date_expire': self.expiry_str,
-            'active': 1}
+            'active': 1,
+            'require_auth': 1}
 
         with self.login(self.superuser):
             response = self.client.post(
@@ -105,7 +107,8 @@ class TestAdminAlertCreateView(TestViewsBase):
             'message': 'new alert',
             'description': 'description',
             'date_expire': expiry_fail,
-            'active': 1}
+            'active': 1,
+            'require_auth': 1}
 
         with self.login(self.superuser):
             response = self.client.post(

@@ -11,7 +11,8 @@ class AdminAlertForm(forms.ModelForm):
 
     class Meta:
         model = AdminAlert
-        fields = ['message', 'date_expire', 'active', 'description']
+        fields = [
+            'message', 'date_expire', 'active', 'require_auth', 'description']
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -23,8 +24,7 @@ class AdminAlertForm(forms.ModelForm):
         # NOTE: "format" works in source but not in widget, any way to fix?
         self.fields['date_expire'].label = 'Expiry date'
         self.fields['date_expire'].widget = forms.widgets.DateInput(
-            attrs={'type': 'date'},
-            format='%Y-%m-%d')
+            attrs={'type': 'date'}, format='%Y-%m-%d')
 
         # Set description widget with preview
         self.fields['description'].widget = PagedownWidget(show_preview=True)

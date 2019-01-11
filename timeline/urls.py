@@ -20,7 +20,7 @@ urlpatterns = [
     # Taskflow API views
     url(
         regex=r'^taskflow/status/set$',
-        view=views.TimelineEventStatusSetAPIView.as_view(),
+        view=views.TaskflowEventStatusSetAPIView.as_view(),
         name='taskflow_status_set',
     ),
 ]

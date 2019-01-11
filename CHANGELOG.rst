@@ -1,10 +1,79 @@
 SODAR Core Changelog
 ^^^^^^^^^^^^^^^^^^^^
 
-Changelog for the SODAR Core Django app package. Loosely follows the
+Changelog for the **SODAR Core** Django app package. Loosely follows the
 `Keep a Changelog <http://keepachangelog.com/en/1.0.0/>`_ guidelines.
 
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
+
+
+v0.4.1 (2019-01-11)
+===================
+
+Added
+-----
+
+- **General**
+    - Travis-CI configuration (#90)
+- **Adminalerts**
+    - Option to display alert to unauthenticated users with ``require_auth`` (#105)
+- **Projectroles**
+    - ``TaskflowAPIAuthentication`` for handling Taskflow API auth (#47)
+    - Handle ``GET`` requests for Taskflow API views (#47)
+    - API version settings ``SODAR_API_ALLOWED_VERSIONS`` and ``SODAR_API_MEDIA_TYPE`` (#111)
+    - Site app support in ``change_plugin_status()``
+    - ``get_sodar_constants()`` helper (#112)
+- **Taskflowbackend**
+    - API logging
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Python version requirement to 3.6 (#102)
+    - Update and cleanup Gitlab-CI setup (#85)
+    - Update Chrome Driver for UI tests
+    - Cleanup Chrome setup
+    - Enable site message display in login view (#105)
+    - Cleanup and refactoring for public GitHub release (#90)
+    - Drop support for Ubuntu Jessie and Trusty
+    - Update installation utility scripts (#90)
+- **Filesfolders**
+    - Move inline javascript into ``filesfolders.js``
+- **Projectroles**
+    - Refactor ``BaseTaskflowAPIView`` (#47)
+    - Rename Taskflow specific API views (#104)
+    - Unify template tag names in ``projectroles_tags``
+    - Change default SODAR API media type into ``application/vnd.bihealth.sodar-core+json`` (#111)
+    - Allow importing ``SODAR_CONSTANTS`` into settings for modification (#112)
+    - Move ``SODAR_CONSTANTS`` to ``constants.py`` (#112)
+- **Timeline**
+    - Rename Taskflow specific API views (#104)
+
+Fixed
+-----
+
+- **Filesfolders**
+    - Overwrite check for zip archive upload if unarchiving was unset (#113)
+- **Projectroles**
+    - Potential Django crash from auth failure in Taskflow API views
+    - Timeline description for updating a remote project
+    - Project update with Taskflow failure if description not set (#110)
+- **Timeline**
+    - ``TaskflowEventStatusSetAPIView`` skipping ``sodar_token`` check (#109)
+
+Removed
+-------
+
+- **Filesfolders**
+    - Unused dropup app buttons mode in templates (#108)
+- **Projectroles**
+    - Unused arguments in ``email`` API
+    - Unused static file ``shepherd-theme-default.css``
+    - Disabled role importing functionality (#61, pending #17)
+    - Unused dropup app buttons mode in templates (#108)
+- **Timeline**
+    - ``ProjectEventStatus.get_timestamp()`` helper
 
 
 v0.4.0 (2018-12-19)
@@ -18,7 +87,7 @@ Added
 - **Bgjobs**
     - Add app from varfish-web (#95)
 - **Filesfolders**
-    - Add app from django-sodar-core v0.4.0 (#86)
+    - Add app from sodar v0.4.0 (#86)
 - **Projectroles**
     - Setting ``PROJECTROLES_ENABLE_SEARCH`` (#70)
     - Re-enable "home" link in project breadcrumb (#80)

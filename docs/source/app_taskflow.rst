@@ -22,6 +22,11 @@ communicate with an external SODAR Taskflow service to manage large-scale data
 transactions. It has no views or database models and only provides an API for
 other apps to use.
 
+.. note::
+
+    At the time of writing, SODAR Taskflow is in development and has not been
+    made public.
+
 
 Installation
 ============
@@ -105,3 +110,13 @@ the following management command:
 .. code-block:: console
 
     ./manage.py synctaskflow
+
+
+API Documentation
+=================
+
+The ``TaskflowAPI`` class contains the SODAR Taskflow backend API. It should be
+initialized using the ``Projectroles.plugins.get_backend_api()`` function.
+
+.. autoclass:: taskflowbackend.api.TaskflowAPI
+    :members:

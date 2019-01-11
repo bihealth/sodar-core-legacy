@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
+
 # Settings
 SECRET_LENGTH = settings.PROJECTROLES_SECRET_LENGTH if \
     hasattr(settings, 'PROJECTROLES_SECRET_LENGTH') else 32
@@ -36,7 +37,7 @@ def build_secret(length=SECRET_LENGTH):
     length = int(length) if int(length) <= 255 else 255
 
     return ''.join(random.SystemRandom().choice(
-        string.ascii_lowercase + string.digits) for x in range(length))
+        string.ascii_lowercase + string.digits) for _ in range(length))
 
 
 def build_invite_url(invite, request):

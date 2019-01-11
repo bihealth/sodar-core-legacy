@@ -3,7 +3,8 @@
 Projectroles Customization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Here you can find some customization instructions and tips for SODAR Core.
+Here you can find some customization instructions and tips for projectroles and
+SODAR Core.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -12,13 +13,10 @@ be missing. Please click "display source" if you want to read this in GitLab.
 CSS Overrides
 =============
 
-While it is strongly recommended to use the Projectroles layout and styles,
-there are of course many possibilities for customization.
-
 If some of the CSS definitions in ``{STATIC}/projectroles/css/projectroles.css``
-do not suit your purposes, it is of course possible to override them in your own
-includes. It is still recommended to include the *"Flexbox page setup"* section
-as is.
+do not suit your purposes, it is possible to override them in your own includes.
+It is still recommended to include the *"Flexbox page setup"* section as
+provided.
 
 In this chapter are examples of overrides you can place e.g. in ``project.css``
 to change certain defaults.
@@ -27,6 +25,11 @@ to change certain defaults.
 
     While not explicitly mentioned, some parameters may require the
     ``!important`` argument to take effect on your site.
+
+.. warning::
+
+    In the future we may instead offer a full Bootstrap 4 theme, which may
+    deprecate current overriding/extending CSS classes.
 
 Static Element Coloring
 -----------------------
@@ -37,15 +40,7 @@ CSS overrides.
 
 .. code-block:: css
 
-    .sodar-base-navbar {
-      background-color: #ff00ff;
-    }
-
-    .sodar-pr-sidebar {
-      background-color: #ff00ff;
-    }
-
-    .sodar-pr-sidebar-nav {
+    .sodar-base-navbar, .sodar-pr-sidebar, .sodar-pr-sidebar-nav {
       background-color: #ff00ff;
     }
 

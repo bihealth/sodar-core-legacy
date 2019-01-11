@@ -149,7 +149,12 @@ Site App Messages
 =================
 
 The site app provides a way to display certain messages to users. For this, you
-need to implement ``get_mesasges()`` in the ``SiteAppPlugin`` class. Example:
+need to implement ``get_mesasges()`` in the ``SiteAppPlugin`` class.
+
+If you need to control e.g. which user should see the message or removal of a
+message after showing, you need to implement relevant logic in the function.
+
+Example:
 
 .. code-block:: python
 
@@ -159,13 +164,9 @@ need to implement ``get_mesasges()`` in the ``SiteAppPlugin`` class. Example:
         :param user: User object (optional)
         :return: List of dicts or and empty list if no messages
         """
-        # TODO: Implement this in your site app plugin
-
-        # Output example:
         return [{
             'content': 'Message content in here, can contain html',
             'color': 'info',        # Corresponds to bg-* in Bootstrap
             'dismissable': True     # False for non-dismissable
+            'require_auth': True    # Only view for authorized users
         }]
-
-        return []

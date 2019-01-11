@@ -3,11 +3,10 @@ from django import template
 # Projectroles dependency
 from projectroles.project_settings import get_project_setting
 
-from ..models import File, Folder, HyperLink, FILESFOLDERS_FLAGS
+from ..models import File, HyperLink, FILESFOLDERS_FLAGS
 
 
 APP_NAME = 'filesfolders'
-
 
 register = template.Library()
 
@@ -37,6 +36,7 @@ def allow_public_links(project):
 
 @register.simple_tag
 def get_file_icon(file):
+    """Return file icon"""
     mt = file.file.file.mimetype
 
     if mt == 'application/pdf':
@@ -66,6 +66,7 @@ def get_file_icon(file):
 
 @register.simple_tag
 def get_flag(flag_name, tooltip=True):
+    """Return item flag HTML"""
     f = FILESFOLDERS_FLAGS[flag_name]
     tip_str = ''
 
@@ -80,9 +81,9 @@ def get_flag(flag_name, tooltip=True):
 
 @register.simple_tag
 def get_flag_status(val, choice):
+    """Return item flag status HTML for form"""
     if val == choice:
         return 'checked="checked"'
-
     return ''
 
 

@@ -1,3 +1,6 @@
+"""Template tags intended for internal use within the projectroles app"""
+
+
 from django import template
 from django.conf import settings
 from django.utils import timezone
@@ -25,6 +28,83 @@ ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
 
 register = template.Library()
+
+
+# SODAR and site operations ----------------------------------------------------
+
+
+@register.simple_tag
+def sodar_constant(value):
+    """Get value from SODAR_CONSTANTS"""
+    return SODAR_CONSTANTS[value] if value in SODAR_CONSTANTS else None
+
+
+# TODO: Refactor into get_plugins(type)
+@register.simple_tag
+def get_backend_plugins():
+    """Get active backend plugins"""
+    return get_active_plugins('backend')
+
+
+# TODO: Refactor into get_plugins(type)
+@register.simple_tag
+def get_site_apps():
+    """Get active site apps"""
+    return get_active_plugins('site_app')
+
+
+@register.simple_tag
+def get_site_app_messages(user):
+    """Get messages from site apps"""
+    plugins = get_active_plugins('site_app')
+    ret = []
+
+    for p in plugins:
+        ret += p.get_messages(user)
+
+    return ret
+
+
+@register.simple_tag
+def has_star(project, user):
+    """Return True/False for project star tag state"""
+    return (
+        user.has_perm('projectroles.view_project', project) and
+        get_tag_state(project, user, PROJECT_TAG_STARRED))
+
+
+@register.simple_tag
+def get_remote_project_obj(site, project):
+    """Return RemoteProject object for RemoteSite and Project"""
+    try:
+        return RemoteProject.objects.get(
+            site=site, project_uuid=project.sodar_uuid)
+
+    except RemoteProject.DoesNotExist:
+        return None
+
+
+@register.simple_tag
+def allow_project_creation():
+    """Check whether creating a project is allowed on the site"""
+    if (settings.PROJECTROLES_SITE_MODE ==
+            SODAR_CONSTANTS['SITE_MODE_TARGET'] and
+            not settings.PROJECTROLES_TARGET_CREATE):
+        return False
+    return True
+
+
+@register.simple_tag
+def is_app_hidden(plugin, user):
+    """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
+    if (hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS') and
+            plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS and
+            not user.is_superuser):
+        return True
+    return False
+
+
+# Template rendering -----------------------------------------------------------
 
 
 @register.simple_tag
@@ -74,8 +154,8 @@ def get_project_list_indent(project, list_parent):
 
 
 @register.simple_tag
-def print_not_found_alert(project_results, app_search_data, search_type):
-    """Print out alert for data which was not found during search, if any"""
+def get_not_found_alert(project_results, app_search_data, search_type):
+    """Return alert HTML for data which was not found during search, if any"""
     not_found = []
 
     if (len(project_results) == 0 and (
@@ -111,14 +191,8 @@ def print_not_found_alert(project_results, app_search_data, search_type):
 
 
 @register.simple_tag
-def sodar_constant(value):
-    """Get value from SODAR_CONSTANTS"""
-    return SODAR_CONSTANTS[value] \
-        if value in SODAR_CONSTANTS else None
-
-
-@register.simple_tag
-def get_user_role_str(project, user):
+def get_user_role_html(project, user):
+    """Return user role HTML"""
     if user.is_superuser:
         return '<span class="text-danger">Superuser</span>'
 
@@ -137,7 +211,6 @@ def get_app_link_state(app_plugin, app_name, url_name):
     if (app_name == app_plugin.name and
             url_name in [u.name for u in app_plugin.urls]):
         return 'active'
-
     return ''
 
 
@@ -160,7 +233,7 @@ def get_pr_link_state(app_urls, url_name, link_names=None):
 
 
 @register.simple_tag
-def get_project_type_str(project, capitalize=True):
+def get_project_type(project, capitalize=True):
     """Return printable version of the project type"""
     ret = PROJECT_TYPE_DISPLAY[project.type]
     return ret.lower() if not capitalize else ret
@@ -176,14 +249,6 @@ def get_star(project, user):
 
 
 @register.simple_tag
-def has_star(project, user):
-    """Return True/False for project star tag state"""
-    return (
-        user.has_perm('projectroles.view_project', project) and
-        get_tag_state(project, user, PROJECT_TAG_STARRED))
-
-
-@register.simple_tag
 def get_help_highlight(user):
     """Return classes to highlight navbar help link if user has recently
     signed in"""
@@ -196,35 +261,9 @@ def get_help_highlight(user):
     return ''
 
 
-# TODO: Refactor into get_plugins(type)
-@register.simple_tag
-def get_backend_plugins():
-    """Get active backend plugins"""
-    return get_active_plugins('backend')
-
-
-# TODO: Refactor into get_plugins(type)
-@register.simple_tag
-def get_site_apps():
-    """Get active site apps"""
-    return get_active_plugins('site_app')
-
-
-@register.simple_tag
-def get_site_app_messages():
-    """Get messages from site apps"""
-    plugins = get_active_plugins('site_app')
-    ret = []
-
-    for p in plugins:
-        ret += p.get_messages()
-
-    return ret
-
-
 @register.simple_tag
 def get_role_import_action(source_as, dest_project):
-    """Return label for role imporrt action based on existing assignment"""
+    """Return label for role import action based on existing assignment"""
     try:
         target_as = RoleAssignment.objects.get(
             project=dest_project, user=source_as.user)
@@ -266,7 +305,7 @@ def get_login_info():
 
 @register.simple_tag
 def get_target_project_select(site, project):
-    """Get remote target project level selection HTML"""
+    """Return remote target project level selection HTML"""
     current_level = None
 
     try:
@@ -302,44 +341,13 @@ def get_target_project_select(site, project):
 
 @register.simple_tag
 def get_remote_access_legend(level):
+    """Return legend text for remote project access level"""
     if level not in SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS']:
         return 'N/A'
-
     return SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
-
-
-@register.simple_tag
-def get_remote_project_obj(site, project):
-    try:
-        return RemoteProject.objects.get(
-            site=site, project_uuid=project.sodar_uuid)
-
-    except RemoteProject.DoesNotExist:
-        return None
-
-
-@register.simple_tag
-def allow_project_creation():
-    if (settings.PROJECTROLES_SITE_MODE ==
-            SODAR_CONSTANTS['SITE_MODE_TARGET'] and
-            not settings.PROJECTROLES_TARGET_CREATE):
-        return False
-
-    return True
 
 
 @register.simple_tag
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
-
-
-@register.simple_tag
-def is_app_hidden(plugin, user):
-    """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
-    if (hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS') and
-            plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS and
-            not user.is_superuser):
-        return True
-
-    return False

@@ -1,12 +1,13 @@
 """Tests for views in the timeline app"""
 import uuid
 
+from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.test import override_settings
 
 # Projectroles dependency
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
 from .test_models import TestProjectEventBase, ProjectEventMixin,\
     ProjectEventStatusMixin
@@ -115,12 +116,14 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
             extra_data={'test_key': 'test_val'},
             status_type='INIT')
 
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_set_status(self):
         """Test setting the status of the event"""
         values = {
             'event_uuid': self.event_init.sodar_uuid,
             'status_type': 'OK',
-            'status_desc': ''}
+            'status_desc': '',
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
 
         response = self.client.post(
             reverse('timeline:taskflow_status_set'),
@@ -128,12 +131,14 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
 
         self.assertEqual(response.status_code, 200)
 
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_set_invalid_event(self):
         """Test setting the status of the event with an invalid event pk"""
         values = {
             'event_uuid': uuid.uuid4(),
             'status_type': 'OK',
-            'status_desc': ''}
+            'status_desc': '',
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
 
         response = self.client.post(
             reverse('timeline:taskflow_status_set'),
@@ -141,12 +146,14 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
 
         self.assertEqual(response.status_code, 404)
 
+    @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_set_invalid_status(self):
         """Test setting the status of the event with an invalid status type"""
         values = {
             'event_uuid': self.event_init.sodar_uuid,
             'status_type': 'ahL4VeerAeth4ohh',
-            'status_desc': ''}
+            'status_desc': '',
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
 
         response = self.client.post(
             reverse('timeline:taskflow_status_set'),

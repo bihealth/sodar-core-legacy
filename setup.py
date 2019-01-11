@@ -55,8 +55,8 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description="""SODAR Core framework and project management apps""",
     long_description=README + '\n\n' + CHANGELOG,
-    author='Mikko Nieminen',
-    author_email='mikko.nieminen@bihealth.de',
+    author='Mikko Nieminen, Manuel Holtgrewe',
+    author_email='mikko.nieminen@bihealth.de, manuel.holtgrewe@bihealth.de',
     url='',
     packages=[
         'projectroles',
@@ -79,7 +79,6 @@ setup(
         'Operating System :: Linux',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',

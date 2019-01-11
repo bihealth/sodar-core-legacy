@@ -1,5 +1,6 @@
 """SODAR Taskflow API for Django apps"""
 
+import logging
 import requests
 from uuid import UUID
 
@@ -9,9 +10,10 @@ from django.conf import settings
 from projectroles.models import SODAR_CONSTANTS
 
 
+logger = logging.getLogger(__name__)
+
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-
 
 # Local constants
 HEADERS = {'Content-Type': 'application/json'}
@@ -23,7 +25,7 @@ TEST_MODE = True if (
 
 
 class TaskflowAPI:
-    """Taskflow API to be used by Django apps"""
+    """SODAR Taskflow API to be used by Django apps"""
 
     class FlowSubmitException(Exception):
         """SODAR Taskflow submission exception"""
@@ -42,7 +44,8 @@ class TaskflowAPI:
             targets=TARGETS, request_mode='sync', timeline_uuid=None,
             force_fail=False, sodar_url=None):
         """
-        Submit taskflow for project data modification.
+        Submit taskflow for SODAR project data modification.
+
         :param project_uuid: UUID of the project (UUID object or string)
         :param flow_name: Name of flow to be executed (string)
         :param flow_data: Input data for flow execution (dict)
@@ -52,7 +55,8 @@ class TaskflowAPI:
         :param timeline_uuid: UUID of corresponding timeline event (optional)
         :param force_fail: Make flow fail on purpose (boolean, default False)
         :param sodar_url: URL of SODAR server (optional, for testing)
-        :return: Boolean, status info if failure (string)
+        :return: Boolean
+        :raise: FlowSubmitException if submission fails
         """
         url = self.taskflow_url + '/submit'
 
@@ -85,40 +89,54 @@ class TaskflowAPI:
         elif sodar_url:
             data['sodar_url'] = sodar_url
 
-        # print('DATA: {}'.format(data))  # DEBUG
+        logger.debug('Submit data: {}'.format(data))
         response = requests.post(url, json=data, headers=HEADERS)
 
         if response.status_code == 200 and bool(response.text) is True:
+            logger.debug('Submit OK')
             return True
 
         else:
-            print('Submit Response (url={}): {}'.format(
-                url, response.text))    # DEBUG
+            logger.error('Submit failed: {}'.format(response.text))
             raise self.FlowSubmitException(
                 self.get_error_msg(flow_name, response.text))
 
     def use_taskflow(self, project):
         """
-        Return True/False regarding if taskflow should be used with a project
+        Check whether taskflow use is allowed with a project.
+
         :param project: Project object
-        :return: bool
+        :return: Boolean
         """
         return True if project.type == PROJECT_TYPE_PROJECT else False
 
     def cleanup(self):
-        """Send a cleanup command to SODAR Taskflow"""
+        """
+        Send a cleanup command to SODAR Taskflow. Only allowed in test mode.
+
+        :return: Boolean
+        :raise: FlowSubmitException if SODAR Taskflow raises an error
+        """
         url = self.taskflow_url + '/cleanup'
         data = {'test_mode': TEST_MODE}
 
         response = requests.post(url, json=data, headers=HEADERS)
 
         if response.status_code == 200:
+            logger.debug('Cleanup OK')
             return True
 
         else:
-            # print('Cleanup Response: {}'.format(response.text))  # DEBUG
+            logger.debug('Cleanup failed: {}'.format(response.text))
             raise self.FlowSubmitException(response.text)
 
     def get_error_msg(self, flow_name, submit_info):
+        """
+        Return a printable version of a SODAR Taskflow error message.
+
+        :param flow_name: Name of submitted flow
+        :param submit_info: Returned information from SODAR Taskflow
+        :return: String
+        """
         return 'Taskflow "{}" failed! Reason: "{}"'.format(
             flow_name, submit_info[:256])

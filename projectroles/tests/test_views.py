@@ -52,6 +52,11 @@ REMOTE_SITE_NEW_URL = 'https://new.url'
 REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 
+SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
+SODAR_API_VERSION = '0.1'
+SODAR_API_VERSION_INVALID = '9.9'
+
 
 class ProjectSettingMixin:
     """Helper mixin for Project settings"""
@@ -788,156 +793,6 @@ class TestRoleAssignmentDeleteView(
                 kwargs={'project': self.project.sodar_uuid}))
 
 
-class TestRoleAssignmentImportView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
-    """Tests for RoleAssignment importing view"""
-
-    def setUp(self):
-        super(TestRoleAssignmentImportView, self).setUp()
-
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
-        self.user_owner = self.make_user('owner')
-        self.owner_as = self._make_assignment(
-            self.project, self.user_owner, self.role_owner)
-
-        # Init other users and roles
-        self.user_contributor = self.make_user('contributor')
-        self.contributor_as = self._make_assignment(
-            self.project, self.user_contributor, self.role_contributor)
-
-        self.user_guest = self.make_user('guest')
-        self.guest_as = self._make_assignment(
-            self.project, self.user_guest, self.role_guest)
-
-        # Init target project
-        self.project_new = self._make_project(
-            'NewProject', PROJECT_TYPE_PROJECT, None)
-        self._make_assignment(
-            self.project_new, self.user_owner, self.role_owner)
-
-    def test_render(self):
-        """Test rendering of RoleAssignment importing form with the owner"""
-
-        with self.login(self.user_owner):
-            response = self.client.get(
-                reverse(
-                    'projectroles:role_import',
-                    kwargs={'project': self.project_new.sodar_uuid}))
-
-        self.assertEqual(response.status_code, 200)
-
-        # Assert context
-        self.assertEqual(
-            response.context['owned_projects'], [self.project])
-
-    def test_render_superuser(self):
-        """Test rendering of RoleAssignment importing form with superuser"""
-
-        with self.login(self.user):
-            response = self.client.get(
-                reverse(
-                    'projectroles:role_import',
-                    kwargs={'project': self.project_new.sodar_uuid}))
-
-        self.assertEqual(response.status_code, 200)
-
-        # Assert context
-        self.assertEqual(
-            response.context['owned_projects'], [self.project])
-
-    def test_import_append(self):
-        """Test appending roles to project"""
-
-        # Assert precondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 1)
-
-        values = {
-            'import-mode': 'append',
-            'source-project': self.project.sodar_uuid,
-            'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
-            'import_field_{}'.format(self.guest_as.sodar_uuid): 1}
-
-        with self.login(self.user_owner):
-            response = self.client.post(
-                reverse(
-                    'projectroles:role_import',
-                    kwargs={'project': self.project_new.sodar_uuid}),
-                values)
-
-        # Assert postcondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 3)
-
-    def test_import_replace(self):
-        """Test deleting roles through replacing"""
-
-        user_new = self.make_user('newuser')
-        new_as = self._make_assignment(
-            self.project_new, user_new, self.role_contributor)
-
-        # Assert precondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 2)
-
-        values = {
-            'import-mode': 'replace',
-            'source-project': self.project.sodar_uuid,
-            'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
-            'import_field_{}'.format(self.guest_as.sodar_uuid): 1,
-            'delete_field_{}'.format(new_as.sodar_uuid): 1}
-
-        with self.login(self.user_owner):
-            response = self.client.post(
-                reverse(
-                    'projectroles:role_import',
-                    kwargs={'project': self.project_new.sodar_uuid}),
-                values)
-
-        # Assert postcondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 3)
-
-        with self.assertRaises(RoleAssignment.DoesNotExist):
-            RoleAssignment.objects.get(project=self.project_new, user=user_new)
-
-    def test_import_replace_update(self):
-        """Test updating roles through replacing"""
-
-        self._make_assignment(
-            self.project_new, self.user_contributor, self.role_guest)
-
-        # Assert precondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 2)
-
-        values = {
-            'import-mode': 'replace',
-            'source-project': self.project.sodar_uuid,
-            'import-confirmed': 1,
-            'import_field_{}'.format(self.contributor_as.sodar_uuid): 1,
-            'import_field_{}'.format(self.guest_as.sodar_uuid): 1}
-
-        with self.login(self.user_owner):
-            response = self.client.post(
-                reverse(
-                    'projectroles:role_import',
-                    kwargs={'project': self.project_new.sodar_uuid}),
-                values)
-
-        # Assert postcondition
-        self.assertEqual(self.project.roles.count(), 3)
-        self.assertEqual(self.project_new.roles.count(), 3)
-
-        updated_as = RoleAssignment.objects.get(
-            project=self.project_new, user=self.user_contributor)
-
-        self.assertEqual(updated_as.role, self.role_contributor)
-
-
 class TestProjectInviteCreateView(
         ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
     """Tests for ProjectInvite creation view"""
@@ -1266,7 +1121,7 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectGetAPIView.as_view()(request)
+        response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
@@ -1290,7 +1145,7 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             data={
                 'project_uuid': str(pd_project.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectGetAPIView.as_view()(request)
+        response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
 
@@ -1323,12 +1178,35 @@ class TestProjectUpdateAPIView(
                 'description': desc,
                 'readme': readme,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.ProjectUpdateAPIView.as_view()(request)
+        response = views.TaskflowProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, title)
         self.assertEqual(self.project.description, desc)
+        self.assertEqual(self.project.readme.raw, readme)
+
+    def test_post_no_description(self):
+        """Test POST request without a description field"""
+
+        # NOTE: Duplicate titles not checked here, not allowed in the form
+        title = 'New title'
+        desc = 'New desc'
+        readme = 'New readme'
+
+        request = self.req_factory.post(
+            reverse('projectroles:taskflow_project_update'),
+            data={
+                'project_uuid': str(self.project.sodar_uuid),
+                'title': title,
+                'readme': readme,
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+        response = views.TaskflowProjectUpdateAPIView.as_view()(request)
+        self.assertEqual(response.status_code, 200)
+
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.title, title)
+        self.assertEqual(self.project.description, '')
         self.assertEqual(self.project.readme.raw, readme)
 
 
@@ -1353,7 +1231,7 @@ class TestRoleAssignmentGetAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(self.user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-        response = views.RoleAssignmentGetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
@@ -1393,7 +1271,7 @@ class TestRoleAssignmentSetAPIView(
                 'role_pk': self.role_contributor.pk,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentSetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
@@ -1416,7 +1294,7 @@ class TestRoleAssignmentSetAPIView(
                 'role_pk': self.role_contributor.pk,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentSetAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
@@ -1452,7 +1330,7 @@ class TestRoleAssignmentDeleteAPIView(
                 'user_uuid': str(new_user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentDeleteAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
@@ -1470,7 +1348,7 @@ class TestRoleAssignmentDeleteAPIView(
                 'user_uuid': str(new_user.sodar_uuid),
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
 
-        response = views.RoleAssignmentDeleteAPIView.as_view()(request)
+        response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
@@ -1503,7 +1381,7 @@ class TestTaskflowAPIViewAccess(
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': TASKFLOW_SECRET_INVALID})
-            response = views.ProjectGetAPIView.as_view()(request)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
     @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
@@ -1520,7 +1398,7 @@ class TestTaskflowAPIViewAccess(
 
         for url in urls:
             request = self.req_factory.post(url)
-            response = views.ProjectGetAPIView.as_view()(request)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
     @override_settings(ENABLED_BACKEND_PLUGINS=[])
@@ -1538,8 +1416,8 @@ class TestTaskflowAPIViewAccess(
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
-            response = views.ProjectGetAPIView.as_view()(request)
-            self.assertEqual(response.status_code, 401)
+            response = views.TaskflowProjectGetAPIView.as_view()(request)
+            self.assertEqual(response.status_code, 403)
 
 
 # Remote view tests ------------------------------------------------------------
@@ -2084,3 +1962,42 @@ class TestRemoteProjectGetAPIView(
                 kwargs={'secret': build_secret()}))
 
         self.assertEqual(response.status_code, 401)
+
+    def test_api_versioning(self):
+        """Test SODAR API Access with correct version headers"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_versioning_invalid_version(self):
+        """Test SODAR API Access with unsupported version (should fail)"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID))
+
+        self.assertEqual(response.status_code, 406)
+
+    def test_api_versioning_invalid_media_type(self):
+        """Test SODAR API Access with unsupported media type (should fail)"""
+        # TODO: Test with a more simple SODAR API view once implemented
+
+        response = self.client.get(
+            reverse(
+                'projectroles:api_remote_get',
+                kwargs={'secret': REMOTE_SITE_SECRET}),
+            HTTP_ACCEPT='{};version={}'.format(
+                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION))
+
+        self.assertEqual(response.status_code, 406)

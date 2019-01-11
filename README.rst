@@ -1,6 +1,12 @@
 SODAR Core
 ^^^^^^^^^^
 
+.. image:: https://img.shields.io/travis/bihealth/sodar_core.svg
+    :target: https://travis-ci.org/bihealth/sodar_core
+
+.. image:: https://img.shields.io/badge/License-MIT-yellow.svg
+    :target: https://opensource.org/licenses/MIT
+
 SODAR (System for Omics Data Access and Retrieval) is a specialized system for
 managing data in omics research projects.
 
@@ -30,5 +36,3 @@ This repository provides the following installable Django apps:
 Also included are resources and examples for developing SODAR compatible apps.
 
 See ``docs`` for detailed documentation on use, integration and development.
-
-:License: MIT

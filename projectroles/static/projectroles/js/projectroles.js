@@ -50,15 +50,14 @@ $(function(){
 var tourEnabled = false;  // Needs to set true if there is content
 tour = new Shepherd.Tour({
     defaults: {
-            classes: 'shepherd-theme-default'
-        }
+        classes: 'shepherd-theme-default'
+    }
 });
 
 // Set up tour link
 $(document).ready(function() {
     if (tourEnabled === false) {
-        $('#site-help-link').addClass(
-            'disabled').removeClass('text-warning');
+        $('#site-help-link').addClass('disabled').removeClass('text-warning');
     }
 
     $('#site-help-link').click(function() {

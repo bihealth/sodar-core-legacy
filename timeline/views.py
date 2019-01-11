@@ -9,8 +9,8 @@ from rest_framework.views import APIView
 
 # Projectroles dependency
 from projectroles.models import Project
-from projectroles.views import LoggedInPermissionMixin, \
-    ProjectContextMixin, ProjectPermissionMixin
+from projectroles.views import LoggedInPermissionMixin, ProjectContextMixin, \
+    ProjectPermissionMixin, BaseTaskflowAPIView
 
 from .models import ProjectEvent
 
@@ -32,10 +32,8 @@ class ProjectTimelineView(
     def get_context_data(self, *args, **kwargs):
         context = super(
             ProjectTimelineView, self).get_context_data(*args, **kwargs)
-
         context['timeline_title'] = 'Project Timeline'
         context['timeline_mode'] = 'project'
-
         return context
 
     def get_queryset(self):
@@ -83,7 +81,7 @@ class ObjectTimelineView(ProjectTimelineView):
 # Taskflow API Views -----------------------------------------------------------
 
 
-class TimelineEventStatusSetAPIView(APIView):
+class TaskflowEventStatusSetAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             tl_event = ProjectEvent.objects.get(

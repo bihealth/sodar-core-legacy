@@ -1,13 +1,14 @@
 image: python:3.6
 
 services:
-  - postgres:9.4
+  - postgres:9.6
 
 variables:
   POSTGRES_DB: sodar_core
   POSTGRES_USER: sodar_core
   POSTGRES_PASSWORD: sodar_core
   DATABASE_URL: postgres://sodar_core:sodar_core@postgres/sodar_core
+  DEBIAN_FRONTEND: noninteractive
 
 before_script:
   # SSH setup taken from https://gitlab.com/gitlab-examples/ssh-private-key

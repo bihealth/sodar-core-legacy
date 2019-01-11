@@ -3,6 +3,8 @@
 from django.urls import reverse
 from django.utils import timezone
 
+from selenium.common.exceptions import NoSuchElementException
+
 # Projectroles dependency
 from projectroles.tests.test_ui import TestUIBase
 
@@ -67,6 +69,22 @@ class TestAlertMessage(TestAlertUIBase):
 
         self.assert_element_count(
             expected, url, 'sodar-alert-site-app', 'class')
+
+    def test_message_login(self):
+        """Test visibility of alert in login view with auth requirement"""
+        self.selenium.get(self.build_selenium_url(reverse('login')))
+
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element_by_class_name('sodar-alert-site-app')
+
+    def test_message_login_no_auth(self):
+        """Test visibility of alert in login view without auth requirement"""
+        self.alert.require_auth = False
+        self.alert.save()
+
+        self.selenium.get(self.build_selenium_url(reverse('login')))
+        self.assertIsNotNone(
+            self.selenium.find_element_by_class_name('sodar-alert-site-app'))
 
 
 class TestListView(TestAlertUIBase):
