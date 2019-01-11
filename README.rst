@@ -1,8 +1,8 @@
 SODAR Core
 ^^^^^^^^^^
 
-.. image:: https://img.shields.io/travis/bihealth/sodar_core.svg
-    :target: https://travis-ci.org/bihealth/sodar_core
+.. image:: https://travis-ci.com/bihealth/sodar_core.svg?branch=master
+    :target: https://travis-ci.com/bihealth/sodar_core
 
 .. image:: https://img.shields.io/badge/License-MIT-yellow.svg
     :target: https://opensource.org/licenses/MIT
