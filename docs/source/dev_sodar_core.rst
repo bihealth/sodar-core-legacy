@@ -69,7 +69,7 @@ the environment, install Python requirements for the project:
     $ pip install virtualenv
     $ virtualenv -p python3.6 .venv
     $ source .venv/bin/activate
-    $ pip install -r requirements/local.txt
+    $ utility/install_python_dependencies.sh
 
 LDAP Setup (Optional)
 ---------------------
