@@ -16,6 +16,12 @@ Added
 - **Projectroles**
     - Automatically pass CSRF token to unsafe Ajax HTTP methods (#116)
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.18 (#120)
+
 
 v0.4.1 (2019-01-11)
 ===================
