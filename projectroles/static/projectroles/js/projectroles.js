@@ -301,14 +301,6 @@ $(document).ready(function() {
 });
 
 
-/* Make alerts removable ---------------------------------------------------- */
-
-
-$('.sodar-alert-close-link').click(function () {
-    $(this).closest('.sodar-alert-top').fadeOut('fast');
-});
-
-
 /* Improve the responsiveness of the title bar ------------------------------ */
 
 
