@@ -36,6 +36,14 @@ Python requirements in your SODAR Core based site.
     dependencies still exhibit problems with the most recent Python release at
     the time of writing.
 
+Taskflow Backend API
+--------------------
+
+The ``cleanup()`` function in ``TaskflowAPI`` now correctly raises a
+``CleanupException`` if SODAR Taskflow encounters an error upon calling its
+cleanup operation. This change should not affect normally running your site, as
+the function in question should only be called during Taskflow testing.
+
 
 v0.4.1
 ======
