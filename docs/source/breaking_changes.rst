@@ -29,6 +29,9 @@ Please go through your site requirements and update dependencies accordingly.
 For stability, it is still recommended to use exact version numbers for
 Python requirements in your SODAR Core based site.
 
+If you are overriding the ``projectroles/base_site.html`` in your site, make
+sure to update Javascript and CSS includes accordingly.
+
 .. note::
 
     Even though the recommended Python version from Django 1.11.17+ is 3.7, we
