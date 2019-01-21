@@ -12,6 +12,31 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.4.2
+======
+
+System Prerequisites
+--------------------
+
+The following minimum version requirements have been upgraded in this release:
+
+- Django 1.11.18+
+- Bootstrap 4.2.1
+- JQuery 3.3.1
+- Numerous required Python packages (see ``requirements/*.txt``)
+
+Please go through your site requirements and update dependencies accordingly.
+For stability, it is still recommended to use exact version numbers for
+Python requirements in your SODAR Core based site.
+
+.. note::
+
+    Even though the recommended Python version from Django 1.11.17+ is 3.7, we
+    still recommend Python 3.6 for this release. The reason is that some
+    dependencies still exhibit problems with the most recent Python release at
+    the time of writing.
+
+
 v0.4.1
 ======
 

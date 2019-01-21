@@ -408,9 +408,9 @@ dl dd {
 }
 
 .sodar-list-dropdown {
-  height: 1.65em;
-  margin-bottom: 0;
-  padding-top: 1px;
+  height: 26px;
+  width: 50px !important;
+  padding: 1px !important;
 }
 
 .sodar-details-app-button {

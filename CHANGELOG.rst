@@ -21,6 +21,25 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to 1.11.18 (#120)
+    - Upgrade Python dependencies (#123)
+    - Update .coveragerc
+    - Upgrade to Bootstrap 4.2.1 (#23)
+    - Upgrade to JQuery 3.3.1 (#23)
+- **Projectroles**
+    - Use ``alert-dismissible`` to dismiss alerts (#13)
+    - Update DataTables dependency in ``search.html`` template
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``sodar-list-dropdown`` layout broke down with Bootstrap 4.2.1 (#23)
+
+Removed
+-------
+
+- **Projectroles**
+    - Custom alert dismissal script (#13)
 
 
 v0.4.1 (2019-01-11)
