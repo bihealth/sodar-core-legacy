@@ -5,6 +5,7 @@ import requests
 from uuid import UUID
 
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
@@ -19,7 +20,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 HEADERS = {'Content-Type': 'application/json'}
 TARGETS = settings.TASKFLOW_TARGETS if \
     hasattr(settings, 'TASKFLOW_TARGETS') else ['sodar']
-TEST_MODE = True if (
+TASKFLOW_TEST_MODE = True if (
     hasattr(settings, 'TASKFLOW_TEST_MODE') and
     settings.TASKFLOW_TEST_MODE) else False
 
@@ -76,7 +77,7 @@ class TaskflowAPI:
             'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
 
         # Add the "test_mode" parameter
-        data['test_mode'] = TEST_MODE
+        data['test_mode'] = TASKFLOW_TEST_MODE
 
         # HACK: Add overriding URL for test server
         if request:
@@ -115,10 +116,15 @@ class TaskflowAPI:
         Send a cleanup command to SODAR Taskflow. Only allowed in test mode.
 
         :return: Boolean
-        :raise: FlowSubmitException if SODAR Taskflow raises an error
+        :raise: ImproperlyConfigured if TASKFLOW_TEST_MODE is not set True
+        :raise: CleanupException if SODAR Taskflow raises an error
         """
+        if not TASKFLOW_TEST_MODE:
+            raise ImproperlyConfigured(
+                'TASKFLOW_TEST_MODE not True, cleanup command not allowed')
+
         url = self.taskflow_url + '/cleanup'
-        data = {'test_mode': TEST_MODE}
+        data = {'test_mode': TASKFLOW_TEST_MODE}
 
         response = requests.post(url, json=data, headers=HEADERS)
 
@@ -128,7 +134,7 @@ class TaskflowAPI:
 
         else:
             logger.debug('Cleanup failed: {}'.format(response.text))
-            raise self.FlowSubmitException(response.text)
+            raise self.CleanupException(response.text)
 
     def get_error_msg(self, flow_name, submit_info):
         """

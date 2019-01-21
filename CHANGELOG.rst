@@ -34,6 +34,10 @@ Fixed
 
 - **Projectroles**
     - ``sodar-list-dropdown`` layout broke down with Bootstrap 4.2.1 (#23)
+    - ``TASKFLOW_TEST_MODE`` not checked for allowing SODAR Taskflow tests (#126)
+- **Taskflowbackend**
+    - ``TASKFLOW_TEST_MODE`` not checked for allowing ``cleanup()`` (#126)
+    - ``FlowSubmitException`` raised instead of ``CleanupException`` in ``cleanup()``
 
 Removed
 -------

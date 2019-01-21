@@ -7,6 +7,7 @@
 from django.conf import settings
 from django.contrib import auth
 from django.core.urlresolvers import reverse
+from django.core.exceptions import ImproperlyConfigured
 from django.forms.models import model_to_dict
 from django.test import LiveServerTestCase
 
@@ -34,8 +35,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING_TASKFLOW']
-
+SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
+    'SUBMIT_STATUS_PENDING_TASKFLOW']
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
@@ -43,6 +44,9 @@ SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
 TASKFLOW_ENABLED = True if \
     'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
 TASKFLOW_SKIP_MSG = 'Taskflow not enabled in settings'
+TASKFLOW_TEST_MODE = True if (
+    hasattr(settings, 'TASKFLOW_TEST_MODE') and
+    settings.TASKFLOW_TEST_MODE) else False
 
 
 class TestTaskflowBase(LiveServerTestCase, TestCase):
@@ -98,6 +102,12 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
         return role_as
 
     def setUp(self):
+        # Ensure TASKFLOW_TEST_MODE is True to avoid data loss
+        if not TASKFLOW_TEST_MODE:
+            raise ImproperlyConfigured(
+                'TASKFLOW_TEST_MODE not True, '
+                'testing with SODAR Taskflow disabled')
+
         # Get taskflow plugin (or None if taskflow not enabled)
         change_plugin_status(
             name='taskflow',

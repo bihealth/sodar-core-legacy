@@ -493,6 +493,7 @@ ADMINALERTS_PAGINATION = 15
 
 # Taskflow backend settings
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
+TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 
 # SODAR constants
