@@ -520,7 +520,7 @@ a.sodar-nav-link-last {
 }
 
 textarea {
-  height: 125px; /* The "rows" attribute does not work for pagedown */
+  height: 125px !important; /* The "rows" attribute doesn't work for pagedown */
 }
 
 /* Pagedown layout fixes */
