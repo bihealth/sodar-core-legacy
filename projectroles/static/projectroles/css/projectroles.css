@@ -383,6 +383,7 @@ dl dd {
 }
 
 .sodar-list-btn {
+  white-space: nowrap !important;
   padding-top: 0.5px;
   padding-left: 5px;
   padding-right: 5px;
@@ -408,8 +409,8 @@ dl dd {
 }
 
 .sodar-list-dropdown {
+  white-space: nowrap !important;
   height: 26px;
-  width: 50px !important;
   padding: 1px !important;
 }
 

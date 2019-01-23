@@ -49,6 +49,7 @@ Fixed
     - ``TASKFLOW_TEST_MODE`` not checked for allowing SODAR Taskflow tests (#126)
     - Typo in ``update_remote`` timeline event description (#129)
     - Textarea height modification (#125)
+    - Text wrapping in ``sodar-list-btn`` and ``sodar-list-dropdown`` with Bootstrap 4.2.1 (#132)
 - **Taskflowbackend**
     - ``TASKFLOW_TEST_MODE`` not checked for allowing ``cleanup()`` (#126)
     - ``FlowSubmitException`` raised instead of ``CleanupException`` in ``cleanup()``
