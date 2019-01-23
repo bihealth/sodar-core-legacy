@@ -35,6 +35,7 @@ Changed
     - Use ``alert-dismissable`` to dismiss alerts (#13, #130)
     - Update DataTables dependency in ``search.html`` template
     - Refactor ``ProjectModifyMixin`` and ``RemoteProjectAPI`` (#128)
+    - Disable ``USE_I18N`` in example site settings (#117)
 - **Timeline**
     - Refactor ``get_event_description()`` (#30, #128)
 
