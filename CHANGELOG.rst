@@ -32,7 +32,7 @@ Changed
 - **Filesfolders**
     - Refactor ``BatchEditView`` and ``FileForm.clean()`` (#128)
 - **Projectroles**
-    - Use ``alert-dismissible`` to dismiss alerts (#13)
+    - Use ``alert-dismissable`` to dismiss alerts (#13, #130)
     - Update DataTables dependency in ``search.html`` template
     - Refactor ``ProjectModifyMixin`` and ``RemoteProjectAPI`` (#128)
 - **Timeline**
