@@ -56,8 +56,7 @@ class ProjectManager(models.Manager):
         :return: List of Project objects
         """
         search_term = search_term.lower()
-        projects = super(
-            ProjectManager, self).get_queryset().order_by('title')
+        projects = super().get_queryset().order_by('title')
 
         if project_type:
             projects = projects.filter(type=project_type)
@@ -313,7 +312,7 @@ class RoleAssignmentManager(models.Manager):
     def get_assignment(self, user, project):
         """Return assignment of user to project, or None if not found"""
         try:
-            return super(RoleAssignmentManager, self).get_queryset().get(
+            return super().get_queryset().get(
                 user=user, project=project)
 
         except RoleAssignment.DoesNotExist:
@@ -437,7 +436,7 @@ class ProjectSettingManager(models.Manager):
         :return: Value (string)
         :raise: ProjectSetting.DoesNotExist if setting is not found
         """
-        setting = super(ProjectSettingManager, self).get_queryset().get(
+        setting = super().get_queryset().get(
             app_plugin__name=app_name, project=project, name=setting_name)
         return setting.get_value()
 

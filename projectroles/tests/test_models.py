@@ -481,7 +481,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_get_project_delegate(self):
         """Test get_project_delegate() results"""
-        assignment_del = self._make_assignment(
+        self._make_assignment(
             self.project_top, self.user_carol, self.role_delegate)
         self.assertEqual(
             self.project_top.get_delegate().user, self.user_carol)

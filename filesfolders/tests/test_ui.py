@@ -29,7 +29,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     """Tests for filesfolders main file list view UI"""
 
     def setUp(self):
-        super(TestListView, self).setUp()
+        super().setUp()
 
         set_project_setting(
             self.project, APP_NAME, 'allow_public_links', True)
@@ -267,7 +267,7 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     """Tests for the project search UI functionalities"""
 
     def setUp(self):
-        super(TestSearch, self).setUp()
+        super().setUp()
 
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()

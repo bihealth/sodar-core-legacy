@@ -311,7 +311,7 @@ class BaseCreateView(
     """Base File/Folder/HyperLink creation view"""
 
     def get_context_data(self, *args, **kwargs):
-        context = super(BaseCreateView, self).get_context_data(
+        context = super().get_context_data(
             *args, **kwargs)
 
         if 'folder' in self.kwargs:
@@ -326,7 +326,7 @@ class BaseCreateView(
 
     def get_form_kwargs(self):
         """Pass current user and URL kwargs to form"""
-        kwargs = super(BaseCreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
 
         if 'folder' in self.kwargs:
@@ -351,7 +351,7 @@ class ProjectFileView(
     template_name = 'filesfolders/project_files.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectFileView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         project = self._get_project(self.request, self.kwargs)
         context['project'] = project
@@ -472,7 +472,7 @@ class FileCreateView(
         ######################
 
         if not form.cleaned_data.get('unpack_archive'):
-            return super(FileCreateView, self).form_valid(form)
+            return super().form_valid(form)
 
         #####################
         # Zip file unpacking
@@ -626,7 +626,7 @@ class FileServePublicView(FileServeMixin, View):
             {'file': file.sodar_uuid, 'project': file.project.sodar_uuid})
 
         # If successful, return get() from FileServeMixin
-        return super(FileServePublicView, self).get(*args, **kwargs)
+        return super().get(*args, **kwargs)
 
 
 class FilePublicLinkView(
@@ -654,11 +654,11 @@ class FilePublicLinkView(
                 'filesfolders:list',
                 kwargs={'project': file.project.sodar_uuid}))
 
-        return super(FilePublicLinkView, self).get(*args, **kwargs)
+        return super().get(*args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
         """Provide URL to context"""
-        context = super(FilePublicLinkView, self).get_context_data(
+        context = super().get_context_data(
             *args, **kwargs)
 
         try:
@@ -722,46 +722,144 @@ class BatchEditView(
     # NOTE: minimum perm, all checked files will be tested in post()
     permission_required = 'filesfolders.update_data_own'
 
+    #: Items we will delete
+    items = None
+
+    #: Item IDs to be deleted (so we don't have to create them again)
+    item_names = None
+
+    #: Items which we can't delete
+    failed = None
+
+    #: Current action of view
+    batch_action = None
+
+    #: Project object
+    project = None
+
+    def _render_confirmation(self, **kwargs):
+        """Render user confirmation"""
+        context = {
+            'batch_action': self.batch_action,
+            'items': self.items,
+            'item_names': self.item_names,
+            'failed': self.failed,
+            'project': self.project,
+            'folder_check': True}
+
+        if 'folder' in kwargs:
+            context['folder'] = kwargs['folder']
+
+        # NOTE: No modifications needed for "delete" action
+        if self.batch_action == 'move':
+            # Exclude folders to be moved
+            exclude_list = [
+                x.sodar_uuid for x in self.items if type(x) == Folder]
+
+            # Exclude folders under folders to be moved
+            for i in self.items:
+                exclude_list += [
+                    x.sodar_uuid for x in Folder.objects.filter(
+                        project__sodar_uuid=self.project.sodar_uuid)
+                    if x.has_in_path(i)]
+
+            # Exclude current folder
+            if 'folder' in kwargs:
+                exclude_list.append(kwargs['folder'])
+
+            folder_choices = Folder.objects.filter(
+                project__sodar_uuid=self.project.sodar_uuid).exclude(
+                sodar_uuid__in=exclude_list)
+            context['folder_choices'] = folder_choices
+
+            if 'folder' not in kwargs or folder_choices.count() == 0:
+                context['folder_check'] = False
+
+        return super().render_to_response(context)
+
+    def _finalize_edit(self, edit_count, target_folder, **kwargs):
+        """Finalize executed batch operation"""
+        timeline = get_backend_api('timeline_backend')
+
+        edit_suffix = 's' if edit_count != 1 else ''
+        fail_suffix = 's' if len(self.failed) != 1 else ''
+
+        if len(self.failed) > 0:
+            messages.warning(
+                self.request,
+                'Unable to edit {} item{}, check '
+                'permissions and target folder! Failed: {}'.format(
+                    len(self.failed),
+                    fail_suffix,
+                    ', '.join(f.name for f in self.failed)))
+
+        if edit_count > 0:
+            messages.success(self.request, 'Batch {} {} item{}.'.format(
+                'deleted' if self.batch_action == 'delete' else 'moved',
+                edit_count,
+                edit_suffix))
+
+        # Add event in Timeline
+        if timeline:
+            extra_data = {
+                'items': [x.name for x in self.items],
+                'failed': [x.name for x in self.failed]}
+
+            tl_event = timeline.add_event(
+                project=Project.objects.filter(
+                    sodar_uuid=self.project.sodar_uuid).first(),
+                app_name=APP_NAME,
+                user=self.request.user,
+                event_name='batch_{}'.format(self.batch_action),
+                description='batch {} {} item{} {} {}'.format(
+                    self.batch_action,
+                    edit_count,
+                    edit_suffix,
+                    '({} failed)'.format(len(self.failed))
+                    if len(self.failed) > 0 else '',
+                    'to {target_folder}'
+                    if self.batch_action == 'move' and target_folder
+                    else ''),
+                extra_data=extra_data,
+                status_type='OK' if edit_count > 0 else 'FAILED')
+
+            if self.batch_action == 'move' and target_folder:
+                tl_event.add_object(
+                    target_folder, 'target_folder',
+                    target_folder.get_path())
+
+        if 'folder' in kwargs:
+            re_kwargs = {'folder': kwargs['folder']}
+
+        else:
+            re_kwargs = {'project': kwargs['project']}
+
+        return redirect(reverse('filesfolders:list', kwargs=re_kwargs))
+
     def post(self, request, **kwargs):
+        """Handle POST request for modifying items or user confirmation"""
         post_data = request.POST
-        project = self._get_project(request, kwargs)
-
-        #: Items we will delete
-        items = []
-
-        #: Item IDs to be deleted (so we don't have to create them again)
-        item_names = []
-
-        #: Items which we can't delete
-        failed = []
+        self.project = self._get_project(request, kwargs)
+        self.batch_action = post_data['batch-action']
+        self.items = []
+        self.item_names = []
+        self.failed = []
 
         can_update_all = request.user.has_perm(
             'filesfolders.update_data_all', self.get_permission_object())
-
         user_confirmed = bool(int(post_data['user-confirmed']))
-        batch_action = post_data['batch-action']
+        edit_count = 0
         target_folder = None
 
-        if batch_action == 'move' and 'target-folder' in post_data:
-            try:
-                target_folder = Folder.objects.get(
-                    sodar_uuid=post_data['target-folder'])
-
-            except Folder.DoesNotExist:
-                pass
-
-        edit_count = 0
+        if self.batch_action == 'move' and 'target-folder' in post_data:
+            target_folder = Folder.objects.filter(
+                sodar_uuid=post_data['target-folder']).first()
 
         for key in [
                 key for key, val in post_data.items()
                 if key.startswith('batch_item') and val == '1']:
             cls = eval(key.split('_')[2])
-
-            try:
-                item = cls.objects.get(sodar_uuid=key.split('_')[3])
-
-            except cls.DoesNotExist:
-                pass
+            item = cls.objects.filter(sodar_uuid=key.split('_')[3]).first()
 
             #: Item permission
             perm_ok = can_update_all | (item.owner == request.user)
@@ -772,47 +870,42 @@ class BatchEditView(
 
             # Perm check
             if not perm_ok:
-                failed.append(item)
+                self.failed.append(item)
 
             # Moving checks (after user has selected target folder)
-            elif batch_action == 'move' and user_confirmed:
+            elif self.batch_action == 'move' and user_confirmed:
 
                 # Can't move if item with same name in target
                 get_kwargs = {
-                    'project': project,
-                    'folder': target_folder if
-                    target_folder else None,
+                    'project': self.project,
+                    'folder': target_folder if target_folder else None,
                     'name': item.name}
 
-                try:
-                    cls.objects.get(**get_kwargs)
-                    failed.append(item)
-
-                except cls.DoesNotExist:
-                    pass
+                if cls.objects.filter(**get_kwargs):
+                    self.failed.append(item)
 
             # Deletion checks
-            elif batch_action == 'delete':
+            elif self.batch_action == 'delete':
 
                 # Can't delete a non-empty folder
                 if type(item) == Folder and not item.is_empty():
-                    failed.append(item)
+                    self.failed.append(item)
 
             ##############
             # Modify item
             ##############
 
-            if perm_ok and item not in failed:
+            if perm_ok and item not in self.failed:
                 if not user_confirmed:
-                    items.append(item)
-                    item_names.append(key)
+                    self.items.append(item)
+                    self.item_names.append(key)
 
-                elif batch_action == 'move':
+                elif self.batch_action == 'move':
                     item.folder = target_folder
                     item.save()
                     edit_count += 1
 
-                elif batch_action == 'delete':
+                elif self.batch_action == 'delete':
                     item.delete()
                     edit_count += 1
 
@@ -820,105 +913,10 @@ class BatchEditView(
         # Render/redirect
         ##################
 
-        # User confirmed, batch operation done
-        if user_confirmed:
-            edit_suffix = 's' if edit_count != 1 else ''
-            fail_suffix = 's' if len(failed) != 1 else ''
-
-            if len(failed) > 0:
-                messages.warning(
-                    self.request,
-                    'Unable to edit {} item{}, check '
-                    'permissions and target folder! Failed: {}'.format(
-                        len(failed),
-                        fail_suffix,
-                        ', '.join(f.name for f in failed)))
-
-            if edit_count > 0:
-                messages.success(self.request, 'Batch {} {} item{}.'.format(
-                    'deleted' if batch_action == 'delete' else 'moved',
-                    edit_count,
-                    edit_suffix))
-
-            # Add event in Timeline
-            timeline = get_backend_api('timeline_backend')
-
-            if timeline:
-                extra_data = {
-                    'items': [x.name for x in items],
-                    'failed': [x.name for x in failed]}
-
-                tl_event = timeline.add_event(
-                    project=Project.objects.get(sodar_uuid=project.sodar_uuid),
-                    app_name=APP_NAME,
-                    user=self.request.user,
-                    event_name='batch_{}'.format(batch_action),
-                    description='batch {} {} item{} {} {}'.format(
-                        batch_action,
-                        edit_count,
-                        edit_suffix,
-                        '({} failed)'.format(len(failed))
-                        if len(failed) > 0 else '',
-                        'to {target_folder}'
-                        if batch_action == 'move' and target_folder else ''),
-                    extra_data=extra_data,
-                    status_type='OK' if edit_count > 0 else 'FAILED')
-
-                if batch_action == 'move' and target_folder:
-                    tl_event.add_object(
-                        target_folder, 'target_folder',
-                        target_folder.get_path())
-
-            if 'folder' in kwargs:
-                re_kwargs = {'folder': kwargs['folder']}
-
-            else:
-                re_kwargs = {'project': kwargs['project']}
-
-            return redirect(
-                reverse('filesfolders:list', kwargs=re_kwargs))
-
         # Confirmation needed
+        if not user_confirmed:
+            return self._render_confirmation(**kwargs)
+
+        # User confirmed, batch operation done
         else:
-            context = {
-                'batch_action': batch_action,
-                'items': items,
-                'item_names': item_names,
-                'failed': failed,
-                'project': Project.objects.get(sodar_uuid=project.sodar_uuid)}
-
-            if 'folder' in kwargs:
-                context['folder'] = kwargs['folder']
-
-            if batch_action == 'move':
-                # Exclude folders to be moved
-                exclude_list = [
-                    x.sodar_uuid for x in items if type(x) == Folder]
-
-                # Exclude folders under folders to be moved
-                for i in items:
-                    exclude_list += [
-                        x.sodar_uuid for x in Folder.objects.filter(
-                            project__sodar_uuid=project.sodar_uuid)
-                        if x.has_in_path(i)]
-
-                # Exclude current folder
-                if 'folder' in kwargs:
-                    exclude_list.append(kwargs['folder'])
-
-                folder_choices = Folder.objects.filter(
-                    project__sodar_uuid=project.sodar_uuid).exclude(
-                    sodar_uuid__in=exclude_list)
-
-                context['folder_choices'] = folder_choices
-
-                if 'folder' in kwargs or folder_choices.count() > 0:
-                    context['folder_check'] = True
-
-                else:
-                    context['folder_check'] = False
-
-            else:   # Delete
-                context['folder_check'] = True
-
-            return super(TemplateView, self).render_to_response(context)
+            return self._finalize_edit(edit_count, target_folder, **kwargs)

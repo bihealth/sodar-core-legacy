@@ -290,9 +290,8 @@ def get_login_info():
                 settings.AUTH_LDAP2_DOMAIN_PRINTABLE):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
 
-        ret += ' account. Enter your user name as ' \
-               '<code>username@{}</code>'.format(
-                settings.AUTH_LDAP_USERNAME_DOMAIN)
+        ret += ' account. Enter your user name as <code>username@{}' \
+               '</code>'.format(settings.AUTH_LDAP_USERNAME_DOMAIN)
 
         if (settings.ENABLE_LDAP_SECONDARY and
                 settings.AUTH_LDAP2_USERNAME_DOMAIN):
@@ -320,8 +319,8 @@ def get_target_project_select(site, project):
 
     ret = '<select class="form-control form-control-sm" ' \
           'name="remote_access_{project}" ' \
-          'id="sodar-pr-remote-project-select-{project}">\n'.format(
-            project=project.sodar_uuid)
+          'id="sodar-pr-remote-project-select-{project}">' \
+          '\n'.format(project=project.sodar_uuid)
 
     for level in ACTIVE_LEVEL_TYPES:
         selected = False

@@ -58,8 +58,7 @@ class FilesfoldersManager(models.Manager):
         :param keywords: Optional search keywords as key/value pairs (dict)
         :return: Python list of BaseFilesfolderClass objects
         """
-        objects = super(
-            FilesfoldersManager, self).get_queryset().order_by('name')
+        objects = super().get_queryset().order_by('name')
 
         objects = objects.filter(
             Q(name__icontains=search_term) |
@@ -272,11 +271,11 @@ class File(BaseFilesfoldersClass):
     def save(self, *args, **kwargs):
         """Override save for deleting file from database if needed"""
         delete_file_if_needed(self, 'file')
-        super(File, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
         """Override delete for deleting file from database"""
-        super(File, self).delete(*args, **kwargs)
+        super().delete(*args, **kwargs)
         delete_file(self, 'file')
 
 

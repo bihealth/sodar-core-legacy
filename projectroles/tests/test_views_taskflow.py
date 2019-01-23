@@ -142,9 +142,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
         values.update(get_all_settings())  # Add default settings
 
         with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:create'),
-                values)
+            self.client.post(reverse('projectroles:create'), values)
 
         self.category = Project.objects.get(title='TestCategory')
 
@@ -206,7 +204,7 @@ class TestProjectUpdateView(TestTaskflowBase):
     """Tests for Project updating view"""
 
     def setUp(self):
-        super(TestProjectUpdateView, self).setUp()
+        super().setUp()
 
         # Make project with owner in Taskflow and Django
         self.project, self.owner_as = self._make_project_taskflow(
@@ -268,7 +266,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
     """Tests for RoleAssignment creation view"""
 
     def setUp(self):
-        super(TestRoleAssignmentCreateView, self).setUp()
+        super().setUp()
 
         # Make project with owner in Taskflow and Django
         self.project, self.owner_as = self._make_project_taskflow(
@@ -326,7 +324,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
     """Tests for RoleAssignment update view with taskflow"""
 
     def setUp(self):
-        super(TestRoleAssignmentUpdateView, self).setUp()
+        super().setUp()
 
         # Make project with owner in Taskflow and Django
         self.project, self.owner_as = self._make_project_taskflow(
@@ -387,7 +385,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
     """Tests for RoleAssignment delete view """
 
     def setUp(self):
-        super(TestRoleAssignmentDeleteView, self).setUp()
+        super().setUp()
 
         # Make project with owner in Taskflow and Django
         self.project, self.owner_as = self._make_project_taskflow(
@@ -430,7 +428,7 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
     """Tests for ProjectInvite accepting view with taskflow"""
 
     def setUp(self):
-        super(TestProjectInviteAcceptView, self).setUp()
+        super().setUp()
 
         # Make project with owner in Taskflow and Django
         self.project, self.owner_as = self._make_project_taskflow(

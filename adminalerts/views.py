@@ -7,8 +7,8 @@ from django.views.generic import DetailView, UpdateView, CreateView, \
 from django.views.generic.edit import ModelFormMixin
 
 # Projectroles dependency
-from projectroles.views import LoginRequiredMixin, LoggedInPermissionMixin,\
-    HTTPRefererMixin, CurrentUserFormMixin
+from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin, \
+    CurrentUserFormMixin
 
 from .forms import AdminAlertForm
 from .models import AdminAlert

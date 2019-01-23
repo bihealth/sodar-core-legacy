@@ -75,8 +75,7 @@ def get_flag(flag_name, tooltip=True):
                   'data-placement="top"'.format(f['label'])
 
     return '<i class="fa fa-{} fa-fw text-{} sodar-ff-flag-icon" {}>' \
-           '</i>'.format(
-                f['icon'], f['color'], tip_str)
+           '</i>'.format(f['icon'], f['color'], tip_str)
 
 
 @register.simple_tag

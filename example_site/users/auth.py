@@ -69,4 +69,3 @@ def cbv_decorator_from_middleware(middleware):
 #: Decorator for ``FallbackToAuthBasicMiddleware``
 fallback_to_auth_basic = cbv_decorator_from_middleware(
     FallbackToAuthBasicMiddleware)
-

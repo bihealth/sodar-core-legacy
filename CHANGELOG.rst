@@ -13,6 +13,9 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Flake8 and Codacy coverage in Travis-CI (#122)
+    - Flake8 in GitLab-CI (#127)
 - **Projectroles**
     - Automatically pass CSRF token to unsafe Ajax HTTP methods (#116)
 
@@ -25,9 +28,15 @@ Changed
     - Update .coveragerc
     - Upgrade to Bootstrap 4.2.1 (#23)
     - Upgrade to JQuery 3.3.1 (#23)
+    - General code cleanup
+- **Filesfolders**
+    - Refactor ``BatchEditView`` and ``FileForm.clean()`` (#128)
 - **Projectroles**
     - Use ``alert-dismissible`` to dismiss alerts (#13)
     - Update DataTables dependency in ``search.html`` template
+    - Refactor ``ProjectModifyMixin`` and ``RemoteProjectAPI`` (#128)
+- **Timeline**
+    - Refactor ``get_event_description()`` (#30, #128)
 
 Fixed
 -----
@@ -42,8 +51,12 @@ Fixed
 Removed
 -------
 
+- **General**
+    - Legacy Python2 ``super()`` calls (#118)
 - **Projectroles**
     - Custom alert dismissal script (#13)
+- **Example Site App**
+    - Example file ``test.py``
 
 
 v0.4.1 (2019-01-11)

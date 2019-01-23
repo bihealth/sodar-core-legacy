@@ -6,7 +6,7 @@ from django.utils.timezone import localtime
 from projectroles.plugins import ProjectAppPluginPoint
 
 from timeline.api import TimelineAPI
-from timeline.models import ProjectEvent, ProjectEventStatus
+from timeline.models import ProjectEvent
 
 register = template.Library()
 

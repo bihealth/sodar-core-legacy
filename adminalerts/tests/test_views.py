@@ -33,7 +33,7 @@ class TestViewsBase(TestCase, AdminAlertMixin):
             require_auth=True)
 
         self.expiry_str = (timezone.now() + timezone.timedelta(
-                days=1)).strftime('%Y-%m-%d')
+            days=1)).strftime('%Y-%m-%d')
 
 
 class TestAdminAlertListView(TestViewsBase):

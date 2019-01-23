@@ -145,7 +145,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         """Override has_permission() for this mixin also to work with admin
         users without a permission object"""
         try:
-            return super(LoggedInPermissionMixin, self).has_permission()
+            return super().has_permission()
 
         except AttributeError:
             if self.request.user.is_superuser:
@@ -178,7 +178,7 @@ class ProjectModifyPermissionMixin(
 
     def has_permission(self):
         """Override has_permission() to check remote project status"""
-        perm = super(ProjectModifyPermissionMixin, self).has_permission()
+        perm = super().has_permission()
         project = self._get_project(self.request, self.kwargs)
         return False if project.is_remote() else perm
 
@@ -200,7 +200,7 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 
     def has_permission(self):
         """Override has_permission to check perms depending on role"""
-        if not super(RolePermissionMixin, self).has_permission():
+        if not super().has_permission():
             return False
 
         try:
@@ -241,7 +241,7 @@ class HTTPRefererMixin:
                     referer != request.build_absolute_uri()):
                 request.session['real_referer'] = referer
 
-        return super(HTTPRefererMixin, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
@@ -249,8 +249,7 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
     extending it. Includes HTTPRefererMixin for correct referer URL"""
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectContextMixin, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         # Project
         if hasattr(self, 'object') and isinstance(self.object, Project):
@@ -282,8 +281,7 @@ class PluginContextMixin(ContextMixin):
     """Mixin for adding plugin list to context data"""
 
     def get_context_data(self, *args, **kwargs):
-        context = super(PluginContextMixin, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         app_plugins = get_active_plugins(plugin_type='project_app')
 
@@ -305,7 +303,7 @@ class CurrentUserFormMixin(ModelFormMixin):
     """Mixin for passing current user to form as current_user"""
 
     def get_form_kwargs(self):
-        kwargs = super(CurrentUserFormMixin, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
 
@@ -319,7 +317,7 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
     template_name = 'projectroles/home.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(HomeView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         context['count_categories'] = Project.objects.filter(
             type=PROJECT_TYPE_CATEGORY).count()
@@ -354,8 +352,7 @@ class ProjectDetailView(
     slug_field = 'sodar_uuid'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectDetailView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         if self.request.user.is_superuser:
             context['role'] = None
@@ -379,8 +376,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
     template_name = 'projectroles/search.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectSearchView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         plugins = get_active_plugins(plugin_type='project_app')
 
@@ -455,7 +451,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
             messages.error(request, 'Please check your search input')
             return redirect('home')
 
-        return super(TemplateView, self).render_to_response(context)
+        return super().render_to_response(context)
 
 
 # Project Editing Views --------------------------------------------------------
@@ -464,7 +460,133 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
 class ProjectModifyMixin(ModelFormMixin):
     """Mixin for Project creation/updating"""
 
+    @staticmethod
+    def _get_old_project_data(project):
+        return {
+            'title': project.title,
+            'description': project.description,
+            'readme': project.readme.raw,
+            'owner': project.get_owner().user}
+
+    @staticmethod
+    def _get_project_update_data(old_data, project, owner, project_settings):
+        extra_data = {}
+        upd_fields = []
+
+        if old_data['title'] != project.title:
+            extra_data['title'] = project.title
+            upd_fields.append('title')
+
+        if old_data['owner'] != owner:
+            extra_data['owner'] = owner.username
+            upd_fields.append('owner')
+
+        if old_data['description'] != project.description:
+            extra_data['description'] = project.description
+            upd_fields.append('description')
+
+        if old_data['readme'] != project.readme.raw:
+            extra_data['readme'] = project.readme.raw
+            upd_fields.append('readme')
+
+        # Settings
+        for k, v in project_settings.items():
+            old_v = get_project_setting(
+                project, k.split('.')[1], k.split('.')[2])
+
+            if old_v != v:
+                extra_data[k] = v
+                upd_fields.append(k)
+
+        return extra_data, upd_fields
+
+    def _submit_with_taskflow(
+            self, project, owner, project_settings, form_action, tl_event):
+        """Submit project modification flow via SODAR Taskflow"""
+        taskflow = get_backend_api('taskflow')
+
+        if tl_event:
+            tl_event.set_status('SUBMIT')
+
+        flow_data = {
+            'project_title': project.title,
+            'project_description': project.description,
+            'parent_uuid': str(project.parent.sodar_uuid) if
+            project.parent else 0,
+            'owner_username': owner.username,
+            'owner_uuid': str(owner.sodar_uuid),
+            'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
+            'settings': project_settings}
+
+        if form_action == 'update':
+            old_owner = project.get_owner().user
+            flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
+            flow_data['old_owner_username'] = old_owner.username
+            flow_data['project_readme'] = project.readme.raw
+
+        try:
+            taskflow.submit(
+                project_uuid=str(project.sodar_uuid),
+                flow_name='project_{}'.format(form_action),
+                flow_data=flow_data,
+                request=self.request)
+
+        except (
+                requests.exceptions.ConnectionError,
+                taskflow.FlowSubmitException) as ex:
+            # NOTE: No need to update status as project will be deleted
+            if form_action == 'create':
+                project.delete()
+
+            elif tl_event:  # Update
+                tl_event.set_status('FAILED', str(ex))
+
+            messages.error(self.request, str(ex))
+
+            if form_action == 'create' and project.parent:
+                redirect_url = reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.parent.sodar_uuid})
+
+            elif form_action == 'create':  # No parent
+                redirect_url = reverse('home')
+
+            else:  # Update
+                redirect_url = reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid})
+
+            return HttpResponseRedirect(redirect_url)
+
+    def _handle_local_save(self, project, owner, project_settings):
+        """Handle local saving of project data if SODAR Taskflow is not
+        enabled"""
+        # Modify owner role if it does exist
+        try:
+            assignment = RoleAssignment.objects.get(
+                project=project, role__name=PROJECT_ROLE_OWNER)
+            assignment.user = owner
+            assignment.save()
+
+        # Else create a new one
+        except RoleAssignment.DoesNotExist:
+            assignment = RoleAssignment(
+                project=project,
+                user=owner,
+                role=Role.objects.get(name=PROJECT_ROLE_OWNER))
+            assignment.save()
+
+        # Modify settings
+        for k, v in project_settings.items():
+            set_project_setting(
+                project=project,
+                app_name=k.split('.')[1],
+                setting_name=k.split('.')[2],
+                value=v,
+                validate=False)  # Already validated in form
+
     def form_valid(self, form):
+        """Handle project updating if form is valid"""
         taskflow = get_backend_api('taskflow')
         timeline = get_backend_api('timeline_backend')
 
@@ -481,12 +603,7 @@ class ProjectModifyMixin(ModelFormMixin):
 
         if self.object:
             project = self.get_object()
-
-            old_data['title'] = project.title
-            old_data['description'] = project.description
-            old_data['readme'] = project.readme.raw
-            old_data['owner'] = project.get_owner().user
-
+            old_data = self._get_old_project_data(project)  # Store old data
             project.title = form.cleaned_data.get('title')
             project.description = form.cleaned_data.get('description')
             project.type = form.cleaned_data.get('type')
@@ -513,9 +630,7 @@ class ProjectModifyMixin(ModelFormMixin):
             project.save()
 
         owner = form.cleaned_data.get('owner')
-        extra_data = {}
-        type_str = 'Project' if \
-            project.type == PROJECT_TYPE_PROJECT else 'Category'
+        type_str = project.type.capitalize()
 
         # Get settings
         project_settings = {}
@@ -537,32 +652,8 @@ class ProjectModifyMixin(ModelFormMixin):
 
             else:   # Update
                 tl_desc = 'update ' + type_str.lower()
-                upd_fields = []
-
-                if old_data['title'] != project.title:
-                    extra_data['title'] = project.title
-                    upd_fields.append('title')
-
-                if old_data['owner'] != owner:
-                    extra_data['owner'] = owner.username
-                    upd_fields.append('owner')
-
-                if old_data['description'] != project.description:
-                    extra_data['description'] = project.description
-                    upd_fields.append('description')
-
-                if old_data['readme'] != project.readme.raw:
-                    extra_data['readme'] = project.readme.raw
-                    upd_fields.append('readme')
-
-                # Settings
-                for k, v in project_settings.items():
-                    old_v = get_project_setting(
-                        project, k.split('.')[1], k.split('.')[2])
-
-                    if old_v != v:
-                        extra_data[k] = v
-                        upd_fields.append(k)
+                extra_data, upd_fields = self._get_project_update_data(
+                    old_data, project, owner, project_settings)
 
                 if len(upd_fields) > 0:
                     tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
@@ -578,89 +669,17 @@ class ProjectModifyMixin(ModelFormMixin):
             if form_action == 'create':
                 tl_event.add_object(owner, 'owner', owner.username)
 
-        # Submit with taskflow
+        # Submit with Taskflow
         if use_taskflow:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
+            response = self._submit_with_taskflow(
+                project, owner, project_settings, form_action, tl_event)
 
-            flow_data = {
-                'project_title': project.title,
-                'project_description': project.description,
-                'parent_uuid': str(project.parent.sodar_uuid) if
-                project.parent else 0,
-                'owner_username': owner.username,
-                'owner_uuid': str(owner.sodar_uuid),
-                'owner_role_pk': Role.objects.get(
-                    name=PROJECT_ROLE_OWNER).pk,
-                'settings': project_settings}
-
-            if form_action == 'update':
-                old_owner = project.get_owner().user
-                flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
-                flow_data['old_owner_username'] = old_owner.username
-                flow_data['project_readme'] = project.readme.raw
-
-            try:
-                taskflow.submit(
-                    project_uuid=str(project.sodar_uuid),
-                    flow_name='project_{}'.format(form_action),
-                    flow_data=flow_data,
-                    request=self.request)
-
-            except (
-                    requests.exceptions.ConnectionError,
-                    taskflow.FlowSubmitException) as ex:
-                # NOTE: No need to update status as project will be deleted
-                if form_action == 'create':
-                    project.delete()
-
-                else:
-                    if tl_event:
-                        tl_event.set_status('FAILED', str(ex))
-
-                messages.error(self.request, str(ex))
-
-                if form_action == 'create':
-                    if project.parent:
-                        redirect_url = reverse(
-                            'projectroles:detail',
-                            kwargs={'project': project.parent.sodar_uuid})
-
-                    else:
-                        redirect_url = reverse('home')
-
-                else:   # Update
-                    redirect_url = reverse(
-                        'projectroles:detail',
-                        kwargs={'project': project.sodar_uuid})
-
-                return HttpResponseRedirect(redirect_url)
+            if response:
+                return response  # Exception encountered with Taskflow
 
         # Local save without Taskflow
         else:
-            # Modify owner role if it does exist
-            try:
-                assignment = RoleAssignment.objects.get(
-                    project=project, role__name=PROJECT_ROLE_OWNER)
-                assignment.user = owner
-                assignment.save()
-
-            # Else create a new one
-            except RoleAssignment.DoesNotExist:
-                assignment = RoleAssignment(
-                    project=project,
-                    user=owner,
-                    role=Role.objects.get(name=PROJECT_ROLE_OWNER))
-                assignment.save()
-
-            # Modify settings
-            for k, v in project_settings.items():
-                set_project_setting(
-                    project=project,
-                    app_name=k.split('.')[1],
-                    setting_name=k.split('.')[2],
-                    value=v,
-                    validate=False)     # Already validated in form
+            self._handle_local_save(project, owner, project_settings)
 
         # Post submit/save
         if form_action == 'create':
@@ -685,8 +704,7 @@ class ProjectCreateView(
     form_class = ProjectForm
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectCreateView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         if 'project' in self.kwargs:
             context['parent'] = Project.objects.get(
@@ -696,7 +714,7 @@ class ProjectCreateView(
 
     def get_form_kwargs(self):
         """Pass URL arguments to form"""
-        kwargs = super(ProjectCreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
         kwargs.update({'current_user': self.request.user})
         return kwargs
@@ -722,7 +740,7 @@ class ProjectCreateView(
                     'projectroles:detail',
                     kwargs={'project': project.sodar_uuid}))
 
-        return super(ProjectCreateView, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class ProjectUpdateView(
@@ -737,7 +755,7 @@ class ProjectUpdateView(
     slug_field = 'sodar_uuid'
 
     def get_form_kwargs(self):
-        kwargs = super(ProjectUpdateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
 
@@ -755,7 +773,7 @@ class ProjectRoleView(
     model = Project
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectRoleView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         context['owner'] = context['project'].get_owner()
         context['delegate'] = context['project'].get_delegate()
         context['members'] = context['project'].get_members()
@@ -766,8 +784,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
     """Mixin for RoleAssignment creation and updating"""
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RoleAssignmentModifyMixin, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         change_type = self.request.resolver_match.url_name.split('_')[1]
         project = self._get_project(self.request, self.kwargs)
@@ -890,7 +907,7 @@ class RoleAssignmentCreateView(
 
     def get_form_kwargs(self):
         """Pass URL arguments and current user to form"""
-        kwargs = super(RoleAssignmentCreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
         kwargs.update({'current_user': self.request.user})
         return kwargs
@@ -909,7 +926,7 @@ class RoleAssignmentUpdateView(
 
     def get_form_kwargs(self):
         """Pass current user to form"""
-        kwargs = super(RoleAssignmentUpdateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
 
@@ -995,7 +1012,7 @@ class RoleAssignmentDeleteView(
 
     def get_form_kwargs(self):
         """Pass current user to form"""
-        kwargs = super(RoleAssignmentDeleteView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
 
@@ -1070,8 +1087,7 @@ class ProjectInviteView(
     model = ProjectInvite
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectInviteView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         context['invites'] = ProjectInvite.objects.filter(
             project=context['project'], active=True,
@@ -1090,8 +1106,7 @@ class ProjectInviteCreateView(
     permission_required = 'projectroles.invite_users'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectInviteCreateView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         project = self.get_permission_object()
 
@@ -1110,7 +1125,7 @@ class ProjectInviteCreateView(
 
     def get_form_kwargs(self):
         """Pass current user to form"""
-        kwargs = super(ProjectInviteCreateView, self).get_form_kwargs()
+        kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
         return kwargs
@@ -1302,8 +1317,7 @@ class ProjectInviteRevokeView(
     permission_required = 'projectroles.invite_users'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(ProjectInviteRevokeView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         context['project'] = self._get_project(self.request, self.kwargs)
 
         if 'projectinvite' in self.kwargs:
@@ -1360,8 +1374,7 @@ class RemoteSiteListView(
     template_name = 'projectroles/remote_sites.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RemoteSiteListView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         site_mode = (
             SITE_MODE_TARGET if
@@ -1387,7 +1400,7 @@ class RemoteSiteListView(
                 'remote project sync disabled')
             return redirect('home')
 
-        return super(RemoteSiteListView, self).get(request, *args, **kwargs)
+        return super().get(request, *args, **kwargs)
 
 
 class RemoteSiteModifyMixin(ModelFormMixin):
@@ -1425,7 +1438,7 @@ class RemoteSiteCreateView(
             messages.error(request, 'Source site has already been set')
             return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
-        return super(RemoteSiteCreateView, self).get(request, args, kwargs)
+        return super().get(request, args, kwargs)
 
 
 class RemoteSiteUpdateView(
@@ -1466,8 +1479,7 @@ class RemoteProjectListView(
     template_name = 'projectroles/remote_projects.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RemoteProjectListView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
         context['site'] = site
@@ -1498,8 +1510,7 @@ class RemoteProjectsBatchUpdateView(
     template_name = 'projectroles/remoteproject_update.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RemoteProjectsBatchUpdateView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         # Current site
         try:
@@ -1565,7 +1576,7 @@ class RemoteProjectsBatchUpdateView(
 
             context['modifying_access'] = modifying_access
 
-            return super(TemplateView, self).render_to_response(context)
+            return super().render_to_response(context)
 
         ############
         # Confirmed
@@ -1588,16 +1599,16 @@ class RemoteProjectsBatchUpdateView(
 
             if timeline:
                 project = Project.objects.get(sodar_uuid=project_uuid)
+                tl_desc = 'update remote access for site {{{}}} to {})'.format(
+                    'site', v, SODAR_CONSTANTS[
+                        'REMOTE_ACCESS_LEVELS'][v].lower())
 
                 tl_event = timeline.add_event(
                     project=project,
                     app_name=APP_NAME,
                     user=request.user,
                     event_name='update_remote',
-                    description=
-                    'update remote access for site {{{}}} to {})'.format(
-                        'site', v,
-                        SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower()),
+                    description=tl_desc,
                     classified=True,
                     status_type='OK')
 
@@ -1621,8 +1632,7 @@ class RemoteProjectsSyncView(
     template_name = 'projectroles/remoteproject_sync.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super(RemoteProjectsSyncView, self).get_context_data(
-            *args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         # Current site
         try:
@@ -1692,7 +1702,7 @@ class RemoteProjectsSyncView(
         context['role_count'] = role_count
         messages.success(
             request, 'Project data updated according to source site')
-        return super(TemplateView, self).render_to_response(context)
+        return super().render_to_response(context)
 
 
 # Base SODAR API Views ---------------------------------------------------------

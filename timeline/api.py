@@ -26,6 +26,61 @@ User = get_user_model()
 class TimelineAPI:
     """Timeline backend API to be used by Django apps."""
 
+    # Helpers ------------------------------------------------------------------
+
+    @staticmethod
+    def _get_label(label):
+        """Format label to be displayed"""
+        if not {' ', '-'}.intersection(label):
+            return Truncator(label).chars(LABEL_MAX_WIDTH)
+        return label
+
+    @staticmethod
+    def _get_not_found_label(ref_obj, history_link):
+        """Get label for object which is not found in db"""
+        return '<span class="text-danger">{}</span> {}'.format(
+            TimelineAPI._get_label(ref_obj.name), history_link)
+
+    @staticmethod
+    def _get_project_desc(ref_obj, request=None):
+        """Get description HTML for special case: Project model"""
+        project = Project.objects.filter(sodar_uuid=ref_obj.object_uuid).first()
+
+        if project and request and request.user.has_perm(
+                'projectroles.view_project', project):
+            return '<a href="{}">{}</a>'.format(
+                reverse(
+                    'projetroles:detail',
+                    kwargs={'project': project.sodar_uuid}),
+                TimelineAPI._get_label(project.title))
+
+        elif project:
+            return '<span class="text-danger">{}</span>'.format(
+                TimelineAPI._get_label(project.title))
+
+        return ref_obj.name
+
+    @staticmethod
+    def _get_remote_site_desc(ref_obj, history_link, request=None):
+        """Get description HTML for special case: RemoteSite model"""
+        site = RemoteSite.objects.filter(
+            sodar_uuid=ref_obj.object_uuid).first()
+
+        if site and request and request.user.is_superuser:
+            return '<a href="{}">{}</a> {}'.format(
+                reverse(
+                    'projectroles:remote_projects',
+                    kwargs={'remotesite': site.sodar_uuid}),
+                site.name,
+                history_link)
+
+        elif site:
+            return site.name
+
+        return TimelineAPI._get_not_found_label(ref_obj, history_link)
+
+    # API functions ------------------------------------------------------------
+
     @staticmethod
     def add_event(
             project, app_name, user, event_name, description,
@@ -108,23 +163,11 @@ class TimelineAPI:
         """
         desc = event.description
         unknown_label = '(unknown)'
+        refs = {}
         ref_ids = re.findall("{'?(.*?)'?}", desc)
 
         if len(ref_ids) == 0:
             return event.description
-
-        refs = {}
-
-        def get_label(label):
-            """Format label to be displayed"""
-            if not {' ', '-'}.intersection(label):
-                return Truncator(label).chars(LABEL_MAX_WIDTH)
-            return label
-
-        def get_not_found_label(ref_obj, history_link):
-            """Get label for object which is not found in db"""
-            return '<span class="text-danger">{}</span> {}'.format(
-                get_label(ref_obj.name), history_link)
 
         for r in ref_ids:
             # Get reference object or return an unknown label if not found
@@ -132,14 +175,14 @@ class TimelineAPI:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
                 refs[r] = app_plugin.get_extra_data_link(event.extra_data, r)
                 continue
-            else:
-                try:
-                    ref_obj = ProjectEventObjectRef.objects.get(
-                        event=event, label=r)
 
-                except ProjectEventObjectRef.DoesNotExist:
-                    refs[r] = unknown_label
-                    continue
+            try:
+                ref_obj = ProjectEventObjectRef.objects.get(
+                    event=event, label=r)
+
+            except ProjectEventObjectRef.DoesNotExist:
+                refs[r] = unknown_label
+                continue
 
             # Get history link
             history_url = reverse('timeline:list_object', kwargs={
@@ -162,54 +205,21 @@ class TimelineAPI:
 
             # Special case: Project model
             elif ref_obj.object_model == 'Project':
-                try:
-                    project = Project.objects.get(
-                        sodar_uuid=ref_obj.object_uuid)
-
-                    if request and request.user.has_perm(
-                            'projectroles.view_project', project):
-                        refs[r] = '<a href="{}">{}</a>'.format(
-                            reverse(
-                                'projetroles:detail',
-                                kwargs={'project': project.sodar_uuid}),
-                            get_label(project.title))
-
-                    else:
-                        refs[r] = \
-                            '<span class="text-danger">{}</span>'.format(
-                                get_label(project.title))
-
-                except Project.DoesNotExist:
-                    refs[r] = ref_obj.name
+                refs[r] = TimelineAPI._get_project_desc(ref_obj, request)
 
             # Special case: RemoteSite model
             elif ref_obj.object_model == 'RemoteSite':
-                try:
-                    site = RemoteSite.objects.get(
-                        sodar_uuid=ref_obj.object_uuid)
-
-                    if request and request.user.is_superuser:
-                        refs[r] = '<a href="{}">{}</a> {}'.format(
-                            reverse(
-                                'projectroles:remote_projects',
-                                kwargs={'remotesite': site.sodar_uuid}),
-                            site.name,
-                            history_link)
-
-                    else:
-                        refs[r] = site.name
-
-                except RemoteSite.DoesNotExist:
-                    refs[r] = get_not_found_label(ref_obj, history_link)
+                refs[r] = TimelineAPI._get_remote_site_desc(
+                    ref_obj, history_link, request)
 
             # Special case: projectroles app
             elif event.app == 'projectroles':
-                refs[r] = get_not_found_label(ref_obj, history_link)
+                refs[r] = TimelineAPI._get_not_found_label(
+                    ref_obj, history_link)
 
             # Apps with plugins
             else:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
-
                 link_data = app_plugin.get_object_link(
                     ref_obj.object_model, ref_obj.object_uuid)
 
@@ -219,11 +229,12 @@ class TimelineAPI:
                         ('target="_blank"'
                          if 'blank' in link_data and
                             link_data['blank'] is True else ''),
-                        get_label(link_data['label']),
+                        TimelineAPI._get_label(link_data['label']),
                         history_link)
 
                 else:
-                    refs[r] = get_not_found_label(ref_obj, history_link)
+                    refs[r] = TimelineAPI._get_not_found_label(
+                        ref_obj, history_link)
 
         return event.description.format(**refs)
 
@@ -251,5 +262,5 @@ class TimelineAPI:
         :return: String (contains HTML)
         """
         return '<a href="{}" class="sodar-tl-object-link">' \
-               '<i class="fa fa-clock-o"></i></a>'.format(
-                TimelineAPI.get_object_url(project_uuid, obj))
+               '<i class="fa fa-clock-o"></i>' \
+               '</a>'.format(TimelineAPI.get_object_url(project_uuid, obj))

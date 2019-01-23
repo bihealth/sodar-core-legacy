@@ -1,6 +1,5 @@
 """Plugin tests for the adminalerts app"""
 
-from django.urls import reverse
 from test_plus.test import TestCase
 
 # Projectroles dependency

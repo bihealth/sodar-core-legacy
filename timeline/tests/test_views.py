@@ -27,7 +27,7 @@ class TestViewsBase(
     """Base class for timeline view testing"""
 
     def setUp(self):
-        super(TestViewsBase, self).setUp()
+        super().setUp()
         self.timeline = get_backend_api('timeline_backend')
 
         # Init roles
@@ -79,7 +79,7 @@ class TestObjectListView(TestViewsBase):
     """Tests for the timeline object list view"""
 
     def setUp(self):
-        super(TestObjectListView, self).setUp()
+        super().setUp()
 
         # Add user as an object reference
         self.ref_obj = self.event.add_object(
@@ -104,7 +104,7 @@ class TestTaskflowSetStatusAPIView(TestViewsBase):
     """Tests for the taskflow status setting API view"""
 
     def setUp(self):
-        super(TestTaskflowSetStatusAPIView, self).setUp()
+        super().setUp()
 
         # Init default event
         self.event_init = self.timeline.add_event(

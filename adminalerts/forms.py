@@ -16,7 +16,7 @@ class AdminAlertForm(forms.ModelForm):
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(AdminAlertForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.current_user = current_user
 
@@ -51,7 +51,7 @@ class AdminAlertForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(AdminAlertForm, self).save(commit=False)
+        obj = super().save(commit=False)
         obj.user = self.current_user
         obj.save()
         return obj

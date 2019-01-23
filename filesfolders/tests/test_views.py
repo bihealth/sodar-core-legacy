@@ -311,7 +311,7 @@ class TestFileCreateView(TestViewsBase):
             owner=self.user,
             description='')
 
-        ow_file = self._make_file(
+        self._make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
             file_content=self.file_content,
@@ -381,7 +381,7 @@ class TestFileCreateView(TestViewsBase):
             owner=self.user,
             description='')
 
-        ow_file = self._make_file(
+        self._make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
             file_content=self.file_content,
@@ -464,7 +464,7 @@ class TestFileUpdateView(TestViewsBase):
     def test_update_existing(self):
         """Test file update with a file name that already exists (should fail)"""
 
-        new_file = self._make_file(
+        self._make_file(
             name='file2.txt',
             file_name='file2.txt',
             file_content=self.file_content,
@@ -1176,7 +1176,7 @@ class TestBatchEditView(TestViewsBase):
         new_folder = self._make_folder(
             'new_folder', self.project, None, self.user, '')
 
-        new_file = self._make_file(
+        self._make_file(
             name='new_file.txt',
             file_name='new_file.txt',
             file_content=self.file_content,
@@ -1256,7 +1256,7 @@ class TestBatchEditView(TestViewsBase):
         target_folder = self._make_folder(
             'target_folder', self.project, None, self.user, '')
 
-        new_file = self._make_file(
+        self._make_file(
             name='file.txt',    # Same name as self.file
             file_name='file.txt',
             file_content=self.file_content,

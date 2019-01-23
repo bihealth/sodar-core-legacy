@@ -18,7 +18,7 @@ class ExampleView(
 
     def get_context_data(self, *args, **kwargs):
         """Override get_context_data() to demonstrate using a backend app"""
-        context = super(ExampleView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         # Get API and data from backend into context
         example_api = get_backend_api('example_backend_app')

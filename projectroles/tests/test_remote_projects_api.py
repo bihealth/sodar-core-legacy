@@ -10,7 +10,7 @@ from django.test import override_settings
 from test_plus.test import TestCase
 
 from projectroles.models import Project, Role, RoleAssignment, \
-    RemoteSite, RemoteProject, SODAR_CONSTANTS
+    RemoteProject, SODAR_CONSTANTS
 
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import build_secret
@@ -114,7 +114,7 @@ class TestGetTargetData(
 
     def test_view_avail(self):
         """Test get data with project level of VIEW_AVAIL (view availability)"""
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_VIEW_AVAIL)
@@ -137,7 +137,7 @@ class TestGetTargetData(
 
     def test_read_info(self):
         """Test get data with project level of READ_INFO (read information)"""
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO)
@@ -176,7 +176,7 @@ class TestGetTargetData(
         self.project.parent = sub_category
         self.project.save()
 
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO)
@@ -218,7 +218,7 @@ class TestGetTargetData(
 
     def test_read_roles(self):
         """Test get data with project level of READ_ROLES (read roles)"""
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
             level=REMOTE_LEVEL_READ_ROLES)
@@ -613,12 +613,12 @@ class TestSyncSourceData(
             project_obj, target_user, self.role_owner)
 
         # Set up RemoteProject objects
-        remote_cat = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=category_obj.sodar_uuid,
             project=category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=project_obj.sodar_uuid,
             project=project_obj,
             site=self.source_site,
@@ -782,17 +782,17 @@ class TestSyncSourceData(
             first_name=SOURCE_USER_FIRST_NAME,
             last_name=SOURCE_USER_LAST_NAME,
             email=SOURCE_USER_EMAIL)
-        c_owner_obj = self._make_assignment(
+        self._make_assignment(
             category_obj, target_user, self.role_owner)
-        p_owner_obj = self._make_assignment(
+        self._make_assignment(
             project_obj, target_user, self.role_owner)
 
         # Set up RemoteProject objects
-        remote_cat = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=category_obj.sodar_uuid,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=project_obj.sodar_uuid,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
@@ -830,9 +830,9 @@ class TestSyncSourceData(
         # Assert remote_data changes
         expected = original_data
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
-                'user': new_user_username,
-                'role': PROJECT_ROLE_CONTRIBUTOR,
-                'status': 'deleted'}
+            'user': new_user_username,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'status': 'deleted'}
 
         self.assertEqual(remote_data, expected)
 
@@ -869,12 +869,12 @@ class TestSyncSourceData(
             project_obj, target_user, self.role_owner)
 
         # Set up RemoteProject objects
-        remote_cat = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=category_obj.sodar_uuid,
             project=category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES)
-        remote_project = self._make_remote_project(
+        self._make_remote_project(
             project_uuid=project_obj.sodar_uuid,
             project=project_obj,
             site=self.source_site,
