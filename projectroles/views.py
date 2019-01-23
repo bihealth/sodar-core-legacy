@@ -1599,7 +1599,7 @@ class RemoteProjectsBatchUpdateView(
 
             if timeline:
                 project = Project.objects.get(sodar_uuid=project_uuid)
-                tl_desc = 'update remote access for site {{{}}} to {})'.format(
+                tl_desc = 'update remote access for site {{{}}} to {}'.format(
                     'site', v, SODAR_CONSTANTS[
                         'REMOTE_ACCESS_LEVELS'][v].lower())
 
