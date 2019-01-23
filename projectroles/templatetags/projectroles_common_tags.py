@@ -130,8 +130,8 @@ def get_project_link(project, full_title=False, request=None):
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
     return '<a title="{}" href="mailto:{}" data-toggle="tooltip" ' \
-           'data-placement="top">{}</a>'.format(
-                user.get_full_name(), user.email, user.username)
+           'data-placement="top">{}' \
+           '</a>'.format(user.get_full_name(), user.email, user.username)
 
 
 @register.simple_tag
@@ -176,9 +176,9 @@ def get_remote_icon(project, request):
         try:
             remote_project = RemoteProject.objects.get(project=project)
             return '<i class="fa fa-globe text-info mx-1 ' \
-                   'sodar-pr-remote-project-icon" title="{}" ' \
-                   'data-toggle="tooltip" data-placement="top"></i>'.format(
-                    'Remote project from ' + remote_project.site.name)
+                   'sodar-pr-remote-project-icon" title="Remote project from ' \
+                   '{}" data-toggle="tooltip" data-placement="top">' \
+                   '</i>'.format(remote_project.site.name)
 
         except RemoteProject.DoesNotExist:
             pass

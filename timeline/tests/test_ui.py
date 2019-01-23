@@ -1,6 +1,5 @@
 """UI tests for the timeline app"""
 
-from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -26,7 +25,7 @@ class TestListView(
     """Tests for the timeline list view UI"""
 
     def setUp(self):
-        super(TestListView, self).setUp()
+        super().setUp()
 
         self.timeline = get_backend_api('timeline_backend')
 

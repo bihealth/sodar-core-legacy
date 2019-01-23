@@ -73,7 +73,6 @@ class ProjectSettingMixin:
 
         for p in app_plugins:
             for s_key in p.project_settings:
-                s = p.project_settings[s_key]
                 ret['settings.{}.{}'.format(p.name, s_key)] = \
                     p.project_settings[s_key]['default']
 
@@ -174,7 +173,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the home view"""
 
     def setUp(self):
-        super(TestHomeView, self).setUp()
+        super().setUp()
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
@@ -204,7 +203,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search view"""
 
     def setUp(self):
-        super(TestProjectSearchView, self).setUp()
+        super().setUp()
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
@@ -271,7 +270,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project detail view"""
 
     def setUp(self):
-        super(TestProjectDetailView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
         self.owner_as = self._make_assignment(
@@ -423,7 +422,7 @@ class TestProjectUpdateView(
     """Tests for Project updating view"""
 
     def setUp(self):
-        super(TestProjectUpdateView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
         self.owner_as = self._make_assignment(
@@ -503,7 +502,7 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for project roles view"""
 
     def setUp(self):
-        super(TestProjectRoleView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
 
@@ -572,7 +571,7 @@ class TestRoleAssignmentCreateView(
     """Tests for RoleAssignment creation view"""
 
     def setUp(self):
-        super(TestRoleAssignmentCreateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -661,7 +660,7 @@ class TestRoleAssignmentUpdateView(
     """Tests for RoleAssignment update view"""
 
     def setUp(self):
-        super(TestRoleAssignmentUpdateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -749,7 +748,7 @@ class TestRoleAssignmentDeleteView(
     """Tests for RoleAssignment delete view"""
 
     def setUp(self):
-        super(TestRoleAssignmentDeleteView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -798,7 +797,7 @@ class TestProjectInviteCreateView(
     """Tests for ProjectInvite creation view"""
 
     def setUp(self):
-        super(TestProjectInviteCreateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -959,7 +958,7 @@ class TestProjectInviteListView(
     """Tests for ProjectInvite list view"""
 
     def setUp(self):
-        super(TestProjectInviteListView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -990,7 +989,7 @@ class TestProjectInviteRevokeView(
     """Tests for ProjectInvite revocation view"""
 
     def setUp(self):
-        super(TestProjectInviteRevokeView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1024,7 +1023,7 @@ class TestProjectInviteRevokeView(
 
         # Issue POST request
         with self.login(self.user):
-            response = self.client.post(
+            self.client.post(
                 reverse(
                     'projectroles:invite_revoke',
                     kwargs={'projectinvite': self.invite.sodar_uuid}))
@@ -1039,7 +1038,7 @@ class TestProjectStarringAPIView(
     """Tests for project starring API view"""
 
     def setUp(self):
-        super(TestProjectStarringAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1107,7 +1106,7 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project retrieve API view"""
 
     def setUp(self):
-        super(TestProjectGetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1155,7 +1154,7 @@ class TestProjectUpdateAPIView(
     """Tests for the project updating API view"""
 
     def setUp(self):
-        super(TestProjectUpdateAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1191,7 +1190,6 @@ class TestProjectUpdateAPIView(
 
         # NOTE: Duplicate titles not checked here, not allowed in the form
         title = 'New title'
-        desc = 'New desc'
         readme = 'New readme'
 
         request = self.req_factory.post(
@@ -1216,7 +1214,7 @@ class TestRoleAssignmentGetAPIView(
     """Tests for the role assignment getting API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentGetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1249,7 +1247,7 @@ class TestRoleAssignmentSetAPIView(
     """Tests for the role assignment setting API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentSetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1281,7 +1279,7 @@ class TestRoleAssignmentSetAPIView(
     def test_post_existing(self):
         """Test POST request for updating an existing role"""
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(self.project, new_user, self.role_guest)
+        self._make_assignment(self.project, new_user, self.role_guest)
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1308,7 +1306,7 @@ class TestRoleAssignmentDeleteAPIView(
     """Tests for the role assignment deletion API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentDeleteAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None)
@@ -1318,7 +1316,7 @@ class TestRoleAssignmentDeleteAPIView(
     def test_post(self):
         """Test POST request for removing a role assignment"""
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(self.project, new_user, self.role_guest)
+        self._make_assignment(self.project, new_user, self.role_guest)
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1358,7 +1356,7 @@ class TestTaskflowAPIViewAccess(
     """Tests for taskflow API view access"""
 
     def setUp(self):
-        super(TestTaskflowAPIViewAccess, self).setUp()
+        super().setUp()
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None)
         self.project = self._make_project(
@@ -1427,7 +1425,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site list view"""
 
     def setUp(self):
-        super(TestRemoteSiteListView, self).setUp()
+        super().setUp()
 
         # Create target site
         self.target_site = self._make_site(
@@ -1470,7 +1468,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site create view"""
 
     def setUp(self):
-        super(TestRemoteSiteCreateView, self).setUp()
+        super().setUp()
 
     def test_render_as_source(self):
         """Test rendering the remote site create view as source"""
@@ -1629,7 +1627,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site update view"""
 
     def setUp(self):
-        super(TestRemoteSiteUpdateView, self).setUp()
+        super().setUp()
 
         # Set up target site
         self.target_site = self._make_site(
@@ -1733,7 +1731,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site delete view"""
     def setUp(self):
-        super(TestRemoteSiteDeleteView, self).setUp()
+        super().setUp()
 
         # Set up target site
         self.target_site = self._make_site(
@@ -1777,7 +1775,7 @@ class TestRemoteProjectsBatchUpdateView(
     """Tests for remote project batch update view"""
 
     def setUp(self):
-        super(TestRemoteProjectsBatchUpdateView, self).setUp()
+        super().setUp()
 
         # Set up project
         self.category = self._make_project(
@@ -1909,7 +1907,7 @@ class TestRemoteProjectGetAPIView(
     """Tests for remote project getting API view"""
 
     def setUp(self):
-        super(TestRemoteProjectGetAPIView, self).setUp()
+        super().setUp()
 
         # Set up projects
         self.category = self._make_project(

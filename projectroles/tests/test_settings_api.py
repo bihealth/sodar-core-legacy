@@ -2,8 +2,7 @@
 
 from test_plus.test import TestCase
 
-from ..models import Project, Role, RoleAssignment, ProjectSetting, \
-    SODAR_CONSTANTS
+from ..models import Role, ProjectSetting, SODAR_CONSTANTS
 from ..plugins import get_app_plugin
 from ..project_settings import get_project_setting, set_project_setting, \
     validate_project_setting

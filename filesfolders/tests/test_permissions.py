@@ -3,7 +3,7 @@
 from django.urls import reverse
 
 # Projectroles dependency
-from projectroles.models import ProjectSetting, SODAR_CONSTANTS
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.project_settings import set_project_setting
 from projectroles.tests.test_permissions import TestProjectPermissionBase
 
@@ -27,7 +27,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
     """Tests for Folder views"""
 
     def setUp(self):
-        super(TestFolderPermissions, self).setUp()
+        super().setUp()
 
         self.folder = self._make_folder(
             name='folder',
@@ -89,7 +89,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
     """Tests for File views"""
 
     def setUp(self):
-        super(TestFilePermissions, self).setUp()
+        super().setUp()
 
         set_project_setting(
             self.project, APP_NAME, 'allow_public_links', True)
@@ -241,7 +241,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
     """Tests for HyperLink views"""
 
     def setUp(self):
-        super(TestHyperLinkPermissions, self).setUp()
+        super().setUp()
 
         # Init link
         self.hyperlink = self._make_hyperlink(
@@ -305,7 +305,7 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
     """Tests for batch editing views"""
 
     def setUp(self):
-        super(TestBatchPermissions, self).setUp()
+        super().setUp()
 
         self.folder = self._make_folder(
             name='folder',

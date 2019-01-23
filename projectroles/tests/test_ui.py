@@ -127,12 +127,12 @@ class TestUIBase(
         self.as_guest = self._make_assignment(
             self.project, self.user_guest, self.role_guest)
 
-        super(TestUIBase, self).setUp()
+        super().setUp()
 
     def tearDown(self):
         # Shut down Selenium
         self.selenium.quit()
-        super(TestUIBase, self).tearDown()
+        super().tearDown()
 
     def build_selenium_url(self, url):
         """Build absolute URL to work with Selenium"""
@@ -607,7 +607,7 @@ class TestPlugins(TestUIBase):
 
     # NOTE: Setting up the plugins is done during migration
     def setUp(self):
-        super(TestPlugins, self).setUp()
+        super().setUp()
         self.plugin_count = len(get_active_plugins())
 
     def test_plugin_links(self):
@@ -631,7 +631,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     """Tests for the project sidebar"""
 
     def setUp(self):
-        super(TestProjectSidebar, self).setUp()
+        super().setUp()
 
         self.sidebar_ids = [
             'sodar-pr-nav-project-detail',

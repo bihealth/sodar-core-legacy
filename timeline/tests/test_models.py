@@ -89,7 +89,7 @@ class TestProjectEvent(
         ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
-        super(TestProjectEvent, self).setUp()
+        super().setUp()
 
         self.event = self._make_event(
             project=self.project,
@@ -128,7 +128,7 @@ class TestProjectEventObjectRef(
         ProjectEventMixin, ProjectEventObjectRefMixin, TestProjectEventBase):
 
     def setUp(self):
-        super(TestProjectEventObjectRef, self).setUp()
+        super().setUp()
 
         self.event = self._make_event(
             project=self.project,
@@ -207,7 +207,7 @@ class TestProjectEventStatus(
         ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
-        super(TestProjectEventStatus, self).setUp()
+        super().setUp()
 
         self.event = self._make_event(
             project=self.project,

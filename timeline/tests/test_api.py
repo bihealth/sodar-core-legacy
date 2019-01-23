@@ -27,7 +27,7 @@ class TestTimelineAPI(
         ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
 
     def setUp(self):
-        super(TestTimelineAPI, self).setUp()
+        super().setUp()
         self.timeline = get_backend_api('timeline_backend')
 
         # Init user

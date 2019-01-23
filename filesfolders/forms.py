@@ -29,7 +29,7 @@ class FilesfoldersItemForm(forms.ModelForm):
             self, current_user=None, folder=None, project=None,
             *args, **kwargs):
         """Override for form initialization"""
-        super(FilesfoldersItemForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.current_user = None
         self.project = None
@@ -61,7 +61,7 @@ class FolderForm(FilesfoldersItemForm):
             self, current_user=None, folder=None, project=None,
             *args, **kwargs):
         """Override for form initialization"""
-        super(FolderForm, self).__init__(
+        super().__init__(
             current_user=current_user, project=project, folder=folder,
             *args, **kwargs)
 
@@ -134,7 +134,7 @@ class FolderForm(FilesfoldersItemForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(FolderForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         # Updating
         if self.instance.pk:
@@ -171,11 +171,28 @@ class FileForm(FilesfoldersItemForm):
             'file': 'Uploaded file (maximum size: {})'.format(
                 filesizeformat(MAX_UPLOAD_SIZE))}
 
+    @staticmethod
+    def _get_file_size(file):
+        try:
+            return file.size
+
+        except NotImplementedError:
+            return file.file.size
+
+    def _check_size(self, file_size, limit):
+        if file_size > limit:
+            self.add_error(
+                'file',
+                'File too large, maximum size is {} bytes '
+                '(file size is {} bytes)'.format(limit, file_size))
+            return False
+        return True
+
     def __init__(
             self, current_user=None, folder=None, project=None,
             *args, **kwargs):
         """Override for form initialization"""
-        super(FileForm, self).__init__(
+        super().__init__(
             current_user=current_user, folder=folder, project=project,
             *args, **kwargs)
 
@@ -214,29 +231,14 @@ class FileForm(FilesfoldersItemForm):
         file = self.cleaned_data.get('file')
         unpack_archive = self.cleaned_data.get('unpack_archive')
         new_filename = file.name.split('/')[-1]
-
-        def check_size(file_size, limit):
-            if file_size > limit:
-                self.add_error(
-                    'file',
-                    'File too large, maximum size is {} bytes '
-                    '(file size is {} bytes)'.format(limit, file_size))
-                return False
-
-            return True
-
-        try:
-            size = file.size
-
-        except NotImplementedError:
-            size = file.file.size
+        size = self._get_file_size(file)
 
         # Normal file handling
-        if (file and (not hasattr(file, 'content_type') or
-                file.content_type not in [
+        if (file and (
+                not hasattr(file, 'content_type') or file.content_type not in [
                     'application/zip', 'application/x-zip-compressed'])):
             # Ensure max file size is not exceeded
-            if not check_size(size, MAX_UPLOAD_SIZE):
+            if not self._check_size(size, MAX_UPLOAD_SIZE):
                 return self.cleaned_data
 
             # Attempting to unpack a non-zip file
@@ -250,7 +252,7 @@ class FileForm(FilesfoldersItemForm):
         # Zip archive handling
         elif unpack_archive:
             # Ensure max archive size is not exceeded
-            if not check_size(size, MAX_ARCHIVE_SIZE):
+            if not self._check_size(size, MAX_ARCHIVE_SIZE):
                 return self.cleaned_data
 
             try:
@@ -270,7 +272,7 @@ class FileForm(FilesfoldersItemForm):
 
             for f in archive_files:
                 # Ensure file size
-                if not check_size(f.file_size, MAX_UPLOAD_SIZE):
+                if not self._check_size(f.file_size, MAX_UPLOAD_SIZE):
                     return self.cleaned_data
 
                 # Check if any of the files exist
@@ -279,79 +281,52 @@ class FileForm(FilesfoldersItemForm):
 
                 for p in path_split[:-1]:
                     # Advance in path
-                    try:
-                        check_folder = Folder.objects.get(
-                            name=p, folder=check_folder)
-
-                    except Folder.DoesNotExist:
-                        break
+                    check_folder = Folder.objects.filter(
+                        name=p, folder=check_folder).first()
 
                 # Once reached the correct path, check if file exists
-                try:
-                    File.objects.get(
-                        name=path_split[-1], folder=check_folder)
+                if (File.objects.filter(
+                        name=path_split[-1], folder=check_folder).first()):
                     self.add_error(
-                        'file',
-                        'File already exists: {}'.format(f.filename))
+                        'file', 'File already exists: {}'.format(f.filename))
                     return self.cleaned_data
 
-                except File.DoesNotExist:
-                    pass
-
         # Creation
-        if not self.instance.pk:
-            if not unpack_archive:
-                try:
-                    File.objects.get(
-                        project=project, folder=self.folder, name=file.name)
-                    self.add_error('file', 'File already exists')
-
-                except File.DoesNotExist:
-                    pass
+        if (not self.instance.pk and not unpack_archive and File.objects.filter(
+                project=project, folder=self.folder, name=file.name).first()):
+            self.add_error('file', 'File already exists')
 
         # Updating
-        else:
+        elif self.instance.pk:
             # Ensure file with the same name does not exist in the same
             # folder (unless we update file with the same folder and name)
-            old_file = None
+            old_file = File.objects.filter(
+                project=self.instance.project,
+                folder=self.instance.folder,
+                name=self.instance.name).first()
 
-            try:
-                old_file = File.objects.get(
-                    project=self.instance.project,
-                    folder=self.instance.folder,
-                    name=self.instance.name)
+            if (old_file and self.instance.name != str(file) and
+                    File.objects.filter(
+                        project=self.instance.project, folder=folder,
+                        name=file).first()):
+                self.add_error('file', 'File already exists')
 
-            except File.DoesNotExist:
-                pass
-
-            if old_file and self.instance.name != str(file):
-                try:
-                    File.objects.get(
-                        project=self.instance.project, folder=folder, name=file)
-                    self.add_error('file', 'File already exists')
-
-                except File.DoesNotExist:
-                    pass
-
-            # Moving
-            if self.instance.folder != folder:
-                # If moving, ensure an identical file doesn't exist in the
-                # target folder
-                existing = File.objects.filter(
+            # Moving:
+            # If moving, ensure an identical file doesn't exist in the
+            # target folder
+            if (self.instance.folder != folder and File.objects.filter(
                     project=self.instance.project,
                     folder=folder,
-                    name__in=[new_filename, self.instance.name])
-
-                if existing.count() > 0:
-                    self.add_error(
-                        'folder',
-                        'File with identical name already exists in folder')
+                    name__in=[new_filename, self.instance.name]).count() > 0):
+                self.add_error(
+                    'folder',
+                    'File with identical name already exists in folder')
 
         return self.cleaned_data
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(FileForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         # Creation
         if not self.instance.pk:
@@ -402,7 +377,7 @@ class HyperLinkForm(FilesfoldersItemForm):
             self, current_user=None, folder=None, project=None,
             *args, **kwargs):
         """Override for form initialization"""
-        super(HyperLinkForm, self).__init__(
+        super().__init__(
             current_user=current_user, project=project, folder=folder,
             *args, **kwargs)
 
@@ -468,7 +443,7 @@ class HyperLinkForm(FilesfoldersItemForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(HyperLinkForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         # Updating
         if self.instance.pk:

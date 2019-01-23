@@ -5,7 +5,6 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
 from rest_framework.response import Response
-from rest_framework.views import APIView
 
 # Projectroles dependency
 from projectroles.models import Project
@@ -30,8 +29,7 @@ class ProjectTimelineView(
         settings, 'TIMELINE_PAGINATION') else DEFAULT_PAGINATION
 
     def get_context_data(self, *args, **kwargs):
-        context = super(
-            ProjectTimelineView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
         context['timeline_title'] = 'Project Timeline'
         context['timeline_mode'] = 'project'
         return context
@@ -53,8 +51,7 @@ class ObjectTimelineView(ProjectTimelineView):
     """View for displaying files and folders for a project"""
 
     def get_context_data(self, *args, **kwargs):
-        context = super(
-            ObjectTimelineView, self).get_context_data(*args, **kwargs)
+        context = super().get_context_data(*args, **kwargs)
 
         context['timeline_title'] = '{} Timeline'.format(
             self.kwargs['object_model'])

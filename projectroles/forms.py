@@ -52,7 +52,7 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(ProjectForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Add settings fields
         self.app_plugins = sorted(
@@ -135,7 +135,8 @@ class ProjectForm(forms.ModelForm):
                 # Limit owner choices to users without non-owner role in project
                 project_users = RoleAssignment.objects.filter(
                     project=self.instance.pk).exclude(
-                   role__name=PROJECT_ROLE_OWNER).values_list('user').distinct()
+                        role__name=PROJECT_ROLE_OWNER).values_list(
+                            'user').distinct()
 
                 # Get owner choices
                 self.fields['owner'].choices = [
@@ -254,7 +255,7 @@ class RoleAssignmentForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(RoleAssignmentForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Get current user for checking permissions for form items
         if current_user:
@@ -385,7 +386,7 @@ class ProjectInviteForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(ProjectInviteForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Get current user for checking permissions and saving issuer
         if current_user:
@@ -441,7 +442,7 @@ class ProjectInviteForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(ProjectInviteForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         obj.project = self.project
         obj.issuer = self.current_user
@@ -465,7 +466,7 @@ class RemoteSiteForm(forms.ModelForm):
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(RemoteSiteForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.current_user = current_user
 
@@ -490,7 +491,7 @@ class RemoteSiteForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(RemoteSiteForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             obj.mode = SITE_MODE_TARGET

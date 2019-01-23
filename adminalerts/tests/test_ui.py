@@ -14,7 +14,7 @@ from .test_models import AdminAlertMixin
 class TestAlertUIBase(AdminAlertMixin, TestUIBase):
 
     def setUp(self):
-        super(TestAlertUIBase, self).setUp()
+        super().setUp()
         # Create users
         self.superuser = self._make_user('superuser', True)
         self.superuser.is_superuser = True

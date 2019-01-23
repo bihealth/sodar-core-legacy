@@ -622,7 +622,7 @@ class TestTargetProjectViews(
     """Tests for Project updating views on a TARGET site"""
 
     def setUp(self):
-        super(TestTargetProjectViews, self).setUp()
+        super().setUp()
 
         # Create site
         self.site = self._make_site(
