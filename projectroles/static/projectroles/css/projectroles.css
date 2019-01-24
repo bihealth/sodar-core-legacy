@@ -411,6 +411,7 @@ dl dd {
 .sodar-list-dropdown {
   white-space: nowrap !important;
   height: 26px;
+  width: 50px !important;
   padding: 1px !important;
 }
 
