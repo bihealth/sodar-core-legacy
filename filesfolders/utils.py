@@ -10,6 +10,9 @@ def build_public_url(file, request):
     :param request: HTTP request of View calling the function
     :return: URL (string)
     """
-    return request.build_absolute_uri(reverse(
-        'filesfolders:file_serve_public',
-        kwargs={'secret': file.secret, 'file_name': file.name}))
+    return request.build_absolute_uri(
+        reverse(
+            'filesfolders:file_serve_public',
+            kwargs={'secret': file.secret, 'file_name': file.name},
+        )
+    )

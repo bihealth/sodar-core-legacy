@@ -2,13 +2,21 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from django.views.generic import DetailView, UpdateView, CreateView, \
-    DeleteView, ListView
+from django.views.generic import (
+    DetailView,
+    UpdateView,
+    CreateView,
+    DeleteView,
+    ListView,
+)
 from django.views.generic.edit import ModelFormMixin
 
 # Projectroles dependency
-from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin, \
-    CurrentUserFormMixin
+from projectroles.views import (
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+)
 
 from .forms import AdminAlertForm
 from .models import AdminAlert
@@ -22,12 +30,15 @@ DEFAULT_PAGINATION = 15
 
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
+
     permission_required = 'adminalerts.create_alert'
     template_name = 'adminalerts/alert_list.html'
     model = AdminAlert
     paginate_by = (
-        settings.ADMINALERTS_PAGINATION if
-        hasattr(settings, 'ADMINALERTS_PAGINATION') else DEFAULT_PAGINATION)
+        settings.ADMINALERTS_PAGINATION
+        if hasattr(settings, 'ADMINALERTS_PAGINATION')
+        else DEFAULT_PAGINATION
+    )
     slug_url_kwarg = 'uuid'
     slug_field = 'sodar_uuid'
 
@@ -36,8 +47,10 @@ class AdminAlertListView(LoggedInPermissionMixin, ListView):
 
 
 class AdminAlertDetailView(
-        LoggedInPermissionMixin, HTTPRefererMixin, DetailView):
+    LoggedInPermissionMixin, HTTPRefererMixin, DetailView
+):
     """Alert detail view"""
+
     permission_required = 'adminalerts.view_alert'
     template_name = 'adminalerts/alert_detail.html'
     model = AdminAlert
@@ -57,18 +70,28 @@ class AdminAlertModifyMixin(ModelFormMixin):
 
 
 class AdminAlertCreateView(
-        LoggedInPermissionMixin, AdminAlertModifyMixin, HTTPRefererMixin,
-        CurrentUserFormMixin, CreateView):
+    LoggedInPermissionMixin,
+    AdminAlertModifyMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+    CreateView,
+):
     """AdminAlert creation view"""
+
     model = AdminAlert
     form_class = AdminAlertForm
     permission_required = 'adminalerts.create_alert'
 
 
 class AdminAlertUpdateView(
-        LoggedInPermissionMixin, AdminAlertModifyMixin, HTTPRefererMixin,
-        CurrentUserFormMixin, UpdateView):
+    LoggedInPermissionMixin,
+    AdminAlertModifyMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+    UpdateView,
+):
     """AdminAlert updating view"""
+
     model = AdminAlert
     form_class = AdminAlertForm
     permission_required = 'adminalerts.update_alert'
@@ -77,8 +100,10 @@ class AdminAlertUpdateView(
 
 
 class AdminAlertDeleteView(
-        LoggedInPermissionMixin, HTTPRefererMixin, DeleteView):
+    LoggedInPermissionMixin, HTTPRefererMixin, DeleteView
+):
     """AdminAlert deletion view"""
+
     model = AdminAlert
     permission_required = 'adminalerts.update_alert'
     slug_url_kwarg = 'uuid'

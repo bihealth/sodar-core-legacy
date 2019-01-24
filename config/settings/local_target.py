@@ -21,7 +21,8 @@ DATABASES['default']['ATOMIC_REQUESTS'] = False
 SITE_TITLE = 'SODAR Core Target Dev Site'
 SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
 SITE_INSTANCE_TITLE = env.str(
-    'SITE_INSTANCE_TITLE', 'SODAR Core Target Example')
+    'SITE_INSTANCE_TITLE', 'SODAR Core Target Example'
+)
 
 
 # Local App Settings

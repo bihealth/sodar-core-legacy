@@ -24,15 +24,13 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
-PROJECT_SETTING_TYPES = [
-    'BOOLEAN',
-    'INTEGER',
-    'STRING']
+PROJECT_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
 
 PROJECT_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
-    ('STRING', 'String')]
+    ('STRING', 'String'),
+]
 
 PROJECT_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
@@ -62,9 +60,14 @@ class ProjectManager(models.Manager):
             projects = projects.filter(type=project_type)
 
         # NOTE: Can't use a custom function in filter()
-        result = [p for p in projects if (
-            search_term in p.get_full_title().lower() or (
-                p.description and search_term in p.description.lower()))]
+        result = [
+            p
+            for p in projects
+            if (
+                search_term in p.get_full_title().lower()
+                or (p.description and search_term in p.description.lower())
+            )
+        ]
 
         return sorted(result, key=lambda x: x.get_full_title())
 
@@ -79,16 +82,16 @@ class Project(models.Model):
 
     #: Project title
     title = models.CharField(
-        max_length=255,
-        unique=False,
-        help_text='Project title')
+        max_length=255, unique=False, help_text='Project title'
+    )
 
     #: Type of project ("CATEGORY", "PROJECT")
     type = models.CharField(
         max_length=64,
         choices=SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'],
         default=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
-        help_text='Type of project ("CATEGORY", "PROJECT")')
+        help_text='Type of project ("CATEGORY", "PROJECT")',
+    )
 
     #: Parent category if nested, otherwise null
     parent = models.ForeignKey(
@@ -96,7 +99,8 @@ class Project(models.Model):
         blank=True,
         null=True,
         related_name='children',
-        help_text='Parent category if nested')
+        help_text='Parent category if nested',
+    )
 
     #: Short project description
     description = models.CharField(
@@ -104,26 +108,28 @@ class Project(models.Model):
         unique=False,
         blank=True,
         null=True,
-        help_text='Short project description')
+        help_text='Short project description',
+    )
 
     #: Project README (optional, supports markdown)
     readme = MarkupField(
         null=True,
         blank=True,
         markup_type='markdown',
-        help_text='Project README (optional, supports markdown)')
+        help_text='Project README (optional, supports markdown)',
+    )
 
     #: Status of project creation
     submit_status = models.CharField(
         max_length=64,
         default=SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
-        help_text='Status of project creation')
+        help_text='Status of project creation',
+    )
 
     #: Project SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='Project SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='Project SODAR UUID'
+    )
 
     # Set manager for custom queries
     objects = ProjectManager()
@@ -144,8 +150,10 @@ class Project(models.Model):
 
     def __repr__(self):
         values = (
-            self.title, self.type,
-            self.parent.title if self.parent else None)
+            self.title,
+            self.type,
+            self.parent.title if self.parent else None,
+        )
         return 'Project({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):
@@ -163,27 +171,31 @@ class Project(models.Model):
 
     def _validate_parent_type(self):
         """Validate parent value to ensure parent can not be a project"""
-        if (self.parent and
-                self.parent.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']):
+        if (
+            self.parent
+            and self.parent.type == SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+        ):
             raise ValidationError(
-                'Subprojects are only allowed within categories')
+                'Subprojects are only allowed within categories'
+            )
 
     def _validate_title(self):
         """Validate title against parent title to ensure they don't equal
         parent"""
         if self.parent and self.title == self.parent.title:
-            raise ValidationError(
-                'Project and parent titles can not be equal')
+            raise ValidationError('Project and parent titles can not be equal')
 
     def get_absolute_url(self):
         return reverse(
-            'projectroles:detail', kwargs={'project': self.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.sodar_uuid}
+        )
 
     # Custom row-level functions
     def get_children(self):
         """Return child objects for the Project sorted by title"""
         return self.children.filter(
-            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']).order_by('title')
+            submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
+        ).order_by('title')
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
@@ -200,7 +212,8 @@ class Project(models.Model):
         """Return RoleAssignment for owner or None if not set"""
         try:
             return self.roles.get(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+            )
 
         except RoleAssignment.DoesNotExist:
             return None
@@ -209,7 +222,8 @@ class Project(models.Model):
         """Return RoleAssignment for delegate or None if not set"""
         try:
             return self.roles.get(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+            )
 
         except RoleAssignment.DoesNotExist:
             return None
@@ -218,8 +232,9 @@ class Project(models.Model):
         """Return RoleAssignments for members of project excluding owner and
         delegate"""
         return self.roles.filter(
-            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']) &
-            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']))
+            ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
+            & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
+        )
 
     def has_role(self, user, include_children=False):
         """Return whether user has roles in Project. If include_children is
@@ -254,8 +269,10 @@ class Project(models.Model):
 
     def get_source_site(self):
         """Return source site or None if this is a locally defined project"""
-        if (settings.PROJECTROLES_SITE_MODE ==
-                SODAR_CONSTANTS['SITE_MODE_SOURCE']):
+        if (
+            settings.PROJECTROLES_SITE_MODE
+            == SODAR_CONSTANTS['SITE_MODE_SOURCE']
+        ):
             return None
 
         RemoteProject = apps.get_model('projectroles', 'RemoteProject')
@@ -263,7 +280,8 @@ class Project(models.Model):
         try:
             return RemoteProject.objects.get(
                 project_uuid=self.sodar_uuid,
-                site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE']).site
+                site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            ).site
 
         except RemoteProject.DoesNotExist:
             pass
@@ -273,8 +291,11 @@ class Project(models.Model):
     def is_remote(self):
         """Return True if current project has been retrieved from a remote
         SODAR site"""
-        if (settings.PROJECTROLES_SITE_MODE ==
-                SODAR_CONSTANTS['SITE_MODE_TARGET'] and self.get_source_site()):
+        if (
+            settings.PROJECTROLES_SITE_MODE
+            == SODAR_CONSTANTS['SITE_MODE_TARGET']
+            and self.get_source_site()
+        ):
             return True
 
         return False
@@ -288,13 +309,11 @@ class Role(models.Model):
 
     #: Name of role
     name = models.CharField(
-        max_length=64,
-        unique=True,
-        help_text='Name of role')
+        max_length=64, unique=True, help_text='Name of role'
+    )
 
     #: Role description
-    description = models.TextField(
-        help_text='Role description')
+    description = models.TextField(help_text='Role description')
 
     def __str__(self):
         return self.name
@@ -312,8 +331,7 @@ class RoleAssignmentManager(models.Manager):
     def get_assignment(self, user, project):
         """Return assignment of user to project, or None if not found"""
         try:
-            return super().get_queryset().get(
-                user=user, project=project)
+            return super().get_queryset().get(user=user, project=project)
 
         except RoleAssignment.DoesNotExist:
             return None
@@ -330,25 +348,25 @@ class RoleAssignment(models.Model):
     project = models.ForeignKey(
         Project,
         related_name='roles',
-        help_text='Project in which role is assigned')
+        help_text='Project in which role is assigned',
+    )
 
     #: User for whom role is assigned
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         related_name='roles',
-        help_text='User for whom role is assigned')
+        help_text='User for whom role is assigned',
+    )
 
     #: Role to be assigned
     role = models.ForeignKey(
-        Role,
-        related_name='assignments',
-        help_text='Role to be assigned')
+        Role, related_name='assignments', help_text='Role to be assigned'
+    )
 
     #: RoleAssignment SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='RoleAssignment SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='RoleAssignment SODAR UUID'
+    )
 
     # Set manager for custom queries
     objects = RoleAssignmentManager()
@@ -358,10 +376,12 @@ class RoleAssignment(models.Model):
             'project__parent__title',
             'project__title',
             'role__name',
-            'user__username']
+            'user__username',
+        ]
         indexes = [
             models.Index(fields=['project']),
-            models.Index(fields=['user'])]
+            models.Index(fields=['user']),
+        ]
 
     def __str__(self):
         return '{}: {}: {}'.format(self.project, self.role, self.user)
@@ -382,12 +402,15 @@ class RoleAssignment(models.Model):
         """Validate fields to ensure user has only one role set for the
         project"""
         assignment = RoleAssignment.objects.get_assignment(
-            self.user, self.project)
+            self.user, self.project
+        )
 
         if assignment and (not self.pk or assignment.pk != self.pk):
             raise ValidationError(
                 'Role {} already set for {} in {}'.format(
-                    assignment.role, assignment.user, assignment.project))
+                    assignment.role, assignment.user, assignment.project
+                )
+            )
 
     def _validate_owner(self):
         """Validate role to ensure no more than one project owner is assigned
@@ -398,7 +421,9 @@ class RoleAssignment(models.Model):
             if owner and (not self.pk or owner.pk != self.pk):
                 raise ValidationError(
                     'User {} already set as owner of {}'.format(
-                        owner, self.project))
+                        owner, self.project
+                    )
+                )
 
     def _validate_delegate(self):
         """Validate role to ensure no more than one project delegate is
@@ -409,15 +434,20 @@ class RoleAssignment(models.Model):
             if delegate and (not self.pk or delegate.pk != self.pk):
                 raise ValidationError(
                     '{} already set as delegate of {}'.format(
-                        delegate.user, self.project))
+                        delegate.user, self.project
+                    )
+                )
 
     def _validate_category(self):
         """Validate project and role types to ensure roles other than project
         owner are not set for category-type projects"""
-        if (self.project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'] and
-                self.role.name != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']):
+        if (
+            self.project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+            and self.role.name != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+        ):
             raise ValidationError(
-                'Only the role of project owner is allowed for categories')
+                'Only the role of project owner is allowed for categories'
+            )
 
 
 # ProjectSetting ---------------------------------------------------------------
@@ -436,8 +466,11 @@ class ProjectSettingManager(models.Manager):
         :return: Value (string)
         :raise: ProjectSetting.DoesNotExist if setting is not found
         """
-        setting = super().get_queryset().get(
-            app_plugin__name=app_name, project=project, name=setting_name)
+        setting = (
+            super()
+            .get_queryset()
+            .get(app_plugin__name=app_name, project=project, name=setting_name)
+        )
         return setting.get_value()
 
 
@@ -453,27 +486,29 @@ class ProjectSetting(models.Model):
         null=False,
         unique=False,
         related_name='settings',
-        help_text='App to which the setting belongs')
+        help_text='App to which the setting belongs',
+    )
 
     #: Project to which the setting belongs
     project = models.ForeignKey(
         Project,
         null=False,
         related_name='settings',
-        help_text='Project to which the setting belongs')
+        help_text='Project to which the setting belongs',
+    )
 
     #: Name of the setting
     name = models.CharField(
-        max_length=255,
-        unique=False,
-        help_text='Name of the setting')
+        max_length=255, unique=False, help_text='Name of the setting'
+    )
 
     #: Type of the setting
     type = models.CharField(
         max_length=64,
         unique=False,
         choices=PROJECT_SETTING_TYPE_CHOICES,
-        help_text='Type of the setting')
+        help_text='Type of the setting',
+    )
 
     #: Value of the setting
     value = models.CharField(
@@ -481,27 +516,25 @@ class ProjectSetting(models.Model):
         unique=False,
         null=True,
         blank=True,
-        help_text='Value of the setting')
+        help_text='Value of the setting',
+    )
 
     #: ProjectSetting SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='ProjectSetting SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='ProjectSetting SODAR UUID'
+    )
 
     # Set manager for custom queries
     objects = ProjectSettingManager()
 
     class Meta:
-        ordering = [
-            'project__title',
-            'app_plugin__name',
-            'name']
+        ordering = ['project__title', 'app_plugin__name', 'name']
         unique_together = ('project', 'app_plugin', 'name')
 
     def __str__(self):
         return '{}: {} / {}'.format(
-            self.project.title, self.app_plugin.name, self.name)
+            self.project.title, self.app_plugin.name, self.name
+        )
 
     def __repr__(self):
         values = (self.project.title, self.app_plugin.name, self.name)
@@ -544,42 +577,45 @@ class ProjectInvite(models.Model):
         unique=False,
         null=False,
         blank=False,
-        help_text='Email address of the person to be invited')
+        help_text='Email address of the person to be invited',
+    )
 
     #: Project to which the person is invited
     project = models.ForeignKey(
         Project,
         null=False,
         related_name='invites',
-        help_text='Project to which the person is invited')
+        help_text='Project to which the person is invited',
+    )
 
     #: Role assigned to the person
     role = models.ForeignKey(
-        Role,
-        null=False,
-        help_text='Role assigned to the person')
+        Role, null=False, help_text='Role assigned to the person'
+    )
 
     #: User who issued the invite
     issuer = models.ForeignKey(
         AUTH_USER_MODEL,
         null=False,
         related_name='issued_invites',
-        help_text='User who issued the invite')
+        help_text='User who issued the invite',
+    )
 
     #: DateTime of invite creation
     date_created = models.DateTimeField(
-        auto_now_add=True,
-        help_text='DateTime of invite creation')
+        auto_now_add=True, help_text='DateTime of invite creation'
+    )
 
     #: Expiration of invite as DateTime
     date_expire = models.DateTimeField(
-        null=False,
-        help_text='Expiration of invite as DateTime')
+        null=False, help_text='Expiration of invite as DateTime'
+    )
 
     #: Message to be included in the invite email (optional)
     message = models.TextField(
         blank=True,
-        help_text='Message to be included in the invite email (optional)')
+        help_text='Message to be included in the invite email (optional)',
+    )
 
     #: Secret token provided to user with the invite
     secret = models.CharField(
@@ -587,31 +623,30 @@ class ProjectInvite(models.Model):
         unique=True,
         blank=False,
         null=False,
-        help_text='Secret token provided to user with the invite')
+        help_text='Secret token provided to user with the invite',
+    )
 
     #: Status of the invite (False if claimed or revoked)
     active = models.BooleanField(
         default=True,
-        help_text='Status of the invite (False if claimed or revoked)')
+        help_text='Status of the invite (False if claimed or revoked)',
+    )
 
     #: ProjectInvite SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='ProjectInvite SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='ProjectInvite SODAR UUID'
+    )
 
     class Meta:
-        ordering = [
-            'project__title',
-            'email',
-            'role__name']
+        ordering = ['project__title', 'email', 'role__name']
 
     def __str__(self):
         return '{}: {} ({}){}'.format(
             self.project,
             self.email,
             self.role.name,
-            ' [ACTIVE]' if self.active else '')
+            ' [ACTIVE]' if self.active else '',
+        )
 
     def __repr__(self):
         values = (self.project.title, self.email, self.role.name, self.active)
@@ -629,14 +664,16 @@ class ProjectUserTag(models.Model):
         Project,
         null=False,
         related_name='tags',
-        help_text='Project in which the tag is assigned')
+        help_text='Project in which the tag is assigned',
+    )
 
     #: User for whom the tag is assigned
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=False,
         related_name='project_tags',
-        help_text='User for whom the tag is assigned')
+        help_text='User for whom the tag is assigned',
+    )
 
     #: Name of tag to be assigned
     name = models.CharField(
@@ -645,23 +682,21 @@ class ProjectUserTag(models.Model):
         null=False,
         blank=False,
         default=PROJECT_TAG_STARRED,
-        help_text='Name of tag to be assigned')
+        help_text='Name of tag to be assigned',
+    )
 
     #: ProjectUserTag SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='ProjectUserTag SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='ProjectUserTag SODAR UUID'
+    )
 
     class Meta:
-        ordering = [
-            'project__title',
-            'user__username',
-            'name']
+        ordering = ['project__title', 'user__username', 'name']
 
     def __str__(self):
         return '{}: {}: {}'.format(
-            self.project.title, self.user.username, self.name)
+            self.project.title, self.user.username, self.name
+        )
 
     def __repr__(self):
         values = (self.project.title, self.user.username, self.name)
@@ -675,10 +710,7 @@ class RemoteSite(models.Model):
     """Remote SODAR site"""
 
     #: Site name
-    name = models.CharField(
-        max_length=255,
-        unique=True,
-        help_text='Site name')
+    name = models.CharField(max_length=255, unique=True, help_text='Site name')
 
     #: Site URL
     url = models.URLField(
@@ -686,7 +718,8 @@ class RemoteSite(models.Model):
         blank=False,
         null=False,
         unique=False,
-        help_text='Site URL')
+        help_text='Site URL',
+    )
 
     #: Site mode
     mode = models.CharField(
@@ -695,11 +728,11 @@ class RemoteSite(models.Model):
         blank=False,
         null=False,
         default=SODAR_CONSTANTS['SITE_MODE_TARGET'],
-        help_text='Site mode')
+        help_text='Site mode',
+    )
 
     #: Site description
-    description = models.TextField(
-        help_text='Site description')
+    description = models.TextField(help_text='Site description')
 
     #: Secret token used to connect to the master site
     secret = models.CharField(
@@ -707,21 +740,22 @@ class RemoteSite(models.Model):
         unique=False,
         blank=False,
         null=False,
-        help_text='Secret token for connecting to the source site')
+        help_text='Secret token for connecting to the source site',
+    )
 
     #: RemoteSite relation UUID (local)
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='RemoteSite relation UUID (local)')
+        help_text='RemoteSite relation UUID (local)',
+    )
 
     class Meta:
         ordering = ['name']
         unique_together = ['url', 'mode', 'secret']
 
     def __str__(self):
-        return '{} ({})'.format(
-            self.name, self.mode, self.name)
+        return '{} ({})'.format(self.name, self.mode, self.name)
 
     def __repr__(self):
         values = (self.name, self.mode, self.url)
@@ -736,14 +770,16 @@ class RemoteSite(models.Model):
         """Validate mode value"""
         if self.mode not in SODAR_CONSTANTS['SITE_MODES']:
             raise ValidationError(
-                'Mode "{}" not found in SITE_MODES'.format(self.mode))
+                'Mode "{}" not found in SITE_MODES'.format(self.mode)
+            )
 
     # Custom row-level functions
 
     def get_access_date(self):
         """Return date of latest project access by remote site"""
-        projects = RemoteProject.objects.filter(
-            site=self).order_by('-date_access')
+        projects = RemoteProject.objects.filter(site=self).order_by(
+            '-date_access'
+        )
 
         if projects.count() > 0:
             return projects.first().date_access
@@ -757,9 +793,8 @@ class RemoteProject(models.Model):
 
     #: Related project UUID
     project_uuid = models.UUIDField(
-        default=None,
-        unique=False,
-        help_text='Project UUID')
+        default=None, unique=False, help_text='Project UUID'
+    )
 
     #: Related project object (if created locally)
     project = models.ForeignKey(
@@ -767,14 +802,16 @@ class RemoteProject(models.Model):
         related_name='remotes',
         blank=True,
         null=True,
-        help_text='Related project object (if created locally)')
+        help_text='Related project object (if created locally)',
+    )
 
     #: Related remote SODAR site
     site = models.ForeignKey(
         RemoteSite,
         null=False,
         related_name='projects',
-        help_text='Remote SODAR site')
+        help_text='Remote SODAR site',
+    )
 
     #: Project access level
     level = models.CharField(
@@ -783,27 +820,30 @@ class RemoteProject(models.Model):
         blank=False,
         null=False,
         default=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
-        help_text='Project access level')
+        help_text='Project access level',
+    )
 
     #: DateTime of last access from/to remote site
     date_access = models.DateTimeField(
         null=True,
         auto_now_add=False,
-        help_text='DateTime of last access from/to remote site')
+        help_text='DateTime of last access from/to remote site',
+    )
 
     #: RemoteProject relation UUID (local)
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4,
         unique=True,
-        help_text='RemoteProject relation UUID (local)')
+        help_text='RemoteProject relation UUID (local)',
+    )
 
     class Meta:
-        ordering = [
-            'site__name', 'project_uuid']
+        ordering = ['site__name', 'project_uuid']
 
     def __str__(self):
         return '{}: {} ({})'.format(
-            self.site.name, str(self.project_uuid), self.site.mode)
+            self.site.name, str(self.project_uuid), self.site.mode
+        )
 
     def __repr__(self):
         values = (self.site.name, str(self.project_uuid), self.site.mode)
@@ -835,9 +875,8 @@ class SODARUser(AbstractUser):
 
     #: User SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='User SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='User SODAR UUID'
+    )
 
     class Meta:
         abstract = True
@@ -866,8 +905,10 @@ def handle_ldap_login(sender, user, **kwargs):
     if hasattr(user, 'ldap_username'):
 
         # Make domain in username uppercase
-        if (user.username.find('@') != -1 and
-                user.username.split('@')[1].islower()):
+        if (
+            user.username.find('@') != -1
+            and user.username.split('@')[1].islower()
+        ):
             u_split = user.username.split('@')
             user.username = u_split[0] + '@' + u_split[1].upper()
             user.save()
@@ -876,7 +917,8 @@ def handle_ldap_login(sender, user, **kwargs):
         if user.name in ['', None]:
             if user.first_name != '':
                 user.name = user.first_name + (
-                    ' ' + user.last_name if user.last_name != '' else '')
+                    ' ' + user.last_name if user.last_name != '' else ''
+                )
                 user.save()
 
 

@@ -28,7 +28,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'allow_public_links': {
             'type': 'BOOLEAN',
             'default': False,
-            'description': 'Allow generation of public links for files'}}
+            'description': 'Allow generation of public links for files',
+        }
+    }
 
     #: FontAwesome icon ID string
     icon = 'file'
@@ -37,8 +39,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     entry_point_url_id = 'filesfolders:list'
 
     #: Description string
-    description = 'Smaller files (e.g., reports, spreadsheets, and ' \
-                  'presentations)'
+    description = (
+        'Smaller files (e.g., reports, spreadsheets, and ' 'presentations)'
+    )
 
     #: Required permission for accessing the app
     app_permission = 'filesfolders.view_data'
@@ -47,10 +50,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     search_enable = True
 
     #: List of search object types for the app
-    search_types = [
-        'file',
-        'folder',
-        'link']
+    search_types = ['file', 'folder', 'link']
 
     #: Search results template
     search_template = 'filesfolders/_search_results.html'
@@ -88,24 +88,22 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             return {
                 'url': reverse(
                     'filesfolders:file_serve',
-                    kwargs={
-                        'file': obj.sodar_uuid,
-                        'file_name': obj.name}),
-                    'label': obj.name,
-                    'blank': True}
+                    kwargs={'file': obj.sodar_uuid, 'file_name': obj.name},
+                ),
+                'label': obj.name,
+                'blank': True,
+            }
 
         elif obj.__class__ == Folder:
             return {
                 'url': reverse(
-                    'filesfolders:list',
-                    kwargs={'folder': obj.sodar_uuid}),
-                'label': obj.name}
+                    'filesfolders:list', kwargs={'folder': obj.sodar_uuid}
+                ),
+                'label': obj.name,
+            }
 
         elif obj.__class__ == HyperLink:
-            return {
-                'url': obj.url,
-                'label': obj.name,
-                'blank': True}
+            return {'url': obj.url, 'label': obj.name, 'blank': True}
 
         return None
 
@@ -135,16 +133,21 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             items = Folder.objects.find(search_term, keywords).order_by('name')
 
         elif search_type == 'link':
-            items = HyperLink.objects.find(
-                search_term, keywords).order_by('name')
+            items = HyperLink.objects.find(search_term, keywords).order_by(
+                'name'
+            )
 
         if items:
             items = [
-                x for x in items if
-                user.has_perm('filesfolders.view_data', x.project)]
+                x
+                for x in items
+                if user.has_perm('filesfolders.view_data', x.project)
+            ]
 
         return {
             'all': {
                 'title': 'Small Files, Folders and Links',
                 'search_types': ['file', 'folder', 'link'],
-                'items': items}}
+                'items': items,
+            }
+        }

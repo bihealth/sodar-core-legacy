@@ -2,7 +2,6 @@
 
 
 class ExampleAPI:
-
     def __init__(self):
         pass
 

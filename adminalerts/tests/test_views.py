@@ -30,10 +30,12 @@ class TestViewsBase(TestCase, AdminAlertMixin):
             user=self.superuser,
             description='description',
             active=True,
-            require_auth=True)
+            require_auth=True,
+        )
 
-        self.expiry_str = (timezone.now() + timezone.timedelta(
-            days=1)).strftime('%Y-%m-%d')
+        self.expiry_str = (
+            timezone.now() + timezone.timedelta(days=1)
+        ).strftime('%Y-%m-%d')
 
 
 class TestAdminAlertListView(TestViewsBase):
@@ -46,7 +48,8 @@ class TestAdminAlertListView(TestViewsBase):
             self.assertEqual(response.status_code, 200)
             self.assertIsNotNone(response.context['object_list'])
             self.assertEqual(
-                response.context['object_list'][0].pk, self.alert.pk)
+                response.context['object_list'][0].pk, self.alert.pk
+            )
 
 
 class TestAdminAlertDetailView(TestViewsBase):
@@ -57,8 +60,9 @@ class TestAdminAlertDetailView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:detail',
-                    kwargs={'uuid': self.alert.sodar_uuid}))
+                    'adminalerts:detail', kwargs={'uuid': self.alert.sodar_uuid}
+                )
+            )
             self.assertEqual(response.status_code, 200)
             self.assertEqual(response.context['object'], self.alert)
 
@@ -83,11 +87,13 @@ class TestAdminAlertCreateView(TestViewsBase):
             'description': 'description',
             'date_expire': self.expiry_str,
             'active': 1,
-            'require_auth': 1}
+            'require_auth': 1,
+        }
 
         with self.login(self.superuser):
             response = self.client.post(
-                reverse('adminalerts:create'), post_data)
+                reverse('adminalerts:create'), post_data
+            )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
 
@@ -100,19 +106,22 @@ class TestAdminAlertCreateView(TestViewsBase):
         # Assert precondition
         self.assertEqual(AdminAlert.objects.all().count(), 1)
 
-        expiry_fail = (timezone.now() + timezone.timedelta(
-            days=-1)).strftime('%Y-%m-%d')
+        expiry_fail = (timezone.now() + timezone.timedelta(days=-1)).strftime(
+            '%Y-%m-%d'
+        )
 
         post_data = {
             'message': 'new alert',
             'description': 'description',
             'date_expire': expiry_fail,
             'active': 1,
-            'require_auth': 1}
+            'require_auth': 1,
+        }
 
         with self.login(self.superuser):
             response = self.client.post(
-                reverse('adminalerts:create'), post_data)
+                reverse('adminalerts:create'), post_data
+            )
             self.assertEqual(response.status_code, 200)
 
         # Assert postcondition
@@ -127,8 +136,9 @@ class TestAdminAlertUpdateView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:update',
-                    kwargs={'uuid': self.alert.sodar_uuid}))
+                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                )
+            )
             self.assertEqual(response.status_code, 200)
 
     def test_update(self):
@@ -141,14 +151,16 @@ class TestAdminAlertUpdateView(TestViewsBase):
             'message': 'updated alert',
             'description': 'updated description',
             'date_expire': self.expiry_str,
-            'active': ''}
+            'active': '',
+        }
 
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
-                    'adminalerts:update',
-                    kwargs={'uuid': self.alert.sodar_uuid}),
-                post_data)
+                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                ),
+                post_data,
+            )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
 
@@ -169,14 +181,16 @@ class TestAdminAlertUpdateView(TestViewsBase):
             'message': 'updated alert',
             'description': 'updated description',
             'date_expire': self.expiry_str,
-            'active': ''}
+            'active': '',
+        }
 
         with self.login(superuser2):
             response = self.client.post(
                 reverse(
-                    'adminalerts:update',
-                    kwargs={'uuid': self.alert.sodar_uuid}),
-                post_data)
+                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                ),
+                post_data,
+            )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
 
@@ -192,8 +206,9 @@ class TestAdminAlertDeleteView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:delete',
-                    kwargs={'uuid': self.alert.sodar_uuid}))
+                    'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+                )
+            )
             self.assertEqual(response.status_code, 200)
 
     def test_delete(self):
@@ -205,8 +220,9 @@ class TestAdminAlertDeleteView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
-                    'adminalerts:delete',
-                    kwargs={'uuid': self.alert.sodar_uuid}))
+                    'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+                )
+            )
             self.assertEqual(response.status_code, 302)
             self.assertEqual(response.url, reverse('adminalerts:list'))
 

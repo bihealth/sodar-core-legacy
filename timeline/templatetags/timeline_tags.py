@@ -17,7 +17,8 @@ STATUS_STYLES = {
     'SUBMIT': 'bg-warning',
     'FAILED': 'bg-danger',
     'INFO': 'bg-info',
-    'CANCEL': 'bg-dark'}
+    'CANCEL': 'bg-dark',
+}
 
 # Event helpers ----------------------------------------------------------------
 
@@ -45,8 +46,7 @@ def get_details_events(project, view_classified):
 
     events = events.order_by('-pk')
 
-    return [
-        x for x in events if x.get_current_status().status_type == 'OK'][:5]
+    return [x for x in events if x.get_current_status().status_type == 'OK'][:5]
 
 
 # Template rendering -----------------------------------------------------------
@@ -55,8 +55,11 @@ def get_details_events(project, view_classified):
 @register.simple_tag
 def get_status_style(status):
     """Retrn status style class"""
-    return (STATUS_STYLES[status.status_type] + ' text-light') \
-        if status.status_type in STATUS_STYLES else 'bg-light'
+    return (
+        (STATUS_STYLES[status.status_type] + ' text-light')
+        if status.status_type in STATUS_STYLES
+        else 'bg-light'
+    )
 
 
 @register.simple_tag
@@ -65,7 +68,8 @@ def get_app_url(event):
     # Projectroles is a special case
     if event.app == 'projectroles':
         return reverse(
-            'projectroles:detail', kwargs={'project': event.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': event.project.sodar_uuid}
+        )
 
     else:
         app_plugin = ProjectAppPluginPoint.get_plugin(event.app)
@@ -73,7 +77,8 @@ def get_app_url(event):
         if app_plugin:
             return reverse(
                 app_plugin.entry_point_url_id,
-                kwargs={'project': event.project.sodar_uuid})
+                kwargs={'project': event.project.sodar_uuid},
+            )
 
     return '#'
 
@@ -81,21 +86,28 @@ def get_app_url(event):
 @register.simple_tag
 def get_event_details(event):
     """Return HTML data for event detail popover"""
-    ret = '<table class="table table-striped sodar-card-table ' \
-          'sodar-tl-table-detail">\n' \
-          '<thead>\n<th>Timestamp</th>\n<th>Description</th>\n' \
-          '<th>Status</th>\n</thead>\n<tbody>'
+    ret = (
+        '<table class="table table-striped sodar-card-table '
+        'sodar-tl-table-detail">\n'
+        '<thead>\n<th>Timestamp</th>\n<th>Description</th>\n'
+        '<th>Status</th>\n</thead>\n<tbody>'
+    )
     status_changes = event.get_status_changes(reverse=True)
 
     for status in status_changes:
-        ret += \
-            '\n<tr><td>{}</td>\n<td>{}</td>\n' \
+        ret += (
+            '\n<tr><td>{}</td>\n<td>{}</td>\n'
             '<td class="{}">{}</td>\n</tr>'.format(
                 localtime(status.timestamp).strftime('%Y-%m-%d %H:%M:%S'),
-                status.description[:256] + (
+                status.description[:256]
+                + (
                     '<em class="text-muted"> (...)</em>'
-                    if len(status.description) > 256 else ''),
+                    if len(status.description) > 256
+                    else ''
+                ),
                 get_status_style(status),
-                status.status_type)
+                status.status_type,
+            )
+        )
     ret += '\n</tbody>\n</table>'
     return ret

@@ -18,11 +18,16 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 HEADERS = {'Content-Type': 'application/json'}
-TARGETS = settings.TASKFLOW_TARGETS if \
-    hasattr(settings, 'TASKFLOW_TARGETS') else ['sodar']
-TASKFLOW_TEST_MODE = True if (
-    hasattr(settings, 'TASKFLOW_TEST_MODE') and
-    settings.TASKFLOW_TEST_MODE) else False
+TARGETS = (
+    settings.TASKFLOW_TARGETS
+    if hasattr(settings, 'TASKFLOW_TARGETS')
+    else ['sodar']
+)
+TASKFLOW_TEST_MODE = (
+    True
+    if (hasattr(settings, 'TASKFLOW_TEST_MODE') and settings.TASKFLOW_TEST_MODE)
+    else False
+)
 
 
 class TaskflowAPI:
@@ -30,20 +35,31 @@ class TaskflowAPI:
 
     class FlowSubmitException(Exception):
         """SODAR Taskflow submission exception"""
+
         pass
 
     class CleanupException(Exception):
         """SODAR Taskflow cleanup exception"""
+
         pass
 
     def __init__(self):
         self.taskflow_url = '{}:{}'.format(
-            settings.TASKFLOW_BACKEND_HOST, settings.TASKFLOW_BACKEND_PORT)
+            settings.TASKFLOW_BACKEND_HOST, settings.TASKFLOW_BACKEND_PORT
+        )
 
     def submit(
-            self, project_uuid, flow_name, flow_data, request=None,
-            targets=TARGETS, request_mode='sync', timeline_uuid=None,
-            force_fail=False, sodar_url=None):
+        self,
+        project_uuid,
+        flow_name,
+        flow_data,
+        request=None,
+        targets=TARGETS,
+        request_mode='sync',
+        timeline_uuid=None,
+        force_fail=False,
+        sodar_url=None,
+    ):
         """
         Submit taskflow for SODAR project data modification.
 
@@ -74,7 +90,8 @@ class TaskflowAPI:
             'targets': targets,
             'force_fail': force_fail,
             'timeline_uuid': str(timeline_uuid),
-            'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
+            'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+        }
 
         # Add the "test_mode" parameter
         data['test_mode'] = TASKFLOW_TEST_MODE
@@ -100,7 +117,8 @@ class TaskflowAPI:
         else:
             logger.error('Submit failed: {}'.format(response.text))
             raise self.FlowSubmitException(
-                self.get_error_msg(flow_name, response.text))
+                self.get_error_msg(flow_name, response.text)
+            )
 
     def use_taskflow(self, project):
         """
@@ -121,7 +139,8 @@ class TaskflowAPI:
         """
         if not TASKFLOW_TEST_MODE:
             raise ImproperlyConfigured(
-                'TASKFLOW_TEST_MODE not True, cleanup command not allowed')
+                'TASKFLOW_TEST_MODE not True, cleanup command not allowed'
+            )
 
         url = self.taskflow_url + '/cleanup'
         data = {'test_mode': TASKFLOW_TEST_MODE}
@@ -145,4 +164,5 @@ class TaskflowAPI:
         :return: String
         """
         return 'Taskflow "{}" failed! Reason: "{}"'.format(
-            flow_name, submit_info[:256])
+            flow_name, submit_info[:256]
+        )

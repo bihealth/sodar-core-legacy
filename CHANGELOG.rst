@@ -29,6 +29,7 @@ Changed
     - Upgrade to Bootstrap 4.2.1 (#23)
     - Upgrade to JQuery 3.3.1 (#23)
     - General code cleanup
+    - Code formatting with Black (#133)
 - **Filesfolders**
     - Refactor ``BatchEditView`` and ``FileForm.clean()`` (#128)
 - **Projectroles**

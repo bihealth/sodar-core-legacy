@@ -5,10 +5,7 @@ from . import views
 app_name = 'adminalerts'
 
 urlpatterns = [
-    url(
-        regex=r'^list$',
-        view=views.AdminAlertListView.as_view(),
-        name='list'),
+    url(regex=r'^list$', view=views.AdminAlertListView.as_view(), name='list'),
     url(
         regex=r'^detail/(?P<uuid>[0-9a-f-]+)$',
         view=views.AdminAlertDetailView.as_view(),
@@ -17,7 +14,8 @@ urlpatterns = [
     url(
         regex=r'^create$',
         view=views.AdminAlertCreateView.as_view(),
-        name='create'),
+        name='create',
+    ),
     url(
         regex=r'^update/(?P<uuid>[0-9a-f-]+)$',
         view=views.AdminAlertUpdateView.as_view(),

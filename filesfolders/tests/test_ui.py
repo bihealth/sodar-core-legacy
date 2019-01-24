@@ -31,8 +31,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     def setUp(self):
         super().setUp()
 
-        set_project_setting(
-            self.project, APP_NAME, 'allow_public_links', True)
+        set_project_setting(self.project, APP_NAME, 'allow_public_links', True)
 
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()
@@ -46,7 +45,8 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         # File created by project contributor
         self.folder_contributor = self._make_folder(
@@ -54,7 +54,8 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_contributor,
-            description='')
+            description='',
+        )
 
         # Init files
 
@@ -67,8 +68,9 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             folder=None,
             owner=self.user_owner,
             description='',
-            public_url=True,    # NOTE: Public URL OK
-            secret=self.secret_file_owner)
+            public_url=True,  # NOTE: Public URL OK
+            secret=self.secret_file_owner,
+        )
 
         # File uploaded by project contributor
         self.file_contributor = self._make_file(
@@ -79,8 +81,9 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             folder=None,
             owner=self.user_contributor,
             description='',
-            public_url=False,   # NOTE: No public URL
-            secret=self.secret_file_contributor)
+            public_url=False,  # NOTE: No public URL
+            secret=self.secret_file_contributor,
+        )
 
         # Init hyperlinks
 
@@ -91,7 +94,8 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         # HyperLink added by project contributor
         self.hyperlink_contrib = self._make_hyperlink(
@@ -100,7 +104,8 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_contributor,
-            description='')
+            description='',
+        )
 
     def test_readme(self):
         """Test rendering readme if it has been uploaded to the folder"""
@@ -115,20 +120,23 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             owner=self.user_owner,
             description='',
             public_url=False,
-            secret='xxxxxxxxx')
+            secret='xxxxxxxxx',
+        )
 
         expected_true = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-ff-readme-card', True)
+            expected_true, url, 'sodar-ff-readme-card', True
+        )
 
     def test_buttons_list(self):
         """Test file/folder list-wide button visibility according to user
@@ -137,18 +145,20 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
-            self.as_contributor.user]
-        expected_false = [
-            self.as_guest.user]
+            self.as_contributor.user,
+        ]
+        expected_false = [self.as_guest.user]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-ff-buttons-list', True)
+            expected_true, url, 'sodar-ff-buttons-list', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-ff-buttons-list', False)
+            expected_false, url, 'sodar-ff-buttons-list', False
+        )
 
     def test_buttons_file(self):
         """Test file action buttons visibility according to user permissions"""
@@ -157,10 +167,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 2),
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 1),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-file-buttons')
 
     def test_buttons_folder(self):
@@ -171,10 +182,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 2),
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 1),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-folder-buttons')
 
     def test_buttons_hyperlink(self):
@@ -185,10 +197,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 2),
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 1),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-hyperlink-buttons')
 
     def test_file_checkboxes(self):
@@ -199,10 +212,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 6),
             (self.as_delegate.user, 6),
             (self.as_contributor.user, 3),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-checkbox')
 
     def test_public_link(self):
@@ -213,10 +227,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 1),
             (self.as_delegate.user, 1),
             (self.as_contributor.user, 1),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-link-public')
 
     def test_public_link_disable(self):
@@ -224,7 +239,8 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         setting = ProjectSetting.objects.get(
             project=self.project.pk,
             app_plugin__name=APP_NAME,
-            name='allow_public_links')
+            name='allow_public_links',
+        )
         setting.value = 0
         setting.save()
 
@@ -233,10 +249,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 0),
             (self.as_delegate.user, 0),
             (self.as_contributor.user, 0),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-ff-link-public')
 
     def test_item_flags(self):
@@ -255,12 +272,12 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_owner.user, 3),
             (self.as_delegate.user, 3),
             (self.as_contributor.user, 3),
-            (self.as_guest.user, 3)]
+            (self.as_guest.user, 3),
+        ]
         url = reverse(
-            'filesfolders:list',
-            kwargs={'project': self.project.sodar_uuid})
-        self.assert_element_count(
-            expected, url, 'sodar-ff-flag-icon', 'class')
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-ff-flag-icon', 'class')
 
 
 class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
@@ -281,7 +298,8 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='description')
+            description='description',
+        )
 
         # File created by project contributor
         self.folder_contributor = self._make_folder(
@@ -289,7 +307,8 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_contributor,
-            description='description')
+            description='description',
+        )
 
         # Init files
 
@@ -302,8 +321,9 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             folder=None,
             owner=self.user_owner,
             description='description',
-            public_url=True,    # NOTE: Public URL OK
-            secret=self.secret_file_owner)
+            public_url=True,  # NOTE: Public URL OK
+            secret=self.secret_file_owner,
+        )
 
         # File uploaded by project contributor
         self.file_contributor = self._make_file(
@@ -314,8 +334,9 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             folder=None,
             owner=self.user_contributor,
             description='description',
-            public_url=False,   # NOTE: No public URL
-            secret=self.secret_file_contributor)
+            public_url=False,  # NOTE: No public URL
+            secret=self.secret_file_contributor,
+        )
 
         # Init hyperlinks
 
@@ -326,7 +347,8 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='description')
+            description='description',
+        )
 
         # HyperLink added by project contributor
         self.hyperlink_contrib = self._make_hyperlink(
@@ -335,7 +357,8 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             project=self.project,
             folder=None,
             owner=self.user_contributor,
-            description='description')
+            description='description',
+        )
 
     def test_search_results(self):
         """Test search items visibility according to user permissions"""
@@ -345,9 +368,13 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_delegate.user, 6),
             (self.as_contributor.user, 6),
             (self.as_guest.user, 6),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode(
-            {'s': 'description'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'description'})
+        )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_file(self):
@@ -358,9 +385,13 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 2),
             (self.as_guest.user, 2),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode({
-            's': 'file type:file'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'file type:file'})
+        )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_folder(self):
@@ -371,9 +402,13 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 2),
             (self.as_guest.user, 2),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode({
-            's': 'folder type:folder'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'folder type:folder'})
+        )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_link(self):
@@ -384,9 +419,13 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 2),
             (self.as_guest.user, 2),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode({
-            's': 'link type:link'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'link type:link'})
+        )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
 
     def test_search_type_nonexisting(self):
@@ -397,7 +436,11 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             (self.as_delegate.user, 0),
             (self.as_contributor.user, 0),
             (self.as_guest.user, 0),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode({
-            's': 'test type:Jaix1au'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'test type:Jaix1au'})
+        )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')

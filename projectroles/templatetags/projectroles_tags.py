@@ -5,27 +5,34 @@ from django import template
 from django.conf import settings
 from django.utils import timezone
 
-from ..models import Project, RoleAssignment, RemoteProject, SODAR_CONSTANTS, \
-    PROJECT_TAG_STARRED
+from ..models import (
+    Project,
+    RoleAssignment,
+    RemoteProject,
+    SODAR_CONSTANTS,
+    PROJECT_TAG_STARRED,
+)
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
 
 
 # Settings
-HELP_HIGHLIGHT_DAYS = settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS if \
-    hasattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS') else 7
+HELP_HIGHLIGHT_DAYS = (
+    settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
+    if hasattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS')
+    else 7
+)
 
 # Local constants
 INDENT_PX = 25
 
-PROJECT_TYPE_DISPLAY = {
-    'PROJECT': 'Project',
-    'CATEGORY': 'Category'}
+PROJECT_TYPE_DISPLAY = {'PROJECT': 'Project', 'CATEGORY': 'Category'}
 
 # Behaviour for certain levels has not been specified/implemented yet
 ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
-    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']]
+    SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+]
 
 register = template.Library()
 
@@ -68,9 +75,9 @@ def get_site_app_messages(user):
 @register.simple_tag
 def has_star(project, user):
     """Return True/False for project star tag state"""
-    return (
-        user.has_perm('projectroles.view_project', project) and
-        get_tag_state(project, user, PROJECT_TAG_STARRED))
+    return user.has_perm(
+        'projectroles.view_project', project
+    ) and get_tag_state(project, user, PROJECT_TAG_STARRED)
 
 
 @register.simple_tag
@@ -78,7 +85,8 @@ def get_remote_project_obj(site, project):
     """Return RemoteProject object for RemoteSite and Project"""
     try:
         return RemoteProject.objects.get(
-            site=site, project_uuid=project.sodar_uuid)
+            site=site, project_uuid=project.sodar_uuid
+        )
 
     except RemoteProject.DoesNotExist:
         return None
@@ -87,9 +95,10 @@ def get_remote_project_obj(site, project):
 @register.simple_tag
 def allow_project_creation():
     """Check whether creating a project is allowed on the site"""
-    if (settings.PROJECTROLES_SITE_MODE ==
-            SODAR_CONSTANTS['SITE_MODE_TARGET'] and
-            not settings.PROJECTROLES_TARGET_CREATE):
+    if (
+        settings.PROJECTROLES_SITE_MODE == SODAR_CONSTANTS['SITE_MODE_TARGET']
+        and not settings.PROJECTROLES_TARGET_CREATE
+    ):
         return False
     return True
 
@@ -97,9 +106,11 @@ def allow_project_creation():
 @register.simple_tag
 def is_app_hidden(plugin, user):
     """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
-    if (hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS') and
-            plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS and
-            not user.is_superuser):
+    if (
+        hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS')
+        and plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS
+        and not user.is_superuser
+    ):
         return True
     return False
 
@@ -114,22 +125,23 @@ def get_project_list(user, parent=None):
 
     if user.is_superuser:
         project_list = Project.objects.filter(
-            parent=parent,
-            submit_status='OK').order_by('title')
+            parent=parent, submit_status='OK'
+        ).order_by('title')
 
     elif not user.is_anonymous():
         project_list = [
-            p for p in Project.objects.filter(
-                parent=parent,
-                submit_status='OK').order_by('title')
-            if p.has_role(user, include_children=True)]
+            p
+            for p in Project.objects.filter(
+                parent=parent, submit_status='OK'
+            ).order_by('title')
+            if p.has_role(user, include_children=True)
+        ]
 
     def append_projects(project):
         lst = [project]
 
         for c in project.get_children():
-            if (user.is_superuser or
-                    c.has_role(user, include_children=True)):
+            if user.is_superuser or c.has_role(user, include_children=True):
                 lst += append_projects(c)
 
         return lst
@@ -148,7 +160,7 @@ def get_project_list_indent(project, list_parent):
     project_depth = project.get_depth()
 
     if list_parent:
-        project_depth -= (list_parent.get_depth() + 1)
+        project_depth -= list_parent.get_depth() + 1
 
     return project_depth * INDENT_PX
 
@@ -158,8 +170,9 @@ def get_not_found_alert(project_results, app_search_data, search_type):
     """Return alert HTML for data which was not found during search, if any"""
     not_found = []
 
-    if (len(project_results) == 0 and (
-            not search_type or search_type == 'project')):
+    if len(project_results) == 0 and (
+        not search_type or search_type == 'project'
+    ):
         not_found.append('Projects'),
 
     for results in [a['results'] for a in app_search_data]:
@@ -167,20 +180,23 @@ def get_not_found_alert(project_results, app_search_data, search_type):
             for k, result in results.items():
                 type_match = False
 
-                if (not search_type or (
-                        'search_type' in result and
-                        search_type in result['search_types'])):
+                if not search_type or (
+                    'search_type' in result
+                    and search_type in result['search_types']
+                ):
                     type_match = True
 
-                if (type_match and (
-                        not result['items'] or len(result['items']) == 0)):
+                if type_match and (
+                    not result['items'] or len(result['items']) == 0
+                ):
                     not_found.append(result['title'])
 
     if not_found:
-        ret = '<div class="alert alert-info pb-0 d-none" ' \
-              'id="sodar-search-not-found-alert">\n' \
-              'No results found:\n<ul>\n' \
-
+        ret = (
+            '<div class="alert alert-info pb-0 d-none" '
+            'id="sodar-search-not-found-alert">\n'
+            'No results found:\n<ul>\n'
+        )
         for n in not_found:
             ret += '<li>{}</li>\n'.format(n)
 
@@ -208,8 +224,9 @@ def get_user_role_html(project, user):
 def get_app_link_state(app_plugin, app_name, url_name):
     """Return "active" if plugin matches app_name and url_name is found in
     app_plugin.urls. """
-    if (app_name == app_plugin.name and
-            url_name in [u.name for u in app_plugin.urls]):
+    if app_name == app_plugin.name and url_name in [
+        u.name for u in app_plugin.urls
+    ]:
         return 'active'
     return ''
 
@@ -242,8 +259,9 @@ def get_project_type(project, capitalize=True):
 @register.simple_tag
 def get_star(project, user):
     """Return HTML for project star tag state if it is set"""
-    if (user.has_perm('projectroles.view_project', project) and
-            get_tag_state(project, user, PROJECT_TAG_STARRED)):
+    if user.has_perm('projectroles.view_project', project) and get_tag_state(
+        project, user, PROJECT_TAG_STARRED
+    ):
         return '<i class="fa fa-star text-warning sodar-tag-starred"></i>'
     return ''
 
@@ -266,7 +284,8 @@ def get_role_import_action(source_as, dest_project):
     """Return label for role import action based on existing assignment"""
     try:
         target_as = RoleAssignment.objects.get(
-            project=dest_project, user=source_as.user)
+            project=dest_project, user=source_as.user
+        )
 
         if target_as.role == source_as.role:
             return 'No action'
@@ -285,18 +304,25 @@ def get_login_info():
     if hasattr(settings, 'ENABLE_LDAP') and settings.ENABLE_LDAP:
         ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
 
-        if (hasattr(settings, 'ENABLE_LDAP_SECONDARY') and
-                settings.ENABLE_LDAP_SECONDARY and
-                settings.AUTH_LDAP2_DOMAIN_PRINTABLE):
+        if (
+            hasattr(settings, 'ENABLE_LDAP_SECONDARY')
+            and settings.ENABLE_LDAP_SECONDARY
+            and settings.AUTH_LDAP2_DOMAIN_PRINTABLE
+        ):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
 
-        ret += ' account. Enter your user name as <code>username@{}' \
-               '</code>'.format(settings.AUTH_LDAP_USERNAME_DOMAIN)
+        ret += (
+            ' account. Enter your user name as <code>username@{}'
+            '</code>'.format(settings.AUTH_LDAP_USERNAME_DOMAIN)
+        )
 
-        if (settings.ENABLE_LDAP_SECONDARY and
-                settings.AUTH_LDAP2_USERNAME_DOMAIN):
+        if (
+            settings.ENABLE_LDAP_SECONDARY
+            and settings.AUTH_LDAP2_USERNAME_DOMAIN
+        ):
             ret += ' or <code>username@{}</code>'.format(
-                settings.AUTH_LDAP2_USERNAME_DOMAIN)
+                settings.AUTH_LDAP2_USERNAME_DOMAIN
+            )
 
     ret += '.</p>'
     return ret
@@ -311,28 +337,32 @@ def get_target_project_select(site, project):
         rp = RemoteProject.objects.get(
             site__mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
             site=site,
-            project_uuid=project.sodar_uuid)
+            project_uuid=project.sodar_uuid,
+        )
         current_level = rp.level
 
     except RemoteProject.DoesNotExist:
         pass
 
-    ret = '<select class="form-control form-control-sm" ' \
-          'name="remote_access_{project}" ' \
-          'id="sodar-pr-remote-project-select-{project}">' \
-          '\n'.format(project=project.sodar_uuid)
+    ret = (
+        '<select class="form-control form-control-sm" '
+        'name="remote_access_{project}" '
+        'id="sodar-pr-remote-project-select-{project}">'
+        '\n'.format(project=project.sodar_uuid)
+    )
 
     for level in ACTIVE_LEVEL_TYPES:
         selected = False
         legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
 
-        if (level == current_level or (
-                level == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and
-                not current_level)):
+        if level == current_level or (
+            level == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and not current_level
+        ):
             selected = True
 
         ret += '<option value="{}" {}>{}</option>\n'.format(
-            level, 'selected' if selected else '', legend)
+            level, 'selected' if selected else '', legend
+        )
 
     ret += '</select>\n'
     return ret

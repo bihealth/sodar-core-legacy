@@ -13,17 +13,24 @@ class AdminAlertMixin:
 
     @classmethod
     def _make_alert(
-            cls, message, user, description, active=True, require_auth=True,
-            date_expire_days=1):
+        cls,
+        message,
+        user,
+        description,
+        active=True,
+        require_auth=True,
+        date_expire_days=1,
+    ):
         """Make and save n AdminAlert"""
         values = {
             'message': message,
             'user': user,
             'description': description,
-            'date_expire':
-                timezone.now() + timezone.timedelta(days=date_expire_days),
+            'date_expire': timezone.now()
+            + timezone.timedelta(days=date_expire_days),
             'active': active,
-            'require_auth': require_auth}
+            'require_auth': require_auth,
+        }
         alert = AdminAlert(**values)
         alert.save()
         return alert
@@ -44,7 +51,8 @@ class TestAdminAlert(AdminAlertMixin, TestCase):
             user=self.superuser,
             description='description',
             active=True,
-            require_auth=True)
+            require_auth=True,
+        )
 
     def test_initialization(self):
         expected = {
@@ -54,7 +62,8 @@ class TestAdminAlert(AdminAlertMixin, TestCase):
             'date_expire': self.alert.date_expire,
             'active': True,
             'require_auth': True,
-            'sodar_uuid': self.alert.sodar_uuid}
+            'sodar_uuid': self.alert.sodar_uuid,
+        }
         model_dict = model_to_dict(self.alert)
         # HACK: Can't compare markupfields like this. Better solution?
         model_dict.pop('description', None)
