@@ -12,13 +12,7 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
 # Event status types
-EVENT_STATUS_TYPES = [
-    'OK',
-    'INIT',
-    'SUBMIT',
-    'FAILED',
-    'INFO',
-    'CANCEL']
+EVENT_STATUS_TYPES = ['OK', 'INIT', 'SUBMIT', 'FAILED', 'INFO', 'CANCEL']
 
 DEFAULT_MESSAGES = {
     'OK': 'All OK',
@@ -26,13 +20,16 @@ DEFAULT_MESSAGES = {
     'SUBMIT': 'Job submitted to Taskflow',
     'FAILED': 'Failed (unknown problem)',
     'INFO': 'Info level action',
-    'CANCEL': 'Action cancelled'}
+    'CANCEL': 'Action cancelled',
+}
 
 
 class ProjectEventManager(models.Manager):
     """Manager for custom table-level ProjectEvent queries"""
+
     def get_object_events(
-            self, project, object_model, object_uuid, order_by='-pk'):
+        self, project, object_model, object_uuid, order_by='-pk'
+    ):
         """
         Return events which are linked to an object reference.
 
@@ -45,7 +42,8 @@ class ProjectEventManager(models.Manager):
         return ProjectEvent.objects.filter(
             project=project,
             event_objects__object_model=object_model,
-            event_objects__object_uuid=object_uuid).order_by(order_by)
+            event_objects__object_uuid=object_uuid,
+        ).order_by(order_by)
 
 
 class ProjectEvent(models.Model):
@@ -55,60 +53,57 @@ class ProjectEvent(models.Model):
     project = models.ForeignKey(
         Project,
         related_name='events',
-        help_text='Project in which the event belongs')
+        help_text='Project in which the event belongs',
+    )
 
     #: App from which the event was triggered
     app = models.CharField(
-        max_length=255,
-        help_text='App from which the event was triggered')
+        max_length=255, help_text='App from which the event was triggered'
+    )
 
     #: User who initiated the event
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         # related_name='events',
-        help_text='User who initiated the event')
+        help_text='User who initiated the event',
+    )
 
     #: Event ID string
-    event_name = models.CharField(
-        max_length=255,
-        help_text='Event ID string')
+    event_name = models.CharField(max_length=255, help_text='Event ID string')
 
     #: Description of status change (may include {object_name} references)
     description = models.TextField(
         help_text='Description of status change '
-                  '(may include {object label} references)')
+        '(may include {object label} references)'
+    )
 
     #: Additional event data as JSON
     extra_data = JSONField(
-        default=dict,
-        help_text='Additional event data as JSON')
+        default=dict, help_text='Additional event data as JSON'
+    )
 
     #: Event is classified (only viewable by user levels specified in rules)
     classified = models.BooleanField(
         default=False,
         help_text='Event is classified (only viewable by user levels '
-                  'specified in rules)')
+        'specified in rules)',
+    )
 
     #: UUID for the event
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='Event SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='Event SODAR UUID'
+    )
 
     # Set manager for custom queries
     objects = ProjectEventManager()
 
     def __str__(self):
         return '{}: {}/{}'.format(
-            self.project.title,
-            self.event_name,
-            self.user.username)
+            self.project.title, self.event_name, self.user.username
+        )
 
     def __repr__(self):
-        values = (
-            self.project.title,
-            self.event_name,
-            self.user.username)
+        values = (self.project.title, self.event_name, self.user.username)
 
         return 'ProjectEvent({})'.format(', '.join(repr(v) for v in values))
 
@@ -122,8 +117,9 @@ class ProjectEvent(models.Model):
 
     def get_status_changes(self, reverse=False):
         """Return all status changes for the event"""
-        return self.status_changes.order_by('{}pk'.format(
-            '-' if reverse else ''))
+        return self.status_changes.order_by(
+            '{}pk'.format('-' if reverse else '')
+        )
 
     def add_object(self, obj, label, name, extra_data=None):
         """
@@ -159,15 +155,19 @@ class ProjectEvent(models.Model):
         :raise: TypeError if status_type is invalid
         """
         if status_type not in EVENT_STATUS_TYPES:
-            raise TypeError('Invalid status type (accepted values: {})'.format(
-                ', '.join(v for v in EVENT_STATUS_TYPES)))
+            raise TypeError(
+                'Invalid status type (accepted values: {})'.format(
+                    ', '.join(v for v in EVENT_STATUS_TYPES)
+                )
+            )
 
         status = ProjectEventStatus()
         status.event = self
         status.status_type = status_type
 
-        status.description = status_desc \
-            if status_desc else DEFAULT_MESSAGES[status_type]
+        status.description = (
+            status_desc if status_desc else DEFAULT_MESSAGES[status_type]
+        )
 
         if extra_data:
             status.extra_data = extra_data
@@ -184,56 +184,61 @@ class ProjectEventObjectRef(models.Model):
     event = models.ForeignKey(
         ProjectEvent,
         related_name='event_objects',
-        help_text='Event to which the object belongs')
+        help_text='Event to which the object belongs',
+    )
 
     #: Label for the object related to the event
     label = models.CharField(
         max_length=255,
         null=False,
         blank=False,
-        help_text='Label for the object related to the event')
+        help_text='Label for the object related to the event',
+    )
 
     #: Name or title of the object
     name = models.CharField(
         max_length=255,
         null=False,
         blank=False,
-        help_text='Name or title of the object')
+        help_text='Name or title of the object',
+    )
 
     #: Object model as string
     object_model = models.CharField(
         max_length=255,
         null=False,
         blank=False,
-        help_text='Object model as string')
+        help_text='Object model as string',
+    )
 
     #: Object SODAR UUID
     object_uuid = models.UUIDField(
-        null=True,
-        blank=True,
-        unique=False,
-        help_text='Object SODAR UUID')
+        null=True, blank=True, unique=False, help_text='Object SODAR UUID'
+    )
 
     #: Additional data related to the object as JSON
     extra_data = JSONField(
-        default=dict,
-        help_text='Additional data related to the object as JSON')
+        default=dict, help_text='Additional data related to the object as JSON'
+    )
 
     def __str__(self):
         return '{}: {}/{} ({})'.format(
             self.event.project.title,
             self.event.event_name,
             self.event.user.username,
-            self.name)
+            self.name,
+        )
 
     def __repr__(self):
         values = (
             self.event.project.title,
             self.event.event_name,
             self.event.user.username,
-            self.name)
+            self.name,
+        )
         return 'ProjectEventObjectRef({})'.format(
-            ', '.join(repr(v) for v in values))
+            ', '.join(repr(v) for v in values)
+        )
 
 
 class ProjectEventStatus(models.Model):
@@ -243,42 +248,47 @@ class ProjectEventStatus(models.Model):
     event = models.ForeignKey(
         ProjectEvent,
         related_name='status_changes',
-        help_text='Event to which the status change belongs')
+        help_text='Event to which the status change belongs',
+    )
 
     #: DateTime of the status change
     timestamp = models.DateTimeField(
-        auto_now_add=True,
-        help_text='DateTime of the status change')
+        auto_now_add=True, help_text='DateTime of the status change'
+    )
 
     #: Type of the status change
     status_type = models.CharField(
         max_length=64,
         null=False,
         blank=False,
-        help_text='Type of the status change')
+        help_text='Type of the status change',
+    )
 
     #: Description of status change (optional)
     description = models.TextField(
-        blank=True,
-        help_text='Description of status change (optional)')
+        blank=True, help_text='Description of status change (optional)'
+    )
 
     #: Additional status data as JSON
     extra_data = JSONField(
-        default=dict,
-        help_text='Additional status data as JSON')
+        default=dict, help_text='Additional status data as JSON'
+    )
 
     def __str__(self):
         return '{}: {}/{} ({})'.format(
             self.event.project.title,
             self.event.event_name,
             self.event.user.username,
-            self.status_type)
+            self.status_type,
+        )
 
     def __repr__(self):
         values = (
             self.event.project.title,
             self.event.event_name,
             self.event.user.username,
-            self.status_type)
+            self.status_type,
+        )
         return 'ProjectEventStatus({})'.format(
-            ', '.join(repr(v) for v in values))
+            ', '.join(repr(v) for v in values)
+        )

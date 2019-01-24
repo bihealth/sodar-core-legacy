@@ -9,8 +9,13 @@ from test_plus.test import TestCase
 
 from ..models import Role, SODAR_CONSTANTS
 from ..utils import build_secret
-from .test_models import ProjectMixin, RoleAssignmentMixin, \
-    ProjectInviteMixin, RemoteSiteMixin, RemoteProjectMixin
+from .test_models import (
+    ProjectMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+)
 
 
 # SODAR constants
@@ -44,18 +49,20 @@ class TestPermissionBase(TestCase):
                     response = self.client.get(url)
 
                     self.assertEqual(
-                        response.status_code, 200, 'user={}'.format(user))
+                        response.status_code, 200, 'user={}'.format(user)
+                    )
 
             # Anonymous
             else:
                 response = self.client.get(url)
                 self.assertEqual(
-                    response.status_code, 200, 'user={}'.format(user))
+                    response.status_code, 200, 'user={}'.format(user)
+                )
 
     # TODO: Remove and use assert_response() instead
     def assert_redirect(
-            self, url, users, redirect_user=None, redirect_anon=None,
-            method='GET'):
+        self, url, users, redirect_user=None, redirect_anon=None, method='GET'
+    ):
         """
         Assert redirection to an appropriate page if user is not authorized
         :param url: Target URL for the request
@@ -64,6 +71,7 @@ class TestPermissionBase(TestCase):
         :param redirect_anon: Redirect URL for anonymous (None=default)
         :param method: Method for URL (default = 'GET')
         """
+
         def make_request(url, method):
             if method == 'POST':
                 return self.client.post(url)
@@ -72,16 +80,20 @@ class TestPermissionBase(TestCase):
                 return self.client.get(url)
 
         for user in users:
-            if user:    # Authenticated user
-                redirect_url = redirect_user if redirect_user else \
-                    reverse('home')
+            if user:  # Authenticated user
+                redirect_url = (
+                    redirect_user if redirect_user else reverse('home')
+                )
 
                 with self.login(user):
                     response = make_request(url, method)
 
-            else:   # Anonymous
-                redirect_url = redirect_anon if redirect_anon else \
-                    reverse('login') + '?next=' + url
+            else:  # Anonymous
+                redirect_url = (
+                    redirect_anon
+                    if redirect_anon
+                    else reverse('login') + '?next=' + url
+                )
 
                 response = make_request(url, method)
 
@@ -90,8 +102,14 @@ class TestPermissionBase(TestCase):
             self.assertEqual(response.url, redirect_url, msg=msg)
 
     def assert_response(
-            self, url, users, status_code, redirect_user=None,
-            redirect_anon=None, method='GET'):
+        self,
+        url,
+        users,
+        status_code,
+        redirect_user=None,
+        redirect_anon=None,
+        method='GET',
+    ):
         """
         Assert a response status code for url with a list of users. Also checks
         for redirection URL where applicable.
@@ -102,6 +120,7 @@ class TestPermissionBase(TestCase):
         :param redirect_anon: Redirect URL for anonymous (None=default)
         :param method: Method for request (default='GET')
         """
+
         def make_request(url, method):
             if method == 'POST':
                 return self.client.post(url)
@@ -110,16 +129,20 @@ class TestPermissionBase(TestCase):
                 return self.client.get(url)
 
         for user in users:
-            if user:    # Authenticated user
-                redirect_url = redirect_user if redirect_user else \
-                    reverse('home')
+            if user:  # Authenticated user
+                redirect_url = (
+                    redirect_user if redirect_user else reverse('home')
+                )
 
                 with self.login(user):
                     response = make_request(url, method)
 
-            else:   # Anonymous
-                redirect_url = redirect_anon if redirect_anon else \
-                    reverse('login') + '?next=' + url
+            else:  # Anonymous
+                redirect_url = (
+                    redirect_anon
+                    if redirect_anon
+                    else reverse('login') + '?next=' + url
+                )
 
                 response = make_request(url, method)
 
@@ -131,20 +154,20 @@ class TestPermissionBase(TestCase):
 
 
 class TestProjectPermissionBase(
-        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin,
-        TestPermissionBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestPermissionBase
+):
     """Base class for testing project permissions"""
 
     def setUp(self):
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE)[0]
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
         self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR)[0]
-        self.role_guest = Role.objects.get_or_create(
-            name=PROJECT_ROLE_GUEST)[0]
+            name=PROJECT_ROLE_CONTRIBUTOR
+        )[0]
+        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
 
@@ -170,28 +193,31 @@ class TestProjectPermissionBase(
 
         # Top level category
         self.category = self._make_project(
-            title='TestCategoryTop',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None)
+            title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
 
         # Subproject under category
         self.project = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
-            parent=self.category)
+            parent=self.category,
+        )
 
         # Init role assignments
 
-        self._make_assignment(
-            self.category, self.user_owner, self.role_owner)
+        self._make_assignment(self.category, self.user_owner, self.role_owner)
         self.as_owner = self._make_assignment(
-            self.project, self.user_owner, self.role_owner)
+            self.project, self.user_owner, self.role_owner
+        )
         self.as_delegate = self._make_assignment(
-            self.project, self.user_delegate, self.role_delegate)
+            self.project, self.user_delegate, self.role_delegate
+        )
         self.as_contributor = self._make_assignment(
-            self.project, self.user_contributor, self.role_contributor)
+            self.project, self.user_contributor, self.role_contributor
+        )
         self.as_guest = self._make_assignment(
-            self.project, self.user_guest, self.role_guest)
+            self.project, self.user_guest, self.role_guest
+        )
 
 
 class TestBaseViews(TestProjectPermissionBase):
@@ -205,9 +231,9 @@ class TestBaseViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
-        bad_users = [
-            self.anonymous]
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -219,9 +245,9 @@ class TestBaseViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
-        bad_users = [
-            self.anonymous]
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(reverse('home'), bad_users)
 
@@ -234,7 +260,8 @@ class TestBaseViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
 
         self.assert_render200_ok(url, good_users)
 
@@ -246,12 +273,11 @@ class TestBaseViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(
-            url,
-            good_users,
-            redirect_user='/login/',
-            redirect_anon='/login/')
+            url, good_users, redirect_user='/login/', redirect_anon='/login/'
+        )
 
     def test_about(self):
         url = reverse('about')
@@ -262,25 +288,28 @@ class TestBaseViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
 
     def test_admin(self):
         url = '/admin/'
-        good_users = [
-            self.superuser]
+        good_users = [self.superuser]
         bad_users = [
             self.anonymous,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(
-            url, bad_users,
+            url,
+            bad_users,
             redirect_user='/admin/login/?next=/admin/',
-            redirect_anon='/admin/login/?next=/admin/')
+            redirect_anon='/admin/login/?next=/admin/',
+        )
 
 
 class TestProjectViews(TestProjectPermissionBase):
@@ -289,13 +318,13 @@ class TestProjectViews(TestProjectPermissionBase):
     def test_category_details(self):
         """Test access to category details"""
         url = reverse(
-            'projectroles:detail', kwargs={'project': self.category.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
 
         # Add user with access to project below category: should still be able
         # to view the category
         new_user = self.make_user('new_user')
-        self._make_assignment(
-            self.project, new_user, self.role_contributor)
+        self._make_assignment(self.project, new_user, self.role_contributor)
 
         good_users = [
             self.superuser,
@@ -303,93 +332,87 @@ class TestProjectViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            new_user]
-        bad_users = [
-            self.anonymous,
-            self.user_no_roles]
+            new_user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_project_details(self):
         """Test access to project details"""
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         good_users = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
-        bad_users = [
-            self.anonymous,
-            self.user_no_roles]
+            self.as_guest.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_update(self):
         """Test access to project updating"""
         url = reverse(
-            'projectroles:update',
-            kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_create_top(self):
         """Test access to top level project creation"""
         url = reverse('projectroles:create')
-        good_users = [
-            self.superuser]
+        good_users = [self.superuser]
         bad_users = [
             self.anonymous,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_create_sub(self):
         """Test access to subproject creation"""
         url = reverse(
-            'projectroles:create',
-            kwargs={'project': self.category.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user]
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.anonymous,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_roles(self):
         """Test access to role list"""
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
         good_users = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
-        bad_users = [
-            self.anonymous,
-            self.user_no_roles]
+            self.as_guest.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -397,16 +420,15 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to role creation"""
         url = reverse(
             'projectroles:role_create',
-            kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -414,16 +436,15 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to role updating"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -431,16 +452,15 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to role deletion"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -448,7 +468,8 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to owner role update: not allowed, should fail"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_owner.sodar_uuid})
+            kwargs={'roleassignment': self.as_owner.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -456,14 +477,16 @@ class TestProjectViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     def test_role_delete_owner(self):
         """Test access to owner role deletion: not allowed, should fail"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_owner.sodar_uuid})
+            kwargs={'roleassignment': self.as_owner.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -471,23 +494,24 @@ class TestProjectViews(TestProjectPermissionBase):
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     def test_role_update_delegate(self):
         """Test access to delegate role update"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user]
+            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.anonymous,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -495,16 +519,16 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to role deletion for delegate"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user]
+            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.anonymous,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -512,33 +536,30 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to role invite creation"""
         url = reverse(
             'projectroles:invite_create',
-            kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_role_invite_list(self):
         """Test access to role invite list"""
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -551,26 +572,28 @@ class TestProjectViews(TestProjectPermissionBase):
             project=self.project,
             role=self.role_contributor,
             issuer=self.user_owner,
-            message='')
+            message='',
+        )
 
         url = reverse(
             'projectroles:invite_resend',
-            kwargs={'projectinvite': invite.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'projectinvite': invite.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(
             url,
             good_users,
             redirect_user=reverse(
                 'projectroles:invites',
-                kwargs={'project': self.project.sodar_uuid}))
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assert_redirect(url, bad_users)
 
     def test_role_invite_revoke(self):
@@ -582,43 +605,43 @@ class TestProjectViews(TestProjectPermissionBase):
             project=self.project,
             role=self.role_contributor,
             issuer=self.user_owner,
-            message='')
+            message='',
+        )
 
         url = reverse(
             'projectroles:invite_revoke',
-            kwargs={'projectinvite': invite.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user]
+            kwargs={'projectinvite': invite.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
         bad_users = [
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_starring_api(self):
         """Test access to project starring API view"""
         url = reverse(
-            'projectroles:star',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:star', kwargs={'project': self.project.sodar_uuid}
+        )
         good_users = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
-        bad_users = [
-            self.anonymous,
-            self.user_no_roles]
+            self.as_guest.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
 
 
 class TestTargetProjectViews(
-        RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase):
+    RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase
+):
     """Tests for Project updating views on a TARGET site"""
 
     def setUp(self):
@@ -630,26 +653,29 @@ class TestTargetProjectViews(
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
             description='',
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
         # Create RemoteProject objects
         self.remote_category = self._make_remote_project(
             project_uuid=self.category.sodar_uuid,
             project=self.category,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
         self.remote_project = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             project=self.project,
             site=self.site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update(self):
         """Test access to project updating as target"""
         url = reverse(
-            'projectroles:update',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -657,22 +683,23 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_top_allowed(self):
         """Test access to top level project creation as target"""
         url = reverse('projectroles:create')
-        good_users = [
-            self.superuser]
+        good_users = [self.superuser]
         bad_users = [
             self.anonymous,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -680,28 +707,28 @@ class TestTargetProjectViews(
     def test_create_sub(self):
         """Test access to subproject creation as target"""
         url = reverse(
-            'projectroles:create',
-            kwargs={'project': self.category.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.as_owner.user]
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.anonymous,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     @override_settings(
         PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
-        PROJECTROLES_TARGET_CREATE=False)
+        PROJECTROLES_TARGET_CREATE=False,
+    )
     def test_create_sub_disallowed(self):
         """Test access to subproject creation with creation disallowed as target"""
         url = reverse(
-            'projectroles:create',
-            kwargs={'project': self.category.sodar_uuid})
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -709,7 +736,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -717,7 +745,8 @@ class TestTargetProjectViews(
         """Test access to role creation as target"""
         url = reverse(
             'projectroles:role_create',
-            kwargs={'project': self.project.sodar_uuid})
+            kwargs={'project': self.project.sodar_uuid},
+        )
         bad_users = [
             self.superuser,
             self.as_owner.user,
@@ -725,7 +754,8 @@ class TestTargetProjectViews(
             self.anonymous,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -733,7 +763,8 @@ class TestTargetProjectViews(
         """Test access to role updating as target"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid})
+            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -741,7 +772,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -749,7 +781,8 @@ class TestTargetProjectViews(
         """Test access to role deletion as target"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid})
+            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -757,7 +790,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -765,7 +799,8 @@ class TestTargetProjectViews(
         """Test access to delegate role update as target"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid})
+            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -773,7 +808,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -781,7 +817,8 @@ class TestTargetProjectViews(
         """Test access to role deletion for delegate as target"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid})
+            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+        )
         bad_users = [
             self.anonymous,
             self.superuser,
@@ -789,7 +826,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -797,7 +835,8 @@ class TestTargetProjectViews(
         """Test access to role invite creation as target"""
         url = reverse(
             'projectroles:invite_create',
-            kwargs={'project': self.project.sodar_uuid})
+            kwargs={'project': self.project.sodar_uuid},
+        )
         bad_users = [
             self.superuser,
             self.anonymous,
@@ -805,15 +844,16 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_role_invite_list(self):
         """Test access to role invite list as target"""
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
         bad_users = [
             self.superuser,
             self.anonymous,
@@ -821,7 +861,8 @@ class TestTargetProjectViews(
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
 
@@ -846,28 +887,22 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
             description='',
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_site_list(self):
         """Test remote site list view permissions"""
         url = reverse('projectroles:remote_sites')
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_site_create(self):
         """Test remote site create view permissions"""
-        url = reverse(
-            'projectroles:remote_site_create')
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+        url = reverse('projectroles:remote_site_create')
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -875,12 +910,10 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
         """Test remote site update view permissions"""
         url = reverse(
             'projectroles:remote_site_update',
-            kwargs={'remotesite': self.site.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            kwargs={'remotesite': self.site.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -888,12 +921,10 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
         """Test remote site delete view permissions"""
         url = reverse(
             'projectroles:remote_site_delete',
-            kwargs={'remotesite': self.site.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            kwargs={'remotesite': self.site.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -901,12 +932,10 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
         """Test remote project list view permissions"""
         url = reverse(
             'projectroles:remote_projects',
-            kwargs={'remotesite': self.site.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            kwargs={'remotesite': self.site.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
@@ -914,11 +943,9 @@ class TestRemoteSiteApp(RemoteSiteMixin, TestPermissionBase):
         """Test remote project update view permissions"""
         url = reverse(
             'projectroles:remote_projects_update',
-            kwargs={'remotesite': self.site.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            kwargs={'remotesite': self.site.sodar_uuid},
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)

@@ -3,13 +3,20 @@ from django.views.generic import TemplateView
 
 # Projectroles dependency
 from projectroles.plugins import get_backend_api
-from projectroles.views import LoggedInPermissionMixin, \
-    ProjectContextMixin, ProjectPermissionMixin
+from projectroles.views import (
+    LoggedInPermissionMixin,
+    ProjectContextMixin,
+    ProjectPermissionMixin,
+)
 
 
 class ExampleView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectPermissionMixin,
+    ProjectContextMixin,
+    TemplateView,
+):
     """Example project app view"""
 
     # Projectroles dependency

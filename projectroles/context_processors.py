@@ -15,4 +15,6 @@ def urls_processor(request):
             'invites',
             'invite_create',
             'invite_resend',
-            'invite_revoke']}
+            'invite_revoke',
+        ],
+    }

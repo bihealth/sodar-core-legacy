@@ -35,18 +35,22 @@ class Command(BaseCommand):
             for item in sync_data:
                 project = Project.objects.get(sodar_uuid=item['project_uuid'])
 
-                print_msg('Syncing flow "{}" by {} for "{}" ({})'.format(
-                    item['flow_name'],
-                    app_name,
-                    project.title,
-                    project.sodar_uuid))
+                print_msg(
+                    'Syncing flow "{}" by {} for "{}" ({})'.format(
+                        item['flow_name'],
+                        app_name,
+                        project.title,
+                        project.sodar_uuid,
+                    )
+                )
 
                 try:
                     taskflow.submit(
                         project_uuid=item['project_uuid'],
                         flow_name=item['flow_name'],
                         flow_data=item['flow_data'],
-                        targets=TARGETS)
+                        targets=TARGETS,
+                    )
 
                 except taskflow.FlowSubmitException as ex:
                     print_msg('Exception raised by flow!')
@@ -61,8 +65,9 @@ class Command(BaseCommand):
 
         # Only sync PROJECT type projects as we (currently) don't have any
         # use for CATEGORY projects in taskflow
-        projects = Project.objects.filter(
-            type=PROJECT_TYPE_PROJECT).order_by('pk')
+        projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT).order_by(
+            'pk'
+        )
 
         ####################
         # Projectroles sync
@@ -80,38 +85,51 @@ class Command(BaseCommand):
             owner_as = project.get_owner()
 
             # Create project
-            project_sync_data.append({
-                'project_uuid': str(project.sodar_uuid),
-                'project_title': project.title,
-                'flow_name': 'project_create',
-                'flow_data': {
-                    'project_title': project.title,
-                    'project_description': project.description,
-                    'parent_uuid': str(project.parent.sodar_uuid) if
-                    project.parent else 0,
-                    'owner_username': owner_as.user.username,
-                    'owner_uuid': str(owner_as.user.sodar_uuid),
-                    'owner_role_pk': owner_as.role.pk}})
-
-            # Set up roles
-            role_sync_data.append({
-                'project_uuid': str(project.sodar_uuid),
-                'project_title': project.title,
-                'flow_name': 'role_sync_delete_all',
-                'flow_data': {
-                    'owner_username': owner_as.user.username}})
-
-            for role_as in project.roles.exclude(
-                    role=Role.objects.get(
-                        name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])):
-                role_sync_data.append({
+            project_sync_data.append(
+                {
                     'project_uuid': str(project.sodar_uuid),
                     'project_title': project.title,
-                    'flow_name': 'role_update',
+                    'flow_name': 'project_create',
                     'flow_data': {
-                        'username': role_as.user.username,
-                        'user_uuid': str(role_as.user.sodar_uuid),
-                        'role_pk': str(role_as.role.pk)}})
+                        'project_title': project.title,
+                        'project_description': project.description,
+                        'parent_uuid': str(project.parent.sodar_uuid)
+                        if project.parent
+                        else 0,
+                        'owner_username': owner_as.user.username,
+                        'owner_uuid': str(owner_as.user.sodar_uuid),
+                        'owner_role_pk': owner_as.role.pk,
+                    },
+                }
+            )
+
+            # Set up roles
+            role_sync_data.append(
+                {
+                    'project_uuid': str(project.sodar_uuid),
+                    'project_title': project.title,
+                    'flow_name': 'role_sync_delete_all',
+                    'flow_data': {'owner_username': owner_as.user.username},
+                }
+            )
+
+            for role_as in project.roles.exclude(
+                role=Role.objects.get(
+                    name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+                )
+            ):
+                role_sync_data.append(
+                    {
+                        'project_uuid': str(project.sodar_uuid),
+                        'project_title': project.title,
+                        'flow_name': 'role_update',
+                        'flow_data': {
+                            'username': role_as.user.username,
+                            'user_uuid': str(role_as.user.sodar_uuid),
+                            'role_pk': str(role_as.role.pk),
+                        },
+                    }
+                )
 
         try:
             submit_sync('projectroles', project_sync_data, raise_exception=True)

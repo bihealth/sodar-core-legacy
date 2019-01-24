@@ -15,13 +15,17 @@ def get_default_setting(app_name, setting_name):
     """
     app_plugin = get_app_plugin(app_name)
 
-    if (app_plugin.project_settings and
-            setting_name in app_plugin.project_settings):
+    if (
+        app_plugin.project_settings
+        and setting_name in app_plugin.project_settings
+    ):
         return app_plugin.project_settings[setting_name]['default']
 
     raise KeyError(
         'Setting "{}" not found in app plugin "{}"'.format(
-            setting_name, app_name))
+            setting_name, app_name
+        )
+    )
 
 
 def get_project_setting(project, app_name, setting_name):
@@ -37,7 +41,8 @@ def get_project_setting(project, app_name, setting_name):
     if project:
         try:
             return ProjectSetting.objects.get_setting_value(
-                project, app_name, setting_name)
+                project, app_name, setting_name
+            )
 
         except ProjectSetting.DoesNotExist:
             pass
@@ -55,12 +60,14 @@ def get_all_settings(project=None):
     """
     ret = {}
     app_plugins = [
-        p for p in ProjectAppPluginPoint.get_plugins() if p.project_settings]
+        p for p in ProjectAppPluginPoint.get_plugins() if p.project_settings
+    ]
 
     for p in app_plugins:
         for s_key in p.project_settings:
             ret['settings.{}.{}'.format(p.name, s_key)] = get_project_setting(
-                project, p.name, s_key)
+                project, p.name, s_key
+            )
 
     return ret
 
@@ -81,7 +88,8 @@ def set_project_setting(project, app_name, setting_name, value, validate=True):
     """
     try:
         setting = ProjectSetting.objects.get(
-            project=project, app_plugin__name=app_name, name=setting_name)
+            project=project, app_plugin__name=app_name, name=setting_name
+        )
 
         if setting.value == value:
             return False
@@ -97,8 +105,11 @@ def set_project_setting(project, app_name, setting_name, value, validate=True):
         app_plugin = ProjectAppPluginPoint.get_plugin(name=app_name)
 
         if setting_name not in app_plugin.project_settings:
-            raise KeyError('Setting "{}" not found in app plugin "{}"'.format(
-                setting_name, app_name))
+            raise KeyError(
+                'Setting "{}" not found in app plugin "{}"'.format(
+                    setting_name, app_name
+                )
+            )
 
         s_type = app_plugin.project_settings[setting_name]['type']
 
@@ -110,7 +121,8 @@ def set_project_setting(project, app_name, setting_name, value, validate=True):
             project=project,
             name=setting_name,
             type=s_type,
-            value=value)
+            value=value,
+        )
         setting.save()
         return True
 
@@ -127,13 +139,15 @@ def validate_project_setting(setting_type, setting_value):
         raise ValueError('Invalid setting type')
 
     if setting_type == 'BOOLEAN' and not isinstance(setting_value, bool):
-        raise ValueError('Please enter a valid boolean value ({})'.format(
-            setting_value))
+        raise ValueError(
+            'Please enter a valid boolean value ({})'.format(setting_value)
+        )
 
     if setting_type == 'INTEGER' and (
-            not isinstance(setting_value, int) and
-            not str(setting_value).isdigit()):
-        raise ValueError('Please enter a valid integer value ({})'.format(
-            setting_value))
+        not isinstance(setting_value, int) and not str(setting_value).isdigit()
+    ):
+        raise ValueError(
+            'Please enter a valid integer value ({})'.format(setting_value)
+        )
 
     return True

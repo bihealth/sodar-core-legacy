@@ -11,9 +11,18 @@ from django.test import override_settings
 
 from test_plus.test import TestCase
 
-from projectroles.models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectSetting, ProjectUserTag, RemoteSite, RemoteProject, \
-    SODAR_CONSTANTS, PROJECT_TAG_STARRED
+from projectroles.models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    ProjectSetting,
+    ProjectUserTag,
+    RemoteSite,
+    RemoteProject,
+    SODAR_CONSTANTS,
+    PROJECT_TAG_STARRED,
+)
 from projectroles.plugins import get_app_plugin
 from projectroles.utils import build_secret, set_user_group
 
@@ -49,9 +58,15 @@ class ProjectMixin:
 
     @classmethod
     def _make_project(
-            cls, title, type, parent, description='',
-            submit_status=SUBMIT_STATUS_OK, readme=None,
-            sodar_uuid=None):
+        cls,
+        title,
+        type,
+        parent,
+        description='',
+        submit_status=SUBMIT_STATUS_OK,
+        readme=None,
+        sodar_uuid=None,
+    ):
         """Make and save a Project"""
         values = {
             'title': title,
@@ -59,7 +74,8 @@ class ProjectMixin:
             'parent': parent,
             'submit_status': submit_status,
             'description': description,
-            'readme': readme}
+            'readme': readme,
+        }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
         project = Project(**values)
@@ -69,9 +85,11 @@ class ProjectMixin:
 
 class ProjectInviteMixin:
     """Helper mixin for ProjectInvite creation"""
+
     @classmethod
     def _make_invite(
-            cls, email, project, role, issuer, message, date_expire=None):
+        cls, email, project, role, issuer, message, date_expire=None
+    ):
         """Make and save a ProjectInvite"""
         values = {
             'email': email,
@@ -79,10 +97,12 @@ class ProjectInviteMixin:
             'role': role,
             'issuer': issuer,
             'message': message,
-            'date_expire': date_expire if date_expire else (
-                timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)),
+            'date_expire': date_expire
+            if date_expire
+            else (timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)),
             'secret': SECRET,
-            'active': True}
+            'active': True,
+        }
         invite = ProjectInvite(**values)
         invite.save()
         return invite
@@ -99,7 +119,8 @@ class ProjectSettingMixin:
             'project': project,
             'name': name,
             'type': setting_type,
-            'value': value}
+            'value': value,
+        }
         setting = ProjectSetting(**values)
         setting.save()
         return setting
@@ -111,10 +132,7 @@ class ProjectUserTagMixin:
     @classmethod
     def _make_tag(cls, project, user, name):
         """Make and save a ProjectUserTag"""
-        values = {
-            'project': project,
-            'user': user,
-            'name': name}
+        values = {'project': project, 'user': user, 'name': name}
         tag = ProjectUserTag(**values)
         tag.save()
         return tag
@@ -125,15 +143,21 @@ class RemoteSiteMixin:
 
     @classmethod
     def _make_site(
-            cls, name, url, mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
-            description='', secret=build_secret()):
+        cls,
+        name,
+        url,
+        mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
+        description='',
+        secret=build_secret(),
+    ):
         """Make and save a RemoteSite"""
         values = {
             'name': name,
             'url': url,
             'mode': mode,
             'description': description,
-            'secret': secret}
+            'secret': secret,
+        }
         site = RemoteSite(**values)
         site.save()
         return site
@@ -144,7 +168,8 @@ class RemoteProjectMixin:
 
     @classmethod
     def _make_remote_project(
-            cls, project_uuid, site, level, date_access=None, project=None):
+        cls, project_uuid, site, level, date_access=None, project=None
+    ):
         """Make and save a RemoteProject"""
         if type(project_uuid) == str:
             project_uuid = uuid.UUID(project_uuid)
@@ -154,7 +179,8 @@ class RemoteProjectMixin:
             'site': site,
             'level': level,
             'date_access': date_access,
-            'project': project}
+            'project': project,
+        }
         remote_project = RemoteProject(**values)
         remote_project.save()
         return remote_project
@@ -171,7 +197,8 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
             url='http://0.0.0.0',
             mode=SITE_MODE_SOURCE,
             description='',
-            secret=build_secret())
+            secret=build_secret(),
+        )
 
         remote_projects = []
 
@@ -181,7 +208,9 @@ class RemoteTargetMixin(RemoteSiteMixin, RemoteProjectMixin):
                     project_uuid=project.sodar_uuid,
                     project=project,
                     site=source_site,
-                    level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']))
+                    level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+                )
+            )
 
         return source_site, remote_projects
 
@@ -190,8 +219,15 @@ class SodarUserMixin:
     """Helper mixin for LDAP SodarUser creation"""
 
     def _make_sodar_user(
-            self, username, name, first_name, last_name, email=None,
-            sodar_uuid=None, password='password'):
+        self,
+        username,
+        name,
+        first_name,
+        last_name,
+        email=None,
+        sodar_uuid=None,
+        password='password',
+    ):
         user = self.make_user(username, password)
         user.name = name
         user.first_name = first_name
@@ -214,19 +250,18 @@ class TestProject(ProjectMixin, TestCase):
     def setUp(self):
         # Top level category
         self.category_top = self._make_project(
-            title='TestCategoryTop',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None)
+            title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
         # Subproject under category_top
         self.project_sub = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
-            parent=self.category_top)
+            parent=self.category_top,
+        )
         # Top level project
         self.project_top = self._make_project(
-            title='TestProjectTop',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProjectTop', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
     def test_initialization(self):
         """Test Project initialization"""
@@ -237,7 +272,8 @@ class TestProject(ProjectMixin, TestCase):
             'parent': self.category_top.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'sodar_uuid': self.project_sub.sodar_uuid,
-            'description': ''}
+            'description': '',
+        }
         model_dict = model_to_dict(self.project_sub)
         # HACK: Can't compare markupfields like this. Better solution?
         model_dict.pop('readme', None)
@@ -250,8 +286,7 @@ class TestProject(ProjectMixin, TestCase):
 
     def test__repr__(self):
         """Test Project __repr__()"""
-        expected = "Project('TestProjectSub', 'PROJECT', " \
-            "'TestCategoryTop')"
+        expected = "Project('TestProjectSub', 'PROJECT', " "'TestCategoryTop')"
         self.assertEqual(repr(self.project_sub), expected)
 
     def test_get_children_top(self):
@@ -279,18 +314,19 @@ class TestProject(ProjectMixin, TestCase):
     def test_get_parents_sub(self):
         """Test get parents function for sub project"""
         self.assertEqual(
-            list(self.project_sub.get_parents()), [self.category_top])
+            list(self.project_sub.get_parents()), [self.category_top]
+        )
 
     def test_get_full_title_top(self):
         """Test full title function for top category"""
         self.assertEqual(
-            self.category_top.get_full_title(), self.category_top.title)
+            self.category_top.get_full_title(), self.category_top.title
+        )
 
     def test_get_full_title_sub(self):
         """Test full title function for sub project"""
         expected = self.category_top.title + ' / ' + self.project_sub.title
-        self.assertEqual(
-            self.project_sub.get_full_title(), expected)
+        self.assertEqual(self.project_sub.get_full_title(), expected)
 
     def test_is_remote(self):
         """Test Project.is_remote() without remote projects"""
@@ -311,7 +347,8 @@ class TestProject(ProjectMixin, TestCase):
             self._make_project(
                 title='TestCategoryTop',
                 type=PROJECT_TYPE_PROJECT,
-                parent=self.category_top)
+                parent=self.category_top,
+            )
 
     def test_validate_parent_type(self):
         """Test parent type validation"""
@@ -319,28 +356,29 @@ class TestProject(ProjectMixin, TestCase):
             self._make_project(
                 title='FailProject',
                 type=PROJECT_TYPE_PROJECT,
-                parent=self.project_top)
+                parent=self.project_top,
+            )
 
     def test_get_absolute_url(self):
         """Test get_absolute_url()"""
         expected_url = reverse(
             'projectroles:detail',
-            kwargs={'project': self.project_sub.sodar_uuid})
+            kwargs={'project': self.project_sub.sodar_uuid},
+        )
         self.assertEqual(self.project_sub.get_absolute_url(), expected_url)
 
 
 class TestRole(TestCase):
-
     def setUp(self):
-        self.role = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
     def test_initialization(self):
         """Test Role initialization"""
         expected = {
             'id': self.role.pk,
             'name': PROJECT_ROLE_OWNER,
-            'description': self.role.description}
+            'description': self.role.description,
+        }
         self.assertEqual(model_to_dict(self.role), expected)
 
     def test__str__(self):
@@ -361,10 +399,7 @@ class RoleAssignmentMixin:
     @classmethod
     def _make_assignment(cls, project, user, role):
         """Make and save a RoleAssignment"""
-        values = {
-            'project': project,
-            'user': user,
-            'role': role}
+        values = {'project': project, 'user': user, 'role': role}
         result = RoleAssignment(**values)
         result.save()
         return result
@@ -377,29 +412,28 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         # Init projects/categories
         # Top level category
         self.category_top = self._make_project(
-            title='TestCategoryTop',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None)
+            title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
         # Subproject under category_top
         self.project_sub = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
-            parent=self.category_top)
+            parent=self.category_top,
+        )
         # Top level project
         self.project_top = self._make_project(
-            title='TestProjectTop',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProjectTop', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE)[0]
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
         self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR)[0]
-        self.role_guest = Role.objects.get_or_create(
-            name=PROJECT_ROLE_GUEST)[0]
+            name=PROJECT_ROLE_CONTRIBUTOR
+        )[0]
+        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
         self.user_alice = self.make_user('alice')
@@ -411,19 +445,22 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
 
         # Init assignment
         self.assignment_owner = self._make_assignment(
-            self.category_top, self.user_alice, self.role_owner)
+            self.category_top, self.user_alice, self.role_owner
+        )
 
         self.expected_default = {
             'id': self.assignment_owner.pk,
             'project': self.category_top.pk,
             'user': self.user_alice.pk,
             'role': self.role_owner.pk,
-            'sodar_uuid': self.assignment_owner.sodar_uuid}
+            'sodar_uuid': self.assignment_owner.sodar_uuid,
+        }
 
     def test_initialization(self):
         """Test RoleAssignment initialization"""
         self.assertEqual(
-            model_to_dict(self.assignment_owner), self.expected_default)
+            model_to_dict(self.assignment_owner), self.expected_default
+        )
 
     def test__str__(self):
         """Test RoleAssignment __str__()"""
@@ -433,7 +470,8 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test__repr__(self):
         """Test RoleAssignment __repr__()"""
         expected = "RoleAssignment('TestCategoryTop', 'alice', '{}')".format(
-            PROJECT_ROLE_OWNER)
+            PROJECT_ROLE_OWNER
+        )
         self.assertEqual(repr(self.assignment_owner), expected)
 
     def test_validate_user(self):
@@ -441,39 +479,49 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         role for user in project at once"""
         with self.assertRaises(ValidationError):
             self._make_assignment(
-                self.category_top, self.user_alice, self.role_contributor)
+                self.category_top, self.user_alice, self.role_contributor
+            )
 
     def test_validate_owner(self):
         """Test owner uniqueness validation: can't add owner for project if
         one already exists"""
         with self.assertRaises(ValidationError):
             self._make_assignment(
-                self.category_top, self.user_bob, self.role_owner)
+                self.category_top, self.user_bob, self.role_owner
+            )
 
     def test_validate_delegate(self):
         """Test delegate validation: can't add delegate for project if one
         already exists"""
         self._make_assignment(
-            self.project_sub, self.user_bob, self.role_delegate)
+            self.project_sub, self.user_bob, self.role_delegate
+        )
 
         with self.assertRaises(ValidationError):
             self._make_assignment(
-                self.project_sub, self.user_carol, self.role_delegate)
+                self.project_sub, self.user_carol, self.role_delegate
+            )
 
     def test_validate_category(self):
         """Test category validation: can't add roles other than owner for
         projects of type CATEGORY"""
         with self.assertRaises(ValidationError):
             self._make_assignment(
-                self.category_top, self.user_bob, self.role_contributor)
+                self.category_top, self.user_bob, self.role_contributor
+            )
 
     # Tests for RoleAssignmentManager
 
     def test_get_assignment(self):
         """Test get_assignment() results"""
         self.assertEqual(
-            model_to_dict(RoleAssignment.objects.get_assignment(
-                self.user_alice, self.category_top)), self.expected_default)
+            model_to_dict(
+                RoleAssignment.objects.get_assignment(
+                    self.user_alice, self.category_top
+                )
+            ),
+            self.expected_default,
+        )
 
     def test_get_project_owner(self):
         """Test get_project_owner() results"""
@@ -482,16 +530,18 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_get_project_delegate(self):
         """Test get_project_delegate() results"""
         self._make_assignment(
-            self.project_top, self.user_carol, self.role_delegate)
-        self.assertEqual(
-            self.project_top.get_delegate().user, self.user_carol)
+            self.project_top, self.user_carol, self.role_delegate
+        )
+        self.assertEqual(self.project_top.get_delegate().user, self.user_carol)
 
     def test_get_project_members(self):
         """Test get_project_members() results"""
         assignment_c0 = self._make_assignment(
-            self.project_top, self.user_erin, self.role_contributor)
+            self.project_top, self.user_erin, self.role_contributor
+        )
         assignment_c1 = self._make_assignment(
-            self.project_top, self.user_frank, self.role_contributor)
+            self.project_top, self.user_frank, self.role_contributor
+        )
 
         expected = [
             {
@@ -499,15 +549,15 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
                 'project': self.project_top.pk,
                 'user': self.user_erin.pk,
                 'role': self.role_contributor.pk,
-                'sodar_uuid': assignment_c0.sodar_uuid
+                'sodar_uuid': assignment_c0.sodar_uuid,
             },
             {
                 'id': assignment_c1.pk,
                 'project': self.project_top.pk,
                 'user': self.user_frank.pk,
                 'role': self.role_contributor.pk,
-                'sodar_uuid': assignment_c1.sodar_uuid
-            }
+                'sodar_uuid': assignment_c1.sodar_uuid,
+            },
         ]
 
         members = self.project_top.get_members()
@@ -523,41 +573,43 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test the has_role() function for a non-existing role without
         recursion"""
         self._make_assignment(
-            self.project_sub, self.user_bob, self.role_contributor)
+            self.project_sub, self.user_bob, self.role_contributor
+        )
         self.assertEqual(self.category_top.has_role(self.user_bob), False)
 
     def test_has_role_norole_children(self):
         """Test the has_role() function for a non-existing role with
         recursion using include_children"""
         self._make_assignment(
-            self.project_sub, self.user_bob, self.role_contributor)
-        self.assertEqual(self.category_top.has_role(
-            self.user_bob, include_children=True), True)
+            self.project_sub, self.user_bob, self.role_contributor
+        )
+        self.assertEqual(
+            self.category_top.has_role(self.user_bob, include_children=True),
+            True,
+        )
 
 
 class TestProjectInvite(
-        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase):
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
+):
     """Tests for model.ProjectInvite"""
 
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init roles
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
-        self.role_delegate = Role.objects.get(
-            name=PROJECT_ROLE_DELEGATE)
-        self.role_contributor = Role.objects.get(
-            name=PROJECT_ROLE_CONTRIBUTOR)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        self.role_delegate = Role.objects.get(name=PROJECT_ROLE_DELEGATE)
+        self.role_contributor = Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init invite
         self.invite = self._make_invite(
@@ -565,7 +617,8 @@ class TestProjectInvite(
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
-            message='')
+            message='',
+        )
 
     def test_initialization(self):
         """Test ProjectInvite initialization"""
@@ -579,19 +632,23 @@ class TestProjectInvite(
             'message': '',
             'secret': SECRET,
             'sodar_uuid': self.invite.sodar_uuid,
-            'active': True}
+            'active': True,
+        }
         self.assertEqual(model_to_dict(self.invite), expected)
 
     def test__str__(self):
         """Test ProjectInvite __str__()"""
-        expected = 'TestProject: test@example.com (project contributor) ' \
-                   '[ACTIVE]'
+        expected = (
+            'TestProject: test@example.com (project contributor) ' '[ACTIVE]'
+        )
         self.assertEqual(str(self.invite), expected)
 
     def test__repr__(self):
         """Test ProjectInvite __repr__()"""
-        expected = "ProjectInvite('TestProject', 'test@example.com', " \
+        expected = (
+            "ProjectInvite('TestProject', 'test@example.com', "
             "'project contributor', True)"
+        )
         self.assertEqual(repr(self.invite), expected)
 
 
@@ -605,64 +662,64 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
             title='TestCategoryTop',
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
-            description='XXX')
+            description='XXX',
+        )
         # Subproject under category_top
         self.project_sub = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category_top,
-            description='YYY')
+            description='YYY',
+        )
 
     def test_find_all(self):
         """Test find() with any project type"""
-        result = Project.objects.find(
-            'Test', project_type=None)
+        result = Project.objects.find('Test', project_type=None)
         self.assertEqual(len(result), 2)
-        result = Project.objects.find(
-            'ThisFails', project_type=None)
+        result = Project.objects.find('ThisFails', project_type=None)
         self.assertEqual(len(result), 0)
 
     def test_find_project(self):
         """Test find() with project_type=PROJECT"""
-        result = Project.objects.find(
-            'Test', project_type=PROJECT_TYPE_PROJECT)
+        result = Project.objects.find('Test', project_type=PROJECT_TYPE_PROJECT)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.project_sub)
 
     def test_find_category(self):
         """Test find() with project_type=CATEGORY"""
         result = Project.objects.find(
-            'Test', project_type=PROJECT_TYPE_CATEGORY)
+            'Test', project_type=PROJECT_TYPE_CATEGORY
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find(
-            'XXX', project_type=None)
+        result = Project.objects.find('XXX', project_type=None)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
 
 class TestProjectSetting(
-        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase):
+    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
+):
     """Tests for model.ProjectSetting"""
+
     # NOTE: This assumes an example app is available
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init role
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init test setting
         self.setting_str = self._make_setting(
@@ -670,7 +727,8 @@ class TestProjectSetting(
             project=self.project,
             name='str_setting',
             setting_type='STRING',
-            value='test')
+            value='test',
+        )
 
         # Init integer setting
         self.setting_int = self._make_setting(
@@ -678,7 +736,8 @@ class TestProjectSetting(
             project=self.project,
             name='int_setting',
             setting_type='INTEGER',
-            value=170)
+            value=170,
+        )
 
         # Init boolean setting
         self.setting_bool = self._make_setting(
@@ -686,7 +745,8 @@ class TestProjectSetting(
             project=self.project,
             name='bool_setting',
             setting_type='BOOLEAN',
-            value=True)
+            value=True,
+        )
 
     def test_initialization(self):
         """Test ProjectSetting initialization"""
@@ -697,7 +757,8 @@ class TestProjectSetting(
             'name': 'str_setting',
             'type': 'STRING',
             'value': 'test',
-            'sodar_uuid': self.setting_str.sodar_uuid}
+            'sodar_uuid': self.setting_str.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.setting_str), expected)
 
     def test_initialization_integer(self):
@@ -709,7 +770,8 @@ class TestProjectSetting(
             'name': 'int_setting',
             'type': 'INTEGER',
             'value': '170',
-            'sodar_uuid': self.setting_int.sodar_uuid}
+            'sodar_uuid': self.setting_int.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
@@ -719,8 +781,10 @@ class TestProjectSetting(
 
     def test__repr__(self):
         """Test ProjectSetting __repr__()"""
-        expected = "ProjectSetting('TestProject', '{}', " \
+        expected = (
+            "ProjectSetting('TestProject', '{}', "
             "'str_setting')".format(EXAMPLE_APP_NAME)
+        )
         self.assertEqual(repr(self.setting_str), expected)
 
     def test_get_value_str(self):
@@ -741,28 +805,29 @@ class TestProjectSetting(
         self.assertIsInstance(val, bool)
         self.assertEqual(val, True)
 
+
 # TODO: Test manager
 
 
 class TestProjectUserTag(
-        ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestCase):
+    ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestCase
+):
     """Tests for model.ProjectUserTag"""
 
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init role
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init tag
         self.tag = self._make_tag(self.project, self.user, PROJECT_TAG_STARRED)
@@ -774,7 +839,8 @@ class TestProjectUserTag(
             'project': self.project.pk,
             'user': self.user.pk,
             'name': PROJECT_TAG_STARRED,
-            'sodar_uuid': self.tag.sodar_uuid}
+            'sodar_uuid': self.tag.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.tag), expected)
 
     def test__str__(self):
@@ -789,24 +855,24 @@ class TestProjectUserTag(
 
 
 class TestRemoteSite(
-        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase):
+    ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, TestCase
+):
     """Tests for model.RemoteSite"""
 
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init role
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init remote site
         self.site = self._make_site(
@@ -814,7 +880,8 @@ class TestRemoteSite(
             url=REMOTE_SITE_URL,
             mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
             description='',
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_initialization(self):
         """Test RemoteSite initialization"""
@@ -825,13 +892,15 @@ class TestRemoteSite(
             'mode': SODAR_CONSTANTS['SITE_MODE_TARGET'],
             'description': '',
             'secret': REMOTE_SITE_SECRET,
-            'sodar_uuid': self.site.sodar_uuid}
+            'sodar_uuid': self.site.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.site), expected)
 
     def test__str__(self):
         """Test RemoteSite __str__()"""
         expected = '{} ({})'.format(
-            REMOTE_SITE_NAME, SODAR_CONSTANTS['SITE_MODE_TARGET'])
+            REMOTE_SITE_NAME, SODAR_CONSTANTS['SITE_MODE_TARGET']
+        )
         self.assertEqual(str(self.site), expected)
 
     def test__repr__(self):
@@ -839,7 +908,8 @@ class TestRemoteSite(
         expected = "RemoteSite('{}', '{}', '{}')".format(
             REMOTE_SITE_NAME,
             SODAR_CONSTANTS['SITE_MODE_TARGET'],
-            REMOTE_SITE_URL)
+            REMOTE_SITE_URL,
+        )
         self.assertEqual(repr(self.site), expected)
 
     def test_validate_mode(self):
@@ -849,29 +919,33 @@ class TestRemoteSite(
             self._make_site(
                 name='New site',
                 url='http://example.com',
-                mode='uGaj9eicQueib1th')
+                mode='uGaj9eicQueib1th',
+            )
 
 
 class TestRemoteProject(
-        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin, RemoteProjectMixin,
-        TestCase):
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestCase,
+):
     """Tests for model.RemoteProject"""
 
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init role
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init remote site
         self.site = self._make_site(
@@ -879,13 +953,15 @@ class TestRemoteProject(
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description='',
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
         self.remote_project = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
-            project=self.project)
+            project=self.project,
+        )
 
     def test_initialization(self):
         """Test RemoteProject initialization"""
@@ -896,23 +972,22 @@ class TestRemoteProject(
             'site': self.site.pk,
             'level': SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
             'date_access': None,
-            'sodar_uuid': self.remote_project.sodar_uuid}
+            'sodar_uuid': self.remote_project.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.remote_project), expected)
 
     def test__str__(self):
         """Test RemoteProject __str__()"""
         expected = '{}: {} ({})'.format(
-            REMOTE_SITE_NAME,
-            str(self.project.sodar_uuid),
-            SITE_MODE_TARGET)
+            REMOTE_SITE_NAME, str(self.project.sodar_uuid), SITE_MODE_TARGET
+        )
         self.assertEqual(str(self.remote_project), expected)
 
     def test__repr__(self):
         """Test RemoteProject __repr__()"""
         expected = "RemoteProject('{}', '{}', '{}')".format(
-            REMOTE_SITE_NAME,
-            str(self.project.sodar_uuid),
-            SITE_MODE_TARGET)
+            REMOTE_SITE_NAME, str(self.project.sodar_uuid), SITE_MODE_TARGET
+        )
         self.assertEqual(repr(self.remote_project), expected)
 
     def test_is_remote_source(self):

@@ -38,7 +38,8 @@ LOG_LEVEL_CHOICES = (
     (LOG_LEVEL_DEBUG, 'debug'),
     (LOG_LEVEL_INFO, 'info'),
     (LOG_LEVEL_WARNING, 'warning'),
-    (LOG_LEVEL_ERROR, 'error'))
+    (LOG_LEVEL_ERROR, 'error'),
+)
 
 
 # The possible states of ``BackgroundJob`` objects and their labels.
@@ -57,7 +58,8 @@ JOB_STATE_CHOICES = (
     (JOB_STATE_INITIAL, 'initial'),
     ('running', 'running'),
     ('done', 'done'),
-    ('failed', 'failed'))
+    ('failed', 'failed'),
+)
 
 
 class BackgroundJob(models.Model):
@@ -65,24 +67,30 @@ class BackgroundJob(models.Model):
 
     #: DateTime of creation
     date_created = models.DateTimeField(
-        auto_now_add=True, help_text='DateTime of creation')
+        auto_now_add=True, help_text='DateTime of creation'
+    )
     #: DateTime of last modification
     date_modified = models.DateTimeField(
-        auto_now=True, help_text='DateTime of last modification')
+        auto_now=True, help_text='DateTime of last modification'
+    )
 
     #: The UUID for this job.
     sodar_uuid = models.UUIDField(
-        default=uuid_object.uuid4, unique=True, help_text='BG Job SODAR UUID')
+        default=uuid_object.uuid4, unique=True, help_text='BG Job SODAR UUID'
+    )
     #: The project that this job belongs to.
     project = models.ForeignKey(
-        Project, help_text='Project in which this objects belongs')
+        Project, help_text='Project in which this objects belongs'
+    )
     #: The user initiating the job.
     user = models.ForeignKey(
-        AUTH_USER_MODEL, null=False, related_name='background_jobs')
+        AUTH_USER_MODEL, null=False, related_name='background_jobs'
+    )
 
     #: Specializing string of the job.
     job_type = models.CharField(
-        max_length=512, null=False, help_text='Type of the job')
+        max_length=512, null=False, help_text='Type of the job'
+    )
 
     #: A human-readable name for this job.
     name = models.CharField(max_length=512)
@@ -90,7 +98,8 @@ class BackgroundJob(models.Model):
     description = models.TextField()
     #: The job status.
     status = models.CharField(
-        max_length=50, choices=JOB_STATE_CHOICES, default=JOB_STATE_INITIAL)
+        max_length=50, choices=JOB_STATE_CHOICES, default=JOB_STATE_INITIAL
+    )
 
     def get_human_readable_type(self):
         """Also implement in your sub classes to show human-readable type in the
@@ -110,17 +119,20 @@ class BackgroundJobLogEntry(models.Model):
 
     #: Creation time of log entry.
     date_created = models.DateTimeField(
-        auto_now_add=True, help_text='DateTime of creation')
+        auto_now_add=True, help_text='DateTime of creation'
+    )
 
     #: The ``BackgroundJob`` that the log entry is for.
     job = models.ForeignKey(
-        BackgroundJob, related_name='log_entries',
-        help_text='Owning background job')
+        BackgroundJob,
+        related_name='log_entries',
+        help_text='Owning background job',
+    )
 
     #: The entry's log level.
     level = models.CharField(
-        max_length=50, choices=LOG_LEVEL_CHOICES,
-        help_text='Level of log entry')
+        max_length=50, choices=LOG_LEVEL_CHOICES, help_text='Level of log entry'
+    )
     #: The message contained by the log entry.
     message = models.TextField(help_text="Log level's message")
 
@@ -146,8 +158,9 @@ class JobModelMessageMixin:
     def mark_error(self, msg):
         """Mark the export job as complete successfully."""
         self.bg_job.status = JOB_STATE_FAILED
-        self.bg_job.add_log_entry('{} file failed: {}'.format(
-            self.task_desc, msg))
+        self.bg_job.add_log_entry(
+            '{} file failed: {}'.format(self.task_desc, msg)
+        )
         self.bg_job.save()
 
     def mark_success(self):

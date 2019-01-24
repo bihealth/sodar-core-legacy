@@ -11,59 +11,61 @@ from projectroles.views import HomeView
 
 urlpatterns = [
     url(r'^$', HomeView.as_view(), name='home'),
-    url(r'^about/$', TemplateView.as_view(template_name='pages/about.html'),
-        name='about'),
-
+    url(
+        r'^about/$',
+        TemplateView.as_view(template_name='pages/about.html'),
+        name='about',
+    ),
     # Django Admin, use {% url 'admin:index' %}
     url(settings.ADMIN_URL, admin.site.urls),
-
     # Login and logout
-    url(r'^login/$', auth_views.LoginView.as_view(
-        template_name='users/login.html'), name='login'),
+    url(
+        r'^login/$',
+        auth_views.LoginView.as_view(template_name='users/login.html'),
+        name='login',
+    ),
     url(r'^logout/$', auth_views.logout_then_login, name='logout'),
-
     # Auth
     url(r'api/auth/', include('knox.urls')),
-
     # Projectroles URLs
     url(r'^project/', include('projectroles.urls')),
-
     # Timeline URLs
     url(r'^timeline/', include('timeline.urls')),
-
     # Filesfolders URLs
     url(r'^files/', include('filesfolders.urls')),
-
     # django-db-file-storage URLs (obfuscated for users)
     url(r'^naFieng1Lai8heg2/', include('db_file_storage.urls')),
-
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
-
     # Admin Alerts URLs
     url(r'^alerts/', include('adminalerts.urls')),
-
     # Background Jobs URLs
     url(r'^bgjobs/', include('bgjobs.urls')),
-
     # Example project app URLs
     url(r'^examples/project/', include('example_project_app.urls')),
-
     # Example site app URLs
     url(r'^examples/site/', include('example_site_app.urls')),
-
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 if settings.DEBUG:
     # This allows the error pages to be debugged during development, just visit
     # these url in browser to see how these error pages look like.
     urlpatterns += [
-        url(r'^400/$', default_views.bad_request,
-            kwargs={'exception': Exception('Bad Request!')}),
-        url(r'^403/$', default_views.permission_denied,
-            kwargs={'exception': Exception('Permission Denied')}),
-        url(r'^404/$', default_views.page_not_found,
-            kwargs={'exception': Exception('Page not Found')}),
+        url(
+            r'^400/$',
+            default_views.bad_request,
+            kwargs={'exception': Exception('Bad Request!')},
+        ),
+        url(
+            r'^403/$',
+            default_views.permission_denied,
+            kwargs={'exception': Exception('Permission Denied')},
+        ),
+        url(
+            r'^404/$',
+            default_views.page_not_found,
+            kwargs={'exception': Exception('Page not Found')},
+        ),
         url(r'^500/$', default_views.server_error),
     ]
 
@@ -71,6 +73,7 @@ if settings.DEBUG:
 
     if 'debug_toolbar' in settings.INSTALLED_APPS:
         import debug_toolbar
+
         urlpatterns = [
-            url(r'^__debug__/', include(debug_toolbar.urls)),
+            url(r'^__debug__/', include(debug_toolbar.urls))
         ] + urlpatterns

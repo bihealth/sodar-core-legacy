@@ -10,8 +10,11 @@ from projectroles.plugins import ProjectAppPluginPoint
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
 from filesfolders.urls import urlpatterns
-from filesfolders.tests.test_models import FolderMixin, FileMixin,\
-    HyperLinkMixin
+from filesfolders.tests.test_models import (
+    FolderMixin,
+    FileMixin,
+    HyperLinkMixin,
+)
 
 
 # SODAR constants
@@ -34,8 +37,13 @@ SETTING_KEY = 'allow_public_links'
 
 
 class TestPlugins(
-        ProjectMixin, FolderMixin, FileMixin, HyperLinkMixin,
-        RoleAssignmentMixin, TestCase):
+    ProjectMixin,
+    FolderMixin,
+    FileMixin,
+    HyperLinkMixin,
+    RoleAssignmentMixin,
+    TestCase,
+):
     """Test filesfolders plugin"""
 
     def setUp(self):
@@ -46,14 +54,15 @@ class TestPlugins(
         self.user.save()
 
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
 
         # Init project and owner role
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init file
         self.file_content = bytes('content'.encode('utf-8'))
@@ -67,7 +76,8 @@ class TestPlugins(
             owner=self.user,
             description='',
             public_url=True,
-            secret=SECRET)
+            secret=SECRET,
+        )
 
         # Init folder
         self.folder = self._make_folder(
@@ -75,7 +85,8 @@ class TestPlugins(
             project=self.project,
             folder=None,
             owner=self.user,
-            description='')
+            description='',
+        )
 
         # Init link
         self.hyperlink = self._make_hyperlink(
@@ -84,7 +95,8 @@ class TestPlugins(
             project=self.project,
             folder=None,
             owner=self.user,
-            description='')
+            description='',
+        )
 
     def test_plugin_retrieval(self):
         """Test retrieving ProjectAppPlugin from the database"""
@@ -104,9 +116,10 @@ class TestPlugins(
     def test_get_object_link_file(self):
         """Test get_object_link() for a File object"""
         plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)
-        url = reverse('filesfolders:file_serve', kwargs={
-            'file': self.file.sodar_uuid,
-            'file_name': self.file.name})
+        url = reverse(
+            'filesfolders:file_serve',
+            kwargs={'file': self.file.sodar_uuid, 'file_name': self.file.name},
+        )
         ret = plugin.get_object_link('File', self.file.sodar_uuid)
 
         self.assertEqual(ret['url'], url)
@@ -116,8 +129,9 @@ class TestPlugins(
     def test_get_object_link_folder(self):
         """Test get_object_link() for a Folder object"""
         plugin = ProjectAppPluginPoint.get_plugin(PLUGIN_NAME)
-        url = reverse('filesfolders:list', kwargs={
-            'folder': self.folder.sodar_uuid})
+        url = reverse(
+            'filesfolders:list', kwargs={'folder': self.folder.sodar_uuid}
+        )
         ret = plugin.get_object_link('Folder', self.folder.sodar_uuid)
 
         self.assertEqual(ret['url'], url)

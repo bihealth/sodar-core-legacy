@@ -14,8 +14,7 @@ def get_tag_state(project, user, name=PROJECT_TAG_STARRED):
     :return: Boolean
     """
     try:
-        ProjectUserTag.objects.get(
-            project=project, user=user, name=name)
+        ProjectUserTag.objects.get(project=project, user=user, name=name)
         return True
 
     except ProjectUserTag.DoesNotExist:
@@ -32,15 +31,11 @@ def set_tag_state(project, user, name=PROJECT_TAG_STARRED):
     :param name: Tag name (string)
     """
     try:
-        tag = ProjectUserTag.objects.get(
-            project=project, user=user, name=name)
+        tag = ProjectUserTag.objects.get(project=project, user=user, name=name)
         tag.delete()
 
     except ProjectUserTag.DoesNotExist:
-        tag = ProjectUserTag(
-            project=project,
-            user=user,
-            name=name)
+        tag = ProjectUserTag(project=project, user=user, name=name)
         tag.save()
 
 
@@ -54,7 +49,8 @@ def remove_tag(project, user, name=PROJECT_TAG_STARRED):
     """
     try:
         ProjectUserTag.objects.get(
-            project=project, user=user, name=name).delete()
+            project=project, user=user, name=name
+        ).delete()
 
     except ProjectUserTag.DoesNotExist:
         pass

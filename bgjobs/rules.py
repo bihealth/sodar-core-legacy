@@ -25,7 +25,8 @@ rules.add_perm(
     | pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
-    | pr_rules.is_project_guest)
+    | pr_rules.is_project_guest,
+)
 
 # Allow viewing of background jobs
 rules.add_perm(
@@ -34,7 +35,8 @@ rules.add_perm(
     | pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
-    | pr_rules.is_project_guest)
+    | pr_rules.is_project_guest,
+)
 
 # Allow creating background jobs
 rules.add_perm(
@@ -42,7 +44,8 @@ rules.add_perm(
     rules.is_superuser
     | pr_rules.is_project_owner
     | pr_rules.is_project_delegate
-    | pr_rules.is_project_contributor)
+    | pr_rules.is_project_contributor,
+)
 
 # Allow modifying or deleting the user's background jobs
 rules.add_perm(
@@ -51,10 +54,13 @@ rules.add_perm(
     | pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
-    | pr_rules.is_project_guest)
+    | pr_rules.is_project_guest,
+)
 
 # Allow modifying or deleting all background jobs
 rules.add_perm(
     'bgjobs.update_bgjob_all',
-    rules.is_superuser | pr_rules.is_project_owner |
-    pr_rules.is_project_delegate)
+    rules.is_superuser
+    | pr_rules.is_project_owner
+    | pr_rules.is_project_delegate,
+)

@@ -13,8 +13,14 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.views.generic import TemplateView, DetailView, UpdateView,\
-    CreateView, DeleteView, View
+from django.views.generic import (
+    TemplateView,
+    DetailView,
+    UpdateView,
+    CreateView,
+    DeleteView,
+    View,
+)
 from django.views.generic.edit import ModelFormMixin
 from django.views.generic.detail import ContextMixin
 
@@ -28,16 +34,40 @@ from rest_framework.views import APIView
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from .email import send_role_change_mail, send_invite_mail, send_accept_note,\
-    send_expiry_note, get_invite_subject, get_invite_body, get_invite_message, \
-    get_email_footer, get_role_change_body, get_role_change_subject
-from .forms import ProjectForm, RoleAssignmentForm, ProjectInviteForm, \
-    RemoteSiteForm
-from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    RemoteSite, RemoteProject, SODAR_CONSTANTS, PROJECT_TAG_STARRED
+from .email import (
+    send_role_change_mail,
+    send_invite_mail,
+    send_accept_note,
+    send_expiry_note,
+    get_invite_subject,
+    get_invite_body,
+    get_invite_message,
+    get_email_footer,
+    get_role_change_body,
+    get_role_change_subject,
+)
+from .forms import (
+    ProjectForm,
+    RoleAssignmentForm,
+    ProjectInviteForm,
+    RemoteSiteForm,
+)
+from .models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    RemoteSite,
+    RemoteProject,
+    SODAR_CONSTANTS,
+    PROJECT_TAG_STARRED,
+)
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
-from .project_settings import set_project_setting, get_project_setting, \
-    get_all_settings
+from .project_settings import (
+    set_project_setting,
+    get_project_setting,
+    get_all_settings,
+)
 from .project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date
@@ -58,7 +88,8 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
-    'SUBMIT_STATUS_PENDING_TASKFLOW']
+    'SUBMIT_STATUS_PENDING_TASKFLOW'
+]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
@@ -71,12 +102,21 @@ APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 
 SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-SODAR_API_MEDIA_TYPE = settings.SODAR_API_MEDIA_TYPE if \
-    hasattr(settings, 'SODAR_API_MEDIA_TYPE') else SODAR_API_DEFAULT_MEDIA_TYPE
-SODAR_API_DEFAULT_VERSION = settings.SODAR_API_DEFAULT_VERSION if hasattr(
-    settings, 'SODAR_API_DEFAULT_VERSION') else '0.1'
-SODAR_API_ALLOWED_VERSIONS = settings.SODAR_API_ALLOWED_VERSIONS if hasattr(
-    settings, 'SODAR_API_ALLOWED_VERSIONS') else [SODAR_API_DEFAULT_VERSION]
+SODAR_API_MEDIA_TYPE = (
+    settings.SODAR_API_MEDIA_TYPE
+    if hasattr(settings, 'SODAR_API_MEDIA_TYPE')
+    else SODAR_API_DEFAULT_MEDIA_TYPE
+)
+SODAR_API_DEFAULT_VERSION = (
+    settings.SODAR_API_DEFAULT_VERSION
+    if hasattr(settings, 'SODAR_API_DEFAULT_VERSION')
+    else '0.1'
+)
+SODAR_API_ALLOWED_VERSIONS = (
+    settings.SODAR_API_ALLOWED_VERSIONS
+    if hasattr(settings, 'SODAR_API_ALLOWED_VERSIONS')
+    else [SODAR_API_DEFAULT_VERSION]
+)
 
 
 # General mixins ---------------------------------------------------------------
@@ -95,7 +135,8 @@ class ProjectAccessMixin:
         if 'project' in kwargs:
             try:
                 return cls.project_class.objects.get(
-                    sodar_uuid=kwargs['project'])
+                    sodar_uuid=kwargs['project']
+                )
 
             except cls.project_class.DoesNotExist:
                 return None
@@ -129,8 +170,9 @@ class ProjectAccessMixin:
                 return obj.project
 
             # Some objects may have a get_project() func instead of foreignkey
-            elif (hasattr(obj, 'get_project') and
-                    callable(getattr(obj, 'get_project', None))):
+            elif hasattr(obj, 'get_project') and callable(
+                getattr(obj, 'get_project', None)
+            ):
                 return obj.get_project()
 
         except model.DoesNotExist:
@@ -157,7 +199,8 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
         """Override handle_no_permission to redirect user"""
         if self.request.user.is_authenticated():
             messages.error(
-                self.request, 'User not authorized for requested action')
+                self.request, 'User not authorized for requested action'
+            )
             return redirect(reverse('home'))
 
         else:
@@ -172,7 +215,8 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
 
 
 class ProjectModifyPermissionMixin(
-        LoggedInPermissionMixin, ProjectPermissionMixin):
+    LoggedInPermissionMixin, ProjectPermissionMixin
+):
     """Mixin for handling access to project modifying views, denying access even
     for local superusers if the project is remote and thus immutable"""
 
@@ -187,7 +231,8 @@ class ProjectModifyPermissionMixin(
         if self.request.user.is_authenticated():
             messages.error(
                 self.request,
-                'Modifications are not allowed for remote projects')
+                'Modifications are not allowed for remote projects',
+            )
             return redirect(reverse('home'))
 
         else:
@@ -205,7 +250,8 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 
         try:
             obj = RoleAssignment.objects.get(
-                sodar_uuid=self.kwargs['roleassignment'])
+                sodar_uuid=self.kwargs['roleassignment']
+            )
 
             if obj.role.name == PROJECT_ROLE_OWNER:
                 # Modifying the project owner is not allowed in role views
@@ -214,12 +260,14 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
                 return self.request.user.has_perm(
                     'projectroles.update_project_delegate',
-                    self.get_permission_object())
+                    self.get_permission_object(),
+                )
 
             else:
                 return self.request.user.has_perm(
                     'projectroles.update_project_members',
-                    self.get_permission_object())
+                    self.get_permission_object(),
+                )
 
         except RoleAssignment.DoesNotExist:
             return False
@@ -237,8 +285,10 @@ class HTTPRefererMixin:
         if 'HTTP_REFERER' in request.META:
             referer = request.META['HTTP_REFERER']
 
-            if ('real_referer' not in request.session or
-                    referer != request.build_absolute_uri()):
+            if (
+                'real_referer' not in request.session
+                or referer != request.build_absolute_uri()
+            ):
                 request.session['real_referer'] = referer
 
         return super().get(request, *args, **kwargs)
@@ -265,14 +315,16 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
         plugins = ProjectAppPluginPoint.get_plugins()
 
         if plugins:
-            context['app_plugins'] = sorted([
-                p for p in plugins if p.is_active()],
-                key=lambda x: x.plugin_ordering)
+            context['app_plugins'] = sorted(
+                [p for p in plugins if p.is_active()],
+                key=lambda x: x.plugin_ordering,
+            )
 
         # Project tagging/starring
         if 'project' in context:
             context['project_starred'] = get_tag_state(
-                context['project'], self.request.user, PROJECT_TAG_STARRED)
+                context['project'], self.request.user, PROJECT_TAG_STARRED
+            )
 
         return context
 
@@ -320,18 +372,23 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
         context = super().get_context_data(*args, **kwargs)
 
         context['count_categories'] = Project.objects.filter(
-            type=PROJECT_TYPE_CATEGORY).count()
+            type=PROJECT_TYPE_CATEGORY
+        ).count()
         context['count_projects'] = Project.objects.filter(
-            type=PROJECT_TYPE_PROJECT).count()
+            type=PROJECT_TYPE_PROJECT
+        ).count()
         context['count_users'] = auth.get_user_model().objects.all().count()
         context['count_assignments'] = RoleAssignment.objects.all().count()
 
         context['user_projects'] = RoleAssignment.objects.filter(
-            user=self.request.user).count()
+            user=self.request.user
+        ).count()
         context['user_owner'] = RoleAssignment.objects.filter(
-            user=self.request.user, role__name=PROJECT_ROLE_OWNER).count()
+            user=self.request.user, role__name=PROJECT_ROLE_OWNER
+        ).count()
         context['user_delegate'] = RoleAssignment.objects.filter(
-            user=self.request.user, role__name=PROJECT_ROLE_DELEGATE).count()
+            user=self.request.user, role__name=PROJECT_ROLE_DELEGATE
+        ).count()
 
         backend_plugins = get_active_plugins(plugin_type='backend')
 
@@ -342,8 +399,8 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
 
 
 class ProjectDetailView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin,
-        DetailView):
+    LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin, DetailView
+):
     """Project details view"""
 
     permission_required = 'projectroles.view_project'
@@ -360,7 +417,8 @@ class ProjectDetailView(
         else:
             try:
                 role_as = RoleAssignment.objects.get(
-                    user=self.request.user, project=self.object)
+                    user=self.request.user, project=self.object
+                )
 
                 context['role'] = role_as.role
 
@@ -411,36 +469,52 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         # Get project results
         if not search_type or search_type == 'project':
             context['project_results'] = [
-                p for p in Project.objects.find(
-                    search_term, project_type='PROJECT') if
-                self.request.user.has_perm('projectroles.view_project', p)]
+                p
+                for p in Project.objects.find(
+                    search_term, project_type='PROJECT'
+                )
+                if self.request.user.has_perm('projectroles.view_project', p)
+            ]
 
         # Get app results
         if search_type:
-            search_apps = sorted([
-                p for p in plugins if (
-                    p.search_enable and search_type in p.search_types)],
-                key=lambda x: x.plugin_ordering)
+            search_apps = sorted(
+                [
+                    p
+                    for p in plugins
+                    if (p.search_enable and search_type in p.search_types)
+                ],
+                key=lambda x: x.plugin_ordering,
+            )
 
         else:
             search_apps = sorted(
                 [p for p in plugins if p.search_enable],
-                key=lambda x: x.plugin_ordering)
+                key=lambda x: x.plugin_ordering,
+            )
 
         context['app_search_data'] = []
 
         for plugin in search_apps:
-            context['app_search_data'].append({
-                'plugin': plugin,
-                'results': plugin.search(
-                    search_term, self.request.user, search_type,
-                    search_keywords)})
+            context['app_search_data'].append(
+                {
+                    'plugin': plugin,
+                    'results': plugin.search(
+                        search_term,
+                        self.request.user,
+                        search_type,
+                        search_keywords,
+                    ),
+                }
+            )
 
         return context
 
     def get(self, request, *args, **kwargs):
-        if (hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH') and
-                not settings.PROJECTROLES_ENABLE_SEARCH):
+        if (
+            hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH')
+            and not settings.PROJECTROLES_ENABLE_SEARCH
+        ):
             messages.error(request, 'Search not enabled')
             return redirect('home')
 
@@ -466,7 +540,8 @@ class ProjectModifyMixin(ModelFormMixin):
             'title': project.title,
             'description': project.description,
             'readme': project.readme.raw,
-            'owner': project.get_owner().user}
+            'owner': project.get_owner().user,
+        }
 
     @staticmethod
     def _get_project_update_data(old_data, project, owner, project_settings):
@@ -492,7 +567,8 @@ class ProjectModifyMixin(ModelFormMixin):
         # Settings
         for k, v in project_settings.items():
             old_v = get_project_setting(
-                project, k.split('.')[1], k.split('.')[2])
+                project, k.split('.')[1], k.split('.')[2]
+            )
 
             if old_v != v:
                 extra_data[k] = v
@@ -501,7 +577,8 @@ class ProjectModifyMixin(ModelFormMixin):
         return extra_data, upd_fields
 
     def _submit_with_taskflow(
-            self, project, owner, project_settings, form_action, tl_event):
+        self, project, owner, project_settings, form_action, tl_event
+    ):
         """Submit project modification flow via SODAR Taskflow"""
         taskflow = get_backend_api('taskflow')
 
@@ -511,12 +588,14 @@ class ProjectModifyMixin(ModelFormMixin):
         flow_data = {
             'project_title': project.title,
             'project_description': project.description,
-            'parent_uuid': str(project.parent.sodar_uuid) if
-            project.parent else 0,
+            'parent_uuid': str(project.parent.sodar_uuid)
+            if project.parent
+            else 0,
             'owner_username': owner.username,
             'owner_uuid': str(owner.sodar_uuid),
             'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
-            'settings': project_settings}
+            'settings': project_settings,
+        }
 
         if form_action == 'update':
             old_owner = project.get_owner().user
@@ -529,11 +608,13 @@ class ProjectModifyMixin(ModelFormMixin):
                 project_uuid=str(project.sodar_uuid),
                 flow_name='project_{}'.format(form_action),
                 flow_data=flow_data,
-                request=self.request)
+                request=self.request,
+            )
 
         except (
-                requests.exceptions.ConnectionError,
-                taskflow.FlowSubmitException) as ex:
+            requests.exceptions.ConnectionError,
+            taskflow.FlowSubmitException,
+        ) as ex:
             # NOTE: No need to update status as project will be deleted
             if form_action == 'create':
                 project.delete()
@@ -546,7 +627,8 @@ class ProjectModifyMixin(ModelFormMixin):
             if form_action == 'create' and project.parent:
                 redirect_url = reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.parent.sodar_uuid})
+                    kwargs={'project': project.parent.sodar_uuid},
+                )
 
             elif form_action == 'create':  # No parent
                 redirect_url = reverse('home')
@@ -554,7 +636,8 @@ class ProjectModifyMixin(ModelFormMixin):
             else:  # Update
                 redirect_url = reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid})
+                    kwargs={'project': project.sodar_uuid},
+                )
 
             return HttpResponseRedirect(redirect_url)
 
@@ -564,7 +647,8 @@ class ProjectModifyMixin(ModelFormMixin):
         # Modify owner role if it does exist
         try:
             assignment = RoleAssignment.objects.get(
-                project=project, role__name=PROJECT_ROLE_OWNER)
+                project=project, role__name=PROJECT_ROLE_OWNER
+            )
             assignment.user = owner
             assignment.save()
 
@@ -573,7 +657,8 @@ class ProjectModifyMixin(ModelFormMixin):
             assignment = RoleAssignment(
                 project=project,
                 user=owner,
-                role=Role.objects.get(name=PROJECT_ROLE_OWNER))
+                role=Role.objects.get(name=PROJECT_ROLE_OWNER),
+            )
             assignment.save()
 
         # Modify settings
@@ -583,23 +668,28 @@ class ProjectModifyMixin(ModelFormMixin):
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
                 value=v,
-                validate=False)  # Already validated in form
+                validate=False,
+            )  # Already validated in form
 
     def form_valid(self, form):
         """Handle project updating if form is valid"""
         taskflow = get_backend_api('taskflow')
         timeline = get_backend_api('timeline_backend')
 
-        use_taskflow = True if taskflow and \
-            form.cleaned_data.get('type') == PROJECT_TYPE_PROJECT else False
+        use_taskflow = (
+            True
+            if taskflow
+            and form.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
+            else False
+        )
 
         tl_event = None
         form_action = 'update' if self.object else 'create'
         old_data = {}
 
         app_plugins = [
-            p for p in ProjectAppPluginPoint.get_plugins() if
-            p.project_settings]
+            p for p in ProjectAppPluginPoint.get_plugins() if p.project_settings
+        ]
 
         if self.object:
             project = self.get_object()
@@ -615,11 +705,15 @@ class ProjectModifyMixin(ModelFormMixin):
                 description=form.cleaned_data.get('description'),
                 type=form.cleaned_data.get('type'),
                 parent=form.cleaned_data.get('parent'),
-                readme=form.cleaned_data.get('readme'))
+                readme=form.cleaned_data.get('readme'),
+            )
 
         if form_action == 'create':
-            project.submit_status = SUBMIT_STATUS_PENDING_TASKFLOW if \
-                use_taskflow else SUBMIT_STATUS_PENDING
+            project.submit_status = (
+                SUBMIT_STATUS_PENDING_TASKFLOW
+                if use_taskflow
+                else SUBMIT_STATUS_PENDING
+            )
             project.save()  # Always save locally if creating (to get uuid)
 
         else:
@@ -642,18 +736,21 @@ class ProjectModifyMixin(ModelFormMixin):
 
         if timeline:
             if form_action == 'create':
-                tl_desc = 'create ' + type_str.lower() + \
-                          ' with {owner} as owner'
+                tl_desc = (
+                    'create ' + type_str.lower() + ' with {owner} as owner'
+                )
                 extra_data = {
                     'title': project.title,
                     'owner': owner.username,
                     'description': project.description,
-                    'readme': project.readme.raw}
+                    'readme': project.readme.raw,
+                }
 
-            else:   # Update
+            else:  # Update
                 tl_desc = 'update ' + type_str.lower()
                 extra_data, upd_fields = self._get_project_update_data(
-                    old_data, project, owner, project_settings)
+                    old_data, project, owner, project_settings
+                )
 
                 if len(upd_fields) > 0:
                     tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
@@ -664,7 +761,8 @@ class ProjectModifyMixin(ModelFormMixin):
                 user=self.request.user,
                 event_name='project_{}'.format(form_action),
                 description=tl_desc,
-                extra_data=extra_data)
+                extra_data=extra_data,
+            )
 
             if form_action == 'create':
                 tl_event.add_object(owner, 'owner', owner.username)
@@ -672,7 +770,8 @@ class ProjectModifyMixin(ModelFormMixin):
         # Submit with Taskflow
         if use_taskflow:
             response = self._submit_with_taskflow(
-                project, owner, project_settings, form_action, tl_event)
+                project, owner, project_settings, form_action, tl_event
+            )
 
             if response:
                 return response  # Exception encountered with Taskflow
@@ -690,13 +789,22 @@ class ProjectModifyMixin(ModelFormMixin):
             tl_event.set_status('OK')
 
         messages.success(self.request, '{} {}d.'.format(type_str, form_action))
-        return HttpResponseRedirect(reverse(
-            'projectroles:detail', kwargs={'project': project.sodar_uuid}))
+        return HttpResponseRedirect(
+            reverse(
+                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+            )
+        )
 
 
 class ProjectCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectModifyMixin, ProjectContextMixin, HTTPRefererMixin, CreateView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectPermissionMixin,
+    ProjectModifyMixin,
+    ProjectContextMixin,
+    HTTPRefererMixin,
+    CreateView,
+):
     """Project creation view"""
 
     permission_required = 'projectroles.create_project'
@@ -708,7 +816,8 @@ class ProjectCreateView(
 
         if 'project' in self.kwargs:
             context['parent'] = Project.objects.get(
-                sodar_uuid=self.kwargs['project'])
+                sodar_uuid=self.kwargs['project']
+            )
 
         return context
 
@@ -723,10 +832,11 @@ class ProjectCreateView(
         """Override get() to limit project creation under other projects"""
 
         # If site is in target mode and target creation is not allowed, redirect
-        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
-                not settings.PROJECTROLES_TARGET_CREATE):
-            messages.error(
-                request, 'Creating local projects not allowed')
+        if (
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+            and not settings.PROJECTROLES_TARGET_CREATE
+        ):
+            messages.error(request, 'Creating local projects not allowed')
             return HttpResponseRedirect(reverse('home'))
 
         if 'project' in self.kwargs:
@@ -735,17 +845,25 @@ class ProjectCreateView(
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
                     self.request,
-                    'Creating a project within a project is not allowed')
-                return HttpResponseRedirect(reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid}))
+                    'Creating a project within a project is not allowed',
+                )
+                return HttpResponseRedirect(
+                    reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                )
 
         return super().get(request, *args, **kwargs)
 
 
 class ProjectUpdateView(
-        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
-        ProjectModifyMixin, UpdateView):
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    ProjectModifyMixin,
+    UpdateView,
+):
     """Project updating view"""
 
     permission_required = 'projectroles.update_project'
@@ -764,8 +882,12 @@ class ProjectUpdateView(
 
 
 class ProjectRoleView(
-        LoginRequiredMixin, LoggedInPermissionMixin, ProjectPermissionMixin,
-        ProjectContextMixin, TemplateView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectPermissionMixin,
+    ProjectContextMixin,
+    TemplateView,
+):
     """View for displaying project roles"""
 
     permission_required = 'projectroles.view_project_roles'
@@ -791,17 +913,21 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
 
         if change_type != 'delete':
             context['preview_subject'] = get_role_change_subject(
-                change_type, project)
+                change_type, project
+            )
             context['preview_body'] = get_role_change_body(
                 change_type=change_type,
                 project=project,
                 user_name='{user_name}',
                 issuer=self.request.user,
                 role_name='{role_name}',
-                project_url=self.request.build_absolute_uri(reverse(
-                    'projectroles:detail',
-                    kwargs={
-                        'project': project.sodar_uuid}))).replace('\n', '\\n')
+                project_url=self.request.build_absolute_uri(
+                    reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                ),
+            ).replace('\n', '\\n')
 
         return context
 
@@ -822,14 +948,16 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
                 form_action,
                 'to ' if form_action == 'update' else '',
                 role.name,
-                'user')
+                'user',
+            )
 
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
                 user=self.request.user,
                 event_name='role_{}'.format(form_action),
-                description=tl_desc)
+                description=tl_desc,
+            )
             tl_event.add_object(user, 'user', user.username)
 
         # Submit with taskflow
@@ -840,46 +968,51 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
             flow_data = {
                 'username': user.username,
                 'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk}
+                'role_pk': role.pk,
+            }
 
             try:
                 taskflow.submit(
                     project_uuid=project.sodar_uuid,
                     flow_name='role_update',
                     flow_data=flow_data,
-                    request=self.request)
+                    request=self.request,
+                )
 
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
 
                 messages.error(self.request, str(ex))
-                return redirect(reverse(
-                    'projectroles:roles',
-                    kwargs={'project': project.sodar_uuid}))
+                return redirect(
+                    reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                )
 
             # Get object
-            self.object = RoleAssignment.objects.get(
-                project=project, user=user)
+            self.object = RoleAssignment.objects.get(project=project, user=user)
 
         # Local save without Taskflow
         else:
             if form_action == 'create':
                 self.object = RoleAssignment(
-                    project=project,
-                    user=user,
-                    role=role)
+                    project=project, user=user, role=role
+                )
 
             else:
                 self.object = RoleAssignment.objects.get(
-                    project=project, user=user)
+                    project=project, user=user
+                )
                 self.object.role = role
 
             self.object.save()
 
         if SEND_EMAIL:
             send_role_change_mail(
-                form_action, project, user, role, self.request)
+                form_action, project, user, role, self.request
+            )
 
         if tl_event:
             tl_event.set_status('OK')
@@ -889,16 +1022,24 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
             'Membership {} for {} with the role of {}.'.format(
                 'added' if form_action == 'create' else 'updated',
                 self.object.user.username,
-                self.object.role.name))
+                self.object.role.name,
+            ),
+        )
         return redirect(
             reverse(
                 'projectroles:roles',
-                kwargs={'project': self.object.project.sodar_uuid}))
+                kwargs={'project': self.object.project.sodar_uuid},
+            )
+        )
 
 
 class RoleAssignmentCreateView(
-        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
-        RoleAssignmentModifyMixin, CreateView):
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    RoleAssignmentModifyMixin,
+    CreateView,
+):
     """RoleAssignment creation view"""
 
     permission_required = 'projectroles.update_project_members'
@@ -914,8 +1055,12 @@ class RoleAssignmentCreateView(
 
 
 class RoleAssignmentUpdateView(
-        LoginRequiredMixin, RolePermissionMixin,
-        ProjectContextMixin, RoleAssignmentModifyMixin, UpdateView):
+    LoginRequiredMixin,
+    RolePermissionMixin,
+    ProjectContextMixin,
+    RoleAssignmentModifyMixin,
+    UpdateView,
+):
     """RoleAssignment updating view"""
 
     permission_required = 'projectroles.update_project_members'
@@ -932,8 +1077,12 @@ class RoleAssignmentUpdateView(
 
 
 class RoleAssignmentDeleteView(
-        LoginRequiredMixin, RolePermissionMixin, ProjectModifyPermissionMixin,
-        ProjectContextMixin, DeleteView):
+    LoginRequiredMixin,
+    RolePermissionMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    DeleteView,
+):
     """RoleAssignment deletion view"""
 
     permission_required = 'projectroles.update_project_members'
@@ -947,7 +1096,8 @@ class RoleAssignmentDeleteView(
 
         tl_event = None
         self.object = RoleAssignment.objects.get(
-            sodar_uuid=kwargs['roleassignment'])
+            sodar_uuid=kwargs['roleassignment']
+        )
         project = self.object.project
         user = self.object.user
         role = self.object.role
@@ -961,7 +1111,9 @@ class RoleAssignmentDeleteView(
                 user=self.request.user,
                 event_name='role_delete',
                 description='delete role "{}" from {{{}}}'.format(
-                    role.name, 'user'))
+                    role.name, 'user'
+                ),
+            )
             tl_event.add_object(user, 'user', user.username)
 
         # Submit with taskflow
@@ -972,14 +1124,16 @@ class RoleAssignmentDeleteView(
             flow_data = {
                 'username': user.username,
                 'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk}
+                'role_pk': role.pk,
+            }
 
             try:
                 taskflow.submit(
                     project_uuid=project.sodar_uuid,
                     flow_name='role_delete',
                     flow_data=flow_data,
-                    request=self.request)
+                    request=self.request,
+                )
                 self.object = None
 
             except taskflow.FlowSubmitException as ex:
@@ -987,9 +1141,14 @@ class RoleAssignmentDeleteView(
                     tl_event.set_status('FAILED', str(ex))
 
                 messages.error(self.request, str(ex))
-                return HttpResponseRedirect(redirect(reverse(
-                    'projectroles:roles',
-                    kwargs={'project': project.sodar_uuid})))
+                return HttpResponseRedirect(
+                    redirect(
+                        reverse(
+                            'projectroles:roles',
+                            kwargs={'project': project.sodar_uuid},
+                        )
+                    )
+                )
 
         # Local save without Taskflow
         else:
@@ -1005,10 +1164,14 @@ class RoleAssignmentDeleteView(
             tl_event.set_status('OK')
 
         messages.success(
-            self.request, 'Membership of {} removed.'.format(user.username))
+            self.request, 'Membership of {} removed.'.format(user.username)
+        )
 
-        return HttpResponseRedirect(reverse(
-            'projectroles:roles', kwargs={'project': project.sodar_uuid}))
+        return HttpResponseRedirect(
+            reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
+        )
 
     def get_form_kwargs(self):
         """Pass current user to form"""
@@ -1024,8 +1187,7 @@ class ProjectInviteMixin:
     """General utilities for mixins"""
 
     @classmethod
-    def _handle_invite(
-            cls, invite, request, resend=False):
+    def _handle_invite(cls, invite, request, resend=False):
         """
         Handle invite creation, email sending/resending and logging to timeline
         :param invite: ProjectInvite object
@@ -1059,9 +1221,11 @@ class ProjectInviteMixin:
                 user=request.user,
                 event_name='invite_{}'.format(send_str),
                 description='{} project invite with role "{}" to {}'.format(
-                    send_str, invite.role.name, invite.email),
+                    send_str, invite.role.name, invite.email
+                ),
                 status_type=status_type,
-                status_desc=status_desc)
+                status_desc=status_desc,
+            )
 
         if status_type == 'OK':
             messages.success(
@@ -1070,8 +1234,11 @@ class ProjectInviteMixin:
                     invite.role.name,
                     invite.project.title,
                     invite.email,
-                    timezone.localtime(
-                        invite.date_expire).strftime('%Y-%m-%d %H:%M')))
+                    timezone.localtime(invite.date_expire).strftime(
+                        '%Y-%m-%d %H:%M'
+                    ),
+                ),
+            )
 
         elif not resend:  # NOTE: Delete invite if send fails
             invite.delete()
@@ -1079,9 +1246,13 @@ class ProjectInviteMixin:
 
 
 class ProjectInviteView(
-        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
-        TemplateView):
+    LoginRequiredMixin,
+    ProjectContextMixin,
+    ProjectModifyPermissionMixin,
+    TemplateView,
+):
     """View for displaying and modifying project invites"""
+
     permission_required = 'projectroles.invite_users'
     template_name = 'projectroles/project_invites.html'
     model = ProjectInvite
@@ -1090,15 +1261,21 @@ class ProjectInviteView(
         context = super().get_context_data(*args, **kwargs)
 
         context['invites'] = ProjectInvite.objects.filter(
-            project=context['project'], active=True,
-            date_expire__gt=timezone.now())
+            project=context['project'],
+            active=True,
+            date_expire__gt=timezone.now(),
+        )
 
         return context
 
 
 class ProjectInviteCreateView(
-        LoginRequiredMixin, ProjectContextMixin, ProjectModifyPermissionMixin,
-        ProjectInviteMixin, CreateView):
+    LoginRequiredMixin,
+    ProjectContextMixin,
+    ProjectModifyPermissionMixin,
+    ProjectInviteMixin,
+    CreateView,
+):
     """ProjectInvite creation view"""
 
     model = ProjectInvite
@@ -1116,9 +1293,11 @@ class ProjectInviteCreateView(
             issuer=self.request.user,
             role_name='{role_name}',
             invite_url='http://XXXXXXXXXXXXXXXXXXXXXXX',
-            date_expire_str='YYYY-MM-DD HH:MM').replace('\n', '\\n')
-        context['preview_message'] = get_invite_message(
-            '{message}').replace('\n', '\\n')
+            date_expire_str='YYYY-MM-DD HH:MM',
+        ).replace('\n', '\\n')
+        context['preview_message'] = get_invite_message('{message}').replace(
+            '\n', '\\n'
+        )
         context['preview_footer'] = get_email_footer().replace('\n', '\\n')
 
         return context
@@ -1136,9 +1315,12 @@ class ProjectInviteCreateView(
         # Send mail and add to timeline
         self._handle_invite(invite=self.object, request=self.request)
 
-        return redirect(reverse(
-            'projectroles:invites',
-            kwargs={'project': self.object.project.sodar_uuid}))
+        return redirect(
+            reverse(
+                'projectroles:invites',
+                kwargs={'project': self.object.project.sodar_uuid},
+            )
+        )
 
 
 class ProjectInviteAcceptView(LoginRequiredMixin, View):
@@ -1163,7 +1345,8 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                     event_name='invite_accept',
                     description='accept project invite',
                     status_type='FAILED',
-                    status_desc=fail_desc)
+                    status_desc=fail_desc,
+                )
 
         # Get invite and ensure it actually exists
         try:
@@ -1176,16 +1359,22 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
         # Check user does not already have a role
         try:
             RoleAssignment.objects.get(
-                user=self.request.user,
-                project=invite.project)
+                user=self.request.user, project=invite.project
+            )
             messages.warning(
-                self.request, 'You already have roles set in this project.')
+                self.request, 'You already have roles set in this project.'
+            )
             revoke_invite(
-                invite, failed=True,
-                fail_desc='User already has roles in project')
-            return redirect(reverse(
-                'projectroles:detail',
-                kwargs={'project': invite.project.sodar_uuid}))
+                invite,
+                failed=True,
+                fail_desc='User already has roles in project',
+            )
+            return redirect(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                )
+            )
 
         except RoleAssignment.DoesNotExist:
             pass
@@ -1196,7 +1385,9 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 self.request,
                 'Error: Your invite has expired! '
                 'Please contact the person who invited you: {} ({})'.format(
-                    invite.issuer.name, invite.issuer.email))
+                    invite.issuer.name, invite.issuer.email
+                ),
+            )
 
             # Send notification of expiry to issuer
             if SEND_EMAIL:
@@ -1215,7 +1406,9 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 user=self.request.user,
                 event_name='invite_accept',
                 description='accept project invite with role of "{}"'.format(
-                    invite.role.name))
+                    invite.role.name
+                ),
+            )
 
         # Submit with taskflow
         if taskflow:
@@ -1225,14 +1418,16 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
             flow_data = {
                 'username': self.request.user.username,
                 'user_uuid': str(self.request.user.sodar_uuid),
-                'role_pk': invite.role.pk}
+                'role_pk': invite.role.pk,
+            }
 
             try:
                 taskflow.submit(
                     project_uuid=str(invite.project.sodar_uuid),
                     flow_name='role_update',
                     flow_data=flow_data,
-                    request=self.request)
+                    request=self.request,
+                )
 
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
@@ -1243,16 +1438,16 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
 
             # Get object
             role_as = RoleAssignment.objects.get(
-                project=invite.project, user=self.request.user)
+                project=invite.project, user=self.request.user
+            )
 
             tl_event.set_status('OK')
 
         # Local save without Taskflow
         else:
             role_as = RoleAssignment(
-                user=self.request.user,
-                project=invite.project,
-                role=invite.role)
+                user=self.request.user, project=invite.project, role=invite.role
+            )
             role_as.save()
 
             if tl_event:
@@ -1269,15 +1464,19 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
         messages.success(
             self.request,
             'Welcome to project "{}"! You have been assigned the role of '
-            '{}.'.format(invite.project.title, invite.role.name))
-        return redirect(reverse(
-            'projectroles:detail',
-            kwargs={'project': invite.project.sodar_uuid}))
+            '{}.'.format(invite.project.title, invite.role.name),
+        )
+        return redirect(
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': invite.project.sodar_uuid},
+            )
+        )
 
 
 class ProjectInviteResendView(
-        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin,
-        View):
+    LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin, View
+):
     """View to handle resending a project invite"""
 
     permission_required = 'projectroles.invite_users'
@@ -1285,16 +1484,19 @@ class ProjectInviteResendView(
     def get(self, *args, **kwargs):
         try:
             invite = ProjectInvite.objects.get(
-                sodar_uuid=self.kwargs['projectinvite'], active=True)
+                sodar_uuid=self.kwargs['projectinvite'], active=True
+            )
 
         except ProjectInvite.DoesNotExist:
-            messages.error(
-                self.request,
-                'Error: Invite not found!')
-            return redirect(reverse(
-                'projectroles:invites',
-                kwargs={'project': self._get_project(
-                    self.request, self.kwargs)}))
+            messages.error(self.request, 'Error: Invite not found!')
+            return redirect(
+                reverse(
+                    'projectroles:invites',
+                    kwargs={
+                        'project': self._get_project(self.request, self.kwargs)
+                    },
+                )
+            )
 
         # Reset invite expiration date
         invite.date_expire = get_expiry_date()
@@ -1303,14 +1505,20 @@ class ProjectInviteResendView(
         # Resend mail and add to timeline
         self._handle_invite(invite=invite, request=self.request, resend=True)
 
-        return redirect(reverse(
-            'projectroles:invites',
-            kwargs={'project': invite.project.sodar_uuid}))
+        return redirect(
+            reverse(
+                'projectroles:invites',
+                kwargs={'project': invite.project.sodar_uuid},
+            )
+        )
 
 
 class ProjectInviteRevokeView(
-        LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectContextMixin,
-        TemplateView):
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    TemplateView,
+):
     """Batch delete/move confirm view"""
 
     template_name = 'projectroles/invite_revoke_confirm.html'
@@ -1323,7 +1531,8 @@ class ProjectInviteRevokeView(
         if 'projectinvite' in self.kwargs:
             try:
                 context['invite'] = ProjectInvite.objects.get(
-                    sodar_uuid=self.kwargs['projectinvite'])
+                    sodar_uuid=self.kwargs['projectinvite']
+                )
 
             except ProjectInvite.DoesNotExist:
                 pass
@@ -1338,7 +1547,8 @@ class ProjectInviteRevokeView(
 
         try:
             invite = ProjectInvite.objects.get(
-                sodar_uuid=kwargs['projectinvite'])
+                sodar_uuid=kwargs['projectinvite']
+            )
 
             invite.active = False
             invite.save()
@@ -1355,19 +1565,24 @@ class ProjectInviteRevokeView(
                 user=self.request.user,
                 event_name='invite_revoke',
                 description='revoke invite sent to "{}"'.format(
-                    invite.email if invite else 'N/A'),
-                status_type='OK' if invite else 'FAILED')
+                    invite.email if invite else 'N/A'
+                ),
+                status_type='OK' if invite else 'FAILED',
+            )
 
-        return redirect(reverse(
-            'projectroles:invites',
-            kwargs={'project': project.sodar_uuid}))
+        return redirect(
+            reverse(
+                'projectroles:invites', kwargs={'project': project.sodar_uuid}
+            )
+        )
 
 
 # Remote site and project views ------------------------------------------------
 
 
 class RemoteSiteListView(
-        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
+):
     """Main view for displaying remote site list"""
 
     permission_required = 'projectroles.update_remote'
@@ -1377,14 +1592,17 @@ class RemoteSiteListView(
         context = super().get_context_data(*args, **kwargs)
 
         site_mode = (
-            SITE_MODE_TARGET if
-            settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE else
-            SITE_MODE_SOURCE)
+            SITE_MODE_TARGET
+            if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
+            else SITE_MODE_SOURCE
+        )
 
         sites = RemoteSite.objects.filter(mode=site_mode).order_by('name')
 
-        if (sites.count() > 0 and
-                settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET):
+        if (
+            sites.count() > 0
+            and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+        ):
             sites = sites[:1]
 
         context['sites'] = sites
@@ -1392,12 +1610,15 @@ class RemoteSiteListView(
 
     # TODO: Remove this once implementing #76
     def get(self, request, *args, **kwargs):
-        if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
-                settings.PROJECTROLES_DISABLE_CATEGORIES):
+        if (
+            hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
+            and settings.PROJECTROLES_DISABLE_CATEGORIES
+        ):
             messages.warning(
                 request,
                 'Project categories and nesting disabled, '
-                'remote project sync disabled')
+                'remote project sync disabled',
+            )
             return redirect('home')
 
         return super().get(request, *args, **kwargs)
@@ -1416,14 +1637,23 @@ class RemoteSiteModifyMixin(ModelFormMixin):
 
         self.object = form.save()
 
-        messages.success(self.request, '{} site "{}" {}'.format(
-            self.object.mode.capitalize(), self.object.name, form_action))
+        messages.success(
+            self.request,
+            '{} site "{}" {}'.format(
+                self.object.mode.capitalize(), self.object.name, form_action
+            ),
+        )
         return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
 
 class RemoteSiteCreateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
-        HTTPRefererMixin, CurrentUserFormMixin, CreateView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    RemoteSiteModifyMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+    CreateView,
+):
     """RemoteSite creation view"""
 
     model = RemoteSite
@@ -1433,8 +1663,10 @@ class RemoteSiteCreateView(
     def get(self, request, *args, **kwargs):
         """Override get() to disallow rendering this view if current site is
         in TARGET mode and a source site already exists"""
-        if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
-                RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0):
+        if (
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+            and RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0
+        ):
             messages.error(request, 'Source site has already been set')
             return HttpResponseRedirect(reverse('projectroles:remote_sites'))
 
@@ -1442,8 +1674,13 @@ class RemoteSiteCreateView(
 
 
 class RemoteSiteUpdateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
-        HTTPRefererMixin, CurrentUserFormMixin, UpdateView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    RemoteSiteModifyMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+    UpdateView,
+):
     """RemoteSite updating view"""
 
     model = RemoteSite
@@ -1454,8 +1691,13 @@ class RemoteSiteUpdateView(
 
 
 class RemoteSiteDeleteView(
-        LoginRequiredMixin, LoggedInPermissionMixin, RemoteSiteModifyMixin,
-        HTTPRefererMixin, CurrentUserFormMixin, DeleteView):
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    RemoteSiteModifyMixin,
+    HTTPRefererMixin,
+    CurrentUserFormMixin,
+    DeleteView,
+):
     """RemoteSite deletion view"""
 
     model = RemoteSite
@@ -1466,15 +1708,20 @@ class RemoteSiteDeleteView(
 
     def get_success_url(self):
         messages.success(
-            self.request, '{} site "{}" deleted'.format(
-                self.object.mode.capitalize(), self.object.name))
+            self.request,
+            '{} site "{}" deleted'.format(
+                self.object.mode.capitalize(), self.object.name
+            ),
+        )
 
         return reverse('projectroles:remote_sites')
 
 
 class RemoteProjectListView(
-        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
+):
     """Main view for displaying a remote site's project list"""
+
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remote_projects.html'
 
@@ -1489,23 +1736,26 @@ class RemoteProjectListView(
             projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
 
         # Projects in TARGET mode: retrieve from source
-        else:   # SITE_MODE_TARGET
-            remote_uuids = [
-                p.project_uuid for p in site.projects.all()]
+        else:  # SITE_MODE_TARGET
+            remote_uuids = [p.project_uuid for p in site.projects.all()]
             projects = Project.objects.filter(
-                type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids)
+                type=PROJECT_TYPE_PROJECT, sodar_uuid__in=remote_uuids
+            )
 
         if projects:
             context['projects'] = sorted(
-                [p for p in projects], key=lambda x: x.get_full_title())
+                [p for p in projects], key=lambda x: x.get_full_title()
+            )
 
         return context
 
 
 class RemoteProjectsBatchUpdateView(
-        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
+):
     """Manually created form view for updating project access in batch for a
     remote target site"""
+
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remoteproject_update.html'
 
@@ -1515,7 +1765,8 @@ class RemoteProjectsBatchUpdateView(
         # Current site
         try:
             context['site'] = RemoteSite.objects.get(
-                sodar_uuid=kwargs['remotesite'])
+                sodar_uuid=kwargs['remotesite']
+            )
 
         except RemoteSite.DoesNotExist:
             pass
@@ -1531,16 +1782,19 @@ class RemoteProjectsBatchUpdateView(
 
         redirect_url = reverse(
             'projectroles:remote_projects',
-            kwargs={'remotesite': site.sodar_uuid})
+            kwargs={'remotesite': site.sodar_uuid},
+        )
 
         # Ensure site is in SOURCE mode
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
             messages.error(
-                request, 'Site in TARGET mode, cannot update project access')
+                request, 'Site in TARGET mode, cannot update project access'
+            )
             return HttpResponseRedirect(redirect_url)
 
         access_fields = {
-            k: v for k, v in post_data.items() if k.startswith('remote_access')}
+            k: v for k, v in post_data.items() if k.startswith('remote_access')
+        }
 
         ######################
         # Confirmation needed
@@ -1556,22 +1810,31 @@ class RemoteProjectsBatchUpdateView(
 
                 try:
                     remote_obj = RemoteProject.objects.get(
-                        site=site, project_uuid=project_uuid)
+                        site=site, project_uuid=project_uuid
+                    )
 
                 except RemoteProject.DoesNotExist:
                     pass
 
-                if ((not remote_obj and v != REMOTE_LEVEL_NONE) or (
-                        remote_obj and remote_obj.level != v)):
-                    modifying_access.append({
-                        'project': Project.objects.get(sodar_uuid=project_uuid),
-                        'old_level': REMOTE_LEVEL_NONE if
-                        not remote_obj else remote_obj.level,
-                        'new_level': v})
+                if (not remote_obj and v != REMOTE_LEVEL_NONE) or (
+                    remote_obj and remote_obj.level != v
+                ):
+                    modifying_access.append(
+                        {
+                            'project': Project.objects.get(
+                                sodar_uuid=project_uuid
+                            ),
+                            'old_level': REMOTE_LEVEL_NONE
+                            if not remote_obj
+                            else remote_obj.level,
+                            'new_level': v,
+                        }
+                    )
 
             if not modifying_access:
                 messages.warning(
-                    request, 'No changes to project access detected')
+                    request, 'No changes to project access detected'
+                )
                 return HttpResponseRedirect(redirect_url)
 
             context['modifying_access'] = modifying_access
@@ -1588,20 +1851,24 @@ class RemoteProjectsBatchUpdateView(
             # Update or create a RemoteProject object
             try:
                 rp = RemoteProject.objects.get(
-                    site=site, project_uuid=project_uuid)
+                    site=site, project_uuid=project_uuid
+                )
                 rp.level = v
 
             except RemoteProject.DoesNotExist:
                 rp = RemoteProject(
-                    site=site, project_uuid=project_uuid, level=v)
+                    site=site, project_uuid=project_uuid, level=v
+                )
 
             rp.save()
 
             if timeline:
                 project = Project.objects.get(sodar_uuid=project_uuid)
                 tl_desc = 'update remote access for site {{{}}} to {}'.format(
-                    'site', v, SODAR_CONSTANTS[
-                        'REMOTE_ACCESS_LEVELS'][v].lower())
+                    'site',
+                    v,
+                    SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
+                )
 
                 tl_event = timeline.add_event(
                     project=project,
@@ -1610,7 +1877,8 @@ class RemoteProjectsBatchUpdateView(
                     event_name='update_remote',
                     description=tl_desc,
                     classified=True,
-                    status_type='OK')
+                    status_type='OK',
+                )
 
                 tl_event.add_object(site, 'site', site.name)
 
@@ -1620,12 +1888,15 @@ class RemoteProjectsBatchUpdateView(
             'Access level updated for {} project{} in site "{}"'.format(
                 len(access_fields.items()),
                 's' if len(access_fields.items()) > 1 else '',
-                context['site'].name))
+                context['site'].name,
+            ),
+        )
         return HttpResponseRedirect(redirect_url)
 
 
 class RemoteProjectsSyncView(
-        LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
+    LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
+):
     """Synchronize remote projects from a source site"""
 
     permission_required = 'projectroles.update_remote'
@@ -1637,7 +1908,8 @@ class RemoteProjectsSyncView(
         # Current site
         try:
             context['site'] = RemoteSite.objects.get(
-                sodar_uuid=kwargs['remotesite'])
+                sodar_uuid=kwargs['remotesite']
+            )
 
         except RemoteSite.DoesNotExist:
             pass
@@ -1651,15 +1923,16 @@ class RemoteProjectsSyncView(
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             messages.error(
-                request, 'Site in SOURCE mode, remote sync not allowed')
+                request, 'Site in SOURCE mode, remote sync not allowed'
+            )
             return HttpResponseRedirect(redirect_url)
 
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
 
         api_url = site.url + reverse(
-            'projectroles:api_remote_get',
-            kwargs={'secret': site.secret})
+            'projectroles:api_remote_get', kwargs={'secret': site.secret}
+        )
 
         try:
             response = urllib.request.urlopen(api_url)
@@ -1672,17 +1945,20 @@ class RemoteProjectsSyncView(
                 ex_str = ex_str[:255]
 
             messages.error(
-                request, 'Unable to synchronize projects: {}'.format(ex_str))
+                request, 'Unable to synchronize projects: {}'.format(ex_str)
+            )
             return HttpResponseRedirect(redirect_url)
 
         # Sync data
         update_data = remote_api.sync_source_data(site, remote_data, request)
 
         # Check for updates
-        user_count = len([
-            v for v in update_data['users'].values() if 'status' in v])
-        project_count = len([
-            v for v in update_data['projects'].values() if 'status' in v])
+        user_count = len(
+            [v for v in update_data['users'].values() if 'status' in v]
+        )
+        project_count = len(
+            [v for v in update_data['projects'].values() if 'status' in v]
+        )
         role_count = 0
 
         for p in [p for p in update_data['projects'].values() if 'roles' in p]:
@@ -1693,7 +1969,8 @@ class RemoteProjectsSyncView(
         if user_count == 0 and project_count == 0 and role_count == 0:
             messages.warning(
                 request,
-                'No changes in remote site detected, nothing to synchronize')
+                'No changes in remote site detected, nothing to synchronize',
+            )
             return HttpResponseRedirect(redirect_url)
 
         context['update_data'] = update_data
@@ -1701,7 +1978,8 @@ class RemoteProjectsSyncView(
         context['project_count'] = project_count
         context['role_count'] = role_count
         messages.success(
-            request, 'Project data updated according to source site')
+            request, 'Project data updated according to source site'
+        )
         return super().render_to_response(context)
 
 
@@ -1720,6 +1998,7 @@ class SODARAPIRenderer(JSONRenderer):
 
 class BaseAPIView(APIView):
     """Base SODAR API View with accept header versioning"""
+
     versioning_class = SODARAPIVersioning
     renderer_classes = [SODARAPIRenderer]
 
@@ -1731,7 +2010,7 @@ class RemoteProjectGetAPIView(BaseAPIView):
     """API view for retrieving remote projects from a source site"""
 
     # TODO: Create custom permission class for general API
-    permission_classes = (AllowAny,)    # We check the secret in get()/post()
+    permission_classes = (AllowAny,)  # We check the secret in get()/post()
 
     def get(self, request, *args, **kwargs):
         remote_api = RemoteProjectAPI()
@@ -1739,7 +2018,8 @@ class RemoteProjectGetAPIView(BaseAPIView):
 
         try:
             target_site = RemoteSite.objects.get(
-                mode=SITE_MODE_TARGET, secret=secret)
+                mode=SITE_MODE_TARGET, secret=secret
+            )
 
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
@@ -1756,8 +2036,8 @@ class RemoteProjectGetAPIView(BaseAPIView):
 
 
 class ProjectStarringAPIView(
-        LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin,
-        APIView):
+    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
+):
     """View to handle starring and unstarring a project via AJAX"""
 
     permission_required = 'projectroles.view_project'
@@ -1781,7 +2061,8 @@ class ProjectStarringAPIView(
                 event_name='project_{}'.format(action_str),
                 description='{} project'.format(action_str),
                 classified=True,
-                status_type='INFO')
+                status_type='INFO',
+            )
 
         return Response(0 if tag_state else 1, status=200)
 
@@ -1804,8 +2085,10 @@ class TaskflowAPIAuthentication(BaseAuthentication):
         elif request.method == 'GET':
             taskflow_secret = request.GET.get('sodar_secret', None)
 
-        if (not hasattr(settings, 'TASKFLOW_SODAR_SECRET') or
-                taskflow_secret != settings.TASKFLOW_SODAR_SECRET):
+        if (
+            not hasattr(settings, 'TASKFLOW_SODAR_SECRET')
+            or taskflow_secret != settings.TASKFLOW_SODAR_SECRET
+        ):
             raise PermissionDenied('Not authorized')
 
 
@@ -1819,6 +2102,7 @@ class TaskflowAPIPermission(BasePermission):
 
 class BaseTaskflowAPIView(APIView):
     """Base Taskflow API view"""
+
     authentication_classes = [TaskflowAPIAuthentication]
     permission_classes = [TaskflowAPIPermission]
 
@@ -1830,7 +2114,8 @@ class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
         try:
             project = Project.objects.get(
                 sodar_uuid=request.data['project_uuid'],
-                submit_status=SUBMIT_STATUS_OK)
+                submit_status=SUBMIT_STATUS_OK,
+            )
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
@@ -1838,7 +2123,8 @@ class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
         ret_data = {
             'project_uuid': str(project.sodar_uuid),
             'title': project.title,
-            'description': project.description}
+            'description': project.description,
+        }
 
         return Response(ret_data, status=200)
 
@@ -1849,10 +2135,14 @@ class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
             project.title = request.data['title']
-            project.description = request.data['description'] if \
-                'description' in request.data else ''
+            project.description = (
+                request.data['description']
+                if 'description' in request.data
+                else ''
+            )
             project.readme.raw = request.data['readme']
             project.save()
 
@@ -1868,7 +2158,8 @@ class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
             user = User.objects.get(sodar_uuid=request.data['user_uuid'])
 
         except (Project.DoesNotExist, User.DoesNotExist) as ex:
@@ -1881,7 +2172,8 @@ class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
                 'project_uuid': str(role_as.project.sodar_uuid),
                 'user_uuid': str(role_as.user.sodar_uuid),
                 'role_pk': role_as.role.pk,
-                'role_name': role_as.role.name}
+                'role_name': role_as.role.name,
+            }
             return Response(ret_data, status=200)
 
         except RoleAssignment.DoesNotExist as ex:
@@ -1894,12 +2186,16 @@ class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
             user = User.objects.get(sodar_uuid=request.data['user_uuid'])
             role = Role.objects.get(pk=request.data['role_pk'])
 
-        except (Project.DoesNotExist, User.DoesNotExist,
-                Role.DoesNotExist) as ex:
+        except (
+            Project.DoesNotExist,
+            User.DoesNotExist,
+            Role.DoesNotExist,
+        ) as ex:
             return Response(str(ex), status=404)
 
         try:
@@ -1920,7 +2216,8 @@ class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
             user = User.objects.get(sodar_uuid=request.data['user_uuid'])
 
         except (Project.DoesNotExist, User.DoesNotExist) as ex:
@@ -1942,14 +2239,16 @@ class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
 
         ret_data = {
             'project_uuid': project.sodar_uuid,
-            'settings': get_all_settings(project)}
+            'settings': get_all_settings(project),
+        }
 
         return Response(ret_data, status=200)
 
@@ -1960,7 +2259,8 @@ class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
     def post(self, request):
         try:
             project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'])
+                sodar_uuid=request.data['project_uuid']
+            )
 
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)

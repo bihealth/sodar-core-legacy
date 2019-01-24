@@ -23,7 +23,8 @@ def load_requirements(*requirements_paths):
     requirements = set()
     for path in requirements_paths:
         requirements.update(
-            line.split('#')[0].strip() for line in open(path).readlines()
+            line.split('#')[0].strip()
+            for line in open(path).readlines()
             if is_requirement(line.strip())
         )
     return list(requirements)
@@ -37,17 +38,18 @@ def is_requirement(line):
         bool: True if the line is not blank, a comment, a URL, or an included file
     """
     return not (
-        line == '' or
-        line.startswith('-r') or
-        line.startswith('#') or
-        line.startswith('-e') or
-        line.startswith('git+')
+        line == ''
+        or line.startswith('-r')
+        or line.startswith('#')
+        or line.startswith('-e')
+        or line.startswith('git+')
     )
 
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 CHANGELOG = open(
-    os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')).read()
+    os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')
+).read()
 
 setup(
     name='django-sodar-core',
@@ -65,7 +67,7 @@ setup(
         'filesfolders',
         'adminalerts',
         'taskflowbackend',
-        'bgjobs'
+        'bgjobs',
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.txt'),

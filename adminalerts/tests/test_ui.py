@@ -12,7 +12,6 @@ from .test_models import AdminAlertMixin
 
 
 class TestAlertUIBase(AdminAlertMixin, TestUIBase):
-
     def setUp(self):
         super().setUp()
         # Create users
@@ -28,7 +27,8 @@ class TestAlertUIBase(AdminAlertMixin, TestUIBase):
             message='alert',
             user=self.superuser,
             description='description',
-            active=True)
+            active=True,
+        )
 
 
 class TestAlertMessage(TestAlertUIBase):
@@ -36,39 +36,36 @@ class TestAlertMessage(TestAlertUIBase):
 
     def test_message(self):
         """Test visibility of alert message in home view"""
-        expected = [
-            (self.superuser, 1),
-            (self.regular_user, 1)]
+        expected = [(self.superuser, 1), (self.regular_user, 1)]
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'sodar-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class'
+        )
 
     def test_message_inactive(self):
         """Test visibility of an inactive alert message"""
         self.alert.active = 0
         self.alert.save()
 
-        expected = [
-            (self.superuser, 0),
-            (self.regular_user, 0)]
+        expected = [(self.superuser, 0), (self.regular_user, 0)]
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'sodar-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class'
+        )
 
     def test_message_expired(self):
         """Test visibility of an expired alert message"""
         self.alert.date_expire = timezone.now() - timezone.timedelta(days=1)
         self.alert.save()
 
-        expected = [
-            (self.superuser, 0),
-            (self.regular_user, 0)]
+        expected = [(self.superuser, 0), (self.regular_user, 0)]
         url = reverse('home')
 
         self.assert_element_count(
-            expected, url, 'sodar-alert-site-app', 'class')
+            expected, url, 'sodar-alert-site-app', 'class'
+        )
 
     def test_message_login(self):
         """Test visibility of alert in login view with auth requirement"""
@@ -84,7 +81,8 @@ class TestAlertMessage(TestAlertUIBase):
 
         self.selenium.get(self.build_selenium_url(reverse('login')))
         self.assertIsNotNone(
-            self.selenium.find_element_by_class_name('sodar-alert-site-app'))
+            self.selenium.find_element_by_class_name('sodar-alert-site-app')
+        )
 
 
 class TestListView(TestAlertUIBase):
@@ -92,18 +90,14 @@ class TestListView(TestAlertUIBase):
 
     def test_list_items(self):
         """Test existence of items in list"""
-        expected = [
-            (self.superuser, 1)]
+        expected = [(self.superuser, 1)]
         url = reverse('adminalerts:list')
 
-        self.assert_element_count(
-            expected, url, 'sodar-aa-alert-item', 'id')
+        self.assert_element_count(expected, url, 'sodar-aa-alert-item', 'id')
 
     def test_list_buttons(self):
         """Test existence of buttons in list"""
-        expected = [
-            (self.superuser, 1)]
+        expected = [(self.superuser, 1)]
         url = reverse('adminalerts:list')
 
-        self.assert_element_count(
-            expected, url, 'sodar-aa-alert-buttons', 'id')
+        self.assert_element_count(expected, url, 'sodar-aa-alert-buttons', 'id')

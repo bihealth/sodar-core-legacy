@@ -30,28 +30,31 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.factory = RequestFactory()
 
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE)[0]
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
         self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR)[0]
-        self.role_guest = Role.objects.get_or_create(
-            name=PROJECT_ROLE_GUEST)[0]
+            name=PROJECT_ROLE_CONTRIBUTOR
+        )[0]
+        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
         self.user_owner = self.make_user('owner')
 
         # Init projects
         self.category = self._make_project(
-            'top_category', PROJECT_TYPE_CATEGORY, None)
+            'top_category', PROJECT_TYPE_CATEGORY, None
+        )
 
         self.project = self._make_project(
-            'sub_project', PROJECT_TYPE_PROJECT, self.category)
+            'sub_project', PROJECT_TYPE_PROJECT, self.category
+        )
 
         # Assign owner role
         self.owner_as = self._make_assignment(
-            self.project, self.user_owner, self.role_owner)
+            self.project, self.user_owner, self.role_owner
+        )
 
     def test_role_create_mail(self):
         """Test role creation mail sending"""
@@ -63,7 +66,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 project=self.owner_as.project,
                 user=self.owner_as.user,
                 role=self.owner_as.role,
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
 
@@ -77,7 +81,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 project=self.owner_as.project,
                 user=self.owner_as.user,
                 role=self.owner_as.role,
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
 
@@ -91,7 +96,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 project=self.owner_as.project,
                 user=self.owner_as.user,
                 role=None,
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
 
@@ -104,7 +110,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 subject_body=SUBJECT_BODY,
                 message_body=MESSAGE_BODY,
                 recipient_list=[self.user_owner],
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
 
@@ -117,7 +124,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 subject_body=SUBJECT_BODY,
                 message_body=MESSAGE_BODY,
                 recipient_list=[self.user_owner.email],
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
 
@@ -134,6 +142,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 subject_body=SUBJECT_BODY,
                 message_body=MESSAGE_BODY,
                 recipient_list=[self.user_owner, user_new],
-                request=request)
+                request=request,
+            )
             self.assertEqual(email_sent, 2)
             self.assertEqual(len(mail.outbox), 2)

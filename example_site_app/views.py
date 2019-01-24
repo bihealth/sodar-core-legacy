@@ -9,5 +9,6 @@ from projectroles.views import LoggedInPermissionMixin
 
 class ExampleView(LoggedInPermissionMixin, TemplateView):
     """Site app example view"""
+
     permission_required = 'example_site_app.view_data'
     template_name = 'example_site_app/example.html'

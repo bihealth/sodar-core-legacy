@@ -15,8 +15,12 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
-from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin,\
-    ProjectInviteMixin, RemoteTargetMixin
+from projectroles.tests.test_models import (
+    ProjectMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    RemoteTargetMixin,
+)
 
 
 # SODAR constants
@@ -34,7 +38,8 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-roles',
     'sodar-pr-link-project-update',
     'sodar-pr-link-project-create',
-    'sodar-pr-link-project-star']
+    'sodar-pr-link-project-star',
+]
 
 
 User = auth.get_user_model()
@@ -50,7 +55,8 @@ class LiveUserMixin:
             'username': user_name,
             'password': 'password',
             'email': '{}@example.com'.format(user_name),
-            'is_active': True}
+            'is_active': True,
+        }
 
         if superuser:
             user = User.objects.create_superuser(**kwargs)
@@ -63,7 +69,8 @@ class LiveUserMixin:
 
 
 class TestUIBase(
-        LiveUserMixin, ProjectMixin, RoleAssignmentMixin, LiveServerTestCase):
+    LiveUserMixin, ProjectMixin, RoleAssignmentMixin, LiveServerTestCase
+):
     """Base class for UI tests"""
 
     def setUp(self):
@@ -80,14 +87,14 @@ class TestUIBase(
         self.selenium.set_window_size(1400, 1000)
 
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE)[0]
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
         self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR)[0]
-        self.role_guest = Role.objects.get_or_create(
-            name=PROJECT_ROLE_GUEST)[0]
+            name=PROJECT_ROLE_CONTRIBUTOR
+        )[0]
+        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init users
         self.superuser = self._make_user('admin', True)
@@ -101,31 +108,34 @@ class TestUIBase(
 
         # Top level category
         self.category = self._make_project(
-            title='TestCategoryTop',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None)
+            title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
 
         # Subproject under category
         self.project = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
-            parent=self.category)
+            parent=self.category,
+        )
 
         # Init role assignments
 
         # Category
-        self._make_assignment(
-            self.category, self.user_owner, self.role_owner)
+        self._make_assignment(self.category, self.user_owner, self.role_owner)
 
         # Sub level project
         self.as_owner = self._make_assignment(
-            self.project, self.user_owner, self.role_owner)
+            self.project, self.user_owner, self.role_owner
+        )
         self.as_delegate = self._make_assignment(
-            self.project, self.user_delegate, self.role_delegate)
+            self.project, self.user_delegate, self.role_delegate
+        )
         self.as_contributor = self._make_assignment(
-            self.project, self.user_contributor, self.role_contributor)
+            self.project, self.user_contributor, self.role_contributor
+        )
         self.as_guest = self._make_assignment(
-            self.project, self.user_guest, self.role_guest)
+            self.project, self.user_guest, self.role_guest
+        )
 
         super().setUp()
 
@@ -149,24 +159,28 @@ class TestUIBase(
 
         try:
             user_button = self.selenium.find_element_by_id(
-                'sodar-navbar-user-dropdown')
+                'sodar-navbar-user-dropdown'
+            )
 
             user_button.click()
 
             # Wait for element to be visible
             WebDriverWait(self.selenium, self.wait_time).until(
                 ec.presence_of_element_located(
-                    (By.ID, 'sodar-navbar-link-logout')))
+                    (By.ID, 'sodar-navbar-link-logout')
+                )
+            )
 
             try:
                 signout_button = self.selenium.find_element_by_id(
-                    'sodar-navbar-link-logout')
+                    'sodar-navbar-link-logout'
+                )
                 signout_button.click()
 
                 # Wait for redirect
                 WebDriverWait(self.selenium, self.wait_time).until(
-                    ec.presence_of_element_located(
-                        (By.ID, 'sodar-form-login')))
+                    ec.presence_of_element_located((By.ID, 'sodar-form-login'))
+                )
 
             except NoSuchElementException:
                 pass
@@ -189,12 +203,15 @@ class TestUIBase(
         field_pass.send_keys('password')
 
         self.selenium.find_element_by_xpath(
-            '//button[contains(., "Log In")]').click()
+            '//button[contains(., "Log In")]'
+        ).click()
 
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
-                (By.ID, 'sodar-navbar-user-dropdown')))
+                (By.ID, 'sodar-navbar-user-dropdown')
+            )
+        )
 
     def assert_element_exists(self, users, url, element_id, exists):
         """
@@ -209,14 +226,16 @@ class TestUIBase(
 
             if exists:
                 self.assertIsNotNone(
-                    self.selenium.find_element_by_id(element_id))
+                    self.selenium.find_element_by_id(element_id)
+                )
 
             else:
                 with self.assertRaises(NoSuchElementException):
                     self.selenium.find_element_by_id(element_id)
 
     def assert_element_count(
-            self, expected, url, search_string, attribute='id'):
+        self, expected, url, search_string, attribute='id'
+    ):
         """
         Assert count of elements containing specified id or class based on
         the logged user.
@@ -226,24 +245,31 @@ class TestUIBase(
         :param attribute: Attribute to search for (string, default=id)
         """
         for e in expected:
-            expected_user = e[0]    # Just to clarify code
+            expected_user = e[0]  # Just to clarify code
             expected_count = e[1]
 
             self.login_and_redirect(expected_user, url)
 
             if expected_count > 0:
                 self.assertEqual(
-                    len(self.selenium.find_elements_by_xpath(
-                        '//*[contains(@{}, "{}")]'.format(
-                            attribute, search_string))),
+                    len(
+                        self.selenium.find_elements_by_xpath(
+                            '//*[contains(@{}, "{}")]'.format(
+                                attribute, search_string
+                            )
+                        )
+                    ),
                     expected_count,
-                    'expected_user={}'.format(expected_user))
+                    'expected_user={}'.format(expected_user),
+                )
 
             else:
                 with self.assertRaises(NoSuchElementException):
                     self.selenium.find_element_by_xpath(
                         '//*[contains(@{}, "{}")]'.format(
-                            attribute, search_string))
+                            attribute, search_string
+                        )
+                    )
 
     def assert_element_set(self, expected, all_elements, url):
         """
@@ -260,8 +286,7 @@ class TestUIBase(
             self.login_and_redirect(user, url)
 
             for element in elements:
-                self.assertIsNotNone(
-                    self.selenium.find_element_by_id(element))
+                self.assertIsNotNone(self.selenium.find_element_by_id(element))
 
             not_expected = list(set(all_elements) ^ set(elements))
 
@@ -282,7 +307,8 @@ class TestUIBase(
 
         # Wait for element to be present (sometimes this is too slow)
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, element_id)))
+            ec.presence_of_element_located((By.ID, element_id))
+        )
 
         element = self.selenium.find_element_by_id(element_id)
 
@@ -303,23 +329,25 @@ class TestBaseTemplate(TestUIBase):
 
     def test_admin_link(self):
         """Test admin site link visibility according to user permissions"""
-        expected_true = [
-            self.superuser]
+        expected_true = [self.superuser]
 
         expected_false = [
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
-            self.user_no_roles]
+            self.user_no_roles,
+        ]
 
         url = reverse('home')
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-navbar-link-admin', True)
+            expected_true, url, 'sodar-navbar-link-admin', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-navbar-link-admin', False)
+            expected_false, url, 'sodar-navbar-link-admin', False
+        )
 
 
 class TestProjectList(TestUIBase):
@@ -328,22 +356,24 @@ class TestProjectList(TestUIBase):
     def test_link_create_toplevel(self):
         """Test project creation link visibility according to user
         permissions"""
-        expected_true = [
-            self.superuser]
+        expected_true = [self.superuser]
 
         expected_false = [
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
 
         url = reverse('home')
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-home-link-create', True)
+            expected_true, url, 'sodar-pr-home-link-create', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-home-link-create', False)
+            expected_false, url, 'sodar-pr-home-link-create', False
+        )
 
 
 class TestProjectDetail(TestUIBase):
@@ -353,27 +383,43 @@ class TestProjectDetail(TestUIBase):
         """Test visibility of project links according to user
         permissions"""
         expected = [
-            (self.superuser, [
-                'sodar-pr-link-project-roles',
-                'sodar-pr-link-project-update',
-                'sodar-pr-link-project-star']),
-            (self.as_owner.user, [
-                'sodar-pr-link-project-roles',
-                'sodar-pr-link-project-update',
-                'sodar-pr-link-project-star']),
-            (self.as_delegate.user, [
-                'sodar-pr-link-project-roles',
-                'sodar-pr-link-project-update',
-                'sodar-pr-link-project-star']),
-            (self.as_contributor.user, [
-                'sodar-pr-link-project-roles',
-                'sodar-pr-link-project-star']),
-            (self.as_guest.user, [
-                'sodar-pr-link-project-roles',
-                'sodar-pr-link-project-star'])]
+            (
+                self.superuser,
+                [
+                    'sodar-pr-link-project-roles',
+                    'sodar-pr-link-project-update',
+                    'sodar-pr-link-project-star',
+                ],
+            ),
+            (
+                self.as_owner.user,
+                [
+                    'sodar-pr-link-project-roles',
+                    'sodar-pr-link-project-update',
+                    'sodar-pr-link-project-star',
+                ],
+            ),
+            (
+                self.as_delegate.user,
+                [
+                    'sodar-pr-link-project-roles',
+                    'sodar-pr-link-project-update',
+                    'sodar-pr-link-project-star',
+                ],
+            ),
+            (
+                self.as_contributor.user,
+                ['sodar-pr-link-project-roles', 'sodar-pr-link-project-star'],
+            ),
+            (
+                self.as_guest.user,
+                ['sodar-pr-link-project-roles', 'sodar-pr-link-project-star'],
+            ),
+        ]
 
         url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
@@ -383,23 +429,30 @@ class TestProjectDetail(TestUIBase):
 
         # Add user with rights only for the subproject
         sub_user = self._make_user('sub_user', False)
-        self._make_assignment(
-            self.project, sub_user, self.role_contributor)
+        self._make_assignment(self.project, sub_user, self.role_contributor)
 
         expected = [
-            (self.superuser, [
-                'sodar-pr-link-project-update',
-                'sodar-pr-link-project-create',
-                'sodar-pr-link-project-star']),
-            (self.as_owner.user, [
-                'sodar-pr-link-project-update',
-                'sodar-pr-link-project-create',
-                'sodar-pr-link-project-star']),
-            (sub_user, [
-                'sodar-pr-link-project-star'])]
+            (
+                self.superuser,
+                [
+                    'sodar-pr-link-project-update',
+                    'sodar-pr-link-project-create',
+                    'sodar-pr-link-project-star',
+                ],
+            ),
+            (
+                self.as_owner.user,
+                [
+                    'sodar-pr-link-project-update',
+                    'sodar-pr-link-project-create',
+                    'sodar-pr-link-project-star',
+                ],
+            ),
+            (sub_user, ['sodar-pr-link-project-star']),
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.category.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
@@ -413,40 +466,42 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
-        expected_false = [
-            self.as_contributor.user,
-            self.as_guest.user]
+            self.as_delegate.user,
+        ]
+        expected_false = [self.as_contributor.user, self.as_guest.user]
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list', True)
+            expected_true, url, 'sodar-pr-btn-role-list', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list', False)
+            expected_false, url, 'sodar-pr-btn-role-list', False
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_list_buttons_target(self):
         """Test visibility of role list button group as target"""
 
         # Set up site as target
-        self._set_up_as_target(
-            projects=[self.category, self.project])
+        self._set_up_as_target(projects=[self.category, self.project])
 
         expected_false = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list', False)
+            expected_false, url, 'sodar-pr-btn-role-list', False
+        )
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user
@@ -454,19 +509,20 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
-        expected_false = [
-            self.as_contributor.user,
-            self.as_guest.user]
+            self.as_delegate.user,
+        ]
+        expected_false = [self.as_contributor.user, self.as_guest.user]
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-invite', True)
+            expected_true, url, 'sodar-pr-btn-role-list-invite', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list-invite', False)
+            expected_false, url, 'sodar-pr-btn-role-list-invite', False
+        )
 
     def test_role_list_add_button(self):
         """Test visibility of role invite button according to user
@@ -474,19 +530,20 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
-        expected_false = [
-            self.as_contributor.user,
-            self.as_guest.user]
+            self.as_delegate.user,
+        ]
+        expected_false = [self.as_contributor.user, self.as_guest.user]
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-create', True)
+            expected_true, url, 'sodar-pr-btn-role-list-create', True
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list-create', False)
+            expected_false, url, 'sodar-pr-btn-role-list-create', False
+        )
 
     def test_role_buttons(self):
         """Test visibility of role management buttons according to user
@@ -496,44 +553,52 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
             (self.as_owner.user, 3),
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 0),
-            (self.as_guest.user, 0)]
+            (self.as_guest.user, 0),
+        ]
         url = reverse(
-            'projectroles:roles',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-pr-btn-grp-role')
 
     def test_role_preview(self):
         """Test visibility of role preview popup"""
         url = reverse(
             'projectroles:role_create',
-            kwargs={'project': self.project.sodar_uuid})
+            kwargs={'project': self.project.sodar_uuid},
+        )
         self.login_and_redirect(self.as_owner.user, url)
 
         button = self.selenium.find_element_by_id('sodar-pr-email-preview-link')
         button.click()
 
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, 'sodar-email-body')))
+            ec.presence_of_element_located((By.ID, 'sodar-email-body'))
+        )
 
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body'))
+            self.selenium.find_element_by_id('sodar-email-body')
+        )
 
     def test_invite_preview(self):
         """Test visibility of invite preview popup"""
         url = reverse(
             'projectroles:invite_create',
-            kwargs={'project': self.project.sodar_uuid})
+            kwargs={'project': self.project.sodar_uuid},
+        )
         self.login_and_redirect(self.as_owner.user, url)
 
         button = self.selenium.find_element_by_id(
-            'sodar-pr-invite-preview-link')
+            'sodar-pr-invite-preview-link'
+        )
         button.click()
 
         WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located((By.ID, 'sodar-email-body')))
+            ec.presence_of_element_located((By.ID, 'sodar-email-body'))
+        )
 
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body'))
+            self.selenium.find_element_by_id('sodar-email-body')
+        )
 
 
 class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
@@ -545,13 +610,15 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
+            self.as_delegate.user,
+        ]
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list', True)
+            expected_true, url, 'sodar-pr-btn-role-list', True
+        )
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user
@@ -559,13 +626,15 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
+            self.as_delegate.user,
+        ]
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-invite', True)
+            expected_true, url, 'sodar-pr-btn-role-list-invite', True
+        )
 
     def test_role_list_add_button(self):
         """Test visibility of role invite button according to user
@@ -573,13 +642,15 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
+            self.as_delegate.user,
+        ]
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list-create', True)
+            expected_true, url, 'sodar-pr-btn-role-list-create', True
+        )
 
     def test_invite_buttons(self):
         """Test visibility of invite management buttons according to user
@@ -590,15 +661,17 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
             project=self.project,
             role=self.role_contributor,
             issuer=self.as_owner.user,
-            message='')
+            message='',
+        )
 
         expected = [
             (self.superuser, 1),
             (self.as_owner.user, 1),
-            (self.as_delegate.user, 1)]
+            (self.as_delegate.user, 1),
+        ]
         url = reverse(
-            'projectroles:invites',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-pr-btn-grp-invite')
 
 
@@ -614,16 +687,16 @@ class TestPlugins(TestUIBase):
         """Test visibility of app plugin links"""
         expected = [(self.superuser, self.plugin_count)]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
 
     def test_plugin_cards(self):
         """Test visibility of app plugin cards"""
         expected = [(self.superuser, self.plugin_count)]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
 
@@ -636,7 +709,8 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         self.sidebar_ids = [
             'sodar-pr-nav-project-detail',
             'sodar-pr-nav-project-roles',
-            'sodar-pr-nav-project-update']
+            'sodar-pr-nav-project-update',
+        ]
 
         # Add app plugin navs
         for p in get_active_plugins():
@@ -645,242 +719,284 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     def test_render_detail(self):
         """Test visibility of sidebar in the project_detail view"""
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-sidebar', True)
+            [self.superuser], url, 'sodar-pr-sidebar', True
+        )
 
     def test_render_home(self):
         """Test visibility of sidebar in the home view"""
         url = reverse('home')
 
         self.assert_element_exists(
-            [self.superuser], url, 'sodar-pr-sidebar', True)
+            [self.superuser], url, 'sodar-pr-sidebar', True
+        )
 
     def test_app_links(self):
         """Test visibility of app links"""
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         expected = [(self.superuser, len(get_active_plugins()))]
 
-        self.assert_element_count(
-            expected, url, 'sodar-pr-nav-app-plugin')
+        self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
     @override_settings(PROJECTROLES_HIDE_APP_LINKS=['timeline'])
     def test_app_links_hide(self):
         """Test visibility of app links with timeline hidden"""
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
         expected = [
             (self.superuser, len(get_active_plugins())),
-            (self.user_owner, len(get_active_plugins()) - 1)]
+            (self.user_owner, len(get_active_plugins()) - 1),
+        ]
 
-        self.assert_element_count(
-            expected, url, 'sodar-pr-nav-app-plugin')
+        self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
     def test_update_link(self):
         """Test visibility of update link"""
         expected_true = [
             self.superuser,
             self.as_owner.user,
-            self.as_delegate.user]
-        expected_false = [
-            self.as_contributor.user,
-            self.as_guest.user]
+            self.as_delegate.user,
+        ]
+        expected_false = [self.as_contributor.user, self.as_guest.user]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-nav-project-update', True)
+            expected_true, url, 'sodar-pr-nav-project-update', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-update', False)
+            expected_false, url, 'sodar-pr-nav-project-update', False
+        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-alt-link-project-update', True)
+            expected_true, url, 'sodar-pr-alt-link-project-update', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-update', False)
+            expected_false, url, 'sodar-pr-alt-link-project-update', False
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update_link_target(self):
         """Test visibility of update link as target"""
 
         # Set up site as target
-        self._set_up_as_target(
-            projects=[self.category, self.project])
+        self._set_up_as_target(projects=[self.category, self.project])
 
         expected_false = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-update', False)
+            expected_false, url, 'sodar-pr-nav-project-update', False
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-update', False)
+            expected_false, url, 'sodar-pr-alt-link-project-update', False
+        )
 
     def test_create_link(self):
         """Test visibility of create link"""
-        expected_true = [
-            self.superuser,
-            self.as_owner.user]
+        expected_true = [self.superuser, self.as_owner.user]
         expected_false = [
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.category.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-nav-project-create', True)
+            expected_true, url, 'sodar-pr-nav-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-create', False)
+            expected_false, url, 'sodar-pr-nav-project-create', False
+        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+            expected_true, url, 'sodar-pr-alt-link-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+            expected_false, url, 'sodar-pr-alt-link-project-create', False
+        )
 
     @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
     def test_create_link_disable_categories(self):
         """Test visibility of create link with categories disabled"""
-        expected_true = [
-            self.superuser]
+        expected_true = [self.superuser]
         expected_false = [
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-nav-project-create', True)
+            expected_true, url, 'sodar-pr-nav-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-create', False)
+            expected_false, url, 'sodar-pr-nav-project-create', False
+        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+            expected_true, url, 'sodar-pr-alt-link-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+            expected_false, url, 'sodar-pr-alt-link-project-create', False
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target(self):
         """Test visibility of create link as target"""
 
         # Set up site as target
-        self._set_up_as_target(
-            projects=[self.category, self.project])
+        self._set_up_as_target(projects=[self.category, self.project])
 
-        expected_true = [
-            self.superuser,
-            self.as_owner.user]
+        expected_true = [self.superuser, self.as_owner.user]
         expected_false = [
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.category.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-nav-project-create', True)
+            expected_true, url, 'sodar-pr-nav-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-create', False)
+            expected_false, url, 'sodar-pr-nav-project-create', False
+        )
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-alt-link-project-create', True)
+            expected_true, url, 'sodar-pr-alt-link-project-create', True
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+            expected_false, url, 'sodar-pr-alt-link-project-create', False
+        )
 
     @override_settings(
         PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
-        PROJECTROLES_TARGET_CREATE=False)
+        PROJECTROLES_TARGET_CREATE=False,
+    )
     def test_create_link_target_disable(self):
         """Test visibility of create link as target with creation not allowed"""
 
         # Set up site as target
-        self._set_up_as_target(
-            projects=[self.category, self.project])
+        self._set_up_as_target(projects=[self.category, self.project])
 
         expected_false = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
-            self.as_guest.user]
+            self.as_guest.user,
+        ]
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.category.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-nav-project-create', False)
+            expected_false, url, 'sodar-pr-nav-project-create', False
+        )
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-alt-link-project-create', False)
+            expected_false, url, 'sodar-pr-alt-link-project-create', False
+        )
 
     def test_link_active_detail(self):
         """Test active status of link on the project_detail page"""
         url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-detail',
-            self.sidebar_ids, url)
+            self.superuser, 'sodar-pr-nav-project-detail', self.sidebar_ids, url
+        )
 
     def test_link_active_role_list(self):
         """Test active status of link on the project roles page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:roles',
-                kwargs={'project': self.project.sodar_uuid}))
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_create(self):
         """Test active status of link on the role creation page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:role_create',
-                kwargs={'project': self.project.sodar_uuid}))
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_update(self):
         """Test active status of link on the role update page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:role_update',
-                kwargs={'roleassignment': self.as_contributor.sodar_uuid}))
+                kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_delete(self):
         """Test active status of link on the role deletion page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:role_delete',
-                kwargs={'roleassignment': self.as_contributor.sodar_uuid}))
+                kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_invites(self):
         """Test active status of link on the invites page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:invites',
-                kwargs={'project': self.project.sodar_uuid}))
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_invite_create(self):
         """Test active status of link on the invite create page"""
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:invite_create',
-                kwargs={'project': self.project.sodar_uuid}))
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_invite_resend(self):
         """Test active status of link on the invite resend page"""
@@ -889,13 +1005,18 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             project=self.project,
             role=self.role_contributor,
             issuer=self.as_owner.user,
-            message='')
+            message='',
+        )
 
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:invite_resend',
-                kwargs={'projectinvite': invite.sodar_uuid}))
+                kwargs={'projectinvite': invite.sodar_uuid},
+            ),
+        )
 
     def test_link_active_role_invite_revoke(self):
         """Test active status of link on the invite revoke page"""
@@ -904,23 +1025,28 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             project=self.project,
             role=self.role_contributor,
             issuer=self.as_owner.user,
-            message='')
+            message='',
+        )
 
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-roles', self.sidebar_ids,
+            self.superuser,
+            'sodar-pr-nav-project-roles',
+            self.sidebar_ids,
             reverse(
                 'projectroles:invite_revoke',
-                kwargs={'projectinvite': invite.sodar_uuid}))
+                kwargs={'projectinvite': invite.sodar_uuid},
+            ),
+        )
 
     def test_link_active_update(self):
         """Test active status of link on the project_update page"""
         url = reverse(
-            'projectroles:update',
-            kwargs={'project': self.project.sodar_uuid})
+            'projectroles:update', kwargs={'project': self.project.sodar_uuid}
+        )
 
         self.assert_element_active(
-            self.superuser, 'sodar-pr-nav-project-update',
-            self.sidebar_ids, url)
+            self.superuser, 'sodar-pr-nav-project-update', self.sidebar_ids, url
+        )
 
 
 class TestProjectSearch(TestUIBase):
@@ -934,7 +1060,8 @@ class TestProjectSearch(TestUIBase):
             (self.as_delegate.user, 1),
             (self.as_contributor.user, 1),
             (self.as_guest.user, 1),
-            (self.user_no_roles, 0)]
+            (self.user_no_roles, 0),
+        ]
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
@@ -946,9 +1073,13 @@ class TestProjectSearch(TestUIBase):
             (self.as_delegate.user, 1),
             (self.as_contributor.user, 1),
             (self.as_guest.user, 1),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode(
-            {'s': 'test type:project'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'test type:project'})
+        )
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')
 
     def test_search_type_nonexisting(self):
@@ -959,7 +1090,11 @@ class TestProjectSearch(TestUIBase):
             (self.as_delegate.user, 0),
             (self.as_contributor.user, 0),
             (self.as_guest.user, 0),
-            (self.user_no_roles, 0)]
-        url = reverse('projectroles:search') + '?' + urlencode(
-            {'s': 'test type:Jaix1au'})
+            (self.user_no_roles, 0),
+        ]
+        url = (
+            reverse('projectroles:search')
+            + '?'
+            + urlencode({'s': 'test type:Jaix1au'})
+        )
         self.assert_element_count(expected, url, 'sodar-pr-project-search-item')

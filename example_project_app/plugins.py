@@ -25,7 +25,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'example_setting': {
             'type': 'BOOLEAN',
             'default': False,
-            'description': 'Example setting'
+            'description': 'Example setting',
         }
     }
 

@@ -8,8 +8,11 @@ from django.utils import timezone
 
 
 # Settings
-SECRET_LENGTH = settings.PROJECTROLES_SECRET_LENGTH if \
-    hasattr(settings, 'PROJECTROLES_SECRET_LENGTH') else 32
+SECRET_LENGTH = (
+    settings.PROJECTROLES_SECRET_LENGTH
+    if hasattr(settings, 'PROJECTROLES_SECRET_LENGTH')
+    else 32
+)
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 SYSTEM_USER_GROUP = 'system'
 
@@ -36,8 +39,10 @@ def build_secret(length=SECRET_LENGTH):
     """
     length = int(length) if int(length) <= 255 else 255
 
-    return ''.join(random.SystemRandom().choice(
-        string.ascii_lowercase + string.digits) for _ in range(length))
+    return ''.join(
+        random.SystemRandom().choice(string.ascii_lowercase + string.digits)
+        for _ in range(length)
+    )
 
 
 def build_invite_url(invite, request):
@@ -47,9 +52,9 @@ def build_invite_url(invite, request):
     :param request: HTTP request
     :return: URL (string)
     """
-    return request.build_absolute_uri(reverse(
-        'projectroles:invite_accept',
-        kwargs={'secret': invite.secret}))
+    return request.build_absolute_uri(
+        reverse('projectroles:invite_accept', kwargs={'secret': invite.secret})
+    )
 
 
 def get_expiry_date():
@@ -64,9 +69,13 @@ def get_app_names():
     """Return list of names for local apps"""
 
     # TODO: Restrict this to SODAR Core apps
-    return sorted([
-        a.split('.')[0] for a in settings.INSTALLED_APPS if
-        a.split('.')[0] not in ['django', settings.SITE_PACKAGE]])
+    return sorted(
+        [
+            a.split('.')[0]
+            for a in settings.INSTALLED_APPS
+            if a.split('.')[0] not in ['django', settings.SITE_PACKAGE]
+        ]
+    )
 
 
 def set_user_group(user):

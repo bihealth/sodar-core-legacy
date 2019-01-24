@@ -17,6 +17,4 @@ import rules
 
 
 # Allow viewing data
-rules.add_perm(
-    'example_site_app.view_data',
-    rules.is_authenticated)
+rules.add_perm('example_site_app.view_data', rules.is_authenticated)
