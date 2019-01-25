@@ -387,7 +387,7 @@ class ProjectFileView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        project = self._get_project(self.request, self.kwargs)
+        project = self.get_project(self.request, self.kwargs)
         context['project'] = project
 
         # Get folder and file data
@@ -531,7 +531,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
         file = form.cleaned_data.get('file')
         folder = form.cleaned_data.get('folder')
-        project = self._get_project(self.request, self.kwargs)
+        project = self.get_project(self.request, self.kwargs)
 
         # Build redirect URL
         # TODO: Repetition, put this in a mixin?
@@ -960,7 +960,7 @@ class BatchEditView(
     def post(self, request, **kwargs):
         """Handle POST request for modifying items or user confirmation"""
         post_data = request.POST
-        self.project = self._get_project(request, kwargs)
+        self.project = self.get_project(request, kwargs)
         self.batch_action = post_data['batch-action']
         self.items = []
         self.item_names = []

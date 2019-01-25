@@ -71,6 +71,10 @@ Add a ``ForeignKey`` field for the ``projectroles.models.Project`` model,
 either called ``project`` or accessible with a ``get_project()`` function
 implemented in your model.
 
+If the project foreign key for your is **not** ``project``, make sure to define
+a ``get_project_filter_key()`` function. It should return the name of the field
+to use as key for filtering your model by project.
+
 .. note::
 
     If your app contains a complex model structure with e.g. nested models using

@@ -40,6 +40,20 @@ sure to update Javascript and CSS includes accordingly.
     dependencies still exhibit problems with the most recent Python release at
     the time of writing.
 
+ProjectAccessMixin
+------------------
+
+The ``_get_project()`` function in ``ProjectAccessMixin`` has been renamed into
+``get_project()``. Arguments for the function are now optional and may be
+removed in a subsequent release: ``self.request`` and ``self.kwargs`` of the
+view class will be used if the arguments are not present.
+
+Base API View
+-------------
+
+The base SODAR API view has been renamed from ``BaseAPIView`` into
+``SODARAPIBaseView``.
+
 Taskflow Backend API
 --------------------
 
