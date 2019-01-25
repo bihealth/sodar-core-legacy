@@ -1,5 +1,6 @@
 .. _breaking_changes:
 
+
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
@@ -26,7 +27,7 @@ The following minimum version requirements have been upgraded in this release:
 - Numerous required Python packages (see ``requirements/*.txt``)
 
 Please go through your site requirements and update dependencies accordingly.
-For stability, it is still recommended to use exact version numbers for
+For project stability, it is still recommended to use exact version numbers for
 Python requirements in your SODAR Core based site.
 
 If you are overriding the ``projectroles/base_site.html`` in your site, make
@@ -35,7 +36,7 @@ sure to update Javascript and CSS includes accordingly.
 .. note::
 
     Even though the recommended Python version from Django 1.11.17+ is 3.7, we
-    still recommend Python 3.6 for this release. The reason is that some
+    only support Python 3.6 for this release. The reason is that some
     dependencies still exhibit problems with the most recent Python release at
     the time of writing.
 

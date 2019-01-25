@@ -109,15 +109,18 @@ Below is an example of a projectroles-compatible Django model:
 
     class SomeModel(models.Model):
         some_field = models.CharField(
-            help_text='Your own field')
+            help_text='Your own field'
+        )
         project = models.ForeignKey(
             Project,
             related_name='some_objects',
-            help_text='Project in which this object belongs')
+            help_text='Project in which this object belongs',
+        )
         sodar_uuid = models.UUIDField(
             default=uuid.uuid4,
             unique=True,
-            help_text='SomeModel SODAR UUID')
+            help_text='SomeModel SODAR UUID',
+        )
 
 .. note::
 
@@ -142,9 +145,11 @@ found in projectroles and they can be extended within your app if needed.
 
     rules.add_perm(
         'example_project_app.view_data',
-        rules.is_superuser | pr_rules.is_project_owner |
-        pr_rules.is_project_delegate | pr_rules.is_project_contributor |
-        pr_rules.is_project_guest)
+        pr_rules.is_project_owner
+        | pr_rules.is_project_delegate
+        | pr_rules.is_project_contributor
+        | pr_rules.is_project_guest,
+    )
 
 
 ProjectAppPlugin
@@ -596,12 +601,18 @@ views. Example with generic ``APIView``:
 .. code-block:: python
 
     from rest_framework.views import APIView
-    from projectroles.views import LoginRequiredMixin, ProjectPermissionMixin, \
-        APIPermissionMixin
+    from projectroles.views import (
+        LoginRequiredMixin,
+        ProjectPermissionMixin,
+        APIPermissionMixin,
+    )
 
     class ExampleAjaxAPIView(
-            LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin,
-            APIView):
+            LoginRequiredMixin,
+            ProjectPermissionMixin,
+            APIPermissionMixin,
+            APIView,
+    ):
 
     permission_required = 'projectroles.view_project'
 
