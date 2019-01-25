@@ -304,7 +304,10 @@ This part of the setup is **optional**.
         LDAP_DEFAULT_CONN_OPTIONS = {ldap.OPT_REFERRALS: 0}
         LDAP_DEFAULT_FILTERSTR = '(sAMAccountName=%(user)s)'
         LDAP_DEFAULT_ATTR_MAP = {
-            'first_name': 'givenName', 'last_name': 'sn', 'email': 'mail'}
+            'first_name': 'givenName',
+            'last_name': 'sn',
+            'email': 'mail',
+        }
 
         # Primary LDAP server
         AUTH_LDAP_SERVER_URI = env.str('AUTH_LDAP_SERVER_URI', None)
@@ -314,17 +317,23 @@ This part of the setup is **optional**.
 
         AUTH_LDAP_USER_SEARCH = LDAPSearch(
             env.str('AUTH_LDAP_USER_SEARCH_BASE', None),
-            ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
+            ldap.SCOPE_SUBTREE,
+            LDAP_DEFAULT_FILTERSTR,
+        )
         AUTH_LDAP_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
         AUTH_LDAP_USERNAME_DOMAIN = env.str('AUTH_LDAP_USERNAME_DOMAIN', None)
         AUTH_LDAP_DOMAIN_PRINTABLE = env.str(
-            'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN)
+            'AUTH_LDAP_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN
+        )
 
-        AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-           ('projectroles.auth_backends.PrimaryLDAPBackend',),
-           AUTHENTICATION_BACKENDS,))
+        AUTHENTICATION_BACKENDS = tuple(
+            itertools.chain(
+                ('projectroles.auth_backends.PrimaryLDAPBackend',),
+                AUTHENTICATION_BACKENDS,
+            )
+        )
 
-        # Secondary LDAP server
+        # Secondary LDAP server (optional)
         if ENABLE_LDAP_SECONDARY:
             AUTH_LDAP2_SERVER_URI = env.str('AUTH_LDAP2_SERVER_URI', None)
             AUTH_LDAP2_BIND_DN = env.str('AUTH_LDAP2_BIND_DN', None)
@@ -333,15 +342,21 @@ This part of the setup is **optional**.
 
             AUTH_LDAP2_USER_SEARCH = LDAPSearch(
                 env.str('AUTH_LDAP2_USER_SEARCH_BASE', None),
-                ldap.SCOPE_SUBTREE, LDAP_DEFAULT_FILTERSTR)
+                ldap.SCOPE_SUBTREE,
+                LDAP_DEFAULT_FILTERSTR,
+            )
             AUTH_LDAP2_USER_ATTR_MAP = LDAP_DEFAULT_ATTR_MAP
             AUTH_LDAP2_USERNAME_DOMAIN = env.str('AUTH_LDAP2_USERNAME_DOMAIN')
             AUTH_LDAP2_DOMAIN_PRINTABLE = env.str(
-                'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP_USERNAME_DOMAIN)
+                'AUTH_LDAP2_DOMAIN_PRINTABLE', AUTH_LDAP2_USERNAME_DOMAIN
+            )
 
-            AUTHENTICATION_BACKENDS = tuple(itertools.chain(
-                ('projectroles.auth_backends.SecondaryLDAPBackend',),
-                AUTHENTICATION_BACKENDS,))
+            AUTHENTICATION_BACKENDS = tuple(
+                itertools.chain(
+                    ('projectroles.auth_backends.SecondaryLDAPBackend',),
+                    AUTHENTICATION_BACKENDS,
+                )
+            )
 
 
 Modifying SODAR_CONSTANTS (Optional)

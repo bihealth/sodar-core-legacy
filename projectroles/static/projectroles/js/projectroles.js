@@ -1,6 +1,27 @@
 /*
- Javascript for projectroles and other apps utilizing its templates
+ General SODAR Core / projectroles javascript
  */
+
+
+/* Cross Site Request Forgery protection for Ajax views --------------------- */
+
+
+// From: https://stackoverflow.com/a/47878344
+var csrfToken = jQuery("[name=csrfmiddlewaretoken]").val();
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+// set CSRF header
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrfToken);
+        }
+    }
+});
 
 
 /* Print out human readable file size --------------------------------------- */
@@ -256,10 +277,7 @@ $(document).ready(function() {
         $.post({
             url: $(this).attr('star-url'),
             method: 'POST',
-            dataType: 'json',
-            headers: {
-                'X-CSRFToken': $(this).attr('csrf-token')
-            }
+            dataType: 'json'
         }).done(function (data) {
             console.log('Star clicked: ' + data);  // DEBUG
             if (data === 1) {
@@ -280,14 +298,6 @@ $(document).ready(function() {
             alert('Error: unable to set project star!');
         });
     });
-});
-
-
-/* Make alerts removable ---------------------------------------------------- */
-
-
-$('.sodar-alert-close-link').click(function () {
-    $(this).closest('.sodar-alert-top').fadeOut('fast');
 });
 
 

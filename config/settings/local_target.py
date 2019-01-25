@@ -8,7 +8,7 @@ import os
 
 # DATABASE CONFIGURATION
 # ------------------------------------------------------------------------------
-# See: https://docs.djangoproject.com/en/dev/ref/settings/#databases
+# See: https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 # Uses django-environ to accept uri format
 # See: https://django-environ.readthedocs.io/en/latest/#supported-types
 DATABASES['default']['NAME'] = 'sodar_core_target'
@@ -21,7 +21,8 @@ DATABASES['default']['ATOMIC_REQUESTS'] = False
 SITE_TITLE = 'SODAR Core Target Dev Site'
 SITE_SUBTITLE = env.str('SITE_SUBTITLE', 'Beta')
 SITE_INSTANCE_TITLE = env.str(
-    'SITE_INSTANCE_TITLE', 'SODAR Core Target Example')
+    'SITE_INSTANCE_TITLE', 'SODAR Core Target Example'
+)
 
 
 # Local App Settings

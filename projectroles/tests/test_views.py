@@ -13,15 +13,33 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from .. import views
-from ..models import Project, Role, RoleAssignment, ProjectInvite, \
-    ProjectUserTag, RemoteSite, RemoteProject, SODAR_CONSTANTS, \
-    PROJECT_TAG_STARRED
-from ..plugins import change_plugin_status, get_backend_api, \
-    get_active_plugins, ProjectAppPluginPoint
+from ..models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    ProjectUserTag,
+    RemoteSite,
+    RemoteProject,
+    SODAR_CONSTANTS,
+    PROJECT_TAG_STARRED,
+)
+from ..plugins import (
+    change_plugin_status,
+    get_backend_api,
+    get_active_plugins,
+    ProjectAppPluginPoint,
+)
 from ..remote_projects import RemoteProjectAPI
 from ..utils import build_secret
-from .test_models import ProjectMixin, RoleAssignmentMixin, \
-    ProjectInviteMixin, ProjectUserTagMixin, RemoteSiteMixin, RemoteProjectMixin
+from .test_models import (
+    ProjectMixin,
+    RoleAssignmentMixin,
+    ProjectInviteMixin,
+    ProjectUserTagMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+)
 from projectroles.utils import get_user_display_name
 
 
@@ -67,15 +85,19 @@ class ProjectSettingMixin:
         ret = {}
 
         app_plugins = sorted(
-            [p for p in ProjectAppPluginPoint.get_plugins() if
-             p.project_settings],
-            key=lambda x: x.name)
+            [
+                p
+                for p in ProjectAppPluginPoint.get_plugins()
+                if p.project_settings
+            ],
+            key=lambda x: x.name,
+        )
 
         for p in app_plugins:
             for s_key in p.project_settings:
-                s = p.project_settings[s_key]
-                ret['settings.{}.{}'.format(p.name, s_key)] = \
-                    p.project_settings[s_key]['default']
+                ret[
+                    'settings.{}.{}'.format(p.name, s_key)
+                ] = p.project_settings[s_key]['default']
 
         return ret
 
@@ -86,8 +108,12 @@ class KnoxAuthMixin:
     # Copied from Knox tests
     @classmethod
     def _get_basic_auth_header(cls, username, password):
-        return 'Basic %s' % base64.b64encode(
-            ('%s:%s' % (username, password)).encode('ascii')).decode()
+        return (
+            'Basic %s'
+            % base64.b64encode(
+                ('%s:%s' % (username, password)).encode('ascii')
+            ).decode()
+        )
 
     @classmethod
     def get_token_header(cls, token):
@@ -105,8 +131,11 @@ class KnoxAuthMixin:
         :param version: String
         :return: Dict
         """
-        return {'HTTP_ACCEPT': '{}; version={}'.format(
-            settings.SODAR_API_MEDIA_TYPE, version)}
+        return {
+            'HTTP_ACCEPT': '{}; version={}'.format(
+                settings.SODAR_API_MEDIA_TYPE, version
+            )
+        }
 
     def knox_login(self, user, password):
         """
@@ -118,8 +147,10 @@ class KnoxAuthMixin:
         response = self.client.post(
             reverse('knox_login'),
             HTTP_AUTHORIZATION=self._get_basic_auth_header(
-                user.username, password),
-            format='json')
+                user.username, password
+            ),
+            format='json',
+        )
         self.assertEqual(response.status_code, 200)
         return response.data['token']
 
@@ -134,7 +165,8 @@ class KnoxAuthMixin:
         return self.client.get(
             url,
             **self.get_accept_header(version),
-            **self.get_token_header(token))
+            **self.get_token_header(token)
+        )
 
 
 class TestViewsBase(TestCase):
@@ -146,19 +178,18 @@ class TestViewsBase(TestCase):
         # Force disabling of taskflow plugin if it's available
         if get_backend_api('taskflow'):
             change_plugin_status(
-                name='taskflow',
-                status=1,  # 0 = Disabled
-                plugin_type='backend')
+                name='taskflow', status=1, plugin_type='backend'  # 0 = Disabled
+            )
 
         # Init roles
-        self.role_owner = Role.objects.get_or_create(
-            name=PROJECT_ROLE_OWNER)[0]
+        self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(
-            name=PROJECT_ROLE_DELEGATE)[0]
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
         self.role_contributor = Role.objects.get_or_create(
-            name=PROJECT_ROLE_CONTRIBUTOR)[0]
-        self.role_guest = Role.objects.get_or_create(
-            name=PROJECT_ROLE_GUEST)[0]
+            name=PROJECT_ROLE_CONTRIBUTOR
+        )[0]
+        self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
         # Init superuser
         self.user = self.make_user('superuser')
@@ -174,13 +205,16 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the home view"""
 
     def setUp(self):
-        super(TestHomeView, self).setUp()
+        super().setUp()
         self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_render(self):
         """Test to ensure the home view renders correctly"""
@@ -191,7 +225,8 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         # Assert the project list is provided by context processors
         self.assertIsNotNone(response.context['project_list'])
         self.assertEqual(
-            response.context['project_list'][1].pk, self.project.pk)
+            response.context['project_list'][1].pk, self.project.pk
+        )
 
         # Assert statistics values
         self.assertEqual(response.context['count_categories'], 1)
@@ -204,13 +239,16 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search view"""
 
     def setUp(self):
-        super(TestProjectSearchView, self).setUp()
+        super().setUp()
         self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         self.plugins = get_active_plugins(plugin_type='project_app')
 
@@ -218,7 +256,8 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         """Test to ensure the project search view renders correctly"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'}))
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
@@ -228,14 +267,17 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['search_input'], 'test')
         self.assertEqual(
             len(response.context['app_search_data']),
-            len([p for p in self.plugins if p.search_enable]))
+            len([p for p in self.plugins if p.search_enable]),
+        )
 
     def test_render_search_type(self):
         """Test to ensure the project search view renders correctly with a search type"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({
-                    's': 'test type:file'}))
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test type:file'})
+            )
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
@@ -245,25 +287,35 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
             len(response.context['app_search_data']),
-            len([p for p in self.plugins if (
-                p.search_enable and
-                response.context['search_type'] in p.search_types)]))
+            len(
+                [
+                    p
+                    for p in self.plugins
+                    if (
+                        p.search_enable
+                        and response.context['search_type'] in p.search_types
+                    )
+                ]
+            ),
+        )
 
     def test_redirect_invalid_input(self):
         """Test to ensure the project search view redirects if input is not valid"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode(
-                    {'s': 'test\'"%,'}))
-            self.assertRedirects(
-                response, reverse('home'))
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'s': 'test\'"%,'})
+            )
+            self.assertRedirects(response, reverse('home'))
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
         """Test redirecting the view due to search being disabled"""
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:search') + '?' + urlencode({'s': 'test'}))
+                reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+            )
             self.assertRedirects(response, reverse('home'))
 
 
@@ -271,11 +323,13 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project detail view"""
 
     def setUp(self):
-        super(TestProjectDetailView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_render(self):
         """Test rendering of project detail view"""
@@ -283,20 +337,22 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['object'].pk, self.project.pk)
 
 
 class TestProjectCreateView(
-        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
+):
     """Tests for Project creation view"""
 
     def test_render_top(self):
         """Test rendering of top level Project creation form"""
         with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:create'))
+            response = self.client.get(reverse('projectroles:create'))
 
         self.assertEqual(response.status_code, 200)
 
@@ -309,9 +365,11 @@ class TestProjectCreateView(
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_CATEGORY, None)
+            'TestProject', PROJECT_TYPE_CATEGORY, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Create another user to enable checking for owner selection
         self.user_new = self.make_user('newuser')
@@ -320,28 +378,37 @@ class TestProjectCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(form.fields['type'].choices, [
-            (PROJECT_TYPE_CATEGORY, 'Category'),
-            (PROJECT_TYPE_PROJECT, 'Project')])
+        self.assertEqual(
+            form.fields['type'].choices,
+            [
+                (PROJECT_TYPE_CATEGORY, 'Category'),
+                (PROJECT_TYPE_PROJECT, 'Project'),
+            ],
+        )
         self.assertEqual(form.fields['parent'].widget.attrs['readonly'], True)
         self.assertEqual(
-            form.fields['parent'].choices, [
-                (self.project.sodar_uuid, self.project.title)])
+            form.fields['parent'].choices,
+            [(self.project.sodar_uuid, self.project.title)],
+        )
 
     def test_render_sub_project(self):
         """Test rendering of Project creation form if creating a subproject
         under a project (should fail with redirect)"""
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Create another user to enable checking for owner selection
         self.user_new = self.make_user('newuser')
@@ -350,7 +417,9 @@ class TestProjectCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 302)
 
@@ -367,15 +436,14 @@ class TestProjectCreateView(
             'parent': None,
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
-            'description': 'description'}
+            'description': 'description',
+        }
 
         # Add settings values
         values.update(self._get_settings())
 
         with self.login(self.user):
-            response = self.client.post(
-                reverse('projectroles:create'),
-                values)
+            response = self.client.post(reverse('projectroles:create'), values)
 
         # Assert Project state after creation
         self.assertEqual(Project.objects.all().count(), 1)
@@ -389,7 +457,8 @@ class TestProjectCreateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
-            'sodar_uuid': project.sodar_uuid}
+            'sodar_uuid': project.sodar_uuid,
+        }
 
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
@@ -399,35 +468,43 @@ class TestProjectCreateView(
 
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
-            project=project, role=self.role_owner)
+            project=project, role=self.role_owner
+        )
 
         expected = {
             'id': owner_as.pk,
             'project': project.pk,
             'role': self.role_owner.pk,
             'user': self.user.pk,
-            'sodar_uuid': owner_as.sodar_uuid}
+            'sodar_uuid': owner_as.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(owner_as), expected)
 
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
-                response, reverse(
+                response,
+                reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid}))
+                    kwargs={'project': project.sodar_uuid},
+                ),
+            )
 
 
 class TestProjectUpdateView(
-        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
+):
     """Tests for Project updating view"""
 
     def setUp(self):
-        super(TestProjectUpdateView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_render(self):
         """Test rendering of Project updating form"""
@@ -439,15 +516,18 @@ class TestProjectUpdateView(
             response = self.client.get(
                 reverse(
                     'projectroles:update',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(form.fields['type'].choices, [
-            (PROJECT_TYPE_PROJECT, 'PROJECT')])
+        self.assertEqual(
+            form.fields['type'].choices, [(PROJECT_TYPE_PROJECT, 'PROJECT')]
+        )
         self.assertEqual(form.fields['parent'].disabled, True)
 
     def test_update_project(self):
@@ -468,8 +548,10 @@ class TestProjectUpdateView(
             response = self.client.post(
                 reverse(
                     'projectroles:update',
-                    kwargs={'project': self.project.sodar_uuid}),
-                values)
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert Project state after update
         self.assertEqual(Project.objects.all().count(), 1)
@@ -483,7 +565,8 @@ class TestProjectUpdateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
-            'sodar_uuid': project.sodar_uuid}
+            'sodar_uuid': project.sodar_uuid,
+        }
 
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
@@ -494,32 +577,39 @@ class TestProjectUpdateView(
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(
-                response, reverse(
+                response,
+                reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid}))
+                    kwargs={'project': project.sodar_uuid},
+                ),
+            )
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for project roles view"""
 
     def setUp(self):
-        super(TestProjectRoleView, self).setUp()
+        super().setUp()
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
 
         # Set superuser as owner
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Set new user as delegate
         self.user_delegate = self.make_user('delegate')
         self.delegate_as = self._make_assignment(
-            self.project, self.user_delegate, self.role_delegate)
+            self.project, self.user_delegate, self.role_delegate
+        )
 
         # Set another new user as guest (= one of the member roles)
         self.user_new = self.make_user('guest')
         self.guest_as = self._make_assignment(
-            self.project, self.user_new, self.role_guest)
+            self.project, self.user_new, self.role_guest
+        )
 
     def test_render(self):
         """Test rendering of project roles view"""
@@ -527,7 +617,9 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:roles',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         # Assert page
         self.assertEqual(response.status_code, 200)
@@ -539,10 +631,10 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'project': self.project.pk,
             'role': self.role_owner.pk,
             'user': self.user.pk,
-            'sodar_uuid': self.owner_as.sodar_uuid}
+            'sodar_uuid': self.owner_as.sodar_uuid,
+        }
 
-        self.assertEqual(
-            model_to_dict(response.context['owner']), expected)
+        self.assertEqual(model_to_dict(response.context['owner']), expected)
 
         # Assert delegate
         expected = {
@@ -550,10 +642,10 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'project': self.project.pk,
             'role': self.role_delegate.pk,
             'user': self.user_delegate.pk,
-            'sodar_uuid': self.delegate_as.sodar_uuid}
+            'sodar_uuid': self.delegate_as.sodar_uuid,
+        }
 
-        self.assertEqual(
-            model_to_dict(response.context['delegate']), expected)
+        self.assertEqual(model_to_dict(response.context['delegate']), expected)
 
         # Assert member
         expected = {
@@ -561,23 +653,28 @@ class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'project': self.project.pk,
             'role': self.role_guest.pk,
             'user': self.user_new.pk,
-            'sodar_uuid': self.guest_as.sodar_uuid}
+            'sodar_uuid': self.guest_as.sodar_uuid,
+        }
 
         self.assertEqual(
-            model_to_dict(response.context['members'][0]), expected)
+            model_to_dict(response.context['members'][0]), expected
+        )
 
 
 class TestRoleAssignmentCreateView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for RoleAssignment creation view"""
 
     def setUp(self):
-        super(TestRoleAssignmentCreateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         self.user_new = self.make_user('guest')
 
@@ -588,7 +685,9 @@ class TestRoleAssignmentCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_create',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -597,22 +696,29 @@ class TestRoleAssignmentCreateView(
         self.assertIsNotNone(form)
         self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
         self.assertEqual(
-            form.fields['project'].choices, [
-                (self.project.sodar_uuid, self.project.title)])
+            form.fields['project'].choices,
+            [(self.project.sodar_uuid, self.project.title)],
+        )
         # Assert user with previously added role in project is not selectable
-        self.assertNotIn([(
-            self.owner_as.user.sodar_uuid,
-            get_user_display_name(self.owner_as.user, True))],
-            form.fields['user'].choices)
+        self.assertNotIn(
+            [
+                (
+                    self.owner_as.user.sodar_uuid,
+                    get_user_display_name(self.owner_as.user, True),
+                )
+            ],
+            form.fields['user'].choices,
+        )
         # Assert owner role is not selectable
-        self.assertNotIn([(
-            self.role_owner.pk,
-            self.role_owner.name)],
-            form.fields['role'].choices)
+        self.assertNotIn(
+            [(self.role_owner.pk, self.role_owner.name)],
+            form.fields['role'].choices,
+        )
         # Assert delegate role is selectable
         self.assertIn(
             (self.role_delegate.pk, self.role_delegate.name),
-            form.fields['role'].choices)
+            form.fields['role'].choices,
+        )
 
     def test_create_assignment(self):
         """Test RoleAssignment creation"""
@@ -623,19 +729,23 @@ class TestRoleAssignmentCreateView(
         values = {
             'project': self.project.sodar_uuid,
             'user': self.user_new.sodar_uuid,
-            'role': self.role_guest.pk}
+            'role': self.role_guest.pk,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_create',
-                    kwargs={'project': self.project.sodar_uuid}),
-                values)
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert RoleAssignment state after creation
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new)
+            project=self.project, user=self.user_new
+        )
         self.assertIsNotNone(role_as)
 
         expected = {
@@ -643,7 +753,8 @@ class TestRoleAssignmentCreateView(
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_guest.pk,
-            'sodar_uuid': role_as.sodar_uuid}
+            'sodar_uuid': role_as.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(role_as), expected)
 
@@ -653,25 +764,31 @@ class TestRoleAssignmentCreateView(
                 response,
                 reverse(
                     'projectroles:roles',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
 
 
 class TestRoleAssignmentUpdateView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for RoleAssignment update view"""
 
     def setUp(self):
-        super(TestRoleAssignmentUpdateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Create guest user and role
         self.user_new = self.make_user('newuser')
         self.role_as = self._make_assignment(
-            self.project, self.user_new, self.role_guest)
+            self.project, self.user_new, self.role_guest
+        )
 
     def test_render(self):
         """Test rendering of RoleAssignment updating form"""
@@ -679,7 +796,9 @@ class TestRoleAssignmentUpdateView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_update',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -687,22 +806,30 @@ class TestRoleAssignmentUpdateView(
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
-        self.assertEqual(form.fields['project'].choices, [
-            (self.project.sodar_uuid, self.project.title)])
+        self.assertEqual(
+            form.fields['project'].choices,
+            [(self.project.sodar_uuid, self.project.title)],
+        )
         self.assertEqual(form.fields['user'].widget.attrs['readonly'], True)
         self.assertEqual(
-            form.fields['user'].choices, [
-                (self.role_as.user.sodar_uuid,
-                 get_user_display_name(self.role_as.user, True))])
+            form.fields['user'].choices,
+            [
+                (
+                    self.role_as.user.sodar_uuid,
+                    get_user_display_name(self.role_as.user, True),
+                )
+            ],
+        )
         # Assert owner role is not sectable
-        self.assertNotIn([(
-            self.role_owner.pk,
-            self.role_owner.name)],
-            form.fields['role'].choices)
+        self.assertNotIn(
+            [(self.role_owner.pk, self.role_owner.name)],
+            form.fields['role'].choices,
+        )
         # Assert delegate role is selectable
         self.assertIn(
             (self.role_delegate.pk, self.role_delegate.name),
-            form.fields['role'].choices)
+            form.fields['role'].choices,
+        )
 
     def test_update_assignment(self):
         """Test RoleAssignment updating"""
@@ -713,19 +840,23 @@ class TestRoleAssignmentUpdateView(
         values = {
             'project': self.role_as.project.sodar_uuid,
             'user': self.role_as.user.sodar_uuid,
-            'role': self.role_contributor.pk}
+            'role': self.role_contributor.pk,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:role_update',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid}),
-                values)
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert RoleAssignment state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         role_as = RoleAssignment.objects.get(
-            project=self.project, user=self.user_new)
+            project=self.project, user=self.user_new
+        )
         self.assertIsNotNone(role_as)
 
         expected = {
@@ -733,33 +864,42 @@ class TestRoleAssignmentUpdateView(
             'project': self.project.pk,
             'user': self.user_new.pk,
             'role': self.role_contributor.pk,
-            'sodar_uuid': role_as.sodar_uuid}
+            'sodar_uuid': role_as.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(role_as), expected)
 
         # Assert redirect
         with self.login(self.user):
-            self.assertRedirects(response, reverse(
-                'projectroles:roles',
-                kwargs={'project': self.project.sodar_uuid}))
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:roles',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
 
 
 class TestRoleAssignmentDeleteView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for RoleAssignment delete view"""
 
     def setUp(self):
-        super(TestRoleAssignmentDeleteView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Create guest user and role
         self.user_new = self.make_user('guest')
         self.role_as = self._make_assignment(
-            self.project, self.user_new, self.role_guest)
+            self.project, self.user_new, self.role_guest
+        )
 
     def test_render(self):
         """Test rendering of the RoleAssignment deletion confirmation form"""
@@ -767,7 +907,9 @@ class TestRoleAssignmentDeleteView(
             response = self.client.get(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -781,29 +923,38 @@ class TestRoleAssignmentDeleteView(
             response = self.client.post(
                 reverse(
                     'projectroles:role_delete',
-                    kwargs={'roleassignment': self.role_as.sodar_uuid}))
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                )
+            )
 
         # Assert RoleAssignment state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
         # Assert redirect
         with self.login(self.user):
-            self.assertRedirects(response, reverse(
-                'projectroles:roles',
-                kwargs={'project': self.project.sodar_uuid}))
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:roles',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
 
 
 class TestProjectInviteCreateView(
-        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+):
     """Tests for ProjectInvite creation view"""
 
     def setUp(self):
-        super(TestProjectInviteCreateView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         self.new_user = self.make_user('new_user')
 
@@ -814,7 +965,9 @@ class TestProjectInviteCreateView(
             response = self.client.get(
                 reverse(
                     'projectroles:invite_create',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -823,14 +976,15 @@ class TestProjectInviteCreateView(
         self.assertIsNotNone(form)
 
         # Assert owner role is not selectable
-        self.assertNotIn([(
-            self.role_owner.pk,
-            self.role_owner.name)],
-            form.fields['role'].choices)
+        self.assertNotIn(
+            [(self.role_owner.pk, self.role_owner.name)],
+            form.fields['role'].choices,
+        )
         # Assert delegate role is not selectable
         self.assertNotIn(
             (self.role_delegate.pk, self.role_delegate.name),
-            form.fields['role'].choices)
+            form.fields['role'].choices,
+        )
 
     def test_create_invite(self):
         """Test ProjectInvite creation"""
@@ -842,20 +996,24 @@ class TestProjectInviteCreateView(
         values = {
             'email': INVITE_EMAIL,
             'project': self.project.pk,
-            'role': self.role_contributor.pk}
+            'role': self.role_contributor.pk,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:invite_create',
-                    kwargs={'project': self.project.sodar_uuid}),
-                values)
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert ProjectInvite state after creation
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
 
         invite = ProjectInvite.objects.get(
-            project=self.project, email=INVITE_EMAIL, active=True)
+            project=self.project, email=INVITE_EMAIL, active=True
+        )
         self.assertIsNotNone(invite)
 
         expected = {
@@ -868,7 +1026,8 @@ class TestProjectInviteCreateView(
             'date_expire': invite.date_expire,
             'secret': invite.secret,
             'active': True,
-            'sodar_uuid': invite.sodar_uuid}
+            'sodar_uuid': invite.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(invite), expected)
 
@@ -878,7 +1037,9 @@ class TestProjectInviteCreateView(
                 response,
                 reverse(
                     'projectroles:invites',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
 
     def test_accept_invite(self):
         """Test user accepting an invite"""
@@ -889,33 +1050,50 @@ class TestProjectInviteCreateView(
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
-            message='')
+            message='',
+        )
 
         # Assert preconditions
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
-        self.assertEqual(RoleAssignment.objects.filter(
-            project=self.project,
-            user=self.new_user,
-            role=self.role_contributor).count(), 0)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
 
         with self.login(self.new_user):
-            response = self.client.get(reverse(
-                'projectroles:invite_accept',
-                kwargs={'secret': invite.secret}))
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                )
+            )
 
-            self.assertRedirects(response, reverse(
-                'projectroles:detail',
-                kwargs={'project': self.project.sodar_uuid}))
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
 
             # Assert postconditions
             self.assertEqual(
-                ProjectInvite.objects.filter(active=True).count(), 0)
+                ProjectInvite.objects.filter(active=True).count(), 0
+            )
 
-            self.assertEqual(RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.new_user,
-                role=self.role_contributor).count(), 1)
+            self.assertEqual(
+                RoleAssignment.objects.filter(
+                    project=self.project,
+                    user=self.new_user,
+                    role=self.role_contributor,
+                ).count(),
+                1,
+            )
 
     def test_accept_invite_expired(self):
         """Test user accepting an expired invite"""
@@ -927,51 +1105,68 @@ class TestProjectInviteCreateView(
             role=self.role_contributor,
             issuer=self.user,
             message='',
-            date_expire=timezone.now())
+            date_expire=timezone.now(),
+        )
 
         # Assert preconditions
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
-        self.assertEqual(RoleAssignment.objects.filter(
-            project=self.project,
-            user=self.new_user,
-            role=self.role_contributor).count(), 0)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
 
         with self.login(self.new_user):
-            response = self.client.get(reverse(
-                'projectroles:invite_accept',
-                kwargs={'secret': invite.secret}))
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                )
+            )
 
             self.assertRedirects(response, reverse('home'))
 
             # Assert postconditions
             self.assertEqual(
-                ProjectInvite.objects.filter(active=True).count(), 0)
+                ProjectInvite.objects.filter(active=True).count(), 0
+            )
 
-            self.assertEqual(RoleAssignment.objects.filter(
-                project=self.project,
-                user=self.new_user,
-                role=self.role_contributor).count(), 0)
+            self.assertEqual(
+                RoleAssignment.objects.filter(
+                    project=self.project,
+                    user=self.new_user,
+                    role=self.role_contributor,
+                ).count(),
+                0,
+            )
 
 
 class TestProjectInviteListView(
-        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+):
     """Tests for ProjectInvite list view"""
 
     def setUp(self):
-        super(TestProjectInviteListView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         self.invite = self._make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
-            message='')
+            message='',
+        )
 
     def test_render(self):
         """Test rendering of ProjectInvite list form"""
@@ -980,29 +1175,35 @@ class TestProjectInviteListView(
             response = self.client.get(
                 reverse(
                     'projectroles:invites',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
 
 class TestProjectInviteRevokeView(
-        ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
+):
     """Tests for ProjectInvite revocation view"""
 
     def setUp(self):
-        super(TestProjectInviteRevokeView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         self.invite = self._make_invite(
             email='test@example.com',
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
-            message='')
+            message='',
+        )
 
     def test_render(self):
         """Test rendering of ProjectInvite revocation form"""
@@ -1011,7 +1212,9 @@ class TestProjectInviteRevokeView(
             response = self.client.get(
                 reverse(
                     'projectroles:invite_revoke',
-                    kwargs={'projectinvite': self.invite.sodar_uuid}))
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1024,10 +1227,12 @@ class TestProjectInviteRevokeView(
 
         # Issue POST request
         with self.login(self.user):
-            response = self.client.post(
+            self.client.post(
                 reverse(
                     'projectroles:invite_revoke',
-                    kwargs={'projectinvite': self.invite.sodar_uuid}))
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
 
         # Assert ProjectInvite state after creation
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
@@ -1035,16 +1240,19 @@ class TestProjectInviteRevokeView(
 
 
 class TestProjectStarringAPIView(
-        ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase
+):
     """Tests for project starring API view"""
 
     def setUp(self):
-        super(TestProjectStarringAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_star_project(self):
         """Test project starring"""
@@ -1057,13 +1265,16 @@ class TestProjectStarringAPIView(
             response = self.client.post(
                 reverse(
                     'projectroles:star',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         # Assert ProjectUserTag state after creation
         self.assertEqual(ProjectUserTag.objects.all().count(), 1)
 
         tag = ProjectUserTag.objects.get(
-            project=self.project, user=self.user, name=PROJECT_TAG_STARRED)
+            project=self.project, user=self.user, name=PROJECT_TAG_STARRED
+        )
         self.assertIsNotNone(tag)
 
         expected = {
@@ -1071,7 +1282,8 @@ class TestProjectStarringAPIView(
             'project': self.project.pk,
             'user': self.user.pk,
             'name': PROJECT_TAG_STARRED,
-            'sodar_uuid': tag.sodar_uuid}
+            'sodar_uuid': tag.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(tag), expected)
 
@@ -1090,7 +1302,9 @@ class TestProjectStarringAPIView(
             response = self.client.post(
                 reverse(
                     'projectroles:star',
-                    kwargs={'project': self.project.sodar_uuid}))
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
 
         # Assert ProjectUserTag state after creation
         self.assertEqual(ProjectUserTag.objects.all().count(), 0)
@@ -1107,12 +1321,14 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project retrieve API view"""
 
     def setUp(self):
-        super(TestProjectGetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_post(self):
         """Test POST request for getting a project"""
@@ -1120,14 +1336,17 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             reverse('projectroles:taskflow_project_get'),
             data={
                 'project_uuid': str(self.project.sodar_uuid),
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
         response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
         expected = {
             'project_uuid': str(self.project.sodar_uuid),
             'title': self.project.title,
-            'description': self.project.description}
+            'description': self.project.description,
+        }
 
         self.assertEqual(response.data, expected)
 
@@ -1138,29 +1357,35 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             title='TestProject2',
             type=PROJECT_TYPE_PROJECT,
             parent=None,
-            submit_status=SUBMIT_STATUS_PENDING_TASKFLOW)
+            submit_status=SUBMIT_STATUS_PENDING_TASKFLOW,
+        )
 
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
                 'project_uuid': str(pd_project.sodar_uuid),
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
         response = views.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestProjectUpdateAPIView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for the project updating API view"""
 
     def setUp(self):
-        super(TestProjectUpdateAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_post(self):
         """Test POST request for updating a project"""
@@ -1177,7 +1402,9 @@ class TestProjectUpdateAPIView(
                 'title': title,
                 'description': desc,
                 'readme': readme,
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
         response = views.TaskflowProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1191,7 +1418,6 @@ class TestProjectUpdateAPIView(
 
         # NOTE: Duplicate titles not checked here, not allowed in the form
         title = 'New title'
-        desc = 'New desc'
         readme = 'New readme'
 
         request = self.req_factory.post(
@@ -1200,7 +1426,9 @@ class TestProjectUpdateAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
                 'readme': readme,
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
         response = views.TaskflowProjectUpdateAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1212,16 +1440,19 @@ class TestProjectUpdateAPIView(
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentGetAPIView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for the role assignment getting API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentGetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_post(self):
         """Test POST request for getting a role assignment"""
@@ -1230,7 +1461,9 @@ class TestRoleAssignmentGetAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(self.user.sodar_uuid),
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
         response = views.TaskflowRoleAssignmentGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
 
@@ -1239,22 +1472,26 @@ class TestRoleAssignmentGetAPIView(
             'project_uuid': str(self.project.sodar_uuid),
             'user_uuid': str(self.user.sodar_uuid),
             'role_pk': self.role_owner.pk,
-            'role_name': self.role_owner.name}
+            'role_name': self.role_owner.name,
+        }
         self.assertEqual(response.data, expected)
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentSetAPIView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for the role assignment setting API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentSetAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_post_new(self):
         """Test POST request for assigning a new role"""
@@ -1269,7 +1506,9 @@ class TestRoleAssignmentSetAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
                 'role_pk': self.role_contributor.pk,
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
 
         response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1281,7 +1520,7 @@ class TestRoleAssignmentSetAPIView(
     def test_post_existing(self):
         """Test POST request for updating an existing role"""
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(self.project, new_user, self.role_guest)
+        self._make_assignment(self.project, new_user, self.role_guest)
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1292,7 +1531,9 @@ class TestRoleAssignmentSetAPIView(
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
                 'role_pk': self.role_contributor.pk,
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
 
         response = views.TaskflowRoleAssignmentSetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1304,21 +1545,24 @@ class TestRoleAssignmentSetAPIView(
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
 class TestRoleAssignmentDeleteAPIView(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for the role assignment deletion API view"""
 
     def setUp(self):
-        super(TestRoleAssignmentDeleteAPIView, self).setUp()
+        super().setUp()
 
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None)
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     def test_post(self):
         """Test POST request for removing a role assignment"""
         new_user = self.make_user('new_user')
-        new_as = self._make_assignment(self.project, new_user, self.role_guest)
+        self._make_assignment(self.project, new_user, self.role_guest)
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1328,7 +1572,9 @@ class TestRoleAssignmentDeleteAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
 
         response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
@@ -1346,7 +1592,9 @@ class TestRoleAssignmentDeleteAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'user_uuid': str(new_user.sodar_uuid),
-                'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
 
         response = views.TaskflowRoleAssignmentDeleteAPIView.as_view()(request)
         self.assertEqual(response.status_code, 404)
@@ -1354,17 +1602,21 @@ class TestRoleAssignmentDeleteAPIView(
 
 
 class TestTaskflowAPIViewAccess(
-        ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
     """Tests for taskflow API view access"""
 
     def setUp(self):
-        super(TestTaskflowAPIViewAccess, self).setUp()
+        super().setUp()
         self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
     @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
     def test_access_invalid_token(self):
@@ -1376,11 +1628,13 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_role_set'),
             reverse('projectroles:taskflow_role_delete'),
             reverse('projectroles:taskflow_settings_get'),
-            reverse('projectroles:taskflow_settings_set')]
+            reverse('projectroles:taskflow_settings_set'),
+        ]
 
         for url in urls:
             request = self.req_factory.post(
-                url, data={'sodar_secret': TASKFLOW_SECRET_INVALID})
+                url, data={'sodar_secret': TASKFLOW_SECRET_INVALID}
+            )
             response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
@@ -1394,7 +1648,8 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_role_set'),
             reverse('projectroles:taskflow_role_delete'),
             reverse('projectroles:taskflow_settings_get'),
-            reverse('projectroles:taskflow_settings_set')]
+            reverse('projectroles:taskflow_settings_set'),
+        ]
 
         for url in urls:
             request = self.req_factory.post(url)
@@ -1411,11 +1666,13 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_role_set'),
             reverse('projectroles:taskflow_role_delete'),
             reverse('projectroles:taskflow_settings_get'),
-            reverse('projectroles:taskflow_settings_set')]
+            reverse('projectroles:taskflow_settings_set'),
+        ]
 
         for url in urls:
             request = self.req_factory.post(
-                url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET})
+                url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
+            )
             response = views.TaskflowProjectGetAPIView.as_view()(request)
             self.assertEqual(response.status_code, 403)
 
@@ -1427,7 +1684,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site list view"""
 
     def setUp(self):
-        super(TestRemoteSiteListView, self).setUp()
+        super().setUp()
 
         # Create target site
         self.target_site = self._make_site(
@@ -1435,7 +1692,8 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_render_as_source(self):
         """Test rendering the remote site list view as source"""
@@ -1470,14 +1728,15 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site create view"""
 
     def setUp(self):
-        super(TestRemoteSiteCreateView, self).setUp()
+        super().setUp()
 
     def test_render_as_source(self):
         """Test rendering the remote site create view as source"""
 
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:remote_site_create'))
+                reverse('projectroles:remote_site_create')
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1493,7 +1752,8 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
 
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:remote_site_create'))
+                reverse('projectroles:remote_site_create')
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1513,11 +1773,13 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_SOURCE,
             description='',
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
         with self.login(self.user):
             response = self.client.get(
-                reverse('projectroles:remote_site_create'))
+                reverse('projectroles:remote_site_create')
+            )
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
     def test_create_target(self):
@@ -1530,12 +1792,13 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'name': REMOTE_SITE_NAME,
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
-            'secret': REMOTE_SITE_SECRET}
+            'secret': REMOTE_SITE_SECRET,
+        }
 
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:remote_site_create'),
-                values)
+                reverse('projectroles:remote_site_create'), values
+            )
 
         # Assert site state after creation
         self.assertEqual(RemoteSite.objects.all().count(), 1)
@@ -1548,7 +1811,8 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'mode': SITE_MODE_TARGET,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
-            'sodar_uuid': site.sodar_uuid}
+            'sodar_uuid': site.sodar_uuid,
+        }
 
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
@@ -1568,12 +1832,13 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'name': REMOTE_SITE_NAME,
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
-            'secret': REMOTE_SITE_SECRET}
+            'secret': REMOTE_SITE_SECRET,
+        }
 
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:remote_site_create'),
-                values)
+                reverse('projectroles:remote_site_create'), values
+            )
 
         # Assert site state after creation
         self.assertEqual(RemoteSite.objects.all().count(), 1)
@@ -1586,7 +1851,8 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'mode': SITE_MODE_SOURCE,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
-            'sodar_uuid': site.sodar_uuid}
+            'sodar_uuid': site.sodar_uuid,
+        }
 
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
@@ -1604,21 +1870,23 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
         # Assert precondition
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         values = {
-            'name': REMOTE_SITE_NAME,   # Old name
+            'name': REMOTE_SITE_NAME,  # Old name
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
-            'secret': build_secret()}
+            'secret': build_secret(),
+        }
 
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:remote_site_create'),
-                values)
+                reverse('projectroles:remote_site_create'), values
+            )
 
         # Assert postconditions
         self.assertEqual(response.status_code, 200)
@@ -1629,7 +1897,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site update view"""
 
     def setUp(self):
-        super(TestRemoteSiteUpdateView, self).setUp()
+        super().setUp()
 
         # Set up target site
         self.target_site = self._make_site(
@@ -1637,7 +1905,8 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_render(self):
         """Test rendering the remote site create view as source"""
@@ -1646,7 +1915,9 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:remote_site_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1669,14 +1940,17 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'name': REMOTE_SITE_NEW_NAME,
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
-            'secret': REMOTE_SITE_SECRET}
+            'secret': REMOTE_SITE_SECRET,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_site_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert site state after creation
         self.assertEqual(RemoteSite.objects.all().count(), 1)
@@ -1689,7 +1963,8 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'mode': SITE_MODE_TARGET,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
-            'sodar_uuid': site.sodar_uuid}
+            'sodar_uuid': site.sodar_uuid,
+        }
 
         model_dict = model_to_dict(site)
         self.assertEqual(model_dict, expected)
@@ -1707,23 +1982,27 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_NEW_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_NEW_DESC,
-            secret=REMOTE_SITE_NEW_SECRET)
+            secret=REMOTE_SITE_NEW_SECRET,
+        )
 
         # Assert precondition
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         values = {
-            'name': REMOTE_SITE_NAME,   # Old name
+            'name': REMOTE_SITE_NAME,  # Old name
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
-            'secret': REMOTE_SITE_SECRET}
+            'secret': REMOTE_SITE_SECRET,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_site_update',
-                    kwargs={'remotesite': new_target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': new_target_site.sodar_uuid},
+                ),
+                values,
+            )
 
         # Assert postconditions
         self.assertEqual(response.status_code, 200)
@@ -1732,8 +2011,9 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
 
 class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
     """Tests for remote site delete view"""
+
     def setUp(self):
-        super(TestRemoteSiteDeleteView, self).setUp()
+        super().setUp()
 
         # Set up target site
         self.target_site = self._make_site(
@@ -1741,7 +2021,8 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_render(self):
         """Test rendering the remote site delete view"""
@@ -1750,7 +2031,9 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:remote_site_delete',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                )
+            )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1764,7 +2047,9 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_site_delete',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                )
+            )
             self.assertRedirects(response, reverse('projectroles:remote_sites'))
 
         # Assert site status
@@ -1772,20 +2057,27 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
 
 
 class TestRemoteProjectsBatchUpdateView(
-        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin, TestViewsBase):
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestViewsBase,
+):
     """Tests for remote project batch update view"""
 
     def setUp(self):
-        super(TestRemoteProjectsBatchUpdateView, self).setUp()
+        super().setUp()
 
         # Set up project
         self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Set up target site
         self.target_site = self._make_site(
@@ -1793,21 +2085,23 @@ class TestRemoteProjectsBatchUpdateView(
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
     def test_render_confirm(self):
         """Test rendering the remote project update view in confirm mode"""
 
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
-        values = {
-            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
+        values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_projects_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+                values,
+            )
 
             # Assert postconditions
             self.assertEqual(response.status_code, 200)
@@ -1818,22 +2112,25 @@ class TestRemoteProjectsBatchUpdateView(
         """Test rendering the remote project update view without changes (should redirect)"""
 
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
-        values = {
-            access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
+        values = {access_field: SODAR_CONSTANTS['REMOTE_LEVEL_NONE']}
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_projects_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+                values,
+            )
 
             # Assert postconditions
             self.assertRedirects(
                 response,
                 reverse(
                     'projectroles:remote_projects',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+            )
 
     def test_post_create(self):
         """Test updating remote project access by adding a new RemoteProject"""
@@ -1844,27 +2141,33 @@ class TestRemoteProjectsBatchUpdateView(
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
             access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
-            'update-confirmed': 1}
+            'update-confirmed': 1,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_projects_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+                values,
+            )
 
             # Assert postconditions
             self.assertEqual(RemoteProject.objects.all().count(), 1)
             rp = RemoteProject.objects.first()
             self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
             self.assertEqual(
-                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
+            )
 
             self.assertRedirects(
                 response,
                 reverse(
                     'projectroles:remote_projects',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+            )
 
     def test_post_update(self):
         """Test updating remote project access by modifying an existing RemoteProject"""
@@ -1872,7 +2175,8 @@ class TestRemoteProjectsBatchUpdateView(
         rp = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+        )
 
         # Assert precondition
         self.assertEqual(RemoteProject.objects.all().count(), 1)
@@ -1880,46 +2184,60 @@ class TestRemoteProjectsBatchUpdateView(
         access_field = 'remote_access_{}'.format(self.project.sodar_uuid)
         values = {
             access_field: SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
-            'update-confirmed': 1}
+            'update-confirmed': 1,
+        }
 
         with self.login(self.user):
             response = self.client.post(
                 reverse(
                     'projectroles:remote_projects_update',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}),
-                values)
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+                values,
+            )
 
             # Assert postconditions
             self.assertEqual(RemoteProject.objects.all().count(), 1)
             rp.refresh_from_db()
             self.assertEqual(rp.project_uuid, self.project.sodar_uuid)
             self.assertEqual(
-                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+                rp.level, SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
+            )
 
             self.assertRedirects(
                 response,
                 reverse(
                     'projectroles:remote_projects',
-                    kwargs={'remotesite': self.target_site.sodar_uuid}))
+                    kwargs={'remotesite': self.target_site.sodar_uuid},
+                ),
+            )
 
 
 class TestRemoteProjectGetAPIView(
-        ProjectMixin, RoleAssignmentMixin, RemoteSiteMixin,
-        RemoteProjectMixin, TestViewsBase):
+    ProjectMixin,
+    RoleAssignmentMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestViewsBase,
+):
     """Tests for remote project getting API view"""
 
     def setUp(self):
-        super(TestRemoteProjectGetAPIView, self).setUp()
+        super().setUp()
 
         # Set up projects
         self.category = self._make_project(
-            'TestCategory', PROJECT_TYPE_CATEGORY, None)
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
         self.cat_owner_as = self._make_assignment(
-            self.category, self.user, self.role_owner)
+            self.category, self.user, self.role_owner
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, self.category)
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
         self.project_owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Create target site
         self.target_site = self._make_site(
@@ -1927,14 +2245,16 @@ class TestRemoteProjectGetAPIView(
             url=REMOTE_SITE_URL,
             mode=SITE_MODE_TARGET,
             description=REMOTE_SITE_DESC,
-            secret=REMOTE_SITE_SECRET)
+            secret=REMOTE_SITE_SECRET,
+        )
 
         # Create remote project
         self.remote_project = self._make_remote_project(
             site=self.target_site,
             project_uuid=self.project.sodar_uuid,
             project=self.project,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'])
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO'],
+        )
 
         self.remote_api = RemoteProjectAPI()
 
@@ -1944,7 +2264,9 @@ class TestRemoteProjectGetAPIView(
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET}))
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            )
+        )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1958,8 +2280,9 @@ class TestRemoteProjectGetAPIView(
 
         response = self.client.get(
             reverse(
-                'projectroles:api_remote_get',
-                kwargs={'secret': build_secret()}))
+                'projectroles:api_remote_get', kwargs={'secret': build_secret()}
+            )
+        )
 
         self.assertEqual(response.status_code, 401)
 
@@ -1970,9 +2293,12 @@ class TestRemoteProjectGetAPIView(
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET}),
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION))
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION
+            ),
+        )
 
         self.assertEqual(response.status_code, 200)
 
@@ -1983,9 +2309,12 @@ class TestRemoteProjectGetAPIView(
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET}),
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID))
+                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID
+            ),
+        )
 
         self.assertEqual(response.status_code, 406)
 
@@ -1996,8 +2325,11 @@ class TestRemoteProjectGetAPIView(
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET}),
+                kwargs={'secret': REMOTE_SITE_SECRET},
+            ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION))
+                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION
+            ),
+        )
 
         self.assertEqual(response.status_code, 406)

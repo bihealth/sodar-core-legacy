@@ -18,13 +18,15 @@ class AdminAlert(models.Model):
     message = models.CharField(
         max_length=255,
         unique=False,
-        help_text='Alert message to be shown for users')
+        help_text='Alert message to be shown for users',
+    )
 
     #: Superuser who has set the alert
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         related_name='alerts',
-        help_text='Superuser who has set the alert')
+        help_text='Superuser who has set the alert',
+    )
 
     #: Full description (optional, will be shown on a separate page)
     description = MarkupField(
@@ -33,40 +35,42 @@ class AdminAlert(models.Model):
         null=True,
         markup_type='markdown',
         help_text='Full description of alert '
-                  '(optional, will be shown on a separate page)')
+        '(optional, will be shown on a separate page)',
+    )
 
     #: Alert creation timestamp
     date_created = models.DateTimeField(
-        auto_now_add=True,
-        help_text='Alert creation timestamp')
+        auto_now_add=True, help_text='Alert creation timestamp'
+    )
 
     #: Alert expiration timestamp
     date_expire = models.DateTimeField(
-        blank=False,
-        null=False,
-        help_text='Alert expiration timestamp')
+        blank=False, null=False, help_text='Alert expiration timestamp'
+    )
 
     #: Alert status (for disabling the alert before expiration)
     active = models.BooleanField(
         default=True,
-        help_text='Alert status (for disabling the alert before expiration)')
+        help_text='Alert status (for disabling the alert before expiration)',
+    )
 
     #: Require authorization to view alert
     require_auth = models.BooleanField(
-        default=True,
-        help_text='Require authorization to view alert')
+        default=True, help_text='Require authorization to view alert'
+    )
 
     #: Adminalerts SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4,
-        unique=True,
-        help_text='Adminalerts SODAR UUID')
+        default=uuid.uuid4, unique=True, help_text='Adminalerts SODAR UUID'
+    )
 
     def __str__(self):
         return '{}{}'.format(
             self.message,
-            ' [ACTIVE]' if (
-                self.active and self.date_expire > timezone.now()) else '')
+            ' [ACTIVE]'
+            if (self.active and self.date_expire > timezone.now())
+            else '',
+        )
 
     def __repr__(self):
         values = (self.message, self.user.username, self.active)
@@ -74,8 +78,11 @@ class AdminAlert(models.Model):
 
     def is_active(self):
         """Return True if alert is active and has not expired"""
-        return True if (
-            self.date_expire > timezone.now() and self.active) else False
+        return (
+            True
+            if (self.date_expire > timezone.now() and self.active)
+            else False
+        )
 
     def is_expired(self):
         """Return True if alert has expired"""

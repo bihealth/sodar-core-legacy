@@ -7,6 +7,69 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.4.2 (2019-01-25)
+===================
+
+Added
+-----
+
+- **General**
+    - Flake8 and Codacy coverage in Travis-CI (#122)
+    - Flake8 in GitLab-CI (#127)
+- **Projectroles**
+    - Automatically pass CSRF token to unsafe Ajax HTTP methods (#116)
+    - Queryset filtering in ``ProjectPermissionMixin`` from digestiflow-web (#134)
+    - Check for ``get_project_filter_key()`` from digestiflow-web (#134)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.18 (#120)
+    - Upgrade Python dependencies (#123)
+    - Update .coveragerc
+    - Upgrade to Bootstrap 4.2.1 (#23)
+    - Upgrade to JQuery 3.3.1 (#23)
+    - General code cleanup
+    - Code formatting with Black (#133)
+- **Filesfolders**
+    - Refactor ``BatchEditView`` and ``FileForm.clean()`` (#128)
+- **Projectroles**
+    - Use ``alert-dismissable`` to dismiss alerts (#13, #130)
+    - Update DataTables dependency in ``search.html`` template
+    - Refactor ``ProjectModifyMixin`` and ``RemoteProjectAPI`` (#128)
+    - Disable ``USE_I18N`` in example site settings (#117)
+    - Refactor ``ProjectAccessMixin._get_project()`` into ``get_project()`` (#134)
+    - Rename ``BaseAPIView`` into ``SODARAPIBaseView``
+- **Timeline**
+    - Refactor ``get_event_description()`` (#30, #128)
+
+Fixed
+-----
+
+- **General**
+    - Django docs references (#131)
+- **Projectroles**
+    - ``sodar-list-dropdown`` layout broke down with Bootstrap 4.2.1 (#23)
+    - ``TASKFLOW_TEST_MODE`` not checked for allowing SODAR Taskflow tests (#126)
+    - Typo in ``update_remote`` timeline event description (#129)
+    - Textarea height modification (#125)
+    - Text wrapping in ``sodar-list-btn`` and ``sodar-list-dropdown`` with Bootstrap 4.2.1 (#132)
+- **Taskflowbackend**
+    - ``TASKFLOW_TEST_MODE`` not checked for allowing ``cleanup()`` (#126)
+    - ``FlowSubmitException`` raised instead of ``CleanupException`` in ``cleanup()``
+
+Removed
+-------
+
+- **General**
+    - Legacy Python2 ``super()`` calls (#118)
+- **Projectroles**
+    - Custom alert dismissal script (#13)
+- **Example Site App**
+    - Example file ``test.py``
+
+
 v0.4.1 (2019-01-11)
 ===================
 

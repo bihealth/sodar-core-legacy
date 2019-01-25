@@ -24,10 +24,14 @@ from projectroles import rules as pr_rules  # To access common predicates
 # Allow viewing project timeline
 rules.add_perm(
     'timeline.view_timeline',
-    pr_rules.is_project_owner | pr_rules.is_project_delegate |
-    pr_rules.is_project_contributor | pr_rules.is_project_guest)
+    pr_rules.is_project_owner
+    | pr_rules.is_project_delegate
+    | pr_rules.is_project_contributor
+    | pr_rules.is_project_guest,
+)
 
 # Allow viewing classified event
 rules.add_perm(
     'timeline.view_classified_event',
-    pr_rules.is_project_owner | pr_rules.is_project_delegate)
+    pr_rules.is_project_owner | pr_rules.is_project_delegate,
+)

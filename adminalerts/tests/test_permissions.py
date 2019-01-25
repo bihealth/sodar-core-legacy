@@ -28,60 +28,46 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
             message='alert',
             user=self.superuser,
             description='description',
-            active=True)
+            active=True,
+        )
 
     def test_alert_create(self):
         url = reverse('adminalerts:create')
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_alert_update(self):
         url = reverse(
-            'adminalerts:update',
-            kwargs={'uuid': self.alert.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_alert_delete(self):
         url = reverse(
-            'adminalerts:delete',
-            kwargs={'uuid': self.alert.sodar_uuid})
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+            'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+        )
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_alert_list(self):
         url = reverse('adminalerts:list')
-        good_users = [
-            self.superuser]
-        bad_users = [
-            self.anonymous,
-            self.regular_user]
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
     def test_alert_detail(self):
         url = reverse(
-            'adminalerts:detail',
-            kwargs={'uuid': self.alert.sodar_uuid})
-        good_users = [
-            self.superuser,
-            self.regular_user]
-        bad_users = [
-            self.anonymous]
+            'adminalerts:detail', kwargs={'uuid': self.alert.sodar_uuid}
+        )
+        good_users = [self.superuser, self.regular_user]
+        bad_users = [self.anonymous]
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)

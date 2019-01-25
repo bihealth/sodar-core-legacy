@@ -8,7 +8,8 @@ from djangoplugins.point import PluginPoint
 PLUGIN_TYPES = {
     'project_app': 'ProjectAppPluginPoint',
     'backend': 'BackendPluginPoint',
-    'site_app': 'SiteAppPluginPoint'}
+    'site_app': 'SiteAppPluginPoint',
+}
 
 # From djangoplugins
 ENABLED = 0
@@ -29,9 +30,9 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Define project specific settings in your app plugin, example below
     project_settings = {
         'example_setting': {
-            'type': 'STRING',                   # STRING/INTEGER/BOOLEAN
+            'type': 'STRING',  # STRING/INTEGER/BOOLEAN
             'default': 'example',
-            'description': 'Example setting'    # Optional
+            'description': 'Example setting',  # Optional
         }
     }
 
@@ -148,10 +149,10 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         # TODO: Implement display of results in the app's search template
         return {
-            'all': {    # You can add 1-N lists of result items
+            'all': {  # You can add 1-N lists of result items
                 'title': 'Title to be displayed',
                 'search_types': [],
-                'items': []
+                'items': [],
             }
         }
 
@@ -229,16 +230,27 @@ def get_active_plugins(plugin_type='project_app'):
     if plugin_type not in PLUGIN_TYPES.keys():
         raise ValueError(
             'Invalid value for plugin_type. Accepted values: {}'.format(
-                ', '.join(PLUGIN_TYPES.keys())))
+                ', '.join(PLUGIN_TYPES.keys())
+            )
+        )
 
     plugins = eval(PLUGIN_TYPES[plugin_type]).get_plugins()
 
     if plugins:
-        return sorted([
-            p for p in plugins if (p.is_active() and (
-                plugin_type in ['project_app', 'site_app'] or
-                p.name in settings.ENABLED_BACKEND_PLUGINS))],
-            key=lambda x: x.name)
+        return sorted(
+            [
+                p
+                for p in plugins
+                if (
+                    p.is_active()
+                    and (
+                        plugin_type in ['project_app', 'site_app']
+                        or p.name in settings.ENABLED_BACKEND_PLUGINS
+                    )
+                )
+            ],
+            key=lambda x: x.name,
+        )
 
     return None
 
@@ -266,8 +278,11 @@ def change_plugin_status(name, status, plugin_type='app'):
         raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
 
     if not plugin:
-        raise ValueError('Plugin of type "{}" not found with name "{}"'.format(
-            plugin_type, name))
+        raise ValueError(
+            'Plugin of type "{}" not found with name "{}"'.format(
+                plugin_type, name
+            )
+        )
 
     plugin = plugin.get_model()
     plugin.status = status

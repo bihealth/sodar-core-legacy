@@ -11,7 +11,7 @@ from .test import *  # noqa
 TASKFLOW_TARGETS = ['irods', 'sodar']
 TASKFLOW_BACKEND_HOST = env.str('TASKFLOW_BACKEND_HOST', 'http://0.0.0.0')
 TASKFLOW_BACKEND_PORT = env.int('TASKFLOW_BACKEND_PORT', 5005)
-TASKFLOW_TEST_MODE = True     # Important! Make taskflow use a test iRODS server
+TASKFLOW_TEST_MODE = True  # Important! Make taskflow use a test iRODS server
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [

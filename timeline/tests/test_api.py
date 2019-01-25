@@ -8,10 +8,17 @@ from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
 
-from .test_models import TestProjectEventBase, ProjectEventMixin,\
-    ProjectEventStatusMixin
-from ..models import ProjectEvent, ProjectEventStatus, ProjectEventObjectRef,\
-    DEFAULT_MESSAGES
+from .test_models import (
+    TestProjectEventBase,
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+)
+from ..models import (
+    ProjectEvent,
+    ProjectEventStatus,
+    ProjectEventObjectRef,
+    DEFAULT_MESSAGES,
+)
 
 
 # Global constants from settings
@@ -24,10 +31,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestTimelineAPI(
-        ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase):
-
+    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+):
     def setUp(self):
-        super(TestTimelineAPI, self).setUp()
+        super().setUp()
         self.timeline = get_backend_api('timeline_backend')
 
         # Init user
@@ -46,7 +53,8 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'})
+            extra_data={'test_key': 'test_val'},
+        )
 
         # Assert object status after insert
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
@@ -61,7 +69,8 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': {'test_key': 'test_val'},
-            'sodar_uuid': event.sodar_uuid}
+            'sodar_uuid': event.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(event), expected)
 
@@ -73,7 +82,8 @@ class TestTimelineAPI(
             'event': event.pk,
             'status_type': 'INIT',
             'description': DEFAULT_MESSAGES['INIT'],
-            'extra_data': {}}
+            'extra_data': {},
+        }
 
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -93,7 +103,8 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
             status_type='OK',
             status_desc='OK',
-            status_extra_data={})
+            status_extra_data={},
+        )
 
         status = event.get_current_status()
 
@@ -110,7 +121,8 @@ class TestTimelineAPI(
             'description': 'description',
             'classified': False,
             'extra_data': {'test_key': 'test_val'},
-            'sodar_uuid': event.sodar_uuid}
+            'sodar_uuid': event.sodar_uuid,
+        }
 
         self.assertEqual(model_to_dict(event), expected_event)
 
@@ -119,7 +131,8 @@ class TestTimelineAPI(
             'event': event.pk,
             'status_type': 'OK',
             'description': 'OK',
-            'extra_data': {}}
+            'extra_data': {},
+        }
 
         self.assertEqual(model_to_dict(status), expected_status)
 
@@ -137,7 +150,8 @@ class TestTimelineAPI(
                 user=self.user_owner,
                 event_name='test_event',
                 description='description',
-                extra_data={'test_key': 'test_val'})
+                extra_data={'test_key': 'test_val'},
+            )
 
         # Assert object status
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
@@ -158,7 +172,8 @@ class TestTimelineAPI(
                 event_name='test_event',
                 description='description',
                 status_type='NON-EXISTING STATUS TYPE',
-                extra_data={'test_key': 'test_val'})
+                extra_data={'test_key': 'test_val'},
+            )
 
         # Assert object status
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
@@ -176,7 +191,8 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='event with {obj}',
-            extra_data={'test_key': 'test_val'})
+            extra_data={'test_key': 'test_val'},
+        )
 
         temp_obj = self.project.get_owner()
 
@@ -184,7 +200,8 @@ class TestTimelineAPI(
             obj=temp_obj,
             label='obj',
             name='assignment',
-            extra_data={'test_key': 'test_val'})
+            extra_data={'test_key': 'test_val'},
+        )
 
         # Assert object status after insert
         self.assertEqual(ProjectEventObjectRef.objects.all().count(), 1)
@@ -196,7 +213,8 @@ class TestTimelineAPI(
             'name': 'assignment',
             'object_model': temp_obj.__class__.__name__,
             'object_uuid': temp_obj.sodar_uuid,
-            'extra_data': {'test_key': 'test_val'}}
+            'extra_data': {'test_key': 'test_val'},
+        }
 
         self.assertEqual(model_to_dict(ref), expected)
 
@@ -209,7 +227,8 @@ class TestTimelineAPI(
             user=self.user_owner,
             event_name='test_event',
             description='description',
-            extra_data={'test_key': 'test_val'})
+            extra_data={'test_key': 'test_val'},
+        )
 
         event_classified = self.timeline.add_event(
             project=self.project,
@@ -218,18 +237,19 @@ class TestTimelineAPI(
             event_name='test_event',
             description='description',
             classified=True,
-            extra_data={'test_key': 'test_val'})
+            extra_data={'test_key': 'test_val'},
+        )
 
         # Test non-classified first
         events = self.timeline.get_project_events(
-            self.project, classified=False)
+            self.project, classified=False
+        )
 
         self.assertEqual(events.count(), 1)
         self.assertEqual(events[0], event_normal)
 
         # Test with classified
-        events = self.timeline.get_project_events(
-            self.project, classified=True)
+        events = self.timeline.get_project_events(self.project, classified=True)
 
         self.assertEqual(events.count(), 2)
         self.assertIn(event_classified, events)
@@ -242,9 +262,12 @@ class TestTimelineAPI(
             kwargs={
                 'project': self.project.sodar_uuid,
                 'object_model': self.user_owner.__class__.__name__,
-                'object_uuid': self.user_owner.sodar_uuid})
+                'object_uuid': self.user_owner.sodar_uuid,
+            },
+        )
         url = self.timeline.get_object_url(
-            self.project.sodar_uuid, self.user_owner)
+            self.project.sodar_uuid, self.user_owner
+        )
 
         self.assertEqual(expected_url, url)
 
@@ -256,9 +279,12 @@ class TestTimelineAPI(
             kwargs={
                 'project': self.project.sodar_uuid,
                 'object_model': self.user_owner.__class__.__name__,
-                'object_uuid': self.user_owner.sodar_uuid})
+                'object_uuid': self.user_owner.sodar_uuid,
+            },
+        )
 
         link = self.timeline.get_object_link(
-            self.project.sodar_uuid, self.user_owner)
+            self.project.sodar_uuid, self.user_owner
+        )
 
         self.assertIn(expected_url, link)

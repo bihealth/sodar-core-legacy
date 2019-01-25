@@ -41,24 +41,30 @@ class SiteAppPlugin(SiteAppPluginPoint):
         """
         messages = []
         alerts = AdminAlert.objects.filter(
-            active=True, date_expire__gte=timezone.now()).order_by('-pk')
+            active=True, date_expire__gte=timezone.now()
+        ).order_by('-pk')
 
         for a in alerts:
             content = '<i class="fa fa-exclamation-triangle"></i> ' + a.message
 
             if a.description.raw and user and user.is_authenticated:
-                content += \
-                    '<span class="pull-right"><a href="{}" class="text-info">' \
-                    '<i class="fa fa-arrow-circle-right"></i> ' \
+                content += (
+                    '<span class="pull-right"><a href="{}" class="text-info">'
+                    '<i class="fa fa-arrow-circle-right"></i> '
                     'Details</a>'.format(
                         reverse(
-                            'adminalerts:detail',
-                            kwargs={'uuid': a.sodar_uuid}))
+                            'adminalerts:detail', kwargs={'uuid': a.sodar_uuid}
+                        )
+                    )
+                )
 
-            messages.append({
-                'content': content,
-                'color': 'info',
-                'dismissable': False,
-                'require_auth': a.require_auth})
+            messages.append(
+                {
+                    'content': content,
+                    'color': 'info',
+                    'dismissable': False,
+                    'require_auth': a.require_auth,
+                }
+            )
 
         return messages

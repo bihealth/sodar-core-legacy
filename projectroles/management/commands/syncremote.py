@@ -25,11 +25,14 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
-                settings.PROJECTROLES_DISABLE_CATEGORIES):
+        if (
+            hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
+            and settings.PROJECTROLES_DISABLE_CATEGORIES
+        ):
             sys.exit(
                 'Project categories and nesting disabled, '
-                'remote sync disabled')
+                'remote sync disabled'
+            )
 
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_TARGET:
             sys.exit('Site not in TARGET mode, unable to sync')
@@ -40,12 +43,15 @@ class Command(BaseCommand):
         except RemoteSite.DoesNotExist:
             sys.exit('No source site defined, unable to sync')
 
-        print('Retrieving data from remote site "{}" ({})..'.format(
-            site.name, site.url))
+        print(
+            'Retrieving data from remote site "{}" ({})..'.format(
+                site.name, site.url
+            )
+        )
 
         api_url = site.url + reverse(
-            'projectroles:api_remote_get',
-            kwargs={'secret': site.secret})
+            'projectroles:api_remote_get', kwargs={'secret': site.secret}
+        )
 
         try:
             response = urllib.request.urlopen(api_url)

@@ -13,7 +13,7 @@ urlpatterns = [
     ),
     url(
         regex=r'^(?P<project>[0-9a-f-]+)/(?P<object_model>[\w-]+)/'
-              r'(?P<object_uuid>[0-9a-f-]+)$',
+        r'(?P<object_uuid>[0-9a-f-]+)$',
         view=views.ObjectTimelineView.as_view(),
         name='list_object',
     ),

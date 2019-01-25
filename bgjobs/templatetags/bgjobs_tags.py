@@ -17,8 +17,9 @@ JOB_SPECS = {}
 
 # Setup the global map.
 for plugin in BackgroundJobsPluginPoint.get_plugins():
-    assert not (set(plugin.job_specs) &
-                set(JOB_SPECS)), 'Registering model twice!'
+    assert not (
+        set(plugin.job_specs) & set(JOB_SPECS)
+    ), 'Registering model twice!'
     JOB_SPECS.update(plugin.job_specs)
 
 

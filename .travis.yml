@@ -33,4 +33,8 @@ before_script:
 
 script:
   - python manage.py collectstatic --noinput
-  - python manage.py test -v 2 --settings=config.settings.test
+  - coverage run --rcfile=.coveragerc manage.py test -v 2 --settings=config.settings.test
+  - coverage xml
+  - python-codacy-coverage -r coverage.xml
+  - flake8 .
+  - ./black.sh --check

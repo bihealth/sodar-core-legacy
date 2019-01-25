@@ -73,7 +73,8 @@ def has_category_child_role(user, obj):
     """Whether or not the user has any role in any child project under the
     current one, if the current project is a category"""
     return obj.type == PROJECT_TYPE_CATEGORY and obj.has_role(
-        user, include_children=True)
+        user, include_children=True
+    )
 
 
 @rules.predicate
@@ -91,11 +92,14 @@ def is_modifiable_project(user, obj):
 @rules.predicate
 def can_create_projects():
     """Whether or not new projects can be generated on the site"""
-    if (settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and
-            not settings.PROJECTROLES_TARGET_CREATE):
+    if (
+        settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+        and not settings.PROJECTROLES_TARGET_CREATE
+    ):
         return False
 
     return True
+
 
 # Combined predicates ----------------------------------------------------------
 
@@ -114,56 +118,61 @@ is_update_user = rules.is_superuser | is_project_owner | is_project_delegate
 
 # Allow viewing project/category details
 rules.add_perm(
-    'projectroles.view_project',
-    has_project_role | has_category_child_role)
+    'projectroles.view_project', has_project_role | has_category_child_role
+)
 
 # Allow project updating
 rules.add_perm(
-    'projectroles.update_project',
-    is_update_user & is_modifiable_project)
+    'projectroles.update_project', is_update_user & is_modifiable_project
+)
 
 # Allow creation of projects
 rules.add_perm(
-    'projectroles.create_project',
-    is_project_owner & can_create_projects)
+    'projectroles.create_project', is_project_owner & can_create_projects
+)
 
 # Allow updating project settings
 rules.add_perm(
     'projectroles.update_project_settings',
-    is_update_user & is_modifiable_project)
+    is_update_user & is_modifiable_project,
+)
 
 # Allow viewing project roles
 rules.add_perm(
     'projectroles.view_project_roles',
-    is_project_owner | is_project_delegate |
-    is_project_contributor | is_project_guest)
+    is_project_owner
+    | is_project_delegate
+    | is_project_contributor
+    | is_project_guest,
+)
 
 # Allow updating project owner
 rules.add_perm(
     'projectroles.update_project_owner',
-    is_project_owner & is_modifiable_project)
+    is_project_owner & is_modifiable_project,
+)
 
 # Allow updating project delegate
 rules.add_perm(
     'projectroles.update_project_delegate',
-    is_project_owner & is_modifiable_project)
+    is_project_owner & is_modifiable_project,
+)
 
 # Allow updating project members
 rules.add_perm(
     'projectroles.update_project_members',
-    is_update_user & is_modifiable_project)
+    is_update_user & is_modifiable_project,
+)
 
 # Allow inviting users to project via email
 rules.add_perm(
-    'projectroles.invite_users',
-    is_update_user & is_modifiable_project)
+    'projectroles.invite_users', is_update_user & is_modifiable_project
+)
 
 # Allow importing roles from another project
 rules.add_perm(
-    'projectroles.import_roles',
-    is_project_owner & is_modifiable_project)
+    'projectroles.import_roles', is_project_owner & is_modifiable_project
+)
 
 # Allow updating remtote sites and remote project access
-rules.add_perm(
-    'projectroles.update_remote',
-    rules.is_superuser)
+rules.add_perm('projectroles.update_remote', rules.is_superuser)

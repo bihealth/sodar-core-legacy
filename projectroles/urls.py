@@ -18,9 +18,7 @@ urlpatterns = [
         name='update',
     ),
     url(
-        regex=r'^create$',
-        view=views.ProjectCreateView.as_view(),
-        name='create',
+        regex=r'^create$', view=views.ProjectCreateView.as_view(), name='create'
     ),
     url(
         regex=r'^create/(?P<project>[0-9a-f-]+)$',

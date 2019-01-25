@@ -28,10 +28,21 @@ SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 
 class FileMixin:
     """Helper mixin for File creation"""
+
     @classmethod
     def _make_file(
-            cls, name, file_name, file_content, project, folder,
-            owner, description, public_url, secret, flag=None):
+        cls,
+        name,
+        file_name,
+        file_content,
+        project,
+        folder,
+        owner,
+        description,
+        public_url,
+        secret,
+        flag=None,
+    ):
         values = {
             'name': name,
             'file': SimpleUploadedFile(file_name, file_content),
@@ -41,7 +52,8 @@ class FileMixin:
             'description': description,
             'public_url': public_url,
             'secret': secret,
-            'flag': flag}
+            'flag': flag,
+        }
         result = File(**values)
         result.save()
         return result
@@ -49,6 +61,7 @@ class FileMixin:
 
 class FolderMixin:
     """Helper mixin for Folder creation"""
+
     @classmethod
     def _make_folder(cls, name, project, folder, owner, description, flag=None):
         values = {
@@ -57,7 +70,8 @@ class FolderMixin:
             'folder': folder,
             'owner': owner,
             'description': description,
-            'flag': flag}
+            'flag': flag,
+        }
         result = Folder(**values)
         result.save()
         return result
@@ -65,9 +79,11 @@ class FolderMixin:
 
 class HyperLinkMixin:
     """Helper mixin for HyperLink creation"""
+
     @classmethod
     def _make_hyperlink(
-            cls, name, url, project, folder, owner, description, flag=None):
+        cls, name, url, project, folder, owner, description, flag=None
+    ):
         values = {
             'name': name,
             'url': url,
@@ -75,7 +91,8 @@ class HyperLinkMixin:
             'folder': folder,
             'owner': owner,
             'description': description,
-            'flag': flag}
+            'flag': flag,
+        }
         result = HyperLink(**values)
         result.save()
         return result
@@ -93,7 +110,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
         # Make project
         self.project = self._make_project(
-            PROJECT_NAME, PROJECT_TYPE_PROJECT, None)
+            PROJECT_NAME, PROJECT_TYPE_PROJECT, None
+        )
 
         # Make folder
         self.folder = self._make_folder(
@@ -101,7 +119,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='description')
+            description='description',
+        )
 
     def test_initialization(self):
         expected = {
@@ -112,7 +131,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             'owner': self.user_owner.pk,
             'description': 'description',
             'flag': None,
-            'sodar_uuid': self.folder.sodar_uuid}
+            'sodar_uuid': self.folder.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.folder), expected)
 
     def test_find_name(self):
@@ -147,7 +167,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
         expected = {
             'id': subfolder.pk,
             'name': 'subfolder',
@@ -156,7 +177,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             'owner': self.user_owner.pk,
             'description': '',
             'flag': None,
-            'sodar_uuid': subfolder.sodar_uuid}
+            'sodar_uuid': subfolder.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(subfolder), expected)
 
     def test_get_path(self):
@@ -172,7 +194,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
         self.assertEqual(subfolder.get_path(), 'root/folder/subfolder/')
 
     def test_is_empty(self):
@@ -189,7 +212,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         self.assertEqual(self.folder.is_empty(), False)
 
@@ -202,7 +226,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         self.assertEqual(subfolder.has_in_path(self.folder), True)
 
@@ -216,7 +241,8 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         self.assertEqual(self.folder.has_in_path(subfolder), False)
 
@@ -230,7 +256,8 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 
         # Make project
         self.project = self._make_project(
-            PROJECT_NAME, PROJECT_TYPE_PROJECT, None)
+            PROJECT_NAME, PROJECT_TYPE_PROJECT, None
+        )
 
         # Make folder
         self.folder = self._make_folder(
@@ -238,7 +265,8 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='description')
+            description='description',
+        )
 
         self.file_content = bytes('content'.encode('utf-8'))
 
@@ -252,7 +280,8 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
             owner=self.user_owner,
             description='description',
             public_url=True,
-            secret=SECRET)
+            secret=SECRET,
+        )
 
     def test_initialization(self):
         expected = {
@@ -266,7 +295,8 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
             'public_url': True,
             'secret': SECRET,
             'flag': None,
-            'sodar_uuid': self.file.sodar_uuid}
+            'sodar_uuid': self.file.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.file), expected)
 
     def test_find_name(self):
@@ -288,16 +318,14 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 
     def test__str__(self):
         expected = '{}: root/{}/{}'.format(
-            PROJECT_NAME,
-            self.folder.name,
-            self.file.name)
+            PROJECT_NAME, self.folder.name, self.file.name
+        )
         self.assertEqual(str(self.file), expected)
 
     def test__repr__(self):
         expected = "File('{}', '{}', {})".format(
-            PROJECT_NAME,
-            self.file.name,
-            self.folder.__repr__())
+            PROJECT_NAME, self.file.name, self.folder.__repr__()
+        )
         self.assertEqual(repr(self.file), expected)
 
     def test_file_access(self):
@@ -307,9 +335,10 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         expected = {
             'id': file_data.pk,
             'file_name': 'filesfolders.FileData/bytes/file_name/'
-                         'content_type/file.txt',
+            'content_type/file.txt',
             'content_type': 'text/plain',
-            'bytes': base64.b64encode(self.file_content).decode('utf-8')}
+            'bytes': base64.b64encode(self.file_content).decode('utf-8'),
+        }
 
         self.assertEqual(model_to_dict(file_data), expected)
 
@@ -326,7 +355,8 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 
 
 class TestHyperLink(
-        FileMixin, FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
+    FileMixin, FolderMixin, ProjectMixin, HyperLinkMixin, TestCase
+):
     """Tests for model.File"""
 
     def setUp(self):
@@ -335,7 +365,8 @@ class TestHyperLink(
 
         # Make project
         self.project = self._make_project(
-            PROJECT_NAME, PROJECT_TYPE_PROJECT, None)
+            PROJECT_NAME, PROJECT_TYPE_PROJECT, None
+        )
 
         # Make folder
         self.folder = self._make_folder(
@@ -343,7 +374,8 @@ class TestHyperLink(
             project=self.project,
             folder=None,
             owner=self.user_owner,
-            description='')
+            description='',
+        )
 
         # Make hyperlink
         self.hyperlink = self._make_hyperlink(
@@ -352,7 +384,8 @@ class TestHyperLink(
             project=self.project,
             folder=self.folder,
             owner=self.user_owner,
-            description='description')
+            description='description',
+        )
 
     def test_initialization(self):
         expected = {
@@ -364,21 +397,20 @@ class TestHyperLink(
             'owner': self.user_owner.pk,
             'description': 'description',
             'flag': None,
-            'sodar_uuid': self.hyperlink.sodar_uuid}
+            'sodar_uuid': self.hyperlink.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.hyperlink), expected)
 
     def test__str__(self):
         expected = '{}: {} / {}'.format(
-            PROJECT_NAME,
-            self.folder.name,
-            self.hyperlink.name)
+            PROJECT_NAME, self.folder.name, self.hyperlink.name
+        )
         self.assertEqual(str(self.hyperlink), expected)
 
     def test__repr__(self):
         expected = "HyperLink('{}', '{}', {})".format(
-            PROJECT_NAME,
-            self.hyperlink.name,
-            self.folder.__repr__())
+            PROJECT_NAME, self.hyperlink.name, self.folder.__repr__()
+        )
         self.assertEqual(repr(self.hyperlink), expected)
 
     def test_find_name(self):

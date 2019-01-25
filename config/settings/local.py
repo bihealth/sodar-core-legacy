@@ -35,23 +35,24 @@ EMAIL_PORT = 1025
 EMAIL_HOST = 'localhost'
 EMAIL_BACKEND = env(
     'DJANGO_EMAIL_BACKEND',
-    default='django.core.mail.backends.console.EmailBackend')
+    default='django.core.mail.backends.console.EmailBackend',
+)
 
 # CACHING
 # ------------------------------------------------------------------------------
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': ''
+        'LOCATION': '',
     }
 }
 
 # django-debug-toolbar
 # ------------------------------------------------------------------------------
-MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware', ]
-INSTALLED_APPS += ['debug_toolbar', ]
+MIDDLEWARE += ['debug_toolbar.middleware.DebugToolbarMiddleware']
+INSTALLED_APPS += ['debug_toolbar']
 
-INTERNAL_IPS = ['127.0.0.1', '10.0.2.2', ]
+INTERNAL_IPS = ['127.0.0.1', '10.0.2.2']
 
 # tricks to have debug toolbar when developing with docker
 if os.environ.get('USE_DOCKER') == 'yes':
@@ -60,20 +61,15 @@ if os.environ.get('USE_DOCKER') == 'yes':
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda r: False,
-    'DISABLE_PANELS': [
-        'debug_toolbar.panels.redirects.RedirectsPanel',
-    ],
+    'DISABLE_PANELS': ['debug_toolbar.panels.redirects.RedirectsPanel'],
     'SHOW_TEMPLATE_CONTEXT': True,
 }
 
 # django-extensions
 # ------------------------------------------------------------------------------
-INSTALLED_APPS += ['django_extensions', ]
+INSTALLED_APPS += ['django_extensions']
 
-GRAPH_MODELS = {
-  'all_applications': False,
-  'group_models': True,
-}
+GRAPH_MODELS = {'all_applications': False, 'group_models': True}
 
 # TESTING
 # ------------------------------------------------------------------------------
@@ -93,7 +89,4 @@ CELERY_TASK_EAGER_PROPAGATES = True
 
 
 # Plugin settings
-ENABLED_BACKEND_PLUGINS = [
-    'timeline_backend',
-    'example_backend_app',
-]
+ENABLED_BACKEND_PLUGINS = ['timeline_backend', 'example_backend_app']

@@ -12,14 +12,18 @@ from django.shortcuts import resolve_url
 from django.db import connections, DEFAULT_DB_ALIAS
 from django.db.models import Q
 from distutils.version import LooseVersion
-from django.test import RequestFactory, signals,\
-    TransactionTestCase as DjangoTestCase
+from django.test import (
+    RequestFactory,
+    signals,
+    TransactionTestCase as DjangoTestCase,
+)
 from django.test.client import store_rendered_templates
 from django.utils.functional import curry
 
 
 class NoPreviousResponse(Exception):
     pass
+
 
 # Build a real context in versions of Django greater than 1.6
 # On versions below 1.6, create a context that simply warns that
@@ -39,15 +43,18 @@ if LooseVersion(django.get_version()) >= LooseVersion('1.6'):
             super(_AssertNumQueriesLessThanContext, self).__init__(connection)
 
         def __exit__(self, exc_type, exc_value, traceback):
-            super(_AssertNumQueriesLessThanContext, self).__exit__(exc_type, exc_value, traceback)
+            super(_AssertNumQueriesLessThanContext, self).__exit__(
+                exc_type, exc_value, traceback
+            )
             if exc_type is not None:
                 return
             executed = len(self)
             self.test_case.assertTrue(
-                executed < self.num, "%d queries executed, expected less than %d" % (
-                    executed, self.num
-                )
+                executed < self.num,
+                "%d queries executed, expected less than %d"
+                % (executed, self.num),
             )
+
 
 else:
     from django.contrib.auth.models import User
@@ -62,7 +69,9 @@ else:
             pass
 
         def __exit__(self, exc_type, exc_value, traceback):
-            warnings.warn("assertNumQueriesLessThan being skipped, does not work prior to Django 1.6")
+            warnings.warn(
+                "assertNumQueriesLessThan being skipped, does not work prior to Django 1.6"
+            )
 
 
 class login(object):
@@ -71,22 +80,22 @@ class login(object):
     a User, we will login with that user's username.  If no password is
     given we will use 'password'.
     """
+
     def __init__(self, testcase, *args, **credentials):
         self.testcase = testcase
 
         if args and isinstance(args[0], User):
             USERNAME_FIELD = getattr(User, 'USERNAME_FIELD', 'username')
-            credentials.update({
-                USERNAME_FIELD: getattr(args[0], USERNAME_FIELD),
-            })
+            credentials.update(
+                {USERNAME_FIELD: getattr(args[0], USERNAME_FIELD)}
+            )
 
         if not credentials.get('password', False):
             credentials['password'] = 'password'
 
         success = testcase.client.login(**credentials)
         self.testcase.assertTrue(
-            success,
-            "login failed with credentials=%r" % (credentials)
+            success, "login failed with credentials=%r" % (credentials)
         )
 
     def __enter__(self):
@@ -100,6 +109,7 @@ class TestCase(DjangoTestCase):
     """
     Django TestCase with helpful additional features
     """
+
     user_factory = None
 
     def __init__(self, *args, **kwargs):
@@ -120,7 +130,9 @@ class TestCase(DjangoTestCase):
         elif hasattr(response_or_form, 'context'):
             form = response_or_form.context['form']
         else:
-            raise Exception('print_form_errors requires the response_or_form argument to either be a Django http response or a form instance.')
+            raise Exception(
+                'print_form_errors requires the response_or_form argument to either be a Django http response or a form instance.'
+            )
 
         print(form.errors.as_text())
 
@@ -142,7 +154,7 @@ class TestCase(DjangoTestCase):
             'head',
             'trace',
             'options',
-            'delete'
+            'delete',
         ]
 
         if method_name in valid_method_names:
@@ -151,9 +163,16 @@ class TestCase(DjangoTestCase):
             raise LookupError("Cannot find the method {0}".format(method_name))
 
         try:
-            self.last_response = method(reverse(url_name, args=args, kwargs=kwargs), data=data, follow=follow, **extra)
+            self.last_response = method(
+                reverse(url_name, args=args, kwargs=kwargs),
+                data=data,
+                follow=follow,
+                **extra
+            )
         except NoReverseMatch:
-            self.last_response = method(url_name, data=data, follow=follow, **extra)
+            self.last_response = method(
+                url_name, data=data, follow=follow, **extra
+            )
 
         self.context = self.last_response.context
         return self.last_response
@@ -266,17 +285,14 @@ class TestCase(DjangoTestCase):
         """
         if self.user_factory:
             USERNAME_FIELD = getattr(
-                self.user_factory._meta.model, 'USERNAME_FIELD', 'username')
-            test_user = self.user_factory(**{
-                USERNAME_FIELD: username,
-            })
+                self.user_factory._meta.model, 'USERNAME_FIELD', 'username'
+            )
+            test_user = self.user_factory(**{USERNAME_FIELD: username})
             test_user.set_password(password)
             test_user.save()
         else:
             test_user = User.objects.create_user(
-                username,
-                '{0}@example.com'.format(username),
-                password,
+                username, '{0}@example.com'.format(username), password
             )
 
         if perms:
@@ -292,9 +308,13 @@ class TestCase(DjangoTestCase):
                 if codename == '*':
                     _filter = _filter | Q(content_type__app_label=app_label)
                 else:
-                    _filter = _filter | Q(content_type__app_label=app_label, codename=codename)
+                    _filter = _filter | Q(
+                        content_type__app_label=app_label, codename=codename
+                    )
 
-            test_user.user_permissions.add(*list(Permission.objects.filter(_filter)))
+            test_user.user_permissions.add(
+                *list(Permission.objects.filter(_filter))
+            )
 
         return test_user
 
@@ -336,7 +356,9 @@ class TestCase(DjangoTestCase):
         response = self._which_response(response)
         self.assertContains(response, text, html=html, **kwargs)
 
-    def assertResponseNotContains(self, text, response=None, html=True, **kwargs):
+    def assertResponseNotContains(
+        self, text, response=None, html=True, **kwargs
+    ):
         """ Convenience wrapper for assertNotContains """
         response = self._which_response(response)
         self.assertNotContains(response, text, html=html, **kwargs)
@@ -414,7 +436,9 @@ class CBVTestCase(TestCase):
         if initkwargs is None:
             initkwargs = {}
         request = RequestFactory().get('/')
-        instance = self.get_instance(cls, initkwargs=initkwargs, request=request, **kwargs)
+        instance = self.get_instance(
+            cls, initkwargs=initkwargs, request=request, **kwargs
+        )
         self.last_response = self.get_response(request, instance.get)
         self.context = self.last_response.context
         return self.last_response
@@ -432,7 +456,9 @@ class CBVTestCase(TestCase):
         if initkwargs is None:
             initkwargs = {}
         request = RequestFactory().post('/', data)
-        instance = self.get_instance(cls, initkwargs=initkwargs, request=request, **kwargs)
+        instance = self.get_instance(
+            cls, initkwargs=initkwargs, request=request, **kwargs
+        )
         self.last_response = self.get_response(request, instance.post)
         self.context = self.last_response.context
         return self.last_response
@@ -449,7 +475,9 @@ class CBVTestCase(TestCase):
         data = {}
         on_template_render = curry(store_rendered_templates, data)
         signal_uid = "template-render-%s" % id(request)
-        signals.template_rendered.connect(on_template_render, dispatch_uid=signal_uid)
+        signals.template_rendered.connect(
+            on_template_render, dispatch_uid=signal_uid
+        )
         try:
             response = view_func(request)
 

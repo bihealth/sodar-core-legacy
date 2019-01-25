@@ -12,5 +12,5 @@ urlpatterns = [
         regex=r'^(?P<project>[0-9a-f-]+)$',
         view=views.ExampleView.as_view(),
         name='example',
-    ),
+    )
 ]

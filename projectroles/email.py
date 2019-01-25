@@ -133,8 +133,7 @@ to grant the user access to the project.
 # Email composing helpers ------------------------------------------------------
 
 
-def get_invite_body(
-        project, issuer, role_name, invite_url, date_expire_str):
+def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
     """
     Return the invite content header.
     :param project: Project object
@@ -153,7 +152,8 @@ def get_invite_body(
         role=role_name,
         invite_url=invite_url,
         date_expire=date_expire_str,
-        site_title=SITE_TITLE)
+        site_title=SITE_TITLE,
+    )
 
     return body
 
@@ -178,7 +178,8 @@ def get_email_footer():
     return MESSAGE_FOOTER.format(
         site_title=SITE_TITLE,
         admin_name=ADMIN_RECIPIENT[0],
-        admin_email=ADMIN_RECIPIENT[1])
+        admin_email=ADMIN_RECIPIENT[1],
+    )
 
 
 def get_invite_subject(project):
@@ -212,7 +213,8 @@ def get_role_change_subject(change_type, project):
 
 
 def get_role_change_body(
-        change_type, project, user_name, role_name, issuer, project_url):
+    change_type, project, user_name, role_name, issuer, project_url
+):
     """
     Return role change email body
     :param change_type: Change type ('create', 'update', 'delete')
@@ -223,9 +225,7 @@ def get_role_change_body(
     :param project_url: URL for the project
     :return: String
     """
-    body = MESSAGE_HEADER.format(
-        recipient=user_name,
-        site_title=SITE_TITLE)
+    body = MESSAGE_HEADER.format(recipient=user_name, site_title=SITE_TITLE)
 
     if change_type == 'create':
         body += MESSAGE_ROLE_CREATE.format(
@@ -234,7 +234,8 @@ def get_role_change_body(
             role=role_name,
             project=project.title,
             project_url=project_url,
-            site_title=SITE_TITLE)
+            site_title=SITE_TITLE,
+        )
 
     elif change_type == 'update':
         body += MESSAGE_ROLE_UPDATE.format(
@@ -243,13 +244,15 @@ def get_role_change_body(
             role=role_name,
             project=project.title,
             project_url=project_url,
-            site_title=SITE_TITLE)
+            site_title=SITE_TITLE,
+        )
 
     elif change_type == 'delete':
         body += MESSAGE_ROLE_DELETE.format(
             issuer_name=issuer.get_full_name(),
             issuer_email=issuer.email,
-            project=project.title)
+            project=project.title,
+        )
 
     body += get_email_footer()
     return body
@@ -270,12 +273,13 @@ def send_mail(subject, message, recipient_list, request):
             message=message,
             from_email=EMAIL_SENDER,
             recipient_list=recipient_list,
-            fail_silently=False)
+            fail_silently=False,
+        )
         logger.debug(
             '{} email{} sent to {}'.format(
-                ret,
-                's' if ret != 1 else '',
-                ', '.join(recipient_list)))
+                ret, 's' if ret != 1 else '', ', '.join(recipient_list)
+            )
+        )
         return ret
 
     except Exception as ex:
@@ -302,9 +306,9 @@ def send_role_change_mail(change_type, project, user, role, request):
     :param request: HTTP request
     :return: Amount of sent email (int)
     """
-    project_url = request.build_absolute_uri(reverse(
-        'projectroles:detail',
-        kwargs={'project': project.sodar_uuid}))
+    project_url = request.build_absolute_uri(
+        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid})
+    )
 
     subject = get_role_change_subject(change_type, project)
     message = get_role_change_body(
@@ -313,7 +317,8 @@ def send_role_change_mail(change_type, project, user, role, request):
         user_name=user.get_full_name(),
         role_name=role.name if role else '',
         issuer=request.user,
-        project_url=project_url)
+        project_url=project_url,
+    )
 
     return send_mail(subject, message, [user.email], request)
 
@@ -332,8 +337,10 @@ def send_invite_mail(invite, request):
         issuer=invite.issuer,
         role_name=invite.role.name,
         invite_url=invite_url,
-        date_expire_str=localtime(
-            invite.date_expire).strftime('%Y-%m-%d %H:%M'))
+        date_expire_str=localtime(invite.date_expire).strftime(
+            '%Y-%m-%d %H:%M'
+        ),
+    )
     message += get_invite_message(invite.message)
     message += get_email_footer()
 
@@ -350,19 +357,24 @@ def send_accept_note(invite, request):
     :param request: HTTP request
     :return: Amount of sent email (int)
     """
-    subject = SUBJECT_PREFIX + ' ' + SUBJECT_ACCEPT.format(
-        user_name=request.user.get_full_name(),
-        project=invite.project.title)
+    subject = (
+        SUBJECT_PREFIX
+        + ' '
+        + SUBJECT_ACCEPT.format(
+            user_name=request.user.get_full_name(), project=invite.project.title
+        )
+    )
 
     message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.get_full_name(),
-        site_title=SITE_TITLE)
+        recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+    )
     message += MESSAGE_ACCEPT_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
         user_name=request.user.get_full_name(),
         user_email=request.user.email,
-        site_title=SITE_TITLE)
+        site_title=SITE_TITLE,
+    )
     message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
@@ -376,20 +388,25 @@ def send_expiry_note(invite, request):
     :param request: HTTP request
     :return: Amount of sent email (int)
     """
-    subject = SUBJECT_PREFIX + ' ' + SUBJECT_EXPIRY.format(
-        user_name=request.user.get_full_name(),
-        project=invite.project.title)
+    subject = (
+        SUBJECT_PREFIX
+        + ' '
+        + SUBJECT_EXPIRY.format(
+            user_name=request.user.get_full_name(), project=invite.project.title
+        )
+    )
 
     message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.get_full_name(),
-        site_title=SITE_TITLE)
+        recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+    )
     message += MESSAGE_EXPIRY_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
         user_name=request.user.get_full_name(),
         user_email=request.user.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
-        site_title=SITE_TITLE)
+        site_title=SITE_TITLE,
+    )
     message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
@@ -418,8 +435,8 @@ def send_generic_mail(subject_body, message_body, recipient_list, request):
             recp_email = recipient
 
         message = MESSAGE_HEADER.format(
-            recipient=recp_name,
-            site_title=SITE_TITLE)
+            recipient=recp_name, site_title=SITE_TITLE
+        )
         message += message_body
         message += get_email_footer()
 

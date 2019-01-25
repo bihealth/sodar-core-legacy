@@ -2,11 +2,13 @@
 
 from test_plus.test import TestCase
 
-from ..models import Project, Role, RoleAssignment, ProjectSetting, \
-    SODAR_CONSTANTS
+from ..models import Role, ProjectSetting, SODAR_CONSTANTS
 from ..plugins import get_app_plugin
-from ..project_settings import get_project_setting, set_project_setting, \
-    validate_project_setting
+from ..project_settings import (
+    get_project_setting,
+    set_project_setting,
+    validate_project_setting,
+)
 from .test_models import ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin
 
 
@@ -28,25 +30,26 @@ EXAMPLE_APP_NAME = 'example_project_app'
 
 
 class TestProjectSettingAPI(
-        ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase):
+    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
+):
     """Tests for the ProjectSetting API"""
+
     # NOTE: This assumes an example app is available
 
     def setUp(self):
         # Init project
         self.project = self._make_project(
-            title='TestProject',
-            type=PROJECT_TYPE_PROJECT,
-            parent=None)
+            title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
+        )
 
         # Init role
-        self.role_owner = Role.objects.get(
-            name=PROJECT_ROLE_OWNER)
+        self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner)
+            self.project, self.user, self.role_owner
+        )
 
         # Init test setting
         self.setting_str = self._make_setting(
@@ -54,7 +57,8 @@ class TestProjectSettingAPI(
             project=self.project,
             name='str_setting',
             setting_type='STRING',
-            value='test')
+            value='test',
+        )
 
         # Init integer setting
         self.setting_int = self._make_setting(
@@ -62,7 +66,8 @@ class TestProjectSettingAPI(
             project=self.project,
             name='int_setting',
             setting_type='INTEGER',
-            value=170)
+            value=170,
+        )
 
         # Init boolean setting
         self.setting_bool = self._make_setting(
@@ -70,14 +75,16 @@ class TestProjectSettingAPI(
             project=self.project,
             name='bool_setting',
             setting_type='BOOLEAN',
-            value=True)
+            value=True,
+        )
 
     def test_get_project_setting(self):
         """Test get_project_setting()"""
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting')
+            setting_name='str_setting',
+        )
         self.assertEqual(self.setting_str.value, val)
 
     def test_get_project_setting_default(self):
@@ -88,7 +95,8 @@ class TestProjectSettingAPI(
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name=EXISTING_SETTING)
+            setting_name=EXISTING_SETTING,
+        )
 
         self.assertEqual(val, default_val)
 
@@ -98,7 +106,8 @@ class TestProjectSettingAPI(
             get_project_setting(
                 project=self.project,
                 app_name=EXAMPLE_APP_NAME,
-                setting_name='NON-EXISTING SETTING')
+                setting_name='NON-EXISTING SETTING',
+            )
 
     def test_set_project_setting(self):
         """Test set_project_setting()"""
@@ -107,14 +116,16 @@ class TestProjectSettingAPI(
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting')
+            setting_name='str_setting',
+        )
         self.assertEqual('test', val)
 
         ret = set_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting',
-            value='updated')
+            value='updated',
+        )
 
         self.assertEqual(ret, True)
 
@@ -122,7 +133,8 @@ class TestProjectSettingAPI(
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting')
+            setting_name='str_setting',
+        )
         self.assertEqual('updated', val)
 
     def test_set_project_setting_unchanged(self):
@@ -132,14 +144,16 @@ class TestProjectSettingAPI(
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting')
+            setting_name='str_setting',
+        )
         self.assertEqual('test', val)
 
         ret = set_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
             setting_name='str_setting',
-            value='test')
+            value='test',
+        )
 
         self.assertEqual(ret, False)
 
@@ -147,7 +161,8 @@ class TestProjectSettingAPI(
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting')
+            setting_name='str_setting',
+        )
         self.assertEqual('test', val)
 
     def test_set_project_setting_new(self):
@@ -158,26 +173,30 @@ class TestProjectSettingAPI(
             ProjectSetting.objects.get(
                 app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
                 project=self.project,
-                name=EXISTING_SETTING)
+                name=EXISTING_SETTING,
+            )
 
         ret = set_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
             setting_name=EXISTING_SETTING,
-            value=True)
+            value=True,
+        )
 
         # Asset postconditions
         self.assertEqual(ret, True)
         val = get_project_setting(
             project=self.project,
             app_name=EXAMPLE_APP_NAME,
-            setting_name=EXISTING_SETTING)
+            setting_name=EXISTING_SETTING,
+        )
         self.assertEqual(True, val)
 
         setting = ProjectSetting.objects.get(
             app_plugin=get_app_plugin(EXAMPLE_APP_NAME).get_model(),
             project=self.project,
-            name=EXISTING_SETTING)
+            name=EXISTING_SETTING,
+        )
         self.assertIsInstance(setting, ProjectSetting)
 
     def test_set_project_setting_undefined(self):
@@ -187,7 +206,8 @@ class TestProjectSettingAPI(
                 project=self.project,
                 app_name=EXAMPLE_APP_NAME,
                 setting_name='new_setting',
-                value='new')
+                value='new',
+            )
 
     def test_validate_project_setting_bool(self):
         """Test validate_project_setting() with type BOOLEAN"""

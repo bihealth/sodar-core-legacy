@@ -1,5 +1,6 @@
 .. _breaking_changes:
 
+
 Breaking Changes
 ^^^^^^^^^^^^^^^^
 
@@ -10,6 +11,56 @@ version. For a complete list of changes in the current release, see the
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
+
+
+v0.4.2
+======
+
+System Prerequisites
+--------------------
+
+The following minimum version requirements have been upgraded in this release:
+
+- Django 1.11.18+
+- Bootstrap 4.2.1
+- JQuery 3.3.1
+- Numerous required Python packages (see ``requirements/*.txt``)
+
+Please go through your site requirements and update dependencies accordingly.
+For project stability, it is still recommended to use exact version numbers for
+Python requirements in your SODAR Core based site.
+
+If you are overriding the ``projectroles/base_site.html`` in your site, make
+sure to update Javascript and CSS includes accordingly.
+
+.. note::
+
+    Even though the recommended Python version from Django 1.11.17+ is 3.7, we
+    only support Python 3.6 for this release. The reason is that some
+    dependencies still exhibit problems with the most recent Python release at
+    the time of writing.
+
+ProjectAccessMixin
+------------------
+
+The ``_get_project()`` function in ``ProjectAccessMixin`` has been renamed into
+``get_project()``. Arguments for the function are now optional and may be
+removed in a subsequent release: ``self.request`` and ``self.kwargs`` of the
+view class will be used if the arguments are not present.
+
+Base API View
+-------------
+
+The base SODAR API view has been renamed from ``BaseAPIView`` into
+``SODARAPIBaseView``.
+
+Taskflow Backend API
+--------------------
+
+The ``cleanup()`` function in ``TaskflowAPI`` now correctly raises a
+``CleanupException`` if SODAR Taskflow encounters an error upon calling its
+cleanup operation. This change should not affect normally running your site, as
+the function in question should only be called during Taskflow testing.
 
 
 v0.4.1

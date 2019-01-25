@@ -1,6 +1,5 @@
 """Plugin tests for the adminalerts app"""
 
-from django.urls import reverse
 from test_plus.test import TestCase
 
 # Projectroles dependency
@@ -33,7 +32,8 @@ class TestPlugins(AdminAlertMixin, TestCase):
             message='alert',
             user=self.superuser,
             description='description',
-            active=True)
+            active=True,
+        )
 
     def test_plugin_retrieval(self):
         """Test retrieving the plugin from the database"""

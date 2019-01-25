@@ -123,15 +123,18 @@ def get_project_link(project, full_title=False, request=None):
     return '<a href="{}">{}</a> {}'.format(
         reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
         project.get_full_title() if full_title else project.title,
-        remote_icon)
+        remote_icon,
+    )
 
 
 @register.simple_tag
 def get_user_html(user):
     """Return standard HTML representation for a User object"""
-    return '<a title="{}" href="mailto:{}" data-toggle="tooltip" ' \
-           'data-placement="top">{}</a>'.format(
-                user.get_full_name(), user.email, user.username)
+    return (
+        '<a title="{}" href="mailto:{}" data-toggle="tooltip" '
+        'data-placement="top">{}'
+        '</a>'.format(user.get_full_name(), user.email, user.username)
+    )
 
 
 @register.simple_tag
@@ -143,8 +146,10 @@ def get_history_dropdown(project, obj):
         return ''
 
     url = timeline.get_object_url(project.sodar_uuid, obj)
-    return '<a class="dropdown-item" href="{}">\n<i class="fa fa-fw ' \
-           'fa-clock-o"></i> History</a>\n'.format(url)
+    return (
+        '<a class="dropdown-item" href="{}">\n<i class="fa fa-fw '
+        'fa-clock-o"></i> History</a>\n'.format(url)
+    )
 
 
 @register.simple_tag
@@ -156,14 +161,17 @@ def highlight_search_term(item, term):
         tl = len(term)
 
         if pos == -1:
-            return item     # Nothing to highlight
+            return item  # Nothing to highlight
 
         ret = item[:pos]
-        ret += '<span class="sodar-search-highlight">' + \
-               item[pos:pos + tl] + '</span>'
+        ret += (
+            '<span class="sodar-search-highlight">'
+            + item[pos : pos + tl]
+            + '</span>'
+        )
 
-        if len(item[pos + tl:]) > 0:
-            ret += get_highlights(item[pos + tl:])
+        if len(item[pos + tl :]) > 0:
+            ret += get_highlights(item[pos + tl :])
         return ret
 
     return get_highlights(item)
@@ -175,10 +183,12 @@ def get_remote_icon(project, request):
     if project.is_remote() and request.user.is_superuser:
         try:
             remote_project = RemoteProject.objects.get(project=project)
-            return '<i class="fa fa-globe text-info mx-1 ' \
-                   'sodar-pr-remote-project-icon" title="{}" ' \
-                   'data-toggle="tooltip" data-placement="top"></i>'.format(
-                    'Remote project from ' + remote_project.site.name)
+            return (
+                '<i class="fa fa-globe text-info mx-1 '
+                'sodar-pr-remote-project-icon" title="Remote project from '
+                '{}" data-toggle="tooltip" data-placement="top">'
+                '</i>'.format(remote_project.site.name)
+            )
 
         except RemoteProject.DoesNotExist:
             pass
@@ -198,7 +208,8 @@ def force_wrap(s, length):
     # If string contains spaces or hyphens, leave wrapping to browser
     if not {' ', '-'}.intersection(s) and len(s) > length:
         return '<wbr />'.join(
-            [s[i:i + length] for i in range(0, len(s), length)])
+            [s[i : i + length] for i in range(0, len(s), length)]
+        )
     return s
 
 

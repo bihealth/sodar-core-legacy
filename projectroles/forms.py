@@ -5,12 +5,22 @@ from django.utils import timezone
 
 from pagedown.widgets import PagedownWidget
 
-from .models import Project, Role, RoleAssignment, ProjectInvite, \
-    RemoteSite, SODAR_CONSTANTS, PROJECT_SETTING_VAL_MAXLENGTH
+from .models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    RemoteSite,
+    SODAR_CONSTANTS,
+    PROJECT_SETTING_VAL_MAXLENGTH,
+)
 from .plugins import ProjectAppPluginPoint
 from .utils import get_user_display_name, build_secret
-from projectroles.project_settings import validate_project_setting, \
-    get_project_setting, get_default_setting
+from projectroles.project_settings import (
+    validate_project_setting,
+    get_project_setting,
+    get_default_setting,
+)
 
 
 # SODAR constants
@@ -39,12 +49,14 @@ User = auth.get_user_model()
 
 class ProjectForm(forms.ModelForm):
     """Form for Project creation/updating"""
+
     owner = forms.ModelChoiceField(
         User.objects.all(),
         required=True,
         to_field_name='sodar_uuid',
         label='Owner',
-        help_text='Project owner')
+        help_text='Project owner',
+    )
 
     class Meta:
         model = Project
@@ -52,13 +64,17 @@ class ProjectForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(ProjectForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Add settings fields
         self.app_plugins = sorted(
-            [p for p in ProjectAppPluginPoint.get_plugins() if
-             p.project_settings],
-            key=lambda x: x.name)
+            [
+                p
+                for p in ProjectAppPluginPoint.get_plugins()
+                if p.project_settings
+            ],
+            key=lambda x: x.name,
+        )
 
         for p in self.app_plugins:
             for s_key in sorted(p.project_settings):
@@ -67,12 +83,14 @@ class ProjectForm(forms.ModelForm):
                 setting_kwargs = {
                     'required': False,
                     'label': '{}.{}'.format(p.name, s_key),
-                    'help_text': s['description']}
+                    'help_text': s['description'],
+                }
 
                 if s['type'] == 'STRING':
                     self.fields[s_field] = forms.CharField(
                         max_length=PROJECT_SETTING_VAL_MAXLENGTH,
-                        **setting_kwargs)
+                        **setting_kwargs
+                    )
 
                 elif s['type'] == 'INTEGER':
                     self.fields[s_field] = forms.IntegerField(**setting_kwargs)
@@ -85,12 +103,13 @@ class ProjectForm(forms.ModelForm):
                     self.initial[s_field] = get_project_setting(
                         project=self.instance,
                         app_name=p.name,
-                        setting_name=s_key)
+                        setting_name=s_key,
+                    )
 
                 else:
                     self.initial[s_field] = get_default_setting(
-                        app_name=p.name,
-                        setting_name=s_key)
+                        app_name=p.name, setting_name=s_key
+                    )
 
         # Access parent project if present
         parent_project = None
@@ -126,22 +145,28 @@ class ProjectForm(forms.ModelForm):
 
             # Do not allow change of project type
             force_select_value(
-                self.fields['type'],
-                (self.instance.type, self.instance.type))
+                self.fields['type'], (self.instance.type, self.instance.type)
+            )
 
             # Only owner/superuser has rights to modify owner
-            if (current_user.has_perm(
-                    'projectroles.update_project_owner', self.instance)):
+            if current_user.has_perm(
+                'projectroles.update_project_owner', self.instance
+            ):
                 # Limit owner choices to users without non-owner role in project
-                project_users = RoleAssignment.objects.filter(
-                    project=self.instance.pk).exclude(
-                   role__name=PROJECT_ROLE_OWNER).values_list('user').distinct()
+                project_users = (
+                    RoleAssignment.objects.filter(project=self.instance.pk)
+                    .exclude(role__name=PROJECT_ROLE_OWNER)
+                    .values_list('user')
+                    .distinct()
+                )
 
                 # Get owner choices
                 self.fields['owner'].choices = [
-                    (user.sodar_uuid, get_user_display_name(user, True)) for
-                    user in get_selectable_users(current_user).exclude(
-                        pk__in=project_users).order_by('name')]
+                    (user.sodar_uuid, get_user_display_name(user, True))
+                    for user in get_selectable_users(current_user)
+                    .exclude(pk__in=project_users)
+                    .order_by('name')
+                ]
 
                 # Set current owner as initial value
                 owner = self.instance.get_owner().user
@@ -152,7 +177,8 @@ class ProjectForm(forms.ModelForm):
                 owner = self.instance.get_owner().user
                 force_select_value(
                     self.fields['owner'],
-                    (owner.sodar_uuid, get_user_display_name(owner, True)))
+                    (owner.sodar_uuid, get_user_display_name(owner, True)),
+                )
 
             # Set initial value for parent
             if parent_project:
@@ -165,15 +191,19 @@ class ProjectForm(forms.ModelForm):
         else:
             # Common stuff
             self.fields['owner'].choices = [
-                (user.sodar_uuid, get_user_display_name(user, True)) for user in
-                get_selectable_users(current_user).order_by('username')]
+                (user.sodar_uuid, get_user_display_name(user, True))
+                for user in get_selectable_users(current_user).order_by(
+                    'username'
+                )
+            ]
 
             # Creating a subproject
             if parent_project:
                 # Parent must be current parent
                 force_select_value(
                     self.fields['parent'],
-                    (parent_project.sodar_uuid, parent_project.title))
+                    (parent_project.sodar_uuid, parent_project.title),
+                )
 
                 # Set parent owner as initial value
                 parent_owner = parent_project.get_owner().user
@@ -185,13 +215,17 @@ class ProjectForm(forms.ModelForm):
             # Creating a top level project
             else:
                 self.fields['owner'].choices = [
-                    (user.sodar_uuid, get_user_display_name(user, True)) for
-                    user in get_selectable_users(
-                        current_user).order_by('username')]
+                    (user.sodar_uuid, get_user_display_name(user, True))
+                    for user in get_selectable_users(current_user).order_by(
+                        'username'
+                    )
+                ]
 
                 # Force project type
-                if (hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES') and
-                        settings.PROJECTROLES_DISABLE_CATEGORIES):
+                if (
+                    hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
+                    and settings.PROJECTROLES_DISABLE_CATEGORIES
+                ):
                     forced_type = (PROJECT_TYPE_PROJECT, 'Project')
 
                 else:
@@ -209,7 +243,8 @@ class ProjectForm(forms.ModelForm):
         try:
             existing_project = Project.objects.get(
                 parent=self.cleaned_data.get('parent'),
-                title=self.cleaned_data.get('title'))
+                title=self.cleaned_data.get('title'),
+            )
 
             if not self.instance or existing_project.pk != self.instance.pk:
                 self.add_error('title', 'Title must be unique within parent')
@@ -222,7 +257,8 @@ class ProjectForm(forms.ModelForm):
 
         if parent and parent.title == self.cleaned_data.get('title'):
             self.add_error(
-                'title', 'Project and parent titles can not be equal')
+                'title', 'Project and parent titles can not be equal'
+            )
 
         # Ensure owner has been set
         if not self.cleaned_data.get('owner'):
@@ -235,8 +271,9 @@ class ProjectForm(forms.ModelForm):
                 s_field = 'settings.{}.{}'.format(p.name, s_key)
 
                 if not validate_project_setting(
-                        setting_type=s['type'],
-                        setting_value=self.cleaned_data.get(s_field)):
+                    setting_type=s['type'],
+                    setting_value=self.cleaned_data.get(s_field),
+                ):
                     self.add_error(s_field, 'Invalid value')
 
         return self.cleaned_data
@@ -254,7 +291,7 @@ class RoleAssignmentForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(RoleAssignmentForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Get current user for checking permissions for form items
         if current_user:
@@ -283,21 +320,25 @@ class RoleAssignmentForm(forms.ModelForm):
 
         # Limit role choices
         self.fields['role'].choices = get_role_choices(
-            self.project, self.current_user)
+            self.project, self.current_user
+        )
 
         # Updating an existing assignment
         if self.instance.pk:
             # Do not allow switching to another project
             force_select_value(
                 self.fields['project'],
-                (self.instance.project.sodar_uuid,
-                 self.instance.project.title))
+                (self.instance.project.sodar_uuid, self.instance.project.title),
+            )
 
             # Do not allow switching to a different user
             force_select_value(
                 self.fields['user'],
-                (self.instance.user.sodar_uuid, get_user_display_name(
-                    self.instance.user, True)))
+                (
+                    self.instance.user.sodar_uuid,
+                    get_user_display_name(self.instance.user, True),
+                ),
+            )
 
             # Set initial role
             self.fields['role'].initial = self.instance.role
@@ -307,19 +348,26 @@ class RoleAssignmentForm(forms.ModelForm):
             # Limit project choice to self.project
             force_select_value(
                 self.fields['project'],
-                (self.project.sodar_uuid, self.project.title))
+                (self.project.sodar_uuid, self.project.title),
+            )
 
             # Limit user choices to users without roles in current project
-            project_users = RoleAssignment.objects.filter(
-                project=self.project.pk).values_list('user').distinct()
+            project_users = (
+                RoleAssignment.objects.filter(project=self.project.pk)
+                .values_list('user')
+                .distinct()
+            )
 
             self.fields['user'].choices = [
-                (user.sodar_uuid, get_user_display_name(user, True)) for user in
-                get_selectable_users(current_user).exclude(
-                    pk__in=project_users).order_by('name')]
+                (user.sodar_uuid, get_user_display_name(user, True))
+                for user in get_selectable_users(current_user)
+                .exclude(pk__in=project_users)
+                .order_by('name')
+            ]
 
             self.fields['role'].initial = Role.objects.get(
-                name=PROJECT_ROLE_GUEST).pk
+                name=PROJECT_ROLE_GUEST
+            ).pk
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -328,8 +376,8 @@ class RoleAssignmentForm(forms.ModelForm):
 
         try:
             existing_as = RoleAssignment.objects.get_assignment(
-                self.cleaned_data.get('user'),
-                self.cleaned_data.get('project'))
+                self.cleaned_data.get('user'), self.cleaned_data.get('project')
+            )
 
         except RoleAssignment.DoesNotExist:
             pass
@@ -342,23 +390,25 @@ class RoleAssignmentForm(forms.ModelForm):
                     'user',
                     'User {} already assigned as {}'.format(
                         existing_as.role.name,
-                        get_user_display_name(self.cleaned_data.get('user'))))
+                        get_user_display_name(self.cleaned_data.get('user')),
+                    ),
+                )
 
         # Updating a RoleAssignment
         else:
             # Ensure not setting existing role again
             if existing_as and existing_as.role == role:
-                self.add_error(
-                    'role', 'Role already assigned to user')
+                self.add_error('role', 'Role already assigned to user')
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
             # Ensure current user has permission to set delegate
-            if (not self.current_user.has_perm(
-                    'projectroles.update_project_delegate',
-                    obj=self.project)):
+            if not self.current_user.has_perm(
+                'projectroles.update_project_delegate', obj=self.project
+            ):
                 self.add_error(
-                    'role', 'Insufficient permissions for altering delegate')
+                    'role', 'Insufficient permissions for altering delegate'
+                )
 
             # Ensure user can't attempt to add another delegate
             delegate = self.cleaned_data.get('project').get_delegate()
@@ -368,7 +418,9 @@ class RoleAssignmentForm(forms.ModelForm):
                     'role',
                     'User {} already assigned as delegate, only one '
                     'delegate allowed per project'.format(
-                        delegate.user.username))
+                        delegate.user.username
+                    ),
+                )
 
         return self.cleaned_data
 
@@ -385,7 +437,7 @@ class ProjectInviteForm(forms.ModelForm):
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(ProjectInviteForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Get current user for checking permissions and saving issuer
         if current_user:
@@ -403,19 +455,23 @@ class ProjectInviteForm(forms.ModelForm):
         # Limit Role choices according to user permissions
         # NOTE: Inviting delegate here not allowed
         self.fields['role'].choices = get_role_choices(
-            self.project, self.current_user, allow_delegate=False)
+            self.project, self.current_user, allow_delegate=False
+        )
         self.fields['role'].initial = Role.objects.get(
-            name=PROJECT_ROLE_GUEST).pk
+            name=PROJECT_ROLE_GUEST
+        ).pk
 
     def clean(self):
         # Check if user email is already in users
         try:
             existing_user = User.objects.get(
-                email=self.cleaned_data.get('email'))
+                email=self.cleaned_data.get('email')
+            )
             self.add_error(
                 'email',
                 'User "{}" already exists in the system with this email. '
-                'Please use "Add Role" instead.'.format(existing_user.username))
+                'Please use "Add Role" instead.'.format(existing_user.username),
+            )
 
         except User.DoesNotExist:
             pass
@@ -426,13 +482,15 @@ class ProjectInviteForm(forms.ModelForm):
                 project=self.project,
                 email=self.cleaned_data.get('email'),
                 active=True,
-                date_expire__gt=timezone.now())
+                date_expire__gt=timezone.now(),
+            )
 
             self.add_error(
                 'email',
                 'There is already an active invite for email {} in {}'.format(
-                    self.cleaned_data.get('email'),
-                    self.project.title))
+                    self.cleaned_data.get('email'), self.project.title
+                ),
+            )
 
         except ProjectInvite.DoesNotExist:
             pass
@@ -441,12 +499,13 @@ class ProjectInviteForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(ProjectInviteForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         obj.project = self.project
         obj.issuer = self.current_user
         obj.date_expire = timezone.now() + timezone.timedelta(
-            days=INVITE_EXPIRY_DAYS)
+            days=INVITE_EXPIRY_DAYS
+        )
         obj.secret = build_secret()
 
         obj.save()
@@ -465,14 +524,15 @@ class RemoteSiteForm(forms.ModelForm):
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
-        super(RemoteSiteForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.current_user = current_user
 
         # Default field modifications
         self.fields['description'].required = False
         self.fields['secret'].widget = forms.TextInput(
-            attrs={'class': "sodar-code-input"})
+            attrs={'class': "sodar-code-input"}
+        )
 
         # Special cases for SOURCE
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
@@ -490,7 +550,7 @@ class RemoteSiteForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         """Override of form saving function"""
-        obj = super(RemoteSiteForm, self).save(commit=False)
+        obj = super().save(commit=False)
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             obj.mode = SITE_MODE_TARGET
@@ -532,13 +592,14 @@ def get_role_choices(project, current_user, allow_delegate=True):
 
     # Exclude delegate if not allowed or current user lacks perms
     if not allow_delegate or not current_user.has_perm(
-            'projectroles.update_project_delegate',
-            obj=project):
+        'projectroles.update_project_delegate', obj=project
+    ):
         role_excludes.append(PROJECT_ROLE_DELEGATE)
 
     return [
-        (role.pk, role.name) for role in Role.objects.exclude(
-            name__in=role_excludes)]
+        (role.pk, role.name)
+        for role in Role.objects.exclude(name__in=role_excludes)
+    ]
 
 
 # TODO: TBD: Needed by other apps than projectroles? Move e.g. to utils?

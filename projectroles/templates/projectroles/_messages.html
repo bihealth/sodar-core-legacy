@@ -12,11 +12,13 @@
   {# Site app messages #}
   {% for message in site_app_messages %}
     {% if request.user.is_authenticated or not message.require_auth %}
-      <div class="alert alert-{{ message.color }} sodar-alert-top sodar-alert-site-app">
+      <div class="alert alert-{{ message.color }} {% if message.dismissable %}alert-dismissable fade show{% endif %} sodar-alert-top sodar-alert-site-app">
         <div class="sodar-alert-top-content">
+          {% comment %}
           {% if message.dismissable %}
-            <a href="#" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+            <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
           {% endif %}
+          {% endcomment %}
           {{ message.content | safe }}
         </div>
       </div>
@@ -25,10 +27,10 @@
 
   {# Regular Django messages #}
   {% for message in messages %}
-    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} sodar-alert-top">
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissable fade show sodar-alert-top">
       <div class="sodar-alert-top-content">
         {{ message }}
-        <a href="#" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+        <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
       </div>
     </div>
   {% endfor %}
