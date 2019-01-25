@@ -18,6 +18,8 @@ Added
     - Flake8 in GitLab-CI (#127)
 - **Projectroles**
     - Automatically pass CSRF token to unsafe Ajax HTTP methods (#116)
+    - Queryset filtering in ``ProjectPermissionMixin`` from digestiflow-web (#134)
+    - Check for ``get_project_filter_key()`` from digestiflow-web (#134)
 
 Changed
 -------
@@ -37,6 +39,8 @@ Changed
     - Update DataTables dependency in ``search.html`` template
     - Refactor ``ProjectModifyMixin`` and ``RemoteProjectAPI`` (#128)
     - Disable ``USE_I18N`` in example site settings (#117)
+    - Refactor ``ProjectAccessMixin._get_project()`` into ``get_project()`` (#134)
+    - Rename ``BaseAPIView`` into ``SODARAPIBaseView``
 - **Timeline**
     - Refactor ``get_event_description()`` (#30, #128)
 

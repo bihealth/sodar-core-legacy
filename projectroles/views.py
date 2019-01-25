@@ -26,7 +26,11 @@ from django.views.generic.detail import ContextMixin
 
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import AllowAny, BasePermission
+from rest_framework.permissions import (
+    AllowAny,
+    BasePermission,
+    DjangoModelPermissions,
+)
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.versioning import AcceptHeaderVersioning
@@ -129,17 +133,27 @@ class ProjectAccessMixin:
     #: with a proxy model, for example.
     project_class = Project
 
-    @classmethod
-    def _get_project(cls, request, kwargs):
-        # "project" kwarg is a special case
-        if 'project' in kwargs:
-            try:
-                return cls.project_class.objects.get(
-                    sodar_uuid=kwargs['project']
-                )
+    def get_project(self, request=None, kwargs=None):
+        """
+        Return SODAR Project object based or None if not found, based on
+        the current request and view kwargs. If arguments are not provided,
+        uses self.request and/or self.kwargs.
 
-            except cls.project_class.DoesNotExist:
-                return None
+        :param request: Request object (optional)
+        :param kwargs: View kwargs (optional)
+        :return: Object of project_class or None if not found
+        """
+        if not request:
+            request = self.request
+
+        if not kwargs:
+            kwargs = self.kwargs
+
+        # First check for a kwarg named "project"
+        if 'project' in kwargs:
+            return self.project_class.objects.filter(
+                sodar_uuid=kwargs['project']
+            ).first()
 
         # Other object types
         model = None
@@ -208,10 +222,33 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
 
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
-    """Mixin for providing a Project object for permission checking"""
+    """Mixin for providing a Project object and queryset for permission
+    checking"""
 
     def get_permission_object(self):
-        return self._get_project(self.request, self.kwargs)
+        return self.get_project()
+
+    def get_queryset(self, *args, **kwargs):
+        """Override ``get_query_set()`` to filter down to the currently selected
+        object."""
+        qs = super().get_queryset(*args, **kwargs)
+
+        if qs.model == ProjectAccessMixin.project_class:
+            return qs
+
+        elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
+            return qs.filter(project=self.get_project())
+
+        elif hasattr(qs.model, 'get_project_filter_key'):
+            return qs.filter(
+                **{qs.model.get_project_filter_key(): self.get_project()}
+            )
+
+        else:
+            raise AttributeError(
+                'Model does not have "project" member, get_project() function '
+                'or "get_project_filter_key()" function'
+            )
 
 
 class ProjectModifyPermissionMixin(
@@ -223,7 +260,7 @@ class ProjectModifyPermissionMixin(
     def has_permission(self):
         """Override has_permission() to check remote project status"""
         perm = super().has_permission()
-        project = self._get_project(self.request, self.kwargs)
+        project = self.get_project()
         return False if project.is_remote() else perm
 
     def handle_no_permission(self):
@@ -274,7 +311,7 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 
     def get_permission_object(self):
         """Override get_permission_object for checking Project permission"""
-        return self._get_project(self.request, self.kwargs)
+        return self.get_project()
 
 
 class HTTPRefererMixin:
@@ -309,7 +346,7 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
             context['project'] = self.object.project
 
         else:
-            context['project'] = self._get_project(self.request, self.kwargs)
+            context['project'] = self.get_project()
 
         # Plugins stuff
         plugins = ProjectAppPluginPoint.get_plugins()
@@ -909,7 +946,7 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
         context = super().get_context_data(*args, **kwargs)
 
         change_type = self.request.resolver_match.url_name.split('_')[1]
-        project = self._get_project(self.request, self.kwargs)
+        project = self.get_project()
 
         if change_type != 'delete':
             context['preview_subject'] = get_role_change_subject(
@@ -1492,9 +1529,7 @@ class ProjectInviteResendView(
             return redirect(
                 reverse(
                     'projectroles:invites',
-                    kwargs={
-                        'project': self._get_project(self.request, self.kwargs)
-                    },
+                    kwargs={'project': self.get_project()},
                 )
             )
 
@@ -1526,7 +1561,7 @@ class ProjectInviteRevokeView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        context['project'] = self._get_project(self.request, self.kwargs)
+        context['project'] = self.get_project()
 
         if 'projectinvite' in self.kwargs:
             try:
@@ -1543,7 +1578,7 @@ class ProjectInviteRevokeView(
         """Override post() to handle POST from confirmation template"""
         timeline = get_backend_api('timeline_backend')
         invite = None
-        project = self._get_project(self.request, self.kwargs)
+        project = self.get_project()
 
         try:
             invite = ProjectInvite.objects.get(
@@ -1996,7 +2031,47 @@ class SODARAPIRenderer(JSONRenderer):
     media_type = SODAR_API_MEDIA_TYPE
 
 
-class BaseAPIView(APIView):
+class SODARAPIObjectInProjectPermissions(
+    ProjectAccessMixin, DjangoModelPermissions
+):
+    """
+    DRF ``Permissions`` implementation for objects in SODAR
+    ``projectroles.models.Project``s.
+
+    Permissions can only be checked on models having a ``project`` attribute or
+    a get_project() function. Access control is based on the convention action
+    names (``${app_label}.${action}_${model_name}``) but based on roles on the
+    containing ``Project``.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """Override to patch ``self.perms_map`` to set required permissions on
+        ``GET`` et al."""
+        super().__init__(*args, **kwargs)
+        patch = {
+            'GET': ['%(app_label)s.view_%(model_name)s'],
+            'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
+            'HEAD': ['%(app_label)s.view_%(model_name)s'],
+        }
+        self.perms_map = {**self.perms_map, **patch}
+
+    def has_permission(self, request, view):
+        """Override to base permission check on project only"""
+        if getattr(view, '_ignore_model_permissions', False):
+            return True
+
+        if not request.user or (
+            not request.user.is_authenticated and self.authenticated_users_only
+        ):
+            return False
+
+        queryset = self._queryset(view)
+        perms = self.get_required_permissions(request.method, queryset.model)
+
+        return request.user.has_perms(perms, self.get_project())
+
+
+class SODARAPIBaseView(APIView):
     """Base SODAR API View with accept header versioning"""
 
     versioning_class = SODARAPIVersioning
@@ -2006,7 +2081,7 @@ class BaseAPIView(APIView):
 # SODAR API Views --------------------------------------------------------------
 
 
-class RemoteProjectGetAPIView(BaseAPIView):
+class RemoteProjectGetAPIView(SODARAPIBaseView):
     """API view for retrieving remote projects from a source site"""
 
     # TODO: Create custom permission class for general API
