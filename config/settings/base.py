@@ -492,4 +492,4 @@ TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 
 # SODAR constants
-SODAR_CONSTANTS = get_sodar_constants(default=True)
+# SODAR_CONSTANTS = get_sodar_constants(default=True)

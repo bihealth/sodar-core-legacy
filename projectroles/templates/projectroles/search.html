@@ -115,12 +115,13 @@
     {% if not search_type or search_type == 'project' %}
 
       {% if project_results|length > 0 %}
-        {% include 'projectroles/_search_header.html' with search_title='Projects' result_count=project_results|length icon='cube' %}
+        {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
+        {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='cube' %}
 
         <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-pr-search-table">
           <thead>
             <tr>
-              <th>Project</th>
+              <th>{% get_display_name 'PROJECT' title=True %}</th>
               <th>Description</th>
             </tr>
           </thead>
@@ -184,8 +185,8 @@
         if ($('.sodar-search-card').length) {
             tour.addStep('search_card', {
                 title: 'Matching Items',
-                text: 'Matching projects and items are listed in cards separated ' +
-                      'by data type.',
+                text: 'Matching {% get_display_name "PROJECT" plural=True %} ' +
+                      'and items are listed in cards separated by data type.',
                 advanceOn: '.docs-link click',
                 showCancelLink: true
             });

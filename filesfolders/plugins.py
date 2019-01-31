@@ -40,7 +40,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Description string
     description = (
-        'Smaller files (e.g., reports, spreadsheets, and ' 'presentations)'
+        'Smaller files (e.g., reports, spreadsheets, and presentations)'
     )
 
     #: Required permission for accessing the app

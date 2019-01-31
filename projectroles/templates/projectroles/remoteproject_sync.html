@@ -4,7 +4,7 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% block title %}Synchronize Projects from {{ site.name }}{% endblock %}
+{% block title %}Synchronize {% get_display_name 'PROJECT' title=True plural=True %} from {{ site.name }}{% endblock %}
 
 {% block css %}
   {{ block.super }}
@@ -28,7 +28,7 @@
 {% get_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
 
 <div class="row sodar-subtitle-container">
-  <h2>Synchronize Projects from {{ site.name }}</h2>
+  <h2>Synchronize {% get_display_name 'PROJECT' title=True plural=True %} from {{ site.name }}</h2>
   <a role="button" class="btn btn-secondary ml-auto"
      href="{% url 'projectroles:remote_sites' %}">
     <i class="fa fa-arrow-circle-left"></i> Back to Sites
@@ -94,14 +94,17 @@
     {% if project_count > 0 %}
       <div class="card mb-3">
         <div class="card-header">
-          <h4><i class="fa fa-cubes"></i> Categories and Projects ({{ project_count }})</h4>
+          <h4>
+            <i class="fa fa-cubes"></i>
+            {% get_display_name 'CATEGORY' title=True plural=True %} and {% get_display_name 'PROJECT' title=True plural=True %} ({{ project_count }})
+          </h4>
         </div>
         <div class="card-body p-0">
           <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
                  id="sodar-pr-remote-update-table-projects">
             <thead>
               <tr>
-                <th>Category/Project</th>
+                <th>{% get_display_name 'CATERGORY' title=True %}/{% get_display_name 'PROJECT' title=True %}</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -149,7 +152,7 @@
                  id="sodar-pr-remote-update-table-roles">
             <thead>
               <tr>
-                <th>Project</th>
+                <th>{% get_display_name 'PROJECT' title=True %}</th>
                 <th>User</th>
                 <th>Role</th>
                 <th>Status</th>

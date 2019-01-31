@@ -97,6 +97,22 @@
   <!-- Projectroles Javascript -->
   <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
+  {# Django admin link warning #}
+  {% check_backend 'taskflow' as taskflow_enabled %}
+  {% if request.user.is_superuser and taskflow_enabled %}
+    {% get_admin_warning as admin_warning %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#sodar-navbar-link-admin-warning').click(function () {
+                $('#sodar-modal').find('.modal-dialog').addClass('w-50');
+                $('.modal-title').text('Warning!');
+                var htmlData = '{{ admin_warning|safe }}';
+                $('.modal-body').html(htmlData);
+           });
+        });
+    </script>
+  {% endif %}
+
   {# Add javascript from enabled backend plugins #}
   {% get_backend_plugins as backend_plugins %}
   {% for plugin in backend_plugins %}

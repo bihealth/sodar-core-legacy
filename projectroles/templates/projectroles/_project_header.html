@@ -2,6 +2,7 @@
 
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {% has_perm 'projectroles.view_project' request.user project as can_view_project %}
 {% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
@@ -36,8 +37,9 @@
   {% if project.is_remote and request.user.is_superuser %}
     <div class="ml-auto">
       <i class="fa fa-globe text-info fa-2x sodar-pr-remote-project-icon"
-         title="Remote project from {{ project.get_source_site.name }}"
-         data-toggle="tooltip" data-placement="left"></i>
+         title="Remote {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
+         data-toggle="tooltip" data-placement="left">
+      </i>
     </div>
   {% endif %}
 

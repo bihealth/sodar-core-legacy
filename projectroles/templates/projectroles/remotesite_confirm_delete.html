@@ -18,7 +18,8 @@
   <div class="alert alert-warning" role="alert">
     Do you really want to remove the remote {{ object.mode | lower }} site
     "<strong>{{ object.name }}</strong>"? Please note that this will also
-    remove all project access rules associated with the site!
+    remove all {% get_display_name 'PROJECT' %} access rules associated
+    with the site!
   </div>
 
   <form method="post">

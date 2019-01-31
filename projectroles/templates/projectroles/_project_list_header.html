@@ -1,5 +1,7 @@
+{% load projectroles_common_tags %}
+
 <tr class="sodar-pr-project-list-header">
- <th id="sodar-pr-project-list-header-project">Project</th>
+ <th id="sodar-pr-project-list-header-project">{% get_display_name 'PROJECT' title=True %}</th>
  <th id="sodar-pr-project-list-header-description">Description</th>
  <th id="sodar-pr-project-list-header-role">Your&nbsp;Role</th>
 </tr>

@@ -24,14 +24,13 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
+PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
 PROJECT_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
-
 PROJECT_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
     ('STRING', 'String'),
 ]
-
 PROJECT_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
@@ -88,7 +87,7 @@ class Project(models.Model):
     #: Type of project ("CATEGORY", "PROJECT")
     type = models.CharField(
         max_length=64,
-        choices=SODAR_CONSTANTS['PROJECT_TYPE_CHOICES'],
+        choices=PROJECT_TYPE_CHOICES,
         default=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
         help_text='Type of project ("CATEGORY", "PROJECT")',
     )

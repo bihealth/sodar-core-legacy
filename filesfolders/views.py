@@ -26,10 +26,10 @@ from .models import Folder, File, FileData, HyperLink
 from .utils import build_public_url
 
 # Projectroles dependency
-from projectroles.models import Project
+from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.project_settings import get_project_setting
-from projectroles.utils import build_secret
+from projectroles.utils import build_secret, get_display_name
 from projectroles.views import (
     LoggedInPermissionMixin,
     ProjectContextMixin,
@@ -731,7 +731,9 @@ class FilePublicLinkView(
         ):
             messages.error(
                 self.request,
-                'Sharing public links not allowed for this project',
+                'Sharing public links not allowed for this {}'.format(
+                    get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'])
+                ),
             )
             return redirect(
                 reverse(

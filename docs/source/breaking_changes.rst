@@ -13,6 +13,17 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.4.3
+======
+
+SODAR Constants
+---------------
+
+``PROJECT_TYPE_CHOICES`` has been removed from ``SODAR_CONSTANTS``, as it can
+vary depending on implemented ``DISPLAY_NAMES``. If needed, the currently
+applicable form structure can be imported from ``projectroles.forms``.
+
+
 v0.4.2
 ======
 

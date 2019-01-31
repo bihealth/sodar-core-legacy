@@ -117,3 +117,39 @@ Footer
 
 Footer content can be specified in the optional template file
 ``{SITE_NAME}/templates/include/_footer.html``.
+
+
+Project and Category Display Names
+==================================
+
+If the *project* and *category* labels don't match your use case, it is possible
+to change the labels displayed to the user by editing ``SODAR_CONSTANTS`` in
+your settings file. Example:
+
+.. code-block:: python
+
+    SODAR_CONSTANTS = get_sodar_constants(default=True)
+    SODAR_CONSTANTS['DISPLAY_NAMES']['CATEGORY'] = {
+        'default': 'not-a-category',
+        'plural': 'non-categories',
+    }
+    SODAR_CONSTANTS['DISPLAY_NAMES']['PROJECT'] = {
+        'default': 'not-a-project',
+        'plural': 'non-projects',
+    }
+
+See more about overriding ``SODAR_CONSTANTS``
+:ref:`here <app_projectroles_settings>`.
+
+To print out these values in your views or templates, call the
+``get_display_name()`` function, which is available both as a template tag
+through ``projectroles_common_tags.py`` and a general utility function in
+``utils.py``. Capitalization and pluralization are handled by the function
+according to arguments.
+See the :ref:`API documentation <app_projectroles_api>` for details.
+
+.. note::
+
+    These changes will **not** affect role names or IDs and descriptions of
+    Timeline events.
+

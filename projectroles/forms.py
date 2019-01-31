@@ -15,7 +15,7 @@ from .models import (
     PROJECT_SETTING_VAL_MAXLENGTH,
 )
 from .plugins import ProjectAppPluginPoint
-from .utils import get_user_display_name, build_secret
+from .utils import get_display_name, get_user_display_name, build_secret
 from projectroles.project_settings import (
     validate_project_setting,
     get_project_setting,
@@ -27,9 +27,15 @@ from projectroles.project_settings import (
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
-PROJECT_TYPE_CHOICES = SODAR_CONSTANTS['PROJECT_TYPE_CHOICES']
-PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CHOICES = [
+    (
+        PROJECT_TYPE_CATEGORY,
+        get_display_name(PROJECT_TYPE_CATEGORY, title=True),
+    ),
+    (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
+]
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
@@ -55,7 +61,7 @@ class ProjectForm(forms.ModelForm):
         required=True,
         to_field_name='sodar_uuid',
         label='Owner',
-        help_text='Project owner',
+        help_text='Owner',
     )
 
     class Meta:
@@ -115,11 +121,7 @@ class ProjectForm(forms.ModelForm):
         parent_project = None
 
         if project:
-            try:
-                parent_project = Project.objects.get(sodar_uuid=project)
-
-            except Project.DoesNotExist:
-                pass
+            parent_project = Project.objects.filter(sodar_uuid=project).first()
 
         # Get current user for checking permissions for form items
         if current_user:
@@ -127,6 +129,19 @@ class ProjectForm(forms.ModelForm):
 
         # Do not allow transfer under another parent
         self.fields['parent'].disabled = True
+
+        # Update help texts to match DISPLAY_NAMES
+        self.fields['title'].help_text = 'Title'
+        self.fields['type'].help_text = 'Type of container ({} or {})'.format(
+            get_display_name(PROJECT_TYPE_CATEGORY),
+            get_display_name(PROJECT_TYPE_PROJECT),
+        )
+        self.fields['type'].choices = PROJECT_TYPE_CHOICES
+        self.fields['parent'].help_text = 'Parent {} if nested'.format(
+            get_display_name(PROJECT_TYPE_CATEGORY)
+        )
+        self.fields['description'].help_text = 'Short description'
+        self.fields['readme'].help_text = 'README (optional, supports markdown)'
 
         ####################
         # Form modifications
@@ -138,15 +153,16 @@ class ProjectForm(forms.ModelForm):
         # Set readme widget with preview
         self.fields['readme'].widget = PagedownWidget(show_preview=True)
 
+        # Hide parent selection
+        self.fields['parent'].widget = forms.HiddenInput()
+
         # Updating an existing project
         if self.instance.pk:
             # Set readme value as raw markdown
             self.initial['readme'] = self.instance.readme.raw
 
-            # Do not allow change of project type
-            force_select_value(
-                self.fields['type'], (self.instance.type, self.instance.type)
-            )
+            # Hide project type selection
+            self.fields['type'].widget = forms.HiddenInput()
 
             # Only owner/superuser has rights to modify owner
             if current_user.has_perm(
@@ -172,13 +188,9 @@ class ProjectForm(forms.ModelForm):
                 owner = self.instance.get_owner().user
                 self.initial['owner'] = owner.sodar_uuid
 
-            # Else don't allow changing the user
+            # Else hide owner selection
             else:
-                owner = self.instance.get_owner().user
-                force_select_value(
-                    self.fields['owner'],
-                    (owner.sodar_uuid, get_user_display_name(owner, True)),
-                )
+                self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
             if parent_project:
@@ -200,17 +212,11 @@ class ProjectForm(forms.ModelForm):
             # Creating a subproject
             if parent_project:
                 # Parent must be current parent
-                force_select_value(
-                    self.fields['parent'],
-                    (parent_project.sodar_uuid, parent_project.title),
-                )
+                self.initial['parent'] = parent_project.sodar_uuid
 
                 # Set parent owner as initial value
                 parent_owner = parent_project.get_owner().user
                 self.initial['owner'] = parent_owner.sodar_uuid
-
-                # Set up parent field
-                self.initial['parent'] = parent_project.sodar_uuid
 
             # Creating a top level project
             else:
@@ -226,12 +232,13 @@ class ProjectForm(forms.ModelForm):
                     hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
                     and settings.PROJECTROLES_DISABLE_CATEGORIES
                 ):
-                    forced_type = (PROJECT_TYPE_PROJECT, 'Project')
+                    self.initial['type'] = PROJECT_TYPE_PROJECT
 
                 else:
-                    forced_type = (PROJECT_TYPE_CATEGORY, 'Category')
+                    self.initial['type'] = PROJECT_TYPE_CATEGORY
 
-                force_select_value(self.fields['type'], forced_type)
+                # Hide project type selection
+                self.fields['type'].widget = forms.HiddenInput()
 
                 # Set up parent field
                 self.initial['parent'] = None
@@ -257,12 +264,20 @@ class ProjectForm(forms.ModelForm):
 
         if parent and parent.title == self.cleaned_data.get('title'):
             self.add_error(
-                'title', 'Project and parent titles can not be equal'
+                'title',
+                '{} and parent titles can not be equal'.format(
+                    get_display_name(self.cleaned_data.get('type'), title=True)
+                ),
             )
 
         # Ensure owner has been set
         if not self.cleaned_data.get('owner'):
-            self.add_error('owner', 'Owner must be set for project')
+            self.add_error(
+                'owner',
+                'Owner must be set for {}'.format(
+                    get_display_name(self.cleaned_data.get('type'))
+                ),
+            )
 
         # Verify settings fields
         for p in self.app_plugins:
@@ -304,11 +319,7 @@ class RoleAssignmentForm(forms.ModelForm):
             self.project = self.instance.project
 
         else:
-            try:
-                self.project = Project.objects.get(sodar_uuid=project)
-
-            except Project.DoesNotExist:
-                pass
+            self.project = Project.objects.filter(sodar_uuid=project).first()
 
         ####################
         # Form modifications
@@ -325,31 +336,22 @@ class RoleAssignmentForm(forms.ModelForm):
 
         # Updating an existing assignment
         if self.instance.pk:
-            # Do not allow switching to another project
-            force_select_value(
-                self.fields['project'],
-                (self.instance.project.sodar_uuid, self.instance.project.title),
-            )
+            # Set values
+            self.initial['project'] = self.instance.project.sodar_uuid
+            self.initial['user'] = self.instance.user.sodar_uuid
 
-            # Do not allow switching to a different user
-            force_select_value(
-                self.fields['user'],
-                (
-                    self.instance.user.sodar_uuid,
-                    get_user_display_name(self.instance.user, True),
-                ),
-            )
+            # Hide project and user switching
+            self.fields['project'].widget = forms.HiddenInput()
+            self.fields['user'].widget = forms.HiddenInput()
 
             # Set initial role
-            self.fields['role'].initial = self.instance.role
+            self.initial['role'] = self.instance.role
 
         # Creating a new assignment
         elif self.project:
-            # Limit project choice to self.project
-            force_select_value(
-                self.fields['project'],
-                (self.project.sodar_uuid, self.project.title),
-            )
+            # Limit project choice to self.project, hide widget
+            self.initial['project'] = self.project.sodar_uuid
+            self.fields['project'].widget = forms.HiddenInput()
 
             # Limit user choices to users without roles in current project
             project_users = (
@@ -372,15 +374,9 @@ class RoleAssignmentForm(forms.ModelForm):
     def clean(self):
         """Function for custom form validation and cleanup"""
         role = self.cleaned_data.get('role')
-        existing_as = None
-
-        try:
-            existing_as = RoleAssignment.objects.get_assignment(
-                self.cleaned_data.get('user'), self.cleaned_data.get('project')
-            )
-
-        except RoleAssignment.DoesNotExist:
-            pass
+        existing_as = RoleAssignment.objects.get_assignment(
+            self.cleaned_data.get('user'), self.cleaned_data.get('project')
+        )
 
         # Adding a new RoleAssignment
         if not self.instance.pk:
@@ -444,13 +440,7 @@ class ProjectInviteForm(forms.ModelForm):
             self.current_user = current_user
 
         # Get the project for which invite is being sent
-        self.project = None
-
-        try:
-            self.project = Project.objects.get(sodar_uuid=project)
-
-        except Project.DoesNotExist:
-            pass
+        self.project = Project.objects.filter(sodar_uuid=project).first()
 
         # Limit Role choices according to user permissions
         # NOTE: Inviting delegate here not allowed
@@ -563,20 +553,6 @@ class RemoteSiteForm(forms.ModelForm):
 
 
 # Helper functions -------------------------------------------------------------
-
-
-def force_select_value(field, choice):
-    """
-    Force a pre-selected choice in a select field without disabling the
-    field from the form submission
-    :param field: Form field to be altered
-    :param choice: Selected choice (tuple)
-    """
-
-    # NOTE: "Readonly" does not actually work with select-fields, Django
-    #           still renders it as it would
-    field.choices = [choice]
-    field.widget.attrs['readonly'] = True
 
 
 def get_role_choices(project, current_user, allow_delegate=True):

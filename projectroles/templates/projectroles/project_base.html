@@ -2,8 +2,9 @@
 
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
-{% block title %}Project "{{ project.title }}"{% endblock title %}
+{% block title %}{% get_display_name project.type title=True %} "{{ project.title }}"{% endblock title %}
 
 {% block projectroles %}
 
@@ -20,7 +21,7 @@
 
 {% else %}
   <div class="alert alert-danger" role="alert">
-    Insufficient permissions for viewing project!
+    Insufficient permissions for viewing {% get_display_name 'PROJECT' %}!
   </div>
 {% endif %}
 

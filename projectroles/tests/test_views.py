@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.urlresolvers import reverse
+from django.forms import HiddenInput
 from django.forms.models import model_to_dict
 from django.test import RequestFactory, override_settings
 from django.utils import timezone
@@ -31,7 +32,7 @@ from ..plugins import (
     ProjectAppPluginPoint,
 )
 from ..remote_projects import RemoteProjectAPI
-from ..utils import build_secret
+from ..utils import build_secret, get_display_name
 from .test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -350,7 +351,7 @@ class TestProjectCreateView(
     """Tests for Project creation view"""
 
     def test_render_top(self):
-        """Test rendering of top level Project creation form"""
+        """Test rendering of top level category creation form"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:create'))
 
@@ -359,8 +360,9 @@ class TestProjectCreateView(
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(form.fields['type'].initial, PROJECT_TYPE_PROJECT)
-        self.assertEqual(form.fields['parent'].disabled, True)
+        self.assertEqual(form.initial['type'], PROJECT_TYPE_CATEGORY)
+        self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
@@ -390,15 +392,17 @@ class TestProjectCreateView(
         self.assertEqual(
             form.fields['type'].choices,
             [
-                (PROJECT_TYPE_CATEGORY, 'Category'),
-                (PROJECT_TYPE_PROJECT, 'Project'),
+                (
+                    PROJECT_TYPE_CATEGORY,
+                    get_display_name(PROJECT_TYPE_CATEGORY, title=True),
+                ),
+                (
+                    PROJECT_TYPE_PROJECT,
+                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                ),
             ],
         )
-        self.assertEqual(form.fields['parent'].widget.attrs['readonly'], True)
-        self.assertEqual(
-            form.fields['parent'].choices,
-            [(self.project.sodar_uuid, self.project.title)],
-        )
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub_project(self):
         """Test rendering of Project creation form if creating a subproject
@@ -525,10 +529,8 @@ class TestProjectUpdateView(
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(
-            form.fields['type'].choices, [(PROJECT_TYPE_PROJECT, 'PROJECT')]
-        )
-        self.assertEqual(form.fields['parent'].disabled, True)
+        self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_update_project(self):
         """Test Project updating"""
@@ -694,11 +696,8 @@ class TestRoleAssignmentCreateView(
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
-        self.assertEqual(
-            form.fields['project'].choices,
-            [(self.project.sodar_uuid, self.project.title)],
-        )
+        self.assertIsInstance(form.fields['project'].widget, HiddenInput)
+        self.assertEqual(form.initial['project'], self.project.sodar_uuid)
         # Assert user with previously added role in project is not selectable
         self.assertNotIn(
             [
@@ -805,21 +804,11 @@ class TestRoleAssignmentUpdateView(
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
-        self.assertEqual(form.fields['project'].widget.attrs['readonly'], True)
-        self.assertEqual(
-            form.fields['project'].choices,
-            [(self.project.sodar_uuid, self.project.title)],
-        )
-        self.assertEqual(form.fields['user'].widget.attrs['readonly'], True)
-        self.assertEqual(
-            form.fields['user'].choices,
-            [
-                (
-                    self.role_as.user.sodar_uuid,
-                    get_user_display_name(self.role_as.user, True),
-                )
-            ],
-        )
+        self.assertIsInstance(form.fields['project'].widget, HiddenInput)
+        self.assertEqual(form.initial['project'], self.project.sodar_uuid)
+        self.assertIsInstance(form.fields['user'].widget, HiddenInput)
+        self.assertEqual(form.initial['user'], self.role_as.user.sodar_uuid)
+
         # Assert owner role is not sectable
         self.assertNotIn(
             [(self.role_owner.pk, self.role_owner.name)],
