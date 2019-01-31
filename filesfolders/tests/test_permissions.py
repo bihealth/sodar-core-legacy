@@ -41,6 +41,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         )
 
     def test_folder_create(self):
+        """Test folder creation"""
         url = reverse(
             'filesfolders:folder_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -55,7 +56,25 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_folder_create_category(self):
+        """Test folder creation under category"""
+        url = reverse(
+            'filesfolders:folder_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_redirect(url, bad_users)
+
     def test_folder_update(self):
+        """Test folder updating"""
         url = reverse(
             'filesfolders:folder_update',
             kwargs={'item': self.folder.sodar_uuid},
@@ -71,6 +90,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_folder_delete(self):
+        """Test folder deletion"""
         url = reverse(
             'filesfolders:folder_delete',
             kwargs={'item': self.folder.sodar_uuid},
@@ -110,6 +130,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
 
     def test_file_create(self):
+        """Test file creation"""
         url = reverse(
             'filesfolders:file_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -124,7 +145,25 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_file_create_category(self):
+        """Test file creation under category"""
+        url = reverse(
+            'filesfolders:file_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_redirect(url, bad_users)
+
     def test_file_update(self):
+        """Test file updating"""
         url = reverse(
             'filesfolders:file_update', kwargs={'item': self.file.sodar_uuid}
         )
@@ -139,6 +178,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_file_delete(self):
+        """Test file deletion"""
         url = reverse(
             'filesfolders:file_delete', kwargs={'item': self.file.sodar_uuid}
         )
@@ -245,6 +285,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         )
 
     def test_hyperlink_create(self):
+        """Test hyperlink creation"""
         url = reverse(
             'filesfolders:hyperlink_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -259,7 +300,25 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_hyperlink_create_category(self):
+        """Test hyperlink creation under category"""
+        url = reverse(
+            'filesfolders:hyperlink_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_redirect(url, bad_users)
+
     def test_hyperlink_update(self):
+        """Test hyperlink updating"""
         url = reverse(
             'filesfolders:hyperlink_update',
             kwargs={'item': self.hyperlink.sodar_uuid},
@@ -275,6 +334,7 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_hyperlink_delete(self):
+        """Test hyperlink deletion"""
         url = reverse(
             'filesfolders:hyperlink_delete',
             kwargs={'item': self.hyperlink.sodar_uuid},
