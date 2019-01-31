@@ -21,8 +21,7 @@ from projectroles import rules as pr_rules  # To access common predicates
 # Allow viewing of background jobs
 rules.add_perm(
     'bgjobs.view_data',
-    rules.is_superuser
-    | pr_rules.is_project_owner
+    pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
     | pr_rules.is_project_guest,
@@ -31,8 +30,7 @@ rules.add_perm(
 # Allow viewing of background jobs
 rules.add_perm(
     'bgjobs.view_jobs_own',
-    rules.is_superuser
-    | pr_rules.is_project_owner
+    pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
     | pr_rules.is_project_guest,
@@ -41,8 +39,7 @@ rules.add_perm(
 # Allow creating background jobs
 rules.add_perm(
     'bgjobs.create_bgjob',
-    rules.is_superuser
-    | pr_rules.is_project_owner
+    pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor,
 )
@@ -50,8 +47,7 @@ rules.add_perm(
 # Allow modifying or deleting the user's background jobs
 rules.add_perm(
     'bgjobs.update_bgjob_own',
-    rules.is_superuser
-    | pr_rules.is_project_owner
+    pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
     | pr_rules.is_project_guest,
@@ -60,7 +56,5 @@ rules.add_perm(
 # Allow modifying or deleting all background jobs
 rules.add_perm(
     'bgjobs.update_bgjob_all',
-    rules.is_superuser
-    | pr_rules.is_project_owner
-    | pr_rules.is_project_delegate,
+    pr_rules.is_project_owner | pr_rules.is_project_delegate,
 )

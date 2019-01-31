@@ -23,8 +23,6 @@ SODAR_CONSTANTS = {
     'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
     'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
     'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES',
-    # Choices for forms/admin with project type
-    'PROJECT_TYPE_CHOICES': [('CATEGORY', 'Category'), ('PROJECT', 'Project')],
     # RemoteSite modes
     'SITE_MODES': ['SOURCE', 'TARGET'],
     # RemoteProject access type legend
@@ -33,6 +31,11 @@ SODAR_CONSTANTS = {
         'VIEW_AVAIL': 'View availability',
         'READ_INFO': 'Read information',
         'READ_ROLES': 'Read members',
+    },
+    # Display names
+    'DISPLAY_NAMES': {
+        'CATEGORY': {'default': 'category', 'plural': 'categories'},
+        'PROJECT': {'default': 'project', 'plural': 'projects'},
     },
 }
 

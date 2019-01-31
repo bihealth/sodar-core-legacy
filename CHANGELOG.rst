@@ -7,6 +7,38 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Category and project display name configuration via ``SODAR_CONSTANTS`` (#141)
+    - ``get_display_name()`` utils function and template tag to retrieve ``DISPLAY_NAMES`` (#141)
+    - Django admin link warning if taskflowbackend is enabled
+
+Changed
+-------
+
+- **General**
+    - Use ``get_display_name()`` to display category/project type (#141)
+- **Projectroles**
+    - Hide immutable fields in forms (#142)
+    - Rename Django admin link in user dropdown
+
+Removed
+-------
+
+- **General**
+    - Redundant ``rules.is_superuser`` predicates from rules (#138)
+- **Projectroles**
+    - ``get_project_type()`` template tag (use ``get_display_name()`` instead)
+    - Unused template ``_roleassignment_import.html``
+    - ``PROJECT_TYPE_CHOICES`` from ``SODAR_CONSTANTS``
+    - ``force_select_value()`` helper no longer used in forms (#142)
+
+
 v0.4.2 (2019-01-25)
 ===================
 

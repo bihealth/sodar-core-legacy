@@ -30,7 +30,7 @@
           {% endautoescape %}
         {% else %}
           <p>
-            No ReadMe is currently set for this {{ object.type|lower }}.
+            No ReadMe is currently set for this {% get_display_name object.type title=False %}.
             {% if can_update_project %}
              <a href="{% url 'projectroles:update' project=project.sodar_uuid %}#div_id_readme">You can update the ReadMe here</a>.
             {% endif %}
@@ -79,7 +79,7 @@
     {% if subproject_list|length > 0 or object.type == 'CATEGORY' %}
       <div class="card">
         <div class="card-header">
-          <h4><i class="fa fa-globe"></i> Projects</h4>
+          <h4><i class="fa fa-globe"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
         </div>
         <div class="card-body p-0">
           <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
@@ -94,7 +94,9 @@
                {% endfor %}
              {% else %}
                <tr>
-                 <td class="bg-faded font-italic text-center text-danger" colspan="3">No subcategories or projects found</td>
+                 <td class="bg-faded font-italic text-center text-danger" colspan="3">
+                   No {% get_display_name 'CATEGORY' title=False count=2 %}
+                   or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
                </tr>
              {% endif %}
            </tbody>
@@ -107,7 +109,7 @@
 
 {% else %}
   <div class="alert alert-danger" role="alert">
-    Insufficient permissions for viewing project!
+    Insufficient permissions for viewing {% get_display_name 'PROJECT' title=False %}!
   </div>
 {% endif %}
 
@@ -121,9 +123,9 @@
     tourEnabled = true;
 
     tour.addStep('project_nav', {
-        title: 'Project Sidebar',
+        title: '{% get_display_name "PROJECT" title=True %} Sidebar',
         text: 'From this sidebar you can access apps and actions of the ' +
-              'currently selected project.',
+              'currently selected {% get_display_name "PROJECT" %}.',
         attachTo: '#sodar-pr-sidebar right',
         advanceOn: '.docs-link click',
         showCancelLink: true
@@ -131,8 +133,9 @@
 
     if ($('.sodar-pr-app-card').length) {
         tour.addStep('project_app_cards', {
-            title: 'Project App Overviews',
-            text: 'Overviews of project apps and data are presented here.',
+            title: '{% get_display_name "PROJECT" title=True %} App Overviews',
+            text: 'Overviews of {% get_display_name "PROJECT" %} apps and ' +
+                  'data are presented here.',
             attachTo: '.sodar-pr-app-card top',
             advanceOn: '.docs-link click',
             showCancelLink: true
@@ -141,9 +144,9 @@
 
     if ($('.sodar-pr-app-details-link').length) {
         tour.addStep('project_app_details', {
-            title: 'View Details of Project App',
-            text: 'In addition to the sidebar, project apps can also ' +
-                  'be accessed using the "View Details" buttons.',
+            title: 'View Details of {% get_display_name "PROJECT" title=True %} App',
+            text: 'In addition to the sidebar, {% get_display_name "PROJECT" %} ' +
+                  'apps can also be accessed using the "View Details" buttons.',
             attachTo: '.sodar-pr-app-details-link left',
             advanceOn: '.docs-link click',
             showCancelLink: true
@@ -151,11 +154,12 @@
     }
 
     tour.addStep('project_star', {
-        title: 'Star a Project',
-        text: 'Using this link you can "star" a project to add it in your ' +
-              'favourites. Starred projects are highlighted and can be ' +
-              'listed on the home page with a shortcut. To "unstar" a ' +
-              'project, click on the same link again.',
+        title: 'Star a {% get_display_name "PROJECT" title=True %}',
+        text: 'Using this link you can "star" a {% get_display_name "PROJECT" %} ' +
+              'to add it in your favourites. Starred ' +
+              '{% get_display_name "PROJECT" plural=True %} are highlighted ' +
+              'and can be listed on the home page with a shortcut. To "unstar" ' +
+              'a {% get_display_name "PROJECT" %}, click on the link again.',
         attachTo: '#sodar-pr-link-project-star bottom',
         advanceOn: '.docs-link click',
         showCancelLink: true

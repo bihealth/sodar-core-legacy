@@ -3,6 +3,7 @@
 
 from django import template
 from django.conf import settings
+from django.urls import reverse
 from django.utils import timezone
 
 from ..models import (
@@ -15,7 +16,6 @@ from ..models import (
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
 
-
 # Settings
 HELP_HIGHLIGHT_DAYS = (
     settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
@@ -26,6 +26,7 @@ HELP_HIGHLIGHT_DAYS = (
 # Local constants
 INDENT_PX = 25
 
+# TODO: Remove
 PROJECT_TYPE_DISPLAY = {'PROJECT': 'Project', 'CATEGORY': 'Category'}
 
 # Behaviour for certain levels has not been specified/implemented yet
@@ -250,13 +251,6 @@ def get_pr_link_state(app_urls, url_name, link_names=None):
 
 
 @register.simple_tag
-def get_project_type(project, capitalize=True):
-    """Return printable version of the project type"""
-    ret = PROJECT_TYPE_DISPLAY[project.type]
-    return ret.lower() if not capitalize else ret
-
-
-@register.simple_tag
 def get_star(project, user):
     """Return HTML for project star tag state if it is set"""
     if user.has_perm('projectroles.view_project', project) and get_tag_state(
@@ -380,3 +374,26 @@ def get_remote_access_legend(level):
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
+
+
+@register.simple_tag
+def get_admin_warning():
+    """Return Django admin warning HTML"""
+    ret = (
+        '<p class="text-danger">SODAR Taskflow is '
+        'enabled. Modifications made in the Django admin view '
+        'are <strong>not</strong> automatically mirrored in '
+        'remote systems managed by SODAR Taskflow.</p>'
+    )
+    ret += (
+        '<p class="text-danger">Actions taken in the admin view may '
+        'result in system malfunction or data loss! Please proceed with '
+        'caution.</p>'
+    )
+    ret += (
+        '<p><a class="btn btn-danger pull-right" role="button" '
+        'target="_blank" href="{}">'
+        '<i class="fa fa-gears"></i> Continue to Django Admin'
+        '</a></p>'.format(reverse('admin:index'))
+    )
+    return ret

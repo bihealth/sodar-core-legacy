@@ -1,5 +1,6 @@
 {% extends 'projectroles/project_base.html' %}
 {% load rules %}
+{% load projectroles_common_tags %}
 
 {% block title %}
   Confirm Background Job Deletion
@@ -19,7 +20,7 @@
     {% else %}
       <strong>your own jobs</strong>
     {% endif %}
-    in the project <strong>{{ project.title }}</strong>?
+    in the {% get_display_name 'PROJECT' %} <strong>{{ project.title }}</strong>?
   </div>
 
   <form method="post">

@@ -1,6 +1,7 @@
 {# NOTE: Expected to be nested under an <ul> element #}
 {% load rules %}
 {% load projectroles_tags %}
+{% load projectroles_common_tags %}
 
 {# Responsive replacement for user dopdown #}
 
@@ -74,11 +75,20 @@
 
     {# Admin link #}
     {% if request.user.is_superuser %}
-      <a class="dropdown-item" href="{% url 'admin:index' %}"
-         id="sodar-navbar-link-admin" target="_blank">
-        <i class="fa fa-fw fa-gears"></i> Admin
-      </a>
-
+      {% check_backend 'taskflow' as taskflow_enabled %}
+      {% if taskflow_enabled %}
+        <a class="dropdown-item"
+           href="#"
+           id="sodar-navbar-link-admin-warning"
+           data-toggle="modal" data-target="#sodar-modal">
+          <i class="fa fa-fw fa-gears"></i> Django Admin
+        </a>
+      {% else %}
+        <a class="dropdown-item" href="{% url 'admin:index' %}"
+           id="sodar-navbar-link-admin" target="_blank">
+          <i class="fa fa-fw fa-gears"></i> Django Admin
+        </a>
+      {% endif %}
       <div class="dropdown-divider"></div>
     {% endif %}
 

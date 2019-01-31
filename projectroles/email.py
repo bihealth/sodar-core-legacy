@@ -7,12 +7,12 @@ from django.core.mail import send_mail as _send_mail
 from django.urls import reverse
 from django.utils.timezone import localtime
 
-from .utils import build_invite_url
+from .models import SODAR_CONSTANTS
+from .utils import build_invite_url, get_display_name
 
 
 # Access Django user model
 User = auth.get_user_model()
-
 
 # Settings
 SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX
@@ -21,6 +21,8 @@ DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 ADMIN_RECIPIENT = settings.ADMINS[0]
 
+# Local constants
+PROJECT_LABEL = get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'])
 
 logger = logging.getLogger(__name__)
 
@@ -49,50 +51,51 @@ contact {admin_name} ({admin_email}).
 # Role Change Template ---------------------------------------------------------
 
 
-SUBJECT_ROLE_CREATE = 'Membership granted for project "{}"'
-SUBJECT_ROLE_UPDATE = 'Membership changed in project "{}"'
-SUBJECT_ROLE_DELETE = 'Membership removed from project "{}"'
+SUBJECT_ROLE_CREATE = 'Membership granted for ' + PROJECT_LABEL + ' "{}"'
+SUBJECT_ROLE_UPDATE = 'Membership changed in ' + PROJECT_LABEL + ' "{}"'
+SUBJECT_ROLE_DELETE = 'Membership removed from ' + PROJECT_LABEL + ' "{}"'
 
 MESSAGE_ROLE_CREATE = r'''
 {issuer_name} ({issuer_email}) has granted you the membership
-in project "{project}" with the role of "{role}".
+in {project_label} "{project}" with the role of "{role}".
 
-To access the project in {site_title}, please click on
+To access the {project_label} in {site_title}, please click on
 the following link:
 {project_url}
 '''.lstrip()
 
 MESSAGE_ROLE_UPDATE = r'''
 {issuer_name} ({issuer_email}) has changed your membership
-role in project "{project}" into "{role}".
+role in {project_label} "{project}" into "{role}".
 
-To access the project in {site_title}, please click on
+To access the {project_label} in {site_title}, please click on
 the following link:
 {project_url}
 '''.lstrip()
 
 MESSAGE_ROLE_DELETE = r'''
 {issuer_name} ({issuer_email}) has removed your membership
-from project "{project}".
+from {project_label} "{project}".
 '''.lstrip()
 
 
 # Invite Template --------------------------------------------------------------
 
 
-SUBJECT_INVITE = 'Invitation for project "{}"'
+SUBJECT_INVITE = 'Invitation for ' + PROJECT_LABEL + ' "{}"'
 
 MESSAGE_INVITE_BODY = r'''
 You have been invited by {issuer_name} ({issuer_email})
-to share data in the project "{project}" with the
+to share data in the {project_label} "{project}" with the
 role of "{role}".
 
-To accept the invitation and access the project in {site_title},
+To accept the invitation and access the {project_label} in {site_title},
 please click on the following link:
 {invite_url}
 
 This invitation will expire on {date_expire}.
 '''
+
 MESSAGE_INVITE_ISSUER = r'''
 Message from the sender of this invitation:
 ----------------------------------------
@@ -104,12 +107,14 @@ Message from the sender of this invitation:
 # Invite Acceptance Notification Template --------------------------------------
 
 
-SUBJECT_ACCEPT = 'Invitation accepted by {user_name} for project "{project}"'
+SUBJECT_ACCEPT = (
+    'Invitation accepted by {user_name} for ' + PROJECT_LABEL + ' "{project}"'
+)
 
 MESSAGE_ACCEPT_BODY = r'''
-Invitation sent by you for role of "{role}" in project "{project}"
+Invitation sent by you for role of "{role}" in {project_label} "{project}"
 has been accepted by {user_name} ({user_email}).
-They have been granted access in the project accordingly.
+They have been granted access in the {project_label} accordingly.
 '''.lstrip()
 
 
@@ -119,14 +124,14 @@ They have been granted access in the project accordingly.
 SUBJECT_EXPIRY = 'Expired invitation used by {user_name} in "{project}"'
 
 MESSAGE_EXPIRY_BODY = r'''
-Invitation sent by you for role of "{role}" in project "{project}"
+Invitation sent by you for role of "{role}" in {project_label} "{project}"
 was attempted to be used by {user_name} ({user_email}).
 
 This invitation has expired on {date_expire}. Because of this,
 access was not granted to the user.
 
 Please add the role manually with "Add Member", if you still wish
-to grant the user access to the project.
+to grant the user access to the {project_label}.
 '''.lstrip()
 
 
@@ -153,6 +158,7 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
         invite_url=invite_url,
         date_expire=date_expire_str,
         site_title=SITE_TITLE,
+        project_label=PROJECT_LABEL,
     )
 
     return body
@@ -235,6 +241,7 @@ def get_role_change_body(
             project=project.title,
             project_url=project_url,
             site_title=SITE_TITLE,
+            project_label=PROJECT_LABEL,
         )
 
     elif change_type == 'update':
@@ -245,6 +252,7 @@ def get_role_change_body(
             project=project.title,
             project_url=project_url,
             site_title=SITE_TITLE,
+            project_label=PROJECT_LABEL,
         )
 
     elif change_type == 'delete':
@@ -252,6 +260,7 @@ def get_role_change_body(
             issuer_name=issuer.get_full_name(),
             issuer_email=issuer.email,
             project=project.title,
+            project_label=PROJECT_LABEL,
         )
 
     body += get_email_footer()
@@ -374,6 +383,7 @@ def send_accept_note(invite, request):
         user_name=request.user.get_full_name(),
         user_email=request.user.email,
         site_title=SITE_TITLE,
+        project_label=PROJECT_LABEL,
     )
     message += get_email_footer()
 
@@ -406,6 +416,7 @@ def send_expiry_note(invite, request):
         user_email=request.user.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
         site_title=SITE_TITLE,
+        project_label=PROJECT_LABEL,
     )
     message += get_email_footer()
 

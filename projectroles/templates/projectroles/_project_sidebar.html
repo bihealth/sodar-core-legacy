@@ -5,6 +5,8 @@
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 {% allow_project_creation as allow_creation %}
 {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+{% get_display_name 'PROJECT' title=True as project_display %}
+{% get_display_name 'CATEGORY' title=True as category_display %}
 
 {# Project nav #}
 
@@ -25,7 +27,7 @@
       {% else %}
         <i class="fa fa-cube"></i>
       {% endif %}
-      <br />{% get_project_type project %}<br />Overview
+      <br />{% get_display_name project.type title=True %}<br />Overview
     </a>
   </li>
 
@@ -65,7 +67,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
-        <i class="fa fa-pencil"></i><br />Update<br />{% get_project_type project %}
+        <i class="fa fa-pencil"></i><br />Update<br />{% get_display_name project.type title=True %}
       </a>
     </li>
   {% endif %}
@@ -81,7 +83,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
-          <i class="fa fa-plus"></i><br />Create<br />Project or<br />Category
+          <i class="fa fa-plus"></i><br />Create<br />{{ project_display }} or<br />{{ category_display }}
       </a>
     </li>
   {% endif %}
@@ -91,7 +93,7 @@
     <a class="nav-link"
        href="{% url 'projectroles:create' %}"
        id="sodar-pr-link-project-create">
-      <i class="fa fa-plus"></i><br />Create<br />Project
+      <i class="fa fa-plus"></i><br />Create<br />{{ project_display }}
     </a>
   </li>
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.app_name == 'projectroles' and not project %}
@@ -101,7 +103,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-home-link-create">
-        <i class="fa fa-plus"></i><br />Create<br />Category
+        <i class="fa fa-plus"></i><br />Create<br />{{ category_display }}
       </a>
     </li>
   {% endif %}

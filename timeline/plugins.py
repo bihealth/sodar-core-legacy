@@ -1,7 +1,9 @@
 """Plugins for the Timeline app"""
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint, BackendPluginPoint
+from projectroles.utils import get_display_name
 
 from .api import TimelineAPI
 from .urls import urlpatterns
@@ -51,7 +53,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     entry_point_url_id = 'timeline:list_project'
 
     #: Description string
-    description = 'Timeline of project events'
+    description = 'Timeline of {} events'.format(
+        get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'])
+    )
 
     #: Required permission for accessing the app
     app_permission = 'timeline.view_timeline'
@@ -63,7 +67,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     details_template = 'timeline/_details_card.html'
 
     #: App card title for the project details page
-    details_title = 'Project Timeline Overview'
+    details_title = '{} Timeline Overview'.format(
+        get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], title=True)
+    )
 
     #: Position in plugin ordering
     plugin_ordering = 40

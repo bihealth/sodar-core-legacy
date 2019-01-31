@@ -17,9 +17,30 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 SYSTEM_USER_GROUP = 'system'
 
 
+def get_display_name(key, title=False, count=1, plural=False):
+    """
+    Return display name from SODAR_CONSTANTS.
+
+    :param key: Key in SODAR_CONSTANTS['DISPLAY_NAMES'] to return (string)
+    :param title: Return name in title case if true (boolean, optional)
+    :param count: Item count for returning plural form, overrides plural=False
+                  if not 1 (int, optional)
+    :param plural: Return plural form if True, overrides count != 1 if True
+                   (boolean, optional)
+    :return: String
+    """
+    from projectroles.models import SODAR_CONSTANTS  # Must import here
+
+    ret = SODAR_CONSTANTS['DISPLAY_NAMES'][key][
+        'plural' if count != 1 or plural else 'default'
+    ]
+    return ret.lower() if not title else ret.title()
+
+
 def get_user_display_name(user, inc_user=False):
     """
-    Return full name of user for displaying
+    Return full name of user for displaying.
+
     :param user: User object
     :param inc_user: Include user name if true (boolean)
     :return: String
@@ -34,6 +55,7 @@ def get_user_display_name(user, inc_user=False):
 def build_secret(length=SECRET_LENGTH):
     """
     Return secret string for e.g. public URLs.
+
     :param length: Length of string if specified, default value from settings
     :return: Randomized secret (string)
     """
@@ -48,6 +70,7 @@ def build_secret(length=SECRET_LENGTH):
 def build_invite_url(invite, request):
     """
     Return invite URL for a project invitation.
+
     :param invite: ProjectInvite object
     :param request: HTTP request
     :return: URL (string)
@@ -60,13 +83,14 @@ def build_invite_url(invite, request):
 def get_expiry_date():
     """
     Return expiry date based on current date + INVITE_EXPIRY_DAYS
+
     :return: DateTime object
     """
     return timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)
 
 
 def get_app_names():
-    """Return list of names for local apps"""
+    """Return list of names for local apps."""
 
     # TODO: Restrict this to SODAR Core apps
     return sorted(
@@ -79,7 +103,7 @@ def get_app_names():
 
 
 def set_user_group(user):
-    """Set user group based on user name"""
+    """Set user group based on user name."""
 
     if user.username.find('@') != -1:
         group_name = user.username.split('@')[1].lower()

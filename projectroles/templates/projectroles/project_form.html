@@ -7,15 +7,17 @@
 
 {% block title %}
   {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+  {% get_display_name 'PROJECT' title=True as project_display %}
+  {% get_display_name 'CATEGORY' title=True as category_display %}
 
   {% if object.pk %}
-    Update {% get_project_type object %} {{ object.title }}
+    Update {% get_display_name object.type title=True %} {{ object.title }}
   {% elif parent.pk %}
-    Create Project or Category Under {{ parent.title }}
+    Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}
   {% elif disable_categories %}
-    Create Project
+    Create {{ project_display }}
   {% else %}
-    Create Top Level Category
+    Create Top Level {{ category_display }}
   {% endif %}
 {% endblock title %}
 
@@ -25,6 +27,8 @@
 
 {% block projectroles %}
   {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+  {% get_display_name 'PROJECT' title=True as project_display %}
+  {% get_display_name 'CATEGORY' title=True as category_display %}
 
   {% if object.pk %}
     {% include 'projectroles/_project_header.html' %}
@@ -32,13 +36,13 @@
 
   <div class="row sodar-subtitle-container">
     {% if object.pk %}
-      <h3>Update {% get_project_type object %}</h3>
+      <h3>Update {% get_display_name object.type title=True %}</h3>
     {% elif parent.pk %}
-      <h2>Create Project or Category Under {{ parent.title }}</h2>
+      <h2>Create {{ project_display }} or {{ category_display }} Under {{ parent.title }}</h2>
     {% elif disable_categories %}
-      <h2>Create Project</h2>
+      <h2>Create {{ project_display }}</h2>
     {% else %}
-      <h2>Create Top Level Category</h2>
+      <h2>Create Top Level {{ category_display }}</h2>
     {% endif %}
   </div>
 

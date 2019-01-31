@@ -1,6 +1,8 @@
 {% extends 'projectroles/project_base.html' %}
 
 {% load rules %}
+{% load projectroles_common_tags %}
+
 {% block title %}Member Invites for {{ project.title }}{% endblock title %}
 
 {% block css %}
@@ -87,7 +89,8 @@
 
     tour.addStep('invite_list', {
         title: 'Invite List',
-        text: 'List of existing invites for this project can be seen here.',
+        text: 'List of existing invites for this ' +
+              '{% get_display_name "PROJECT" %} can be seen here.',
         attachTo: '#sodar-pr-invite-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true

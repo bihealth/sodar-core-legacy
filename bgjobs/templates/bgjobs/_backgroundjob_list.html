@@ -1,3 +1,5 @@
+{% load projectroles_common_tags %}
+
 {# BackgroundJob list #}
 <div id="sodar-bg-job-list" class="card mb-3">
   <div class="card-body p-0">
@@ -17,9 +19,10 @@
         {% endfor %}
         {% if not object_list %}
           <tr>
-             <td class="bg-faded font-italic text-center" colspan="5">
-               No background jobs found for {% if related_type  %}{{ related_type }}{% else %}project{% endif %}.
-             </td>
+            <td class="bg-faded font-italic text-center" colspan="5">
+              No background jobs found for
+              {% if related_type  %}{{ related_type }}{% else %}{% get_display_name 'PROJECT' %}{% endif %}.
+            </td>
           </tr>
         {% endif %}
       </tbody>
