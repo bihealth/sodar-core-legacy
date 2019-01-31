@@ -230,7 +230,9 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
 
     def has_permission(self):
         """Disable project app access for categories"""
-        if self.get_project().type == PROJECT_TYPE_CATEGORY:
+        project = self.get_project()
+
+        if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
             if (
