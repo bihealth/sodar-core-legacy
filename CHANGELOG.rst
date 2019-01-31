@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Codacy badge in ``README.rst`` (#140)
 - **Projectroles**
     - Category and project display name configuration via ``SODAR_CONSTANTS`` (#141)
     - ``get_display_name()`` utils function and template tag to retrieve ``DISPLAY_NAMES`` (#141)

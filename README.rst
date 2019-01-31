@@ -4,6 +4,9 @@ SODAR Core
 .. image:: https://travis-ci.com/bihealth/sodar_core.svg?branch=master
     :target: https://travis-ci.com/bihealth/sodar_core
 
+.. image:: https://api.codacy.com/project/badge/Grade/404e8515825548b1aa5a44dbe3d45ece
+    :target: https://www.codacy.com/app/bihealth/sodar_core
+
 .. image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
 
