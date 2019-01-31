@@ -27,6 +27,12 @@ Changed
     - Hide immutable fields in forms (#142)
     - Rename Django admin link in user dropdown
 
+Fixed
+-----
+
+- **Projectroles**
+    - View access control for categories (#143)
+
 Removed
 -------
 

@@ -205,7 +205,9 @@ class TestProjectPermissionBase(
 
         # Init role assignments
 
-        self._make_assignment(self.category, self.user_owner, self.role_owner)
+        self.as_owner_cat = self._make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
         self.as_owner = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
@@ -369,6 +371,22 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_update_category(self):
+        """Test access to category updating"""
+        url = reverse(
+            'projectroles:update', kwargs={'project': self.category.sodar_uuid}
+        )
+        good_users = [self.superuser, self.as_owner.user]
+        bad_users = [
+            self.anonymous,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
     def test_create_top(self):
         """Test access to top level project creation"""
         url = reverse('projectroles:create')
@@ -416,6 +434,22 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_roles_category(self):
+        """Test access to role list under category"""
+        url = reverse(
+            'projectroles:roles', kwargs={'project': self.category.sodar_uuid}
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_redirect(url, bad_users)
+
     def test_role_create(self):
         """Test access to role creation"""
         url = reverse(
@@ -430,6 +464,23 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_no_roles,
         ]
         self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
+    def test_role_create_category(self):
+        """Test access to role creation under category"""
+        url = reverse(
+            'projectroles:role_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     def test_role_update(self):
@@ -548,6 +599,23 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_role_invite_create_category(self):
+        """Test access to role invite creation under category"""
+        url = reverse(
+            'projectroles:invite_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_redirect(url, bad_users)
+
     def test_role_invite_list(self):
         """Test access to role invite list"""
         url = reverse(
@@ -561,6 +629,22 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_no_roles,
         ]
         self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
+    def test_role_invite_list_category(self):
+        """Test access to role invite list under category"""
+        url = reverse(
+            'projectroles:invites', kwargs={'project': self.category.sodar_uuid}
+        )
+        bad_users = [
+            self.anonymous,
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
         self.assert_redirect(url, bad_users)
 
     def test_role_invite_resend(self):
@@ -626,6 +710,22 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test access to project starring API view"""
         url = reverse(
             'projectroles:star', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
+        self.assert_response(url, good_users, 200, method='POST')
+        self.assert_response(url, bad_users, 403, method='POST')
+
+    def test_starring_api_category(self):
+        """Test access to project starring API view under category"""
+        url = reverse(
+            'projectroles:star', kwargs={'project': self.category.sodar_uuid}
         )
         good_users = [
             self.superuser,

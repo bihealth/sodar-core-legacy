@@ -103,6 +103,7 @@ REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 # Local constants
 APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
+ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
 
 SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 SODAR_API_MEDIA_TYPE = (
@@ -226,6 +227,19 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
 
     def get_permission_object(self):
         return self.get_project()
+
+    def has_permission(self):
+        """Disable project app access for categories"""
+        if self.get_project().type == PROJECT_TYPE_CATEGORY:
+            request_url = resolve(self.request.get_full_path())
+
+            if (
+                request_url.app_name != APP_NAME
+                or request_url.url_name not in ALLOWED_CATEGORY_URLS
+            ):
+                return False
+
+        return super().has_permission()
 
     def get_queryset(self, *args, **kwargs):
         """Override ``get_query_set()`` to filter down to the currently selected
