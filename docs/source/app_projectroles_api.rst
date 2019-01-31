@@ -48,3 +48,12 @@ These tags can be included in templates with
 
 .. automodule:: projectroles.templatetags.projectroles_common_tags
     :members:
+
+
+Utilities
+=========
+
+General utility functions are stored in ``utils.py``.
+
+.. automodule:: projectroles.utils
+    :members:

@@ -2,7 +2,7 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}Remote Projects for {{ site.name }} {% endblock %}
+{% block title %}Remote {% get_display_name 'PROJECT' title=True plural=True %} for {{ site.name }} {% endblock %}
 
 {% block css %}
   {{ block.super }}
@@ -40,7 +40,8 @@
     <div class="alert alert-info">
       No projects are available.
       {% if site_mode == 'TARGET' %}
-        To retrieve remote project data, <a href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">synchronize with the source site</a>
+        To retrieve remote {% get_display_name 'PROJECT' %} data,
+        <a href="{% url 'projectroles:remote_projects_sync' remotesite=site.sodar_uuid %}">synchronize with the source site</a>
         or use the <code>syncremote</code> management command.
       {% endif %}
     </div>
@@ -53,7 +54,7 @@
         <div class="card-header">
           <h4>
             <i class="fa fa-cubes"></i>
-            {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} Projects
+            {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} {% get_display_name 'PROJECT' title=True plural=True %}
           </h4>
         </div>
         <div class="card-body p-0">
@@ -61,7 +62,7 @@
                  id="sodar-pr-remote-project-table">
             <thead>
               <tr>
-                <th>Project</th>
+                <th>{% get_display_name 'PROJECT' title=True %}</th>
                 <th>Accessed</th>
                 <th>Level</th>
               </tr>
@@ -78,7 +79,7 @@
       {% if site_mode == 'SOURCE' %}
         <div class="container-fluid text-right">
           <button type="submit" class="btn btn-primary">
-            <i class="fa fa-pencil"></i> Update Project Access
+            <i class="fa fa-pencil"></i> Update {% get_display_name 'PROJECT' title=True %} Access
           </button>
         </div>
       {% endif %}

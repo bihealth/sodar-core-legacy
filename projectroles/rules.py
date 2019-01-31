@@ -104,7 +104,7 @@ def can_create_projects():
 # Combined predicates ----------------------------------------------------------
 
 
-is_update_user = rules.is_superuser | is_project_owner | is_project_delegate
+is_update_user = is_project_owner | is_project_delegate
 
 
 # Rules ------------------------------------------------------------------------

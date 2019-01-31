@@ -1,6 +1,7 @@
 {% extends 'projectroles/project_base.html' %}
 
 {% load rules %}
+{% load projectroles_common_tags %}
 {% block title %}Members of {{ project.title }}{% endblock title %}
 
 {% block css %}
@@ -35,7 +36,7 @@
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
   <h3>
-    <i class="fa fa-users"></i> Project Members
+    <i class="fa fa-users"></i> {% get_display_name project.type title=True %} Members
   </h3>
   {% if not project.is_remote %}
     {% if can_update_members or can_invite %}
@@ -109,7 +110,8 @@
 
     tour.addStep('role_list', {
         title: 'Members List',
-        text: 'List of users given access for this project can be seen here.',
+        text: 'List of users given access for this ' +
+              '{% get_display_name "PROJECT" %} can be seen here.',
         attachTo: '#sodar-pr-role-list top',
         advanceOn: '.docs-link click',
         showCancelLink: true
@@ -119,7 +121,7 @@
         tour.addStep('role_actions', {
             title: 'Member Operations Menu',
             text: 'Use this menu to add members, send invites or view existing ' +
-            'invites.',
+                  'invites.',
             attachTo: '#sodar-pr-btn-role-list left',
             advanceOn: '.docs-link click',
             showCancelLink: true

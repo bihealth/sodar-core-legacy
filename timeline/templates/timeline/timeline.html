@@ -2,6 +2,7 @@
 
 {% load rules %}
 {% load timeline_tags %}
+{% load projectroles_common_tags %}
 
 {% block title %}{{ timeline_title }} {% if timeline_mode == 'project' %}for{% else %}in{% endif %} {{ project.title }}{% endblock title %}
 
@@ -75,7 +76,7 @@
       <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
          class="btn btn-secondary ml-auto"
          role="button">
-        <i class="fa fa-arrow-circle-left"></i> Project Timeline
+        <i class="fa fa-arrow-circle-left"></i> {% get_display_name 'PROJECT' title=True %} Timeline
       </a>
     </div>
   {% endif %}
@@ -129,7 +130,7 @@
   {% else %}
     <div class="alert alert-info" role="alert">
       No timeline events found for this
-      {% if timeline_mode == 'project' %}project{% else %}object{% endif %}.
+      {% if timeline_mode == 'project' %}{% get_display_name 'PROJECT' %}{% else %}object{% endif %}.
     </div>
   {% endif %}
 
@@ -146,7 +147,8 @@
 
     tour.addStep('event_list', {
         title: 'Event List',
-        text: 'This is the list of events for the project, organized by ' +
+        text: 'This is the list of events for the ' +
+              '{% get_display_name "PROJECT" %}' + ' or object, organized by ' +
               'newest first.',
         attachTo: '#sodar-tl-event-list top',
         advanceOn: '.docs-link click',

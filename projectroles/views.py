@@ -74,7 +74,7 @@ from .project_settings import (
 )
 from .project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
-from .utils import get_expiry_date
+from .utils import get_expiry_date, get_display_name
 
 
 # Access Django user model
@@ -86,7 +86,6 @@ SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-PROJECT_TYPE_CHOICES = SODAR_CONSTANTS['PROJECT_TYPE_CHOICES']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
@@ -268,7 +267,9 @@ class ProjectModifyPermissionMixin(
         if self.request.user.is_authenticated():
             messages.error(
                 self.request,
-                'Modifications are not allowed for remote projects',
+                'Modifications are not allowed for remote {}'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT, plural=True)
+                ),
             )
             return redirect(reverse('home'))
 
@@ -873,7 +874,12 @@ class ProjectCreateView(
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
             and not settings.PROJECTROLES_TARGET_CREATE
         ):
-            messages.error(request, 'Creating local projects not allowed')
+            messages.error(
+                request,
+                'Creating local {} not allowed'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT, plural=True)
+                ),
+            )
             return HttpResponseRedirect(reverse('home'))
 
         if 'project' in self.kwargs:
@@ -882,7 +888,9 @@ class ProjectCreateView(
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
                     self.request,
-                    'Creating a project within a project is not allowed',
+                    'Creating nested {} is not allowed'.format(
+                        get_display_name(PROJECT_TYPE_PROJECT, plural=True)
+                    ),
                 )
                 return HttpResponseRedirect(
                     reverse(
@@ -1399,12 +1407,17 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 user=self.request.user, project=invite.project
             )
             messages.warning(
-                self.request, 'You already have roles set in this project.'
+                self.request,
+                'You already have roles set in this {}.'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT)
+                ),
             )
             revoke_invite(
                 invite,
                 failed=True,
-                fail_desc='User already has roles in project',
+                fail_desc='User already has roles in {}'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT)
+                ),
             )
             return redirect(
                 reverse(
@@ -1500,8 +1513,12 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
         # ..and finally redirect user to the project front page
         messages.success(
             self.request,
-            'Welcome to project "{}"! You have been assigned the role of '
-            '{}.'.format(invite.project.title, invite.role.name),
+            'Welcome to {} "{}"! You have been assigned the role of '
+            '{}.'.format(
+                get_display_name(PROJECT_TYPE_PROJECT),
+                invite.project.title,
+                invite.role.name,
+            ),
         )
         return redirect(
             reverse(
@@ -1651,8 +1668,12 @@ class RemoteSiteListView(
         ):
             messages.warning(
                 request,
-                'Project categories and nesting disabled, '
-                'remote project sync disabled',
+                '{} {} and nesting disabled, '
+                'remote {} sync disabled'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT, title=True),
+                    get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
+                    get_display_name(PROJECT_TYPE_PROJECT),
+                ),
             )
             return redirect('home')
 
@@ -1823,7 +1844,10 @@ class RemoteProjectsBatchUpdateView(
         # Ensure site is in SOURCE mode
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_SOURCE:
             messages.error(
-                request, 'Site in TARGET mode, cannot update project access'
+                request,
+                'Site in TARGET mode, cannot update {} access'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT)
+                ),
             )
             return HttpResponseRedirect(redirect_url)
 
@@ -1868,7 +1892,10 @@ class RemoteProjectsBatchUpdateView(
 
             if not modifying_access:
                 messages.warning(
-                    request, 'No changes to project access detected'
+                    request,
+                    'No changes to {} access detected'.format(
+                        get_display_name(PROJECT_TYPE_PROJECT)
+                    ),
                 )
                 return HttpResponseRedirect(redirect_url)
 
@@ -1920,9 +1947,11 @@ class RemoteProjectsBatchUpdateView(
         # All OK
         messages.success(
             request,
-            'Access level updated for {} project{} in site "{}"'.format(
+            'Access level updated for {} {} in site "{}"'.format(
                 len(access_fields.items()),
-                's' if len(access_fields.items()) > 1 else '',
+                get_display_name(
+                    PROJECT_TYPE_PROJECT, count=len(access_fields.items())
+                ),
                 context['site'].name,
             ),
         )
@@ -1980,7 +2009,10 @@ class RemoteProjectsSyncView(
                 ex_str = ex_str[:255]
 
             messages.error(
-                request, 'Unable to synchronize projects: {}'.format(ex_str)
+                request,
+                'Unable to synchronize {}: {}'.format(
+                    get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
+                ),
             )
             return HttpResponseRedirect(redirect_url)
 
@@ -2013,7 +2045,10 @@ class RemoteProjectsSyncView(
         context['project_count'] = project_count
         context['role_count'] = role_count
         messages.success(
-            request, 'Project data updated according to source site'
+            request,
+            '{} data updated according to source site'.format(
+                get_display_name(PROJECT_TYPE_PROJECT, title=True)
+            ),
         )
         return super().render_to_response(context)
 

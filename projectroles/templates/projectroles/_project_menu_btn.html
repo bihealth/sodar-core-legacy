@@ -59,9 +59,9 @@
       {% if not project.is_remote and can_update_project %}
         <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}"
            href="{% url 'projectroles:update' project=project.sodar_uuid %}"
-           title="Update Project"
+           title="Update {% get_display_name 'PROJECT' title=True %}"
            id="sodar-pr-alt-link-project-update">
-          <i class="fa fa-fw fa-pencil"></i> Update {% get_project_type project %}
+          <i class="fa fa-fw fa-pencil"></i> Update {% get_display_name project.type title=True %}
         </a>
      {% endif %}
 
@@ -75,14 +75,14 @@
          <a class="dropdown-item"
             href="{% url 'projectroles:create' project=project.sodar_uuid %}"
             id="sodar-pr-alt-link-project-create">
-           <i class="fa fa-fw fa-plus"></i> Create Project or Category
+           <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'PROJECT' title=True %} or {% get_display_name 'CATEGORY' title=True %}
          </a>
       {% endif %}
     {% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
       <a class="dropdown-item"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-alt-link-project-create">
-       <i class="fa fa-fw fa-plus"></i> Create Project
+       <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'PROJECT' title=True %}
      </a>
     {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
       {% has_perm 'projectroles.create_project' request.user as can_create_project %}
@@ -90,7 +90,7 @@
         <a class="dropdown-item"
            href="{% url 'projectroles:create' %}"
            id="sodar-pr-alt-link-home-create">
-          <i class="fa fa-fw fa-plus"></i> Create Category
+          <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'CATEGORY' title=True %}
         </a>
       {% endif %}
     {% endif %}

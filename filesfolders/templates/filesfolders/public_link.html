@@ -1,6 +1,7 @@
 {% extends 'projectroles/project_base.html' %}
 
 {% load rules %}
+{% load projectroles_common_tags %}
 
 {% block title %}
   Public Link for File "{{ file.name }}"
@@ -13,9 +14,14 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  <p>Use the URL below to provide a publicly available download link to the file "{{ file.name }}" in project {{ file.project.title }}.</p>
+  <p>
+    Use the URL below to provide a publicly available download link to the
+    file "{{ file.name }}" in {% get_display_name 'PROJECT' %}
+    {{ file.project.title }}.
+  </p>
   <div class="alert alert-warning" role="alert">
-    <strong>Warning:</strong> Anyone with this URL can access the file, including users without permissions in the project.
+    <strong>Warning:</strong> Anyone with this URL can access the file,
+      including users without permissions in the {% get_display_name 'PROJECT' %}.
   </div>
 
   <dl class="row">

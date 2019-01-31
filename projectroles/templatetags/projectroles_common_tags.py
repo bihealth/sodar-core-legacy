@@ -13,6 +13,7 @@ from django.urls import reverse
 import projectroles
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
+from projectroles.utils import get_display_name as _get_display_name
 
 
 site = import_module(settings.SITE_PACKAGE)
@@ -98,6 +99,12 @@ def get_full_url(request, url):
 
 
 # Template rendering -----------------------------------------------------------
+
+
+@register.simple_tag
+def get_display_name(key, title=False, count=1, plural=False):
+    """Return display name from SODAR_CONSTANTS"""
+    return _get_display_name(key, title, count, plural)
 
 
 @register.simple_tag

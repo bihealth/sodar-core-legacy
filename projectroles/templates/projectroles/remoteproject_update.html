@@ -21,7 +21,7 @@
 <div class="container-fluid sodar-page-container">
 
   <div class="alert alert-warning">
-    Are you sure you want to update project access for the site
+    Are you sure you want to update {% get_display_name 'PROJECT' %} access for the site
     "<strong>{{ site.name }}</strong>"? Please review the following
     changes and click "Confirm" to proceed.
   </div>
@@ -39,7 +39,7 @@
                id="sodar-pr-remote-update-table">
           <thead>
             <tr>
-              <th>Project</th>
+              <th>{% get_display_name 'PROJECT' title=True %}</th>
               <th>Old Access</th>
               <th></th>
               <th>New Access</th>

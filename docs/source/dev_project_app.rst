@@ -155,6 +155,13 @@ found in projectroles and they can be extended within your app if needed.
         | pr_rules.is_project_guest,
     )
 
+.. hint::
+
+    The ``rules.is_superuser`` predicate is often redundant, as permission
+    checks are skipped for Django superusers. However, it can be handy if you
+    e.g. want to define a rule allowing only superuser access for now, with the
+    potential for adding other predicates later.
+
 
 ProjectAppPlugin
 ================
@@ -398,6 +405,45 @@ example of a minimal template.
     to the element.
 
 
+General Guidelines for Views and Templates
+==========================================
+
+General guidelines and hints for developing views and templates are discussed
+in this section.
+
+Referring to Project Type
+-------------------------
+
+As of SODAR Core v0.4.3, it is possible to customize the display name for the
+project type from the default "project" or "category". For more information, see
+:ref:`app_projectroles_custom`.
+
+It is thus recommended that instead of hard coding "project" or "category" in
+your views or templates, use the ``get_display_name()`` function to refer to
+project type.
+
+In templates, this can be achieved with a custom template tag. Example:
+
+.. code-block:: django
+
+    {% load projectroles_common_tags %}
+    {% get_display_name project.type title=True plural=False %}
+
+In views and other Python code, the similar function can be accessed through
+``utils.py``:
+
+.. code-block:: python
+
+    from projectroles.utils import get_display_name
+    display_name = get_display_name(project.type, plural=False)
+
+.. hint::
+
+    If not dealing with a ``Project`` object, you can provide the
+    ``PROJECT_TYPE_*`` constant from ``SODAR_CONSTANTS``. In templates, it's
+    most straightforward to use "CATEGORY" and "PROJECT".
+
+
 Specific Views and Templates
 ============================
 
@@ -622,6 +668,7 @@ views. Example with generic ``APIView``:
 
     def get(self, request):
         # ...
+
 
 TODO
 ====
