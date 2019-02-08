@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash in remote project sync caused by typo in ``remoteproject_sync.html`` (#148)
+
+
 v0.4.3 (2019-01-31)
 ===================
 
