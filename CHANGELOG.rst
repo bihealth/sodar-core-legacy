@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Projectroles**
+    - Change ``modifyCellOverflow()`` to work with non-table containers (#149)
+
 Fixed
 -----
 
