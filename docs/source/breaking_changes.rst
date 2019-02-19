@@ -13,8 +13,27 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-v0.4.3
-======
+v0.4.4 (2019-02-19)
+===================
+
+Textarea Height in Forms
+------------------------
+
+Due to this feature breaking the layout of certain third party components,
+textarea height in forms is no longer adjusted automatically. An exception to
+this are Pagedown-specific markdown fields.
+
+To adjust the height of a textarea field in your forms, the easiest way is to
+modify the widget of the related field in the ``__init__()`` function of your
+form as follows:
+
+.. code-block:: python
+
+    self.fields['field_name'].widget.attrs['rows'] = 4
+
+
+v0.4.3 (2019-01-31)
+===================
 
 SODAR Constants
 ---------------
@@ -24,8 +43,8 @@ vary depending on implemented ``DISPLAY_NAMES``. If needed, the currently
 applicable form structure can be imported from ``projectroles.forms``.
 
 
-v0.4.2
-======
+v0.4.2 (2019-01-25)
+===================
 
 System Prerequisites
 --------------------
@@ -74,8 +93,8 @@ cleanup operation. This change should not affect normally running your site, as
 the function in question should only be called during Taskflow testing.
 
 
-v0.4.1
-======
+v0.4.1 (2019-01-11)
+===================
 
 System Prerequisites
 --------------------
@@ -107,8 +126,8 @@ not requiring user authorization will not be visible on the login page. Example:
   {% endblock content %}
 
 
-v0.4.0
-======
+v0.4.0 (2018-12-19)
+===================
 
 List Button Classes in Templates
 --------------------------------
@@ -142,8 +161,8 @@ If you are using the ``taskflow`` backend app, you **must** set the value of
 similarly named setting in your SODAR Taskflow instance!
 
 
-v0.3.0
-======
+v0.3.0 (2018-10-26)
+===================
 
 Remote Site Setup
 -----------------

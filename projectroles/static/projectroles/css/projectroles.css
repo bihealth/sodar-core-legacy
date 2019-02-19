@@ -521,8 +521,9 @@ a.sodar-nav-link-last {
   border-bottom-left-radius: 0;
 }
 
-textarea {
-  height: 125px !important; /* The "rows" attribute doesn't work for pagedown */
+/* Pagedown textarea height modification ("rows" attribute does not work) */
+textarea.wmd-input {
+  height: 125px !important;
 }
 
 /* Pagedown layout fixes */

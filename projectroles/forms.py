@@ -451,6 +451,9 @@ class ProjectInviteForm(forms.ModelForm):
             name=PROJECT_ROLE_GUEST
         ).pk
 
+        # Limit textarea height
+        self.fields['message'].widget.attrs['rows'] = 4
+
     def clean(self):
         # Check if user email is already in users
         try:
@@ -523,6 +526,7 @@ class RemoteSiteForm(forms.ModelForm):
         self.fields['secret'].widget = forms.TextInput(
             attrs={'class': "sodar-code-input"}
         )
+        self.fields['description'].widget.attrs['rows'] = 4
 
         # Special cases for SOURCE
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:

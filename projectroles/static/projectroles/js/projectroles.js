@@ -119,11 +119,12 @@ $(document).ready(function() {
 
 function modifyCellOverflow() {
   $('.sodar-overflow-container').each(function() {
-      var parentWidth = $(this).closest('td').width();
+      var parentWidth = $(this).parent().width();
       var lastVisibleTd = false;
 
       // Don't allow adding hover to last visible td for now
-      if ($(this).closest('td').is($(this).closest('tr').find('td:visible:last'))) {
+      if ($(this).parent().is($(this).closest('td')) &&
+              $(this).closest('td').is($(this).closest('tr').find('td:visible:last'))) {
           lastVisibleTd = true;
       }
 
