@@ -282,7 +282,7 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 /* Container for overflowing table data */
 .sodar-overflow-container {
   display: inline-block;
-  position: absolute;
+  position: relative;
   width: 100%;
   white-space: nowrap;
   overflow: hidden;
