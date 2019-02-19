@@ -13,8 +13,8 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-v0.4.4 (WIP)
-============
+v0.4.4 (2019-02-19)
+===================
 
 Textarea Height in Forms
 ------------------------
