@@ -14,13 +14,15 @@ Changed
 -------
 
 - **Projectroles**
-    - Change ``modifyCellOverflow()`` to work with non-table containers (#149)
+    - Modify ``modifyCellOverflow()`` to work with non-table containers (#149)
+    - Non-Pagedown form textarea height no longer adjusted automatically (#151)
 
 Fixed
 -----
 
 - **Projectroles**
     - Crash in remote project sync caused by typo in ``remoteproject_sync.html`` (#148)
+    - Textarea element CSS override breaking layout in third party components (#151)
 
 
 v0.4.3 (2019-01-31)
