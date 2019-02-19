@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.20 (#152)
+
+
 v0.4.4 (2019-02-19)
 ===================
 

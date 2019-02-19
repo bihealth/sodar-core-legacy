@@ -13,6 +13,15 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.4.5 (WIP)
+============
+
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.20.
+
+
 v0.4.4 (2019-02-19)
 ===================
 
