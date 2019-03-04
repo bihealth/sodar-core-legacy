@@ -1,5 +1,5 @@
 import json
-import sys
+import logging
 import urllib.request
 
 from django.contrib import auth
@@ -11,6 +11,7 @@ from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
 
 User = auth.get_user_model()
+logger = logging.getLogger(__name__)
 
 
 # SODAR constants
@@ -29,21 +30,24 @@ class Command(BaseCommand):
             hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
             and settings.PROJECTROLES_DISABLE_CATEGORIES
         ):
-            sys.exit(
+            logger.info(
                 'Project categories and nesting disabled, '
                 'remote sync disabled'
             )
+            return
 
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_TARGET:
-            sys.exit('Site not in TARGET mode, unable to sync')
+            logger.error('Site not in TARGET mode, unable to sync')
+            return
 
         try:
             site = RemoteSite.objects.get(mode=SITE_MODE_SOURCE)
 
         except RemoteSite.DoesNotExist:
-            sys.exit('No source site defined, unable to sync')
+            logger.error('No source site defined, unable to sync')
+            return
 
-        print(
+        logger.info(
             'Retrieving data from remote site "{}" ({})..'.format(
                 site.name, site.url
             )
@@ -58,8 +62,11 @@ class Command(BaseCommand):
             remote_data = json.loads(response.read())
 
         except Exception as ex:
-            sys.exit('Unable to retrieve data from remote site: {}'.format(ex))
+            logger.error(
+                'Unable to retrieve data from remote site: {}'.format(ex)
+            )
+            return
 
         remote_api = RemoteProjectAPI()
         remote_api.sync_source_data(site, remote_data)
-        print('Syncremote command OK')
+        logger.info('Syncremote command OK')

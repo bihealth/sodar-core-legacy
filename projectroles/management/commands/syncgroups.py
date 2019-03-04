@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -6,6 +8,7 @@ from projectroles.utils import set_user_group
 
 
 User = auth.get_user_model()
+logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -15,7 +18,7 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        print('Synchronizing user groups')
+        logger.info('Synchronizing user groups..')
 
         with transaction.atomic():
             for user in User.objects.all():
@@ -24,9 +27,11 @@ class Command(BaseCommand):
                 group_name = set_user_group(user)
 
                 if group_name:
-                    print('{} -> {}'.format(user.username, group_name))
+                    logger.debug(
+                        'Group set: {} -> {}'.format(user.username, group_name)
+                    )
 
-        print(
+        logger.info(
             'Synchronized groups for {} users'.format(
                 User.objects.all().count()
             )

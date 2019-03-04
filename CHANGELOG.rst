@@ -15,6 +15,7 @@ Added
 
 - **Projectroles**
     - User autocomplete widgets (#51)
+    - Logging in ``syncgroups`` and ``syncremote`` management commands
 
 Changed
 -------
@@ -22,6 +23,12 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.20 (#152)
     - Use user autocomplete in forms in place of standard widget (#51)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Potential crash in ``syncremote`` if run as Celery job (#160)
 
 
 v0.4.4 (2019-02-19)
