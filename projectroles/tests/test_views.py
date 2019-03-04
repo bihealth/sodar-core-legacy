@@ -767,6 +767,81 @@ class TestRoleAssignmentCreateView(
                 ),
             )
 
+    def test_redirect_to_invite(self):
+        """Test RedirectWidget redirects to the ProjectInvite creation view"""
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'text': 'test@example.com',
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse('projectroles:autocomplete_user_redirect'), values
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert correct redirect url
+        with self.login(self.user):
+            data = json.loads(response.content)
+            self.assertEqual(data['success'], True)
+            self.assertEqual(
+                data['redirect_url'],
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+    def test_create_option(self):
+        """Test if new options are being displayedby the RedirectWidget"""
+        values = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'q': 'test@example.com',
+        }
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:autocomplete_user_redirect'), values
+            )
+
+        new_option = {
+            'id': 'test@example.com',
+            'text': 'Send an invite to "test@example.com"',
+            'create_id': True,
+        }
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertIn(new_option, data['results'])
+
+    def test_dont_create_option(self):
+        """Test if new options are not being displayed by the RedirectWidget if
+        they are nor valid email addresses """
+        values = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+            'q': 'test@example',
+        }
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:autocomplete_user_redirect'), values
+            )
+
+        new_option = {
+            'id': 'test@example.com',
+            'text': 'Send an invite to "test@example"',
+            'create_id': True,
+        }
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertNotIn(new_option, data['results'])
+
 
 class TestRoleAssignmentUpdateView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
@@ -969,11 +1044,42 @@ class TestProjectInviteCreateView(
             [(self.role_owner.pk, self.role_owner.name)],
             form.fields['role'].choices,
         )
-        # Assert delegate role is not selectable
+
+    def test_render_from_roleassignment(self):
+        """Test rendering of ProjectInvite creation form with forwarded values
+        from the RoleAssignment Form"""
+
+        values = {
+            'forwarded-email': 'test@example.com',
+            'forwarded-role': self.role_contributor.pk,
+        }
+
+        with self.login(self.owner_as.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+
+        # Assert owner role is not selectable
         self.assertNotIn(
-            (self.role_delegate.pk, self.role_delegate.name),
+            [(self.role_owner.pk, self.role_owner.name)],
             form.fields['role'].choices,
         )
+
+        # Assert that forwarded mail address and role have been set in the form
+        self.assertEqual(
+            form.fields['role'].initial, str(self.role_contributor.pk)
+        )
+        self.assertEqual(form.fields['email'].initial, 'test@example.com')
 
     def test_create_invite(self):
         """Test ProjectInvite creation"""

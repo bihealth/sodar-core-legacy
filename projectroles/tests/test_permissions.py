@@ -1,5 +1,7 @@
 """Tests for permissions in the projectroles Django app"""
 
+import json
+
 from urllib.parse import urlencode
 
 from django.core.urlresolvers import reverse
@@ -482,6 +484,23 @@ class TestProjectViews(TestProjectPermissionBase):
             self.user_no_roles,
         ]
         self.assert_redirect(url, bad_users)
+
+    def test_role_create_autocomplete(self):
+        """Test access to user results of the UserAutocompleteView"""
+
+        values = {
+            'project': self.project.sodar_uuid,
+            'role': self.role_guest.pk,
+        }
+
+        # trying to access results without logging in
+        response = self.client.get(
+            reverse('projectroles:autocomplete_user'), values
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertFalse(data['results'])
 
     def test_role_update(self):
         """Test access to role updating"""

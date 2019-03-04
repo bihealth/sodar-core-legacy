@@ -18,9 +18,6 @@ urlpatterns = [
         name='update',
     ),
     url(
-        regex=r'^create$', view=views.ProjectCreateView.as_view(), name='create'
-    ),
-    url(
         regex=r'^create/(?P<project>[0-9a-f-]+)$',
         view=views.ProjectCreateView.as_view(),
         name='create',
@@ -125,6 +122,24 @@ urlpatterns = [
         regex=r'^star/(?P<project>[0-9a-f-]+)',
         view=views.ProjectStarringAPIView.as_view(),
         name='star',
+    ),
+    url(
+        r'^autocomplete/user$',
+        view=views.UserAutocompleteView.as_view(),
+        name='autocomplete_user',
+    ),
+    url(
+        r'^autocomplete/user/exclude$',
+        view=views.UserAutocompleteExcludeMembersView.as_view(),
+        name='autocomplete_user_exclude',
+    ),
+    url(
+        r'^autocomplete/user/redirect$',
+        view=views.UserAutocompleteRedirectView.as_view(create_field='user'),
+        name='autocomplete_user_redirect',
+    ),
+    url(
+        regex=r'^create$', view=views.ProjectCreateView.as_view(), name='create'
     ),
     # Taskflow API views
     url(
