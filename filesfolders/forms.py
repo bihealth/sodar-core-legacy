@@ -72,12 +72,10 @@ class FolderForm(FilesfoldersItemForm):
         # Creation
         if not self.instance.pk:
             # Don't allow changing folder if we are creating a new object
-            self.fields['folder'].choices = [
-                (self.folder.sodar_uuid, self.folder.name)
-                if self.folder
-                else (None, 'root')
-            ]
-            self.fields['folder'].widget.attrs['readonly'] = True
+            self.initial['folder'] = (
+                self.folder.sodar_uuid if self.folder else None
+            )
+            self.fields['folder'].widget = forms.HiddenInput()
 
         # Updating
         else:
@@ -233,12 +231,10 @@ class FileForm(FilesfoldersItemForm):
         # Creation
         if not self.instance.pk:
             # Don't allow changing folder if we are creating a new object
-            self.fields['folder'].choices = [
-                (self.folder.sodar_uuid, self.folder.name)
-                if self.folder
-                else (None, 'root')
-            ]
-            self.fields['folder'].widget.attrs['readonly'] = True
+            self.initial['folder'] = (
+                self.folder.sodar_uuid if self.folder else None
+            )
+            self.fields['folder'].widget = forms.HiddenInput()
 
         # Updating
         else:
@@ -440,12 +436,10 @@ class HyperLinkForm(FilesfoldersItemForm):
         # Creation
         if not self.instance.pk:
             # Don't allow changing folder if we are creating a new object
-            self.fields['folder'].choices = [
-                (self.folder.sodar_uuid, self.folder.name)
-                if self.folder
-                else (None, 'root')
-            ]
-            self.fields['folder'].widget.attrs['readonly'] = True
+            self.initial['folder'] = (
+                self.folder.sodar_uuid if self.folder else None
+            )
+            self.fields['folder'].widget = forms.HiddenInput()
 
         # Updating
         else:

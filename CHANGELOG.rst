@@ -23,6 +23,8 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.20 (#152)
     - Use user autocomplete in forms in place of standard widget (#51)
+- **Filesfolders**
+    - Hide parent folder widgets in item creation forms (#159)
 
 Fixed
 -----
