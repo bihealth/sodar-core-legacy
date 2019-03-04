@@ -10,11 +10,18 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - User autocomplete widgets (#51)
+
 Changed
 -------
 
 - **General**
     - Upgrade minimum Django version to 1.11.20 (#152)
+    - Use user autocomplete in forms in place of standard widget (#51)
 
 
 v0.4.4 (2019-02-19)

@@ -600,6 +600,37 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
             self.selenium.find_element_by_id('sodar-email-body')
         )
 
+    def test_widget_user_options(self):
+        """Test visibility of user options given by the autocomplete widget"""
+        url = reverse(
+            'projectroles:role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.login_and_redirect(self.as_owner.user, url)
+
+        widget = self.selenium.find_element_by_class_name(
+            'select2-container--default'
+        )
+        widget.click()
+
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located((By.ID, 'select2-id_user-results'))
+        )
+
+        # assert that options are displayed
+        self.assertIsNotNone(
+            self.selenium.find_element_by_class_name('select2-results__option')
+        )
+
+        self.assertEqual(
+            len(
+                self.selenium.find_elements_by_class_name(
+                    'select2-results__message'
+                )
+            ),
+            0,
+        )
+
 
 class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
     """Tests for the project invite list page UI functionalities"""

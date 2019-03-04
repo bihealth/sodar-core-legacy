@@ -63,3 +63,7 @@ django-db-file-storage==0.5.3
 
 # Backround Jobs requirements
 celery<4.2  # pyup: <4.2  # blocker: https://github.com/celery/celery/issues/4878
+
+# Django autocomplete light (DAL)
+django-autocomplete-light==3.2.10  #higher versions are not compatible with django 1.11
+
