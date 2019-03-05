@@ -2257,8 +2257,12 @@ class UserAutocompleteView(autocomplete.Select2QuerySetView):
         return selectable
 
     def get_result_label(self, user):
-        """Display options with name, username and email-address"""
-        display = '{} ({}), {}'.format(user.name, user.username, user.email)
+        """Display options with name, username and email address"""
+        display = '{}{}{}'.format(
+            user.name if user.name else '',
+            ' ({})'.format(user.username) if user.name else user.username,
+            ' <{}>'.format(user.email) if user.email else '',
+        )
         return display
 
     def get_result_value(self, user):
