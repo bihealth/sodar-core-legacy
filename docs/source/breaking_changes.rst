@@ -21,6 +21,21 @@ System Prerequisites
 
 The minimum version requirement for Django has been bumped to 1.11.20.
 
+User Autocomplete Widget Support
+--------------------------------
+
+Due to the use of autocomplete widgets for users, the following apps must be
+added into ``THIRD_PARTY_APPS`` in ``config/settings/base.py``, regardless of
+whether you intend to use them in your own apps:
+
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'dal',
+        'dal_select2',
+    ]
+
 
 v0.4.4 (2019-02-19)
 ===================
