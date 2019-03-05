@@ -187,13 +187,19 @@ Adding Members
 
 There are two ways to add new members to a project:
 
-- **Add Member** is used to add member roles to users already using the system.
+- **Add Member** is used to add member roles to system users.
 - **Invite Member** is used to send email invites to users not yet registered
   in the system.
 
 Addition or modification of users sends an email notification to the user in
 question if email sending is enabled on your Django server. The emails can be
 previewed in corresponding forms.
+
+.. hint::
+
+    As of SODAR Core v0.4.5, it is also possible to create an invite in the "add
+    member" form. Inviting is enabled when inputting an email address not found
+    among the system users.
 
 Modifying Members
 -----------------
