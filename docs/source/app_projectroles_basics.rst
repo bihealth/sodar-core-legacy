@@ -34,7 +34,7 @@ The default setup of role types used in SODAR sites:
 - **project delegate**
     - Full read/write access to project data
     - Can modify roles except for owner and delegate
-    - One per project (to be increased in a further update)
+    - One per project (as default, the limit can be increased in the settings)
     - Assigned by owner
 - **project contributor**
     - Can read and write project data

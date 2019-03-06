@@ -967,7 +967,7 @@ class ProjectRoleView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['owner'] = context['project'].get_owner()
-        context['delegate'] = context['project'].get_delegate()
+        context['delegates'] = context['project'].get_delegates()
         context['members'] = context['project'].get_members()
         return context
 
