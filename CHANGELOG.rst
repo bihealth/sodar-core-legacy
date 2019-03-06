@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.4.5 (2019-03-06)
+===================
 
 Added
 -----
@@ -16,6 +16,7 @@ Added
 - **Projectroles**
     - User autocomplete widgets (#51)
     - Logging in ``syncgroups`` and ``syncremote`` management commands
+    - ``PROJECTROLES_DELEGATE_LIMIT`` setting (#21)
 
 Changed
 -------
@@ -25,6 +26,8 @@ Changed
     - Use user autocomplete in forms in place of standard widget (#51)
 - **Filesfolders**
     - Hide parent folder widgets in item creation forms (#159)
+- **Projectroles**
+    - Enable allowing multiple delegates per project (#21)
 
 Fixed
 -----
@@ -367,8 +370,8 @@ Changed
 - **Projectroles**
     - Rename abstract ``OmicsUser`` model into ``SODARUser`` (sodar#166)
     - Rename ``OMICS_CONSTANTS`` into ``SODAR_CONSTANTS`` (sodar#166)
-    - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (omics_data_mgmt(#166)
-    - Rename ``omics_url`` in sodar_taskflow tests to ``sodar_url`` (see omics_taskflow#36)
+    - Rename the ``omics_constant()`` template tag into ``sodar_constant()`` (sodar#166)
+    - Rename ``omics_url`` in sodar_taskflow tests to ``sodar_url`` (see sodar_taskflow#36)
     - Rename ``shepherd-theme-omics.css`` to ``shepherd-theme-sodar.css`` (sodar#166)
 
 

@@ -470,6 +470,8 @@ PROJECTROLES_ENABLE_SEARCH = True
 # PROJECTROLES_SEARCH_PAGINATION = 5
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
+# Set limit for delegate roles per project (if 0, no limit is applied)
+PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15

@@ -47,7 +47,11 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-
+DELEGATE_LIMIT = (
+    settings.PROJECTROLES_DELEGATE_LIMIT
+    if hasattr(settings, 'PROJECTROLES_DELEGATE_LIMIT')
+    else 1
+)
 
 User = auth.get_user_model()
 
@@ -408,17 +412,17 @@ class RoleAssignmentForm(forms.ModelForm):
                     'role', 'Insufficient permissions for altering delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate
-            delegate = self.cleaned_data.get('project').get_delegate()
+            # Ensure user can't attempt to add another delegate if limit is
+            # reached
+            delegates = self.project.get_delegates()
 
-            if delegate:
-                self.add_error(
-                    'role',
-                    'User {} already assigned as delegate, only one '
-                    'delegate allowed per project'.format(
-                        delegate.user.username
-                    ),
-                )
+            if DELEGATE_LIMIT != 0:
+                if len(delegates) >= DELEGATE_LIMIT:
+                    self.add_error(
+                        'role',
+                        'The limit ({}) of delegates for this project has '
+                        'already been reached.'.format(DELEGATE_LIMIT),
+                    )
 
         return self.cleaned_data
 
@@ -516,17 +520,17 @@ class ProjectInviteForm(forms.ModelForm):
                     'role', 'Insufficient permissions for inviting delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate
-            delegate = self.project.get_delegate()
+            # Ensure user can't attempt to add another delegate if limit is
+            # reached
+            delegates = self.project.get_delegates()
 
-            if delegate:
-                self.add_error(
-                    'role',
-                    'User {} already assigned as delegate, only one '
-                    'delegate allowed per project'.format(
-                        delegate.user.username
-                    ),
-                )
+            if DELEGATE_LIMIT != 0:
+                if len(delegates) >= DELEGATE_LIMIT:
+                    self.add_error(
+                        'role',
+                        'The limit ({}) of delegates for this project has '
+                        'already been reached.'.format(DELEGATE_LIMIT),
+                    )
 
         return self.cleaned_data
 

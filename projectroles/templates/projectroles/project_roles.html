@@ -66,7 +66,7 @@
            <td><strong>project owner <i class="fa fa-star" aria-hidden="true"></i></strong></td>
            <td></td>
          </tr>
-         {% if delegate %}
+         {% for delegate in delegates %}
            <tr>
              <td>{{ delegate.user.username }}</td>
              <td>{{ delegate.user.name }}</td>
@@ -78,7 +78,7 @@
                {% endif %}
              </td>
            </tr>
-         {% endif %}
+         {% endfor %}
          {% for member in members %}
            <tr>
              <td>{{ member.user.username }}</td>

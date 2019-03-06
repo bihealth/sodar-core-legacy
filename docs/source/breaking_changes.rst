@@ -13,8 +13,8 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-v0.4.5 (WIP)
-============
+v0.4.5 (2019-03-06)
+===================
 
 System Prerequisites
 --------------------
@@ -35,6 +35,13 @@ whether you intend to use them in your own apps:
         'dal',
         'dal_select2',
     ]
+
+Project.get_delegate() Helper Renamed
+-------------------------------------
+
+As the limit for delegates per project is now arbitrary, the
+``Project.get_delegate()`` helper function has been replaced by
+``Project.get_delegates()``. The new function returns a ``QuerySet``.
 
 Bootstrap 4 Crispy Forms Overrides Removed
 ------------------------------------------
