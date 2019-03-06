@@ -494,7 +494,6 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_validate_one_delegate(self):
         """Test delegate validation: can't add delegate for project if limit (1)
         of delegates is reached"""
-        print(settings.PROJECTROLES_DELEGATE_LIMIT)
         self._make_assignment(
             self.project_sub, self.user_bob, self.role_delegate
         )
