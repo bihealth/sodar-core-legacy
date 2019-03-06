@@ -17,6 +17,16 @@
   {% endif %}
 {% endblock title %}
 
+{% block css %}
+  {{ block.super }}
+  {# Workaround for django-db-file-storage Bootstrap4 issue (#164) #}
+  <style type="text/css">
+    div#div_id_file div p.invalid-feedback {
+      display: block;
+    }
+  </style>
+{% endblock css %}
+
 {% block projectroles_extend %}
 
 <div class="container-fluid sodar-subtitle-container">

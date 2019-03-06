@@ -1,5 +1,7 @@
 """Tests for permissions in the projectroles Django app"""
 
+import json
+
 from urllib.parse import urlencode
 
 from django.core.urlresolvers import reverse
@@ -737,6 +739,36 @@ class TestProjectViews(TestProjectPermissionBase):
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
+
+    def test_user_autocomplete_api(self):
+        """Test UserAutocompleteAPIView access"""
+        good_users = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
+
+        values = {'project': self.project.sodar_uuid}
+
+        for user in good_users:
+            with self.login(user):
+                response = self.client.get(
+                    reverse('projectroles:autocomplete_user'), values
+                )
+                self.assertEqual(response.status_code, 200)
+                data = json.loads(response.content)
+                self.assertNotEqual(len(data['results']), 0)
+
+        for user in bad_users:
+            response = self.client.get(
+                reverse('projectroles:autocomplete_user'), values
+            )
+            self.assertEqual(response.status_code, 200)
+            data = json.loads(response.content)
+            self.assertFalse(data['results'])
 
 
 class TestTargetProjectViews(

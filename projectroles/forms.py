@@ -4,6 +4,7 @@ from django.contrib import auth
 from django.utils import timezone
 
 from pagedown.widgets import PagedownWidget
+from dal import autocomplete
 
 from .models import (
     Project,
@@ -14,6 +15,7 @@ from .models import (
     SODAR_CONSTANTS,
     PROJECT_SETTING_VAL_MAXLENGTH,
 )
+
 from .plugins import ProjectAppPluginPoint
 from .utils import get_display_name, get_user_display_name, build_secret
 from projectroles.project_settings import (
@@ -45,9 +47,34 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-
+DELEGATE_LIMIT = (
+    settings.PROJECTROLES_DELEGATE_LIMIT
+    if hasattr(settings, 'PROJECTROLES_DELEGATE_LIMIT')
+    else 1
+)
 
 User = auth.get_user_model()
+
+
+# General widgets --------------------------------------------------------------
+
+
+class UserAutocompleteWidget(autocomplete.ModelSelect2):
+    """Custom Select widget for user field autocompletion that uses the UUID
+    instead of the pk."""
+
+    # override function to use sodar_uuid instead of pk
+    def filter_choices_to_render(self, selected_choices):
+        """Filter out un-selected choices if choices is a QuerySet."""
+        self.choices.queryset = self.choices.queryset.filter(
+            sodar_uuid__in=[c for c in selected_choices if c]
+        )
+
+
+class RedirectWidget(UserAutocompleteWidget):
+    """Custom Select widget for QuerySet choices and Select2."""
+
+    autocomplete_function = 'autocomplete_redirect'
 
 
 # Project form -----------------------------------------------------------------
@@ -62,6 +89,18 @@ class ProjectForm(forms.ModelForm):
         to_field_name='sodar_uuid',
         label='Owner',
         help_text='Owner',
+        widget=UserAutocompleteWidget(
+            url='projectroles:autocomplete_user_exclude', forward=['project']
+        ),
+    )
+
+    # Hidden project field for user autocomplete
+    project = forms.ModelChoiceField(
+        Project.objects.all(),
+        required=False,
+        to_field_name='sodar_uuid',
+        initial=None,
+        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -164,26 +203,13 @@ class ProjectForm(forms.ModelForm):
             # Hide project type selection
             self.fields['type'].widget = forms.HiddenInput()
 
+            # Set hidden project field for autocomplete
+            self.initial['project'] = self.instance
+
             # Only owner/superuser has rights to modify owner
             if current_user.has_perm(
                 'projectroles.update_project_owner', self.instance
             ):
-                # Limit owner choices to users without non-owner role in project
-                project_users = (
-                    RoleAssignment.objects.filter(project=self.instance.pk)
-                    .exclude(role__name=PROJECT_ROLE_OWNER)
-                    .values_list('user')
-                    .distinct()
-                )
-
-                # Get owner choices
-                self.fields['owner'].choices = [
-                    (user.sodar_uuid, get_user_display_name(user, True))
-                    for user in get_selectable_users(current_user)
-                    .exclude(pk__in=project_users)
-                    .order_by('name')
-                ]
-
                 # Set current owner as initial value
                 owner = self.instance.get_owner().user
                 self.initial['owner'] = owner.sodar_uuid
@@ -201,13 +227,8 @@ class ProjectForm(forms.ModelForm):
 
         # Project creation
         else:
-            # Common stuff
-            self.fields['owner'].choices = [
-                (user.sodar_uuid, get_user_display_name(user, True))
-                for user in get_selectable_users(current_user).order_by(
-                    'username'
-                )
-            ]
+            # Set hidden project field for autocomplete
+            self.initial['project'] = None
 
             # Creating a subproject
             if parent_project:
@@ -220,13 +241,6 @@ class ProjectForm(forms.ModelForm):
 
             # Creating a top level project
             else:
-                self.fields['owner'].choices = [
-                    (user.sodar_uuid, get_user_display_name(user, True))
-                    for user in get_selectable_users(current_user).order_by(
-                        'username'
-                    )
-                ]
-
                 # Force project type
                 if (
                     hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
@@ -303,6 +317,12 @@ class RoleAssignmentForm(forms.ModelForm):
     class Meta:
         model = RoleAssignment
         fields = ['project', 'user', 'role']
+        widgets = {
+            'user': RedirectWidget(
+                url='projectroles:autocomplete_user_redirect',
+                forward=['project', 'role'],
+            )
+        }
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -353,20 +373,6 @@ class RoleAssignmentForm(forms.ModelForm):
             self.initial['project'] = self.project.sodar_uuid
             self.fields['project'].widget = forms.HiddenInput()
 
-            # Limit user choices to users without roles in current project
-            project_users = (
-                RoleAssignment.objects.filter(project=self.project.pk)
-                .values_list('user')
-                .distinct()
-            )
-
-            self.fields['user'].choices = [
-                (user.sodar_uuid, get_user_display_name(user, True))
-                for user in get_selectable_users(current_user)
-                .exclude(pk__in=project_users)
-                .order_by('name')
-            ]
-
             self.fields['role'].initial = Role.objects.get(
                 name=PROJECT_ROLE_GUEST
             ).pk
@@ -406,17 +412,17 @@ class RoleAssignmentForm(forms.ModelForm):
                     'role', 'Insufficient permissions for altering delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate
-            delegate = self.cleaned_data.get('project').get_delegate()
+            # Ensure user can't attempt to add another delegate if limit is
+            # reached
+            delegates = self.project.get_delegates()
 
-            if delegate:
-                self.add_error(
-                    'role',
-                    'User {} already assigned as delegate, only one '
-                    'delegate allowed per project'.format(
-                        delegate.user.username
-                    ),
-                )
+            if DELEGATE_LIMIT != 0:
+                if len(delegates) >= DELEGATE_LIMIT:
+                    self.add_error(
+                        'role',
+                        'The limit ({}) of delegates for this project has '
+                        'already been reached.'.format(DELEGATE_LIMIT),
+                    )
 
         return self.cleaned_data
 
@@ -431,7 +437,15 @@ class ProjectInviteForm(forms.ModelForm):
         model = ProjectInvite
         fields = ['email', 'role', 'message']
 
-    def __init__(self, project=None, current_user=None, *args, **kwargs):
+    def __init__(
+        self,
+        project=None,
+        current_user=None,
+        mail=None,
+        role=None,
+        *args,
+        **kwargs
+    ):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
 
@@ -439,17 +453,24 @@ class ProjectInviteForm(forms.ModelForm):
         if current_user:
             self.current_user = current_user
 
+        # in case it has been redirected from the RoleAssignment form
+        if mail:
+            self.fields['email'].initial = mail
+
         # Get the project for which invite is being sent
         self.project = Project.objects.filter(sodar_uuid=project).first()
 
         # Limit Role choices according to user permissions
-        # NOTE: Inviting delegate here not allowed
         self.fields['role'].choices = get_role_choices(
-            self.project, self.current_user, allow_delegate=False
+            self.project, self.current_user, allow_delegate=True
         )
-        self.fields['role'].initial = Role.objects.get(
-            name=PROJECT_ROLE_GUEST
-        ).pk
+
+        if role:
+            self.fields['role'].initial = role
+        else:
+            self.fields['role'].initial = Role.objects.get(
+                name=PROJECT_ROLE_GUEST
+            ).pk
 
         # Limit textarea height
         self.fields['message'].widget.attrs['rows'] = 4
@@ -487,6 +508,29 @@ class ProjectInviteForm(forms.ModelForm):
 
         except ProjectInvite.DoesNotExist:
             pass
+
+        # Delegate checks
+        role = self.cleaned_data.get('role')
+        if role.name == PROJECT_ROLE_DELEGATE:
+            # Ensure current user has permission to invite delegate
+            if not self.current_user.has_perm(
+                'projectroles.update_project_delegate', obj=self.project
+            ):
+                self.add_error(
+                    'role', 'Insufficient permissions for inviting delegate'
+                )
+
+            # Ensure user can't attempt to add another delegate if limit is
+            # reached
+            delegates = self.project.get_delegates()
+
+            if DELEGATE_LIMIT != 0:
+                if len(delegates) >= DELEGATE_LIMIT:
+                    self.add_error(
+                        'role',
+                        'The limit ({}) of delegates for this project has '
+                        'already been reached.'.format(DELEGATE_LIMIT),
+                    )
 
         return self.cleaned_data
 

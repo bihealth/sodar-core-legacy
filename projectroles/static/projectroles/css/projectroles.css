@@ -365,6 +365,23 @@ dl dd {
 /* Buttons, links and forms ------------------------------------------------- */
 
 
+/* HACK for autocomplete widget to look similar to the rest of the form */
+
+.select2-container--default
+.select2-selection--single{
+  width: 100%;
+  border: 1px solid #ced4da;
+  height: calc(2.25rem + 2px);
+  padding: .3rem .5rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  background-color: #fff;
+  background-clip: padding-box;
+  border-radius: .25rem;
+}
+
+
 /* HACK for Bootstrap v4 button group alignment with dropdown enabled */
 .btn {
   height: 2.35em;
@@ -531,6 +548,26 @@ div.wmd-panel {
   margin-left: 0;
   margin-right: 0;
   width: 100%;
+}
+
+/* Select2 autocomplete field tweaks */
+span.select2-container {
+  width: 100% !important;
+}
+
+span.select2-selection {
+  padding-left: 0px !important;
+  height: 38px !important;
+  border: 1px solid #ced4da !important;
+}
+
+span.select2-selection__arrow {
+  height: 38px !important;
+}
+
+span.select2-selection__rendered {
+  padding-left: 12px !important;
+  color: #495057 !important;
 }
 
 

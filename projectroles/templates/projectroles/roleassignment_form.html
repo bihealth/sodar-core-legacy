@@ -2,6 +2,7 @@
 
 {% load crispy_forms_filters %}
 {% load projectroles_tags %}
+{% load static %}
 
 {% block title %}
   {% if object.pk %}
@@ -78,4 +79,15 @@
 
   </script>
 
+  <!-- DAL for autocomplete widgets -->
+  <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
+  <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
+  <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+  <script type="text/javascript" src="{% static 'projectroles/js/autocomplete_redirect.js' %}"></script>
 {% endblock javascript %}
+
+{% block css %}
+  {{ block.super }}
+  <!-- Select2 theme -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+{% endblock css %}

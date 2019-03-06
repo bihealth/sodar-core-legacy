@@ -13,6 +13,78 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.4.5 (2019-03-06)
+===================
+
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.20.
+
+User Autocomplete Widget Support
+--------------------------------
+
+Due to the use of autocomplete widgets for users, the following apps must be
+added into ``THIRD_PARTY_APPS`` in ``config/settings/base.py``, regardless of
+whether you intend to use them in your own apps:
+
+.. code-block:: python
+
+    THIRD_PARTY_APPS = [
+        # ...
+        'dal',
+        'dal_select2',
+    ]
+
+Project.get_delegate() Helper Renamed
+-------------------------------------
+
+As the limit for delegates per project is now arbitrary, the
+``Project.get_delegate()`` helper function has been replaced by
+``Project.get_delegates()``. The new function returns a ``QuerySet``.
+
+Bootstrap 4 Crispy Forms Overrides Removed
+------------------------------------------
+
+Deprecated site-wide Bootstrap 4 theme overrides for ``django-crispy-forms``
+were removed from the example site and are no longer supported. These
+workarounds were located in ``{SITE_NAME}/templates/bootstrap4/``. Unless
+specifically required forms on your site, it is recommended to remove the files
+from your project.
+
+.. note::
+
+    If you choose to keep the files or similar workarounds in your site, you
+    are responsible of maintaining them and ensuring SODAR compatibility. Such
+    site-wide template overrides are outside of the scope for SODAR Core
+    components. Leaving the existing files in without maintenance may cause
+    undesireable effects in the future.
+
+Database File Upload Widget
+---------------------------
+
+Within SODAR Core apps, the only known issue caused by removal of the
+aforementioned Bootstrap 4 form overrides in the file upload widget of the
+``django-db-file-upload`` package. If you are using the file upload package in
+your own SODAR apps and have removed the site-wide Crispy overrides, you can fix
+this particular widget by adding the following snippet into your form template.
+Make sure to replace ``{FIELD_NAME}`` with the name of your form field.
+
+.. code-block:: django
+
+    {% block css %}
+      {{ block.super }}
+      {# Workaround for django-db-file-storage Bootstrap4 issue (#164) #}
+      <style type="text/css">
+        div#div_id_{FIELD_NAME} div p.invalid-feedback {
+        display: block;
+      }
+      </style>
+    {% endblock css %}
+
+Alternatively, you can create a common override in your project-wide CSS file.
+
+
 v0.4.4 (2019-02-19)
 ===================
 

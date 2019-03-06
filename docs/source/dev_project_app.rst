@@ -444,13 +444,106 @@ In views and other Python code, the similar function can be accessed through
     most straightforward to use "CATEGORY" and "PROJECT".
 
 
+Forms
+=====
+
+This section contains guidelines for implementing forms.
+
+Custom User Selection Widget
+----------------------------
+
+A widget for autocomplete user selection in forms is available and can be build
+into any form.
+
+First, the ``UserAutocompleteWidget`` needs to be imported from
+``projectroles/forms.py``.
+
+.. code-block:: python
+
+    from projectroles.forms import UserAutocompleteWidget
+
+In your form's ``Meta`` class, assign the ``UserAutocompleteWidget`` as the
+widget of the user field:
+
+.. code-block:: python
+
+    class YourForm(forms.ModelForm):
+
+        class Meta:
+            model = YourModel
+            fields ['user'] # ...
+            widgets = {
+                'user': UserAutocompleteWidget(
+                url='projectroles:autocomplete_user',
+                forward=['project'],
+            )
+        }
+
+Some parameters have to be specified:
+
+- ``url``: The URL of the ``UserAutocompleteAPIView`` (or another custom API
+  view)
+- ``forward``: Optional list with fields whose values will be forwarded to the
+  view
+
+If you wish to only display users who are members of a certain project, you need
+to include a field with the project's UUID in the form. This form can be hidden.
+This field's value needs to be forwarded to the autocomplete view (like in the
+code example above).
+
+The alternative ``UserAutocompleteExcludeMembersAPIView`` view provides the
+opposite functionality: only users that are *not* project members are shown.
+That can be useful, for example, in a form to invite new members. To have the
+widget exclude project members, just change the URL parameter to the
+``UserAutocompleteExcludeMembersAPIView``'s URL
+(``projectroles:autocomplete_user_exclude``).
+In that same way, you can provide your custom view's URL to the widget to
+change its behaviour.
+
+Also, as is required by SODAR, the user and the project fields need to point to
+SODAR UUIDs:
+
+.. code-block:: python
+
+    self.fields['project'].to_field_name = 'sodar_uuid'
+    self.fields['user'].to_field_name = 'sodar_uuid'
+
+The following ``django-autocomplete-light`` and ``select2`` stylesheets and
+javascript files have to be added to the html template that includes the form.
+
+.. code-block:: django
+
+    {% block javascript %}
+      {{ block.super }}
+      <!-- DAL for autocomplete widgets -->
+      <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
+    {% endblock javascript %}
+
+    {% block css %}
+      {{ block.super }}
+      <!-- Select2 theme -->
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    {% endblock css %}
+
+When using the ``RedirectWidget`` or any other widget with custom javascript,
+include the corresponding js file instead of ``autocomplete_light/select2.js``.
+
+If you create your own custom user selection widget on the basis of the
+``UserAutocompleteWidget`` take a look at the ``RedirectWidget`` as an example,
+or check out the ``django-autocomplete-light`` documentation for more
+information on how to customize your autocomplete-widget.
+
+
 Specific Views and Templates
 ============================
 
 A few specific views/templates are expected to be implemented.
 
 App Entry Point
-----------------
+---------------
 
 As described in the Plugins chapter, an app entry point view is to be defined
 in the ``ProjectAppPlugin``. This is **mandatory**.

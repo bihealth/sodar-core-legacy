@@ -490,9 +490,10 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
                 self.category_top, self.user_bob, self.role_owner
             )
 
-    def test_validate_delegate(self):
-        """Test delegate validation: can't add delegate for project if one
-        already exists"""
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)
+    def test_validate_one_delegate(self):
+        """Test delegate validation: can't add delegate for project if limit (1)
+        of delegates is reached"""
         self._make_assignment(
             self.project_sub, self.user_bob, self.role_delegate
         )
@@ -501,6 +502,21 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
             self._make_assignment(
                 self.project_sub, self.user_carol, self.role_delegate
             )
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=0)
+    def test_validate_several_delegates(self):
+        """Test delegate validation: can add delegate for project if no limit
+        of delegates is set"""
+        self._make_assignment(
+            self.project_sub, self.user_bob, self.role_delegate
+        )
+
+        try:
+            self._make_assignment(
+                self.project_sub, self.user_carol, self.role_delegate
+            )
+        except ValidationError as e:
+            self.fail(e)
 
     def test_validate_category(self):
         """Test category validation: can't add roles other than owner for
@@ -527,12 +543,40 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         """Test get_project_owner() results"""
         self.assertEqual(self.category_top.get_owner().user, self.user_alice)
 
-    def test_get_project_delegate(self):
-        """Test get_project_delegate() results"""
-        self._make_assignment(
+    def test_get_project_delegates(self):
+        """Test get_project_delegates() results"""
+        assignment_d0 = self._make_assignment(
             self.project_top, self.user_carol, self.role_delegate
         )
-        self.assertEqual(self.project_top.get_delegate().user, self.user_carol)
+
+        expected = [
+            {
+                'id': assignment_d0.pk,
+                'project': self.project_top.pk,
+                'user': self.user_carol.pk,
+                'role': self.role_delegate.pk,
+                'sodar_uuid': assignment_d0.sodar_uuid,
+            }
+        ]
+
+        if settings.PROJECTROLES_DELEGATE_LIMIT != 1:
+            assignment_d1 = self._make_assignment(
+                self.project_top, self.user_dan, self.role_delegate
+            )
+            expected.append(
+                {
+                    'id': assignment_d1.pk,
+                    'project': self.project_top.pk,
+                    'user': self.user_dan.pk,
+                    'role': self.role_delegate.pk,
+                    'sodar_uuid': assignment_d1.sodar_uuid,
+                }
+            )
+
+        delegates = self.project_top.get_delegates()
+
+        for i in range(0, delegates.count()):
+            self.assertEqual(model_to_dict(delegates[i]), expected[i])
 
     def test_get_project_members(self):
         """Test get_project_members() results"""
@@ -940,12 +984,17 @@ class TestRemoteProject(
 
         # Init role
         self.role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        self.role_delegate = Role.objects.get_or_create(
+            name=PROJECT_ROLE_DELEGATE
+        )[0]
 
         # Init user & role
         self.user = self.make_user('owner')
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
+        self.user_alice = self.make_user('alice')
+        self.user_bob = self.make_user('bob')
 
         # Init remote site
         self.site = self._make_site(
@@ -1011,3 +1060,20 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.get_source_site(), self.site)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)
+    def test_validate_remote_delegates(self):
+        """Test delegate validation: can add delegate for remote project even if
+         there is a limit"""
+        self.site.mode = SITE_MODE_SOURCE
+        self.site.save()
+
+        self._make_assignment(self.project, self.user_bob, self.role_delegate)
+
+        try:
+            self._make_assignment(
+                self.project, self.user_alice, self.role_delegate
+            )
+        except ValidationError as e:
+            self.fail(e)

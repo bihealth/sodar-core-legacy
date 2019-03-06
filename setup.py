@@ -57,8 +57,8 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     description="""SODAR Core framework and project management apps""",
     long_description=README + '\n\n' + CHANGELOG,
-    author='Mikko Nieminen, Manuel Holtgrewe',
-    author_email='mikko.nieminen@bihealth.de, manuel.holtgrewe@bihealth.de',
+    author='Berlin Institute of Health, Core Unit Bioinformatics',
+    author_email='cubi@bihealth.de',
     url='',
     packages=[
         'projectroles',

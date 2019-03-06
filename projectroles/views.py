@@ -3,13 +3,22 @@ import re
 import requests
 import urllib.request
 
+from dal import autocomplete
+
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.urlresolvers import resolve
+from django.core.validators import EmailValidator
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.db.models import Q
+from django.http import (
+    HttpResponseRedirect,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -958,7 +967,7 @@ class ProjectRoleView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['owner'] = context['project'].get_owner()
-        context['delegate'] = context['project'].get_delegate()
+        context['delegates'] = context['project'].get_delegates()
         context['members'] = context['project'].get_members()
         return context
 
@@ -1364,10 +1373,17 @@ class ProjectInviteCreateView(
         return context
 
     def get_form_kwargs(self):
-        """Pass current user to form"""
+        """Pass current user (and possibly mail address and role pk) to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
+
+        mail = self.request.GET.get('forwarded-email', None)
+        role = self.request.GET.get('forwarded-role', None)
+
+        kwargs.update({'mail': mail})
+        kwargs.update({'role': role})
+
         return kwargs
 
     def form_valid(self, form):
@@ -2191,6 +2207,137 @@ class ProjectStarringAPIView(
             )
 
         return Response(0 if tag_state else 1, status=200)
+
+
+class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
+    """ User autocompletion widget view"""
+
+    def get_queryset(self):
+        """Offer the appropriate user choices and allow autocompletion"""
+        if not self.request.user.is_authenticated():
+            return self.get_no_results()
+
+        current_user = self.request.user
+        project_uuid = self.forwarded.get('project', None)
+
+        # If project UUID is given, only show users that are in the project
+        if project_uuid not in ['', None]:
+            project = Project.objects.filter(sodar_uuid=project_uuid).first()
+
+            # If user has no permission for the project, return None
+            if not self.request.user.has_perm(
+                'projectroles.view_project', project
+            ):
+                return self.get_no_results()
+
+            project_users = (
+                RoleAssignment.objects.filter(project=project)
+                .values_list('user')
+                .distinct()
+            )
+            # Limit selectable choices
+            qs = self.get_selectable_users(project_users)
+
+        # If no project UUID is given all users are selectable
+        else:
+            qs = User.objects.all()
+
+        # Exclude the users in the system group
+        if not current_user.is_superuser:
+            qs = qs.exclude(groups__name='system')
+
+        if self.q:
+            qs = qs.filter(
+                Q(username__icontains=self.q)
+                | Q(first_name__icontains=self.q)
+                | Q(last_name__icontains=self.q)
+                | Q(name__icontains=self.q)
+                | Q(email__icontains=self.q)
+            )
+
+        return qs.order_by('name')  # Fix issue #165
+
+    def get_selectable_users(self, project_users):
+        """Return a queryset only containing users that are project members"""
+        return User.objects.filter(pk__in=project_users)
+
+    def get_result_label(self, user):
+        """Display options with name, username and email address"""
+        display = '{}{}{}'.format(
+            user.name if user.name else '',
+            ' ({})'.format(user.username) if user.name else user.username,
+            ' <{}>'.format(user.email) if user.email else '',
+        )
+        return display
+
+    def get_result_value(self, user):
+        """Use the UUID instead of the pk"""
+        return str(user.sodar_uuid)
+
+    def get_no_results(self):
+        """Return no search results"""
+        return User.objects.none().order_by('name')  # Fix issue #165
+
+
+class UserAutocompleteExcludeMembersAPIView(UserAutocompleteAPIView):
+    """User autocomplete widget excluding project members view"""
+
+    def get_selectable_users(self, project_users):
+        """Limit user choices to users without roles in current project"""
+        return User.objects.exclude(pk__in=project_users)
+
+
+class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
+    """ RedirectWidget view (user autocompletion) redirecting to the 'create
+     invites' page"""
+
+    def get_create_option(self, context, q):
+        """Form the correct email invite option to append to results."""
+        create_option = []
+        validator = EmailValidator()
+        display_create_option = False
+        if self.create_field and q:
+            page_obj = context.get('page_obj', None)
+            if page_obj is None or page_obj.number == 1:
+
+                # Don't offer to send an invite if the entered text is not an
+                # email address
+                try:
+                    validator(q)
+                    display_create_option = True
+                except ValidationError:
+                    display_create_option = False
+
+                # Don't offer to send an invite if a
+                # case-insensitive) identical one already exists
+                existing_options = (
+                    self.get_result_label(result).lower()
+                    for result in context['object_list']
+                )
+                if q.lower() in existing_options:
+                    display_create_option = False
+
+        if display_create_option and self.has_add_permission(self.request):
+            create_option = [
+                {
+                    'id': q,
+                    'text': ('Send an invite to "%(new_value)s"')
+                    % {'new_value': q},
+                    'create_id': True,
+                }
+            ]
+        return create_option
+
+    def post(self, request):
+        """Send the invite form url to which the forwarded values will be
+        send"""
+        project_uuid = self.request.POST.get('project', None)
+        project = Project.objects.filter(sodar_uuid=project_uuid).first()
+        # create JSON with address to redirect to
+        redirect_url = reverse(
+            'projectroles:invite_create', kwargs={'project': project.sodar_uuid}
+        )
+        return JsonResponse({'success': True, 'redirect_url': redirect_url})
 
 
 # Taskflow API Views -----------------------------------------------------------

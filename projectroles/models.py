@@ -217,19 +217,15 @@ class Project(models.Model):
         except RoleAssignment.DoesNotExist:
             return None
 
-    def get_delegate(self):
-        """Return RoleAssignment for delegate or None if not set"""
-        try:
-            return self.roles.get(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
-            )
-
-        except RoleAssignment.DoesNotExist:
-            return None
+    def get_delegates(self):
+        """Return RoleAssignments for delegates"""
+        return self.roles.filter(
+            role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+        )
 
     def get_members(self):
         """Return RoleAssignments for members of project excluding owner and
-        delegate"""
+        delegates"""
         return self.roles.filter(
             ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
             & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
@@ -339,8 +335,8 @@ class RoleAssignmentManager(models.Manager):
 class RoleAssignment(models.Model):
     """
     Assignment of an user to a role in a project. One role per user is
-    allowed for each project. Roles of project owner and project delegate are
-    limited to one assignment per project.
+    allowed for each project. Roles of project owner and project delegate
+    assignements might be limited (to PROJECTROLES_DELEGATE_LIMIT) per project.
     """
 
     #: Project in which role is assigned
@@ -425,17 +421,29 @@ class RoleAssignment(models.Model):
                 )
 
     def _validate_delegate(self):
-        """Validate role to ensure no more than one project delegate is
+        """Validate role to ensure no more than project delegate is
         assigned to a project"""
-        if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']:
-            delegate = self.project.get_delegate()
 
-            if delegate and (not self.pk or delegate.pk != self.pk):
-                raise ValidationError(
-                    '{} already set as delegate of {}'.format(
-                        delegate.user, self.project
-                    )
-                )
+        # No validation if the project is a remote one
+        if not (self.project.is_remote()):
+            # Get project delegate limit
+            delegate_limit = (
+                settings.PROJECTROLES_DELEGATE_LIMIT
+                if hasattr(settings, 'PROJECTROLES_DELEGATE_LIMIT')
+                else 1
+            )
+            if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']:
+                delegates = self.project.get_delegates()
+
+                # No delegate limit if PROJECTROLES_DELEGATE_LIMIT is set to 0
+                if delegate_limit != 0:
+                    if len(delegates) >= delegate_limit and (
+                        not self.pk or (delegates.filter(pk=self.pk) is None)
+                    ):
+                        raise ValidationError(
+                            'The limit ({}) of delegates for this project has '
+                            'already been reached.'.format(delegate_limit)
+                        )
 
     def _validate_category(self):
         """Validate project and role types to ensure roles other than project

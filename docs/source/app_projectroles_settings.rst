@@ -60,6 +60,8 @@ following apps need to be included in the list in order for SODAR Core to work:
         'rest_framework',
         'knox',
         'projectroles.apps.ProjectrolesConfig',
+        'dal',
+        'dal_select2',
     ]
 
 
@@ -213,6 +215,10 @@ The following projectroles settings are **optional**:
   dropdown menus for non-superusers. The app views and URLs are still
   accessible. The names should correspond to the ``name`` property in each
   project app's plugin (list)
+* ``PROJECTROLES_DELEGATE_LIMIT``: The number of delegate roles allowed per
+  project. The amount is limited to 1 per project if not set, unlimited if set
+  to 0. Will be ignored for remote projects synchronized from a source site
+  (int)
 
 Example:
 
@@ -225,6 +231,7 @@ Example:
     PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
     PROJECTROLES_DISABLE_CATEGORIES = True
     PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
+    PROJECTROLES_DELEGATE_LIMIT = 1
 
 .. warning::
 
