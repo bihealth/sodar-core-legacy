@@ -481,7 +481,8 @@ widget of the user field:
 
 Some parameters have to be specified:
 
-- ``url``: The URL of the ``UserAutocompleteView`` (or another custom view)
+- ``url``: The URL of the ``UserAutocompleteAPIView`` (or another custom API
+  view)
 - ``forward``: Optional list with fields whose values will be forwarded to the
   view
 
@@ -490,11 +491,11 @@ to include a field with the project's UUID in the form. This form can be hidden.
 This field's value needs to be forwarded to the autocomplete view (like in the
 code example above).
 
-The alternative ``UserAutocompleteExcludeMembersView`` view provides the
+The alternative ``UserAutocompleteExcludeMembersAPIView`` view provides the
 opposite functionality: only users that are *not* project members are shown.
 That can be useful, for example, in a form to invite new members. To have the
 widget exclude project members, just change the URL parameter to the
-``UserAutocompleteExcludeMembersView``'s URL
+``UserAutocompleteExcludeMembersAPIView``'s URL
 (``projectroles:autocomplete_user_exclude``).
 In that same way, you can provide your custom view's URL to the widget to
 change its behaviour.
@@ -504,30 +505,28 @@ SODAR UUIDs:
 
 .. code-block:: python
 
-   self.fields['project'].to_field_name = 'sodar_uuid'
-   self.fields['user'].to_field_name = 'sodar_uuid'
+    self.fields['project'].to_field_name = 'sodar_uuid'
+    self.fields['user'].to_field_name = 'sodar_uuid'
 
 The following ``django-autocomplete-light`` and ``select2`` stylesheets and
 javascript files have to be added to the html template that includes the form.
 
 .. code-block:: django
 
-  {% block javascript %}
-    {{ block.super }}
-    <!-- DAL for autocomplete widgets -->
-     <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
-     <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
-     <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
-     <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
-  {% endblock javascript %}
+    {% block javascript %}
+      {{ block.super }}
+      <!-- DAL for autocomplete widgets -->
+      <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
+      <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
+    {% endblock javascript %}
 
-  {% block css %}
-    {{ block.super }}
-    <!-- Select2 theme -->
-     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
-    <!-- Projectroles custom CSS to override some CSS from Select2-->
-     <link rel="stylesheet" type="text/css" href="{% static 'projectroles/css/projectroles.css' %}" />
-  {% endblock css %}
+    {% block css %}
+      {{ block.super }}
+      <!-- Select2 theme -->
+      <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+    {% endblock css %}
 
 When using the ``RedirectWidget`` or any other widget with custom javascript,
 include the corresponding js file instead of ``autocomplete_light/select2.js``.
