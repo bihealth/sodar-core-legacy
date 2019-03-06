@@ -29,8 +29,16 @@ Changed
 Fixed
 -----
 
+- **Filesfolders**
+    - File upload wiget error not displayed without Bootstrap 4 workarounds (#164)
 - **Projectroles**
     - Potential crash in ``syncremote`` if run as Celery job (#160)
+
+Removed
+-------
+
+- **General**
+    - Old Bootstrap 4 workarounds for django-crispy-forms (#157)
 
 
 v0.4.4 (2019-02-19)
