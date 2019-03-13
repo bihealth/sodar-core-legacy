@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash in ``get_assignment()`` if called with AnonymousUser (#174)
+
+
 v0.4.5 (2019-03-06)
 ===================
 

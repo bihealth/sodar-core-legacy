@@ -3,6 +3,7 @@
 import uuid
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ValidationError
 from django.forms.models import model_to_dict
 from django.urls import reverse
@@ -537,6 +538,13 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
                 )
             ),
             self.expected_default,
+        )
+
+    def test_get_assignment_anon(self):
+        """Test get_assignment() results with an anonymous user"""
+        anon_user = AnonymousUser()
+        self.assertIsNone(
+            RoleAssignment.objects.get_assignment(anon_user, self.category_top)
         )
 
     def test_get_project_owner(self):
