@@ -24,6 +24,12 @@ Fixed
 - **Projectroles**
     - Crash in ``get_assignment()`` if called with AnonymousUser (#174)
 
+Removed
+-------
+
+- **General**
+    - Deprecated Bootstrap 4 workaround from ``project.js`` (#178)
+
 
 v0.4.5 (2019-03-06)
 ===================
