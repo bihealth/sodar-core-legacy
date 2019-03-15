@@ -79,14 +79,14 @@
 
   <body>
 
-    <div class="sodar-base-container">
+    <div class="sodar-base-container" id="sodar-base-container">
 
-      <div class="sodar-top-container">
+      <div class="sodar-top-container" id="sodar-top-container">
         {# Projectroles site title bar #}
         {% include 'projectroles/_site_titlebar.html' %}
       </div> <!-- /sodar-top-container -->
 
-      <div class="sodar-content-container">
+      <div class="sodar-content-container" id="sodar-content-container">
         {% block content %}
           <p>Use this document as a way to quick start any new project.</p>
         {% endblock content %}
