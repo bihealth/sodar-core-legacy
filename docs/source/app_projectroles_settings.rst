@@ -219,6 +219,8 @@ The following projectroles settings are **optional**:
   project. The amount is limited to 1 per project if not set, unlimited if set
   to 0. Will be ignored for remote projects synchronized from a source site
   (int)
+* ``PROJECTROLES_BROWSER_WARNING``: If true, display a warning to users using
+  Internet Explorer (bool)
 
 Example:
 
@@ -232,6 +234,7 @@ Example:
     PROJECTROLES_DISABLE_CATEGORIES = True
     PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
     PROJECTROLES_DELEGATE_LIMIT = 1
+    PROJECTROLES_BROWSER_WARNING = True
 
 .. warning::
 

@@ -473,6 +473,9 @@ PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 # Set limit for delegate roles per project (if 0, no limit is applied)
 PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 
+# Warn about unsupported browsers (IE)
+PROJECTROLES_BROWSER_WARNING = True
+
 # Timeline app settings
 TIMELINE_PAGINATION = 15
 

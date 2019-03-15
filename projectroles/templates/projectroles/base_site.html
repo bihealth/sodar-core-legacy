@@ -102,6 +102,13 @@
     <!-- Standard Javascript includes -->
     {# Include your Javascript here #}
     {% block javascript %}
+      <!-- Settings -->
+      <!-- Settings for Javascript -->
+      <script type="text/javascript">
+        {% get_setting name='PROJECTROLES_BROWSER_WARNING' js=True as browser_warning %}
+        window.sodarBrowserWarning = {{ browser_warning }};
+      </script>
+
       <!-- Shepherd -->
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.4/js/tether.js"></script>
       <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/shepherd/1.8.1/js/shepherd.min.js"></script>

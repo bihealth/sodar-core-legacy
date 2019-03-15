@@ -335,3 +335,35 @@ $(document).ready(function() {
         }
     });
 });
+
+
+/* Display Internet Explorer warning ---------------------------------------- */
+
+
+$(document).ready(function() {
+    if (window.sodarBrowserWarning === 1 && (
+            navigator.appName === 'Microsoft Internet Explorer' ||
+                !!(navigator.userAgent.match(/Trident/) ||
+                navigator.userAgent.match(/rv:11/)) || (
+                    typeof $.browser !== "undefined" && $.browser.msie === 1))) {
+        let parentElem = $('div.sodar-app-container');
+
+        if (!parentElem.length) {
+            parentElem = $('div.sodar-content-container').find(
+                'div.container-fluid').first();
+        }
+
+        if (!$('div.sodar-alert-container').length) {
+            parentElem.prepend(
+                '<div class="container-fluid sodar-alert-container"></div>');
+        }
+
+        $('div.sodar-alert-container').prepend(
+            '<div class="alert alert-danger sodar-alert-top">' +
+            '<i class="fa fa-exclamation-triangle"></i> ' +
+            'This site does not support Microsoft Internet Explorer. We recommend using ' +
+            '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +
+            '<a href="https://www.google.com/chrome" target="_blank">Google Chrome</a>.' +
+            '</div>');
+      }
+});

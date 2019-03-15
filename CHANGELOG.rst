@@ -10,6 +10,14 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Warning when using an unsupported browser (#176)
+    - Setting ``PROJECTROLES_BROWSER_WARNING`` for unsupported browser warning (#176)
+    - Javascript-safe toggle for ``get_setting()`` template tag
+
 Fixed
 -----
 
