@@ -24,6 +24,7 @@ Fixed
 
 - **Projectroles**
     - Crash in ``get_assignment()`` if called with AnonymousUser (#174)
+    - Line breaks in templates breaking ``badge-group`` elements (#180)
 
 Removed
 -------
