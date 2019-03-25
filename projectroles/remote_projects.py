@@ -205,7 +205,7 @@ class RemoteProjectAPI:
             )
 
         else:
-            logger.info('Nothing to update')
+            logger.debug('Nothing to update in project details')
 
     def _create_project(self, uuid, p_data, parent):
         """Create a new project from source site data"""
@@ -330,12 +330,16 @@ class RemoteProjectAPI:
                             user=role_user,
                         ).delete()
                         logger.debug(
-                            'Deleted existing owner role from '
+                            'Deleted existing role from '
                             'user "{}"'.format(role_user.username)
                         )
 
                     except RoleAssignment.DoesNotExist:
-                        pass
+                        logger.debug(
+                            'No existing role found for user "{}"'.format(
+                                role_user.username
+                            )
+                        )
 
             # Updating of other roles
             elif (

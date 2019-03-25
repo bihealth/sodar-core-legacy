@@ -19,6 +19,12 @@ Added
     - Javascript-safe toggle for ``get_setting()`` template tag
     - ID attributes in site containers (#173)
 
+Changed
+-------
+
+- **Projectroles**
+    - Improve remote project sync logging (#184, #185)
+
 Fixed
 -----
 
