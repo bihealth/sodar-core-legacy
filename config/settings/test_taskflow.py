@@ -18,4 +18,5 @@ ENABLED_BACKEND_PLUGINS = [
     'taskflow',
     'timeline_backend',
     'example_backend_app',
+    'sodarprojectcache',
 ]
