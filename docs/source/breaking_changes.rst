@@ -13,6 +13,23 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.5.0 (WIP)
+============
+
+Default Admin Setting Renamed
+-----------------------------
+
+The setting ``PROJECTROLES_ADMIN_OWNER`` has been renamed into
+``PROJECTROLES_DEFAULT_ADMIN`` to better reflect its uses. Please rename this
+settings variable on your site configuration to prevent issues.
+
+.. note::
+
+    In this release, the old settings value is still accepted in remote project
+    management to avoid sudden crashes. This deprecation will be removed in the
+    next release.
+
+
 v0.4.5 (2019-03-06)
 ===================
 

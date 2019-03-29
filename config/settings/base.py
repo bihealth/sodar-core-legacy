@@ -455,8 +455,8 @@ PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 # Enable or disable project creation if site is in TARGET mode
 PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
 
-# Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
-PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+# Username of default admin for when regular users cannot be assigned to a task
+PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 
 # General projectroles settings
 PROJECTROLES_DISABLE_CATEGORIES = env.bool(

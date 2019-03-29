@@ -185,6 +185,9 @@ Projectroles Settings
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
 * ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
   your site (boolean)
+* ``PROJECTROLES_DEFAULT_ADMIN``: User name of the default superuser account
+  used in e.g. replacing an unavailable user or performing backend admin
+  commands (string)
 
 Example:
 
@@ -196,6 +199,7 @@ Example:
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
     PROJECTROLES_ENABLE_SEARCH = True
+    PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 
 
 Optional Projectroles Settings

@@ -658,22 +658,27 @@ class RemoteProjectAPI:
         :param remote_data: Data returned by get_target_data() in the source
         :param request: Request object (optional)
         :return: Dict with updated remote_data
-        :raise: ValueError if user from PROJECTROLES_ADMIN_OWNER is not found
+        :raise: ValueError if user from PROJECTROLES_DEFAULT_ADMIN is not found
         """
         self.source_site = site
         self.remote_data = remote_data
         self.updated_parents = []
 
         # Get default owner if remote projects have a local owner
+
+        if hasattr(settings, 'PROJECTROLES_DEFAULT_ADMIN'):
+            admin_username = settings.PROJECTROLES_DEFAULT_ADMIN
+
+        else:  # Avoiding crash if the variable is not renamed, will be removed
+            admin_username = settings.PROJECTROLES_ADMIN_OWNER
+
         try:
-            self.default_owner = User.objects.get(
-                username=settings.PROJECTROLES_ADMIN_OWNER
-            )
+            self.default_owner = User.objects.get(username=admin_username)
 
         except User.DoesNotExist:
             error_msg = (
-                'Local user "{}" defined in PROJECTROLES_ADMIN_OWNER '
-                'not found'.format(settings.PROJECTROLES_ADMIN_OWNER)
+                'Local user "{}" defined in PROJECTROLES_DEFAULT_ADMIN '
+                'not found'.format(settings.PROJECTROLES_DEFAULT_ADMIN)
             )
             logger.error(error_msg)
             raise ValueError(error_msg)

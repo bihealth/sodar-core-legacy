@@ -317,7 +317,7 @@ class TestSyncSourceData(
 
     def setUp(self):
         # Init users
-        self.admin_user = self.make_user(settings.PROJECTROLES_ADMIN_OWNER)
+        self.admin_user = self.make_user(settings.PROJECTROLES_DEFAULT_ADMIN)
         self.admin_user.is_staff = True
         self.admin_user.is_superuser = True
 

@@ -18,12 +18,15 @@ Added
     - Setting ``PROJECTROLES_BROWSER_WARNING`` for unsupported browser warning (#176)
     - Javascript-safe toggle for ``get_setting()`` template tag
     - ID attributes in site containers (#173)
+- **Sodarprojectcache**
+    - Create app (#169)
 
 Changed
 -------
 
 - **Projectroles**
     - Improve remote project sync logging (#184, #185)
+    - Rename ``PROJECTROLES_ADMIN_OWNER`` into ``PROJECTROLES_DEFAULT_ADMIN`` (#187)
 
 Fixed
 -----
