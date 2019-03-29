@@ -156,6 +156,19 @@ class ProjectAppPluginPoint(PluginPoint):
             }
         }
 
+    def update_project_cache(self, project, name=None):
+        """Updates all cached data of a project and can be called by the
+        management command 'update_cache'.
+
+        :param project: Project object
+        :param name: Name of the field to update; if None, updates all cache
+                items known to the app (optional)
+        :return: None
+        """
+        # TODO: Implement this in your app plugin
+
+        return None
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""

@@ -82,6 +82,8 @@ LOCAL_APPS = [
     'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
+    # Data Cache app
+    'sodarprojectcache.apps.SodarProjectCacheConfig',
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
     # Example site app
