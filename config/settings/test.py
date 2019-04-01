@@ -73,7 +73,7 @@ LOGGING['handlers']['console']['level'] = 'ERROR'
 ENABLED_BACKEND_PLUGINS = [
     'timeline_backend',
     'example_backend_app',
-    'sodarprojectcache',
+    'sodar_cache',
 ]
 
 # Projectroles app settings

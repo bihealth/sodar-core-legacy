@@ -1,11 +1,11 @@
-.. _app_sodarprojectcache_install:
+.. _app_sodarcache_install:
 
 
-Sodar Project Cache Installation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sodar Cache Installation
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 This document provides instructions and guidelines for installing the
-``sodarprojectcache`` app to be used with your SODAR Core enabled Django site.
+``sodarcache`` app to be used with your SODAR Core enabled Django site.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -21,44 +21,45 @@ be missing. Please click "display source" if you want to read this in GitLab.
 Django Settings
 ===============
 
-The sodarprojectcache app is available for your Django site after installing
+The sodarcache app is available for your Django site after installing
 ``django-sodar-core``. Add the app into ``THIRD_PARTY_APPS`` as follows:
 
 .. code-block:: python
 
     THIRD_PARTY_APPS = [
         # ...
-        'sodarprojectcache.apps.SodarProjectCacheConfig',
+        'sodarcache.apps.SodarCacheConfig',
     ]
 
-You also need to add the sodarprojectcache backend plugin in enabled backend
+You also need to add the sodarcache backend plugin in enabled backend
 plugins.
 
 .. code-block:: python
 
     ENABLED_BACKEND_PLUGINS = [
         # ...
-        'sodarprojectcache',
+        'sodar_cache',
     ]
+
 
 URL Configuration
 =================
 
 In the Django URL configuration file, add the following lines under
-``urlpatterns`` to include sodarprojectcache URLs in your site.
+``urlpatterns`` to include sodarcache URLs in your site.
 
 .. code-block:: python
 
     urlpatterns = [
         # ...
-        url(r'^cache/', include('sodarprojectcache.urls')),
+        url(r'^cache/', include('sodarcache.urls')),
     ]
 
 
 Migrate Database and Register Plugin
 ====================================
 
-To migrate the Django database and register the sodarprojectcache app plugin, run the
+To migrate the Django database and register the sodarcache app plugin, run the
 following management command:
 
 .. code-block:: console
@@ -70,4 +71,4 @@ output:
 
 .. code-block:: console
 
-    Registering Plugin for sodarprojectcache.plugins.BackendPlugin
+    Registering Plugin for sodarcache.plugins.BackendPlugin

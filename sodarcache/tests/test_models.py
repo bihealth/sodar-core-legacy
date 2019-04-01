@@ -1,4 +1,4 @@
-"""Tests for models in the sodarprojectcache app"""
+"""Tests for models in the sodarcache app"""
 
 from test_plus.test import TestCase
 from django.forms.models import model_to_dict
@@ -7,7 +7,7 @@ from django.forms.models import model_to_dict
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
-from ..models import JsonCacheItem
+from ..models import JSONCacheItem
 
 
 # Global constants from settings
@@ -18,9 +18,12 @@ PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+TEST_APP_NAME = 'sodarcache'
+
 
 class JsonCacheItemMixin:
-    """Helper mixin for JsonCacheItem creation"""
+    """Helper mixin for JSONCacheItem creation"""
 
     @classmethod
     def _make_item(cls, project, app_name, name, user, data):
@@ -31,7 +34,7 @@ class JsonCacheItemMixin:
             'name': name,
             'data': data,
         }
-        result = JsonCacheItem(**values)
+        result = JSONCacheItem(**values)
         result.save()
         return result
 
@@ -60,7 +63,7 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
 
         self.item = self._make_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
@@ -70,7 +73,7 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
         expected = {
             'id': self.item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarprojectcache',
+            'app_name': TEST_APP_NAME,
             'name': 'test_item',
             'user': self.user_owner.pk,
             'sodar_uuid': self.item.sodar_uuid,
@@ -80,12 +83,10 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
         self.assertEqual(model_to_dict(self.item), expected)
 
     def test__str__(self):
-        expected = "TestProject: test_item: {'test_key': 'test_val'}"
+        expected = 'TestProject: sodarcache: test_item'
         self.assertEqual(str(self.item), expected)
 
     # TODO assert datetime
     def test__repr__(self):
-        expected = (
-            "JsonCacheItem('TestProject', 'test_item', 'sodarprojectcache')"
-        )
+        expected = "JSONCacheItem('TestProject', 'sodarcache', 'test_item')"
         self.assertEqual(repr(self.item), expected)

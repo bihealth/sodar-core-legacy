@@ -1,4 +1,4 @@
-"""Access rules for the sodarprojectcache app"""
+"""Access rules for the sodarcache app"""
 
 import rules
 
@@ -23,7 +23,7 @@ from projectroles import rules as pr_rules  # To access common predicates
 
 # Allow viewing cached data
 rules.add_perm(
-    'sodarprojectcache.get_cache_value',
+    'sodarcache.get_cache_value',
     pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor
@@ -32,7 +32,7 @@ rules.add_perm(
 
 # Allow setting cached data
 rules.add_perm(
-    'sodarprojectcache.set_cache_value',
+    'sodarcache.set_cache_value',
     pr_rules.is_project_owner
     | pr_rules.is_project_delegate
     | pr_rules.is_project_contributor,

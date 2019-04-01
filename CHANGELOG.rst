@@ -18,7 +18,7 @@ Added
     - Setting ``PROJECTROLES_BROWSER_WARNING`` for unsupported browser warning (#176)
     - Javascript-safe toggle for ``get_setting()`` template tag
     - ID attributes in site containers (#173)
-- **Sodarprojectcache**
+- **Sodarcache**
     - Create app (#169)
 
 Changed

@@ -82,8 +82,8 @@ LOCAL_APPS = [
     'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
-    # Data Cache app
-    'sodarprojectcache.apps.SodarProjectCacheConfig',
+    # External Data Cache app
+    'sodarcache.apps.SodarCacheConfig',
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
     # Example site app
@@ -410,6 +410,11 @@ def set_logging(debug):
                 'propagate': False,
             },
             'taskflowbackend': {
+                'level': 'DEBUG' if debug else 'INFO',
+                'handlers': ['console'],
+                'propagate': False,
+            },
+            'sodarcache': {
                 'level': 'DEBUG' if debug else 'INFO',
                 'handlers': ['console'],
                 'propagate': False,

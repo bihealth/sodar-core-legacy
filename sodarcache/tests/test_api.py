@@ -1,4 +1,4 @@
-"""Tests for the API in the sodarprojectcache app"""
+"""Tests for the API in the sodarcache app"""
 
 from django.forms.models import model_to_dict
 
@@ -8,7 +8,7 @@ from projectroles.plugins import get_backend_api
 
 
 from .test_models import TestJsonCacheItemBase, JsonCacheItemMixin
-from ..models import JsonCacheItem
+from ..models import JSONCacheItem
 
 
 # Global constants from settings
@@ -19,35 +19,38 @@ PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
+# Local constants
+TEST_APP_NAME = 'sodarcache'
 
-class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
-    """Testing sodarprojectcache API class"""
+
+class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
+    """Testing sodarcache API class"""
 
     def setUp(self):
         super().setUp()
-        self.project_cache = get_backend_api('sodarprojectcache')
+        self.cache_backend = get_backend_api('sodar_cache')
 
     def test_add_cache_item(self):
         """Test creating a cache item"""
 
         # Assert precondition
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-        item = self.project_cache.set_cache_item(
+        item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
 
         # Assert object status after insert
-        self.assertEqual(JsonCacheItem.objects.all().count(), 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarprojectcache',
+            'app_name': 'sodarcache',
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'test_val'},
@@ -60,10 +63,10 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
         """Test adding an event with an invalid app name"""
 
         # Assert preconditions
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
         with self.assertRaises(ValueError):
-            self.project_cache.set_cache_item(
+            self.cache_backend.set_cache_item(
                 project=self.project,
                 app_name='NON-EXISTING APP NAME',
                 user=self.user_owner,
@@ -72,16 +75,16 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
             )
 
         # Assert object status
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
     def test_add_cache_item_invalid_data(self):
         """Test adding an event with an invalid app name"""
 
         # Assert preconditions
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
         with self.assertRaises(ValueError):
-            self.project_cache.set_cache_item(
+            self.cache_backend.set_cache_item(
                 project=self.project,
                 app_name='NON-EXISTING APP NAME',
                 user=self.user_owner,
@@ -91,28 +94,28 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
             )
 
         # Assert object status
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
     def test_set_cache_value(self):
         """Test updating a cache item"""
 
         # Assert precondition
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-        item = self.project_cache.set_cache_item(
+        item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
 
         # Assert object status after insert
-        self.assertEqual(JsonCacheItem.objects.all().count(), 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
-        update_item = self.project_cache.set_cache_item(
+        update_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'new_test_val'},
@@ -121,7 +124,7 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarprojectcache',
+            'app_name': 'sodarcache',
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'new_test_val'},
@@ -134,27 +137,27 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
         """Test getting a cache item"""
 
         # Assert precondition
-        self.assertEqual(JsonCacheItem.objects.all().count(), 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
 
-        item = self.project_cache.set_cache_item(
+        item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
 
         # Assert object status after insert
-        self.assertEqual(JsonCacheItem.objects.all().count(), 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
 
-        get_item = self.project_cache.get_cache_item(
-            name='test_item', project=self.project
+        get_item = self.cache_backend.get_cache_item(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
         )
 
         expected = {
             'id': item.pk,
             'project': self.project.pk,
-            'app_name': 'sodarprojectcache',
+            'app_name': 'sodarcache',
             'user': self.user_owner.pk,
             'name': 'test_item',
             'data': {'test_key': 'test_val'},
@@ -166,23 +169,23 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
     def test_get_project_cache(self):
         """Test getting all cache item of a project"""
 
-        first_item = self.project_cache.set_cache_item(
+        first_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item1',
             data={'test_key1': 'test_val1'},
         )
 
-        second_item = self.project_cache.set_cache_item(
+        second_item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item2',
             data={'test_key2': 'test_val2'},
         )
 
-        project_items = self.project_cache.get_project_cache(
+        project_items = self.cache_backend.get_project_cache(
             project=self.project, data_type='json'
         )
 
@@ -193,18 +196,16 @@ class TestSodarProjectCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
     def test_get_update_time(self):
         """Test getting the time of the latest update of a cache item"""
 
-        item = self.project_cache.set_cache_item(
+        item = self.cache_backend.set_cache_item(
             project=self.project,
-            app_name='sodarprojectcache',
+            app_name=TEST_APP_NAME,
             user=self.user_owner,
             name='test_item',
             data={'test_key': 'test_val'},
         )
 
-        update_time = self.project_cache.get_update_time(
-            name='test_item', project=self.project
+        update_time = self.cache_backend.get_update_time(
+            app_name=TEST_APP_NAME, name='test_item', project=self.project
         )
 
-        self.assertEqual(
-            update_time, self.project_cache._get_datetime(item.date_modified)
-        )
+        self.assertEqual(update_time, item.date_modified.timestamp())

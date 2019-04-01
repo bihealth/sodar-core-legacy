@@ -1,26 +1,29 @@
-"""Plugins for the SodarProjectCache app"""
+"""Plugins for the sodarcache app"""
 
 # Projectroles dependency
 from projectroles.plugins import BackendPluginPoint
 
-from .api import SodarProjectCacheAPI
+from .api import SodarCacheAPI
 
 
 class BackendPlugin(BackendPluginPoint):
     """Plugin for registering backend app with Projectroles"""
 
     #: Name (slug-safe, used in URLs)
-    name = 'sodarprojectcache'
+    name = 'sodar_cache'
 
     #: Title (used in templates)
-    title = 'Sodar Project Cache Backend'
+    title = 'Sodar Cache Backend'
 
     #: FontAwesome icon ID string
     icon = 'file-alt'
 
     #: Description string
-    description = 'Sodar Project Cache backend for caching project data'
+    description = (
+        'Sodar Cache backend for caching and aggregating data from '
+        'external databases'
+    )
 
     def get_api(self):
         """Return API entry point object."""
-        return SodarProjectCacheAPI()
+        return SodarCacheAPI()

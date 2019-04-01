@@ -42,7 +42,7 @@ urlpatterns = [
     # Background Jobs URLs
     url(r'^bgjobs/', include('bgjobs.urls')),
     # Data Cache app
-    url(r'^cache/', include('sodarprojectcache.urls')),
+    url(r'^cache/', include('sodarcache.urls')),
     # Example project app URLs
     url(r'^examples/project/', include('example_project_app.urls')),
     # Example site app URLs

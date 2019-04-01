@@ -156,17 +156,14 @@ class ProjectAppPluginPoint(PluginPoint):
             }
         }
 
-    def update_project_cache(self, project, name=None):
-        """Updates all cached data of a project and can be called by the
-        management command 'update_cache'.
+    def update_cache(self, name=None, project=None):
+        """
+        Update cached data for this app, limitable to item ID and/or project.
 
-        :param project: Project object
-        :param name: Name of the field to update; if None, updates all cache
-                items known to the app (optional)
-        :return: None
+        :param project: Project object to limit update to (optional)
+        :param name: Item name to limit update to (string, optional)
         """
         # TODO: Implement this in your app plugin
-
         return None
 
 
