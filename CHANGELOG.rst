@@ -27,6 +27,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade to Bootstrap 4.3.1 and Popper 1.14.7 (#181)
 - **Projectroles**
     - Improve remote project sync logging (#184, #185)
     - Rename ``PROJECTROLES_ADMIN_OWNER`` into ``PROJECTROLES_DEFAULT_ADMIN`` (#187)

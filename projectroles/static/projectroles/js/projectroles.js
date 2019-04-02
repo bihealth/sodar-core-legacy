@@ -50,7 +50,8 @@ function humanFileSize(bytes, si) {
 
 // Bootstrap popover
 $('[data-toggle="popover"]').popover({
-    container: 'body'
+    container: 'body',
+    sanitize: false
 });
 
 // Bootstrap tooltip
