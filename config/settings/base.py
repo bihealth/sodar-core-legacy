@@ -463,6 +463,11 @@ PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
 # Username of default admin for when regular users cannot be assigned to a task
 PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 
+# Allow showing and synchronizing local non-admin users
+PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
+    'PROJECTROLES_ALLOW_LOCAL_USERS', False
+)
+
 # General projectroles settings
 PROJECTROLES_DISABLE_CATEGORIES = env.bool(
     'PROJECTROLES_DISABLE_CATEGORIES', False

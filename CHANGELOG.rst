@@ -18,6 +18,9 @@ Added
     - Setting ``PROJECTROLES_BROWSER_WARNING`` for unsupported browser warning (#176)
     - Javascript-safe toggle for ``get_setting()`` template tag
     - ID attributes in site containers (#173)
+    - Setting ``PROJECTROLES_ALLOW_LOCAL_USERS`` for showing and syncing non-LDAP users (#193)
+    - Allow synchronizing existing local target users for remote projects (#192)
+    - Allow selecting local users if in local user mode (#192)
 - **Sodarcache**
     - Create app (#169)
 
@@ -27,6 +30,7 @@ Changed
 - **Projectroles**
     - Improve remote project sync logging (#184, #185)
     - Rename ``PROJECTROLES_ADMIN_OWNER`` into ``PROJECTROLES_DEFAULT_ADMIN`` (#187)
+    - Update login template and ``get_login_info()`` to support local user mode (#192)
 
 Fixed
 -----

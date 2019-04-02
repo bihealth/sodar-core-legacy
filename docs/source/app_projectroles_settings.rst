@@ -225,6 +225,10 @@ The following projectroles settings are **optional**:
   (int)
 * ``PROJECTROLES_BROWSER_WARNING``: If true, display a warning to users using
   Internet Explorer (bool)
+* ``PROJECTROLES_ALLOW_LOCAL_USERS``: If true, roles for local non-LDAP users
+  can be synchronized from a source during remote project sync if they exist on
+  the target site. Similarly, local users will be selectable in member dropdowns
+  when selecting users (bool)
 
 Example:
 
@@ -239,6 +243,7 @@ Example:
     PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
     PROJECTROLES_DELEGATE_LIMIT = 1
     PROJECTROLES_BROWSER_WARNING = True
+    PROJECTROLES_ALLOW_LOCAL_USERS = True
 
 .. warning::
 
@@ -246,6 +251,15 @@ Example:
     version remote site access and remote project synchronization are disabled
     if this option is used! Use only if a simple project list is specifically
     required in your site.
+
+.. warning::
+
+    Regarding ``PROJECTROLES_ALLOW_LOCAL_USERS``: Please note that this will
+    allow synchronizing project roles to local non-LDAP users based on their
+    **user name**. You should personally ensure that the users in question are
+    authorized for these roles. Furthermore, only roles for **existing** local
+    users will be synchronized. New local users will have to be added manually
+    through the Django admin or shell on the target site.
 
 
 Backend App Settings

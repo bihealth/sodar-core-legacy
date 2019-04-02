@@ -138,6 +138,15 @@ class RemoteProjectAPI:
                     )
                 )
 
+    def _handle_user_error(self, error_msg, project, role_uuid):
+        logger.error(error_msg)
+        self.remote_data['projects'][str(project.sodar_uuid)]['roles'][
+            role_uuid
+        ]['status'] = 'error'
+        self.remote_data['projects'][str(project.sodar_uuid)]['roles'][
+            role_uuid
+        ]['status_msg'] = error_msg
+
     def _handle_project_error(self, error_msg, uuid, p, action):
         """Add and log project error in remote sync"""
         logger.error(
@@ -257,11 +266,13 @@ class RemoteProjectAPI:
         # TODO: Refactor this
         uuid = str(project.sodar_uuid)
 
-        for r_uuid, r in {
-            k: v
-            for k, v in p_data['roles'].items()
-            if '@' in v['user'] or v['role'] == PROJECT_ROLE_OWNER
-        }.items():
+        allow_local = (
+            settings.PROJECTROLES_ALLOW_LOCAL_USERS
+            if hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
+            else False
+        )
+
+        for r_uuid, r in {k: v for k, v in p_data['roles'].items()}.items():
             # Ensure the Role exists
             try:
                 role = Role.objects.get(name=r['role'])
@@ -270,18 +281,46 @@ class RemoteProjectAPI:
                 error_msg = 'Role object "{}" not found (assignment {})'.format(
                     r['role'], r_uuid
                 )
-                logger.error(error_msg)
-                self.remote_data['projects'][project.sodar_uuid]['roles'][
-                    r_uuid
-                ]['status'] = 'error'
-                self.remote_data['projects'][project.sodar_uuid]['roles'][
-                    r_uuid
-                ]['status_msg'] = error_msg
+                self._handle_user_error(error_msg, project, r_uuid)
                 continue
 
-            # If role is "project owner" for a non-LDAP user, get
-            # the default local user instead
-            if r['role'] == PROJECT_ROLE_OWNER and '@' not in r['user']:
+            # Ensure the user is valid
+            if (
+                '@' not in r['user']
+                and not allow_local
+                and r['role'] != PROJECT_ROLE_OWNER
+            ):
+                error_msg = (
+                    'Local user "{}" set for role "{}" but local '
+                    'users are not allowed'.format(r['user'], r['role'])
+                )
+                self._handle_user_error(error_msg, project, r_uuid)
+                continue
+
+            # If local user, ensure they exist
+            elif (
+                '@' not in r['user']
+                and allow_local
+                and r['role'] != PROJECT_ROLE_OWNER
+                and not User.objects.filter(username=r['user']).first()
+            ):
+                error_msg = (
+                    'Local user "{}" not found, role of "{}" will '
+                    'not be assigned'.format(r['user'], r['role'])
+                )
+                self._handle_user_error(error_msg, project, r_uuid)
+                continue
+
+            # Use the default owner, if owner role for a non-LDAP user and local
+            # users are not allowed
+            if (
+                r['role'] == PROJECT_ROLE_OWNER
+                and (
+                    not allow_local
+                    or not User.objects.filter(username=r['user']).first()
+                )
+                and '@' not in r['user']
+            ):
                 role_user = self.default_owner
 
                 # Notify of assigning role to default owner
@@ -566,7 +605,7 @@ class RemoteProjectAPI:
         """
         sync_data = {'users': {}, 'projects': {}}
 
-        def add_user(user):
+        def _add_user(user):
             if user.username not in [
                 u['username'] for u in sync_data['users'].values()
             ]:
@@ -579,9 +618,9 @@ class RemoteProjectAPI:
                     'groups': [g.name for g in user.groups.all()],
                 }
 
-        def add_parent_categories(category, project_level):
+        def _add_parent_categories(category, project_level):
             if category.parent:
-                add_parent_categories(category.parent, project_level)
+                _add_parent_categories(category.parent, project_level)
 
             if str(category.sodar_uuid) not in sync_data['projects'].keys():
                 cat_data = {
@@ -602,7 +641,7 @@ class RemoteProjectAPI:
                         'user': role_as.user.username,
                         'role': role_as.role.name,
                     }
-                    add_user(role_as.user)
+                    _add_user(role_as.user)
 
                 else:
                     cat_data['level'] = REMOTE_LEVEL_READ_INFO
@@ -631,7 +670,7 @@ class RemoteProjectAPI:
 
                 # Add categories
                 if project.parent:
-                    add_parent_categories(project.parent, rp.level)
+                    _add_parent_categories(project.parent, rp.level)
                     project_data['parent_uuid'] = str(project.parent.sodar_uuid)
 
             # If level is READ_ROLES, add categories and roles
@@ -643,7 +682,7 @@ class RemoteProjectAPI:
                         'user': role_as.user.username,
                         'role': role_as.role.name,
                     }
-                    add_user(role_as.user)
+                    _add_user(role_as.user)
 
             sync_data['projects'][str(rp.project_uuid)] = project_data
 

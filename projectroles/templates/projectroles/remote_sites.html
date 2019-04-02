@@ -68,6 +68,19 @@
     Your site is in <code>{{ site_mode }}</code> mode.
   </div>
 
+  {% get_setting 'PROJECTROLES_ALLOW_LOCAL_USERS' as allow_local_users %}
+  {% if site_mode == 'TARGET' and allow_local_users %}
+    <div class="alert alert-warning">
+      <code>PROJECTROLES_ALLOW_LOCAL_USERS</code> is enabled in site
+      configuration. Please note that this will allow synchronizing project
+      roles to local non-LDAP users based on the user name. You should
+      personally ensure that the users in question are authorized for these
+      roles. Furthermore, only roles for existing local users will be
+      synchronized. New local users will have to be added manually through the
+      Django admin or shell.
+    </div>
+  {% endif %}
+
 </div>
 
 {% endblock projectroles %}

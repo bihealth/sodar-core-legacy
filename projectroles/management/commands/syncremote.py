@@ -47,6 +47,15 @@ class Command(BaseCommand):
             logger.error('No source site defined, unable to sync')
             return
 
+        if (
+            hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
+            and settings.PROJECTROLES_ALLOW_LOCAL_USERS
+        ):
+            logger.info(
+                'PROJECTROLES_ALLOW_LOCAL_USERS=True, will sync '
+                'roles for existing local users'
+            )
+
         logger.info(
             'Retrieving data from remote site "{}" ({})..'.format(
                 site.name, site.url

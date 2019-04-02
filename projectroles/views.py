@@ -2242,8 +2242,14 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
         else:
             qs = User.objects.all()
 
-        # Exclude the users in the system group
-        if not current_user.is_superuser:
+        # Exclude the users in the system group unless local users are allowed
+        allow_local = (
+            settings.PROJECTROLES_ALLOW_LOCAL_USERS
+            if hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
+            else False
+        )
+
+        if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name='system')
 
         if self.q:

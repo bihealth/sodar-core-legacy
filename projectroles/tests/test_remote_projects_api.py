@@ -388,7 +388,7 @@ class TestSyncSourceData(
         }
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_create(self):
+    def test_create(self):
         """Test sync with non-existing project data and READ_ROLE access"""
 
         # Assert preconditions
@@ -506,7 +506,7 @@ class TestSyncSourceData(
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_create_multiple(self):
+    def test_create_multiple(self):
         """Test sync with non-existing project data and multiple projects"""
 
         # Assert preconditions
@@ -593,7 +593,7 @@ class TestSyncSourceData(
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_create_local_owner(self):
+    def test_create_local_owner(self):
         """Test sync with non-existing project data and a local owner"""
 
         # Assert preconditions
@@ -628,7 +628,7 @@ class TestSyncSourceData(
         self.assertEqual(project_obj.get_owner().user, self.admin_user)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_update(self):
+    def test_update(self):
         """Test sync with existing project data and READ_ROLE access"""
 
         # Set up target category and project
@@ -819,7 +819,7 @@ class TestSyncSourceData(
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_delete_role(self):
+    def test_delete_role(self):
         """Test sync with existing project data and a removed role"""
 
         # Set up target category and project
@@ -906,7 +906,7 @@ class TestSyncSourceData(
         self.assertEqual(remote_data, expected)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_update_no_changes(self):
+    def test_update_no_changes(self):
         """Test sync with existing project data and no changes"""
 
         # Set up target category and project
@@ -1054,14 +1054,8 @@ class TestSyncSourceData(
         self.assertEqual(original_data, remote_data)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_create_no_access(self):
+    def test_create_no_access(self):
         """Test sync with no READ_ROLE access set"""
-
-        # Assert preconditions
-        self.assertEqual(Project.objects.all().count(), 0)
-        self.assertEqual(RoleAssignment.objects.all().count(), 0)
-        self.assertEqual(User.objects.all().count(), 1)
-        self.assertEqual(RemoteProject.objects.all().count(), 0)
 
         remote_data = self.default_data
 
@@ -1087,14 +1081,8 @@ class TestSyncSourceData(
         self.assertEqual(original_data, remote_data)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_sync_create_local_user(self):
+    def test_create_local_user(self):
         """Test sync with a local non-owner user"""
-
-        # Assert preconditions
-        self.assertEqual(Project.objects.all().count(), 0)
-        self.assertEqual(RoleAssignment.objects.all().count(), 0)
-        self.assertEqual(User.objects.all().count(), 1)
-        self.assertEqual(RemoteProject.objects.all().count(), 0)
 
         local_user_username = 'localusername'
         local_user_uuid = str(uuid.uuid4())
@@ -1124,3 +1112,160 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
         self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_user_allow(self):
+        """Test sync with a local user with local users allowed"""
+
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+
+        # Create the user on the target site
+        self.make_user(local_user_username)
+
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
+            'user': local_user_username,
+            'role': self.role_contributor.name,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_user_allow_unavailable(self):
+        """Test sync with a non-existent local user with local users allowed"""
+
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
+            'user': local_user_username,
+            'role': self.role_contributor.name,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should not be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_owner_allow(self):
+        """Test sync with a local owner with local users allowed"""
+
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+
+        # Create the user on the target site
+        new_user = self.make_user(local_user_username)
+
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
+            role_uuid: {
+                'user': local_user_username,
+                'role': self.role_owner.name,
+            }
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        # Assert owner role
+        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(new_project.get_owner().user, new_user)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_owner_allow_unavailable(self):
+        """Test sync with an unavailable local owner"""
+
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+
+        # Create the user on the target site
+        # new_user = self.make_user(local_user_username)
+
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
+            role_uuid: {
+                'user': local_user_username,
+                'role': self.role_owner.name,
+            }
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+
+        # Assert owner role
+        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(new_project.get_owner().user, self.admin_user)
