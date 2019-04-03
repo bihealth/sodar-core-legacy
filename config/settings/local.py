@@ -87,6 +87,11 @@ CELERY_TASK_EAGER_PROPAGATES = True
 # Local App Settings
 # ------------------------------------------------------------------------------
 
+PROJECTROLES_ALLOW_LOCAL_USERS = False
 
 # Plugin settings
-ENABLED_BACKEND_PLUGINS = ['timeline_backend', 'example_backend_app']
+ENABLED_BACKEND_PLUGINS = [
+    'timeline_backend',
+    'example_backend_app',
+    'sodar_cache',
+]

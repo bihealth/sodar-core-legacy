@@ -30,5 +30,8 @@ SITE_INSTANCE_TITLE = env.str(
 
 PROJECTROLES_SITE_MODE = 'TARGET'
 
-# Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
-PROJECTROLES_ADMIN_OWNER = 'admin_target'
+# Username of default admin for when regular users cannot be assigned to a task
+PROJECTROLES_DEFAULT_ADMIN = 'admin_target'
+
+# Allowing local users by default when developing target site locally
+PROJECTROLES_ALLOW_LOCAL_USERS = True

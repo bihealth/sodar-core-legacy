@@ -20,6 +20,8 @@ The following Django apps will be installed when installing the
   content management. All other apps require the integration of projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
 - **bgjobs**: Project app for managing background jobs.
+- **sodarcache**: Generic caching and aggregation of data referring to external
+  services.
 - **taskflowbackend**: Backend app providing an API for the optional
   ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.

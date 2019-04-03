@@ -456,6 +456,7 @@ dl dd {
 /* Badge group */
 .badge-group {
     padding: 2px;
+    display: inline-flex;
 }
 
 .badge-group > .badge:not(:first-child):not(:last-child) {

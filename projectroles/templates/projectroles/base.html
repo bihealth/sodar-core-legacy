@@ -11,7 +11,7 @@
   {% csrf_token %}
 
   {# Sidebar #}
-  <div class="sodar-content-left">
+  <div class="sodar-content-left" id="sodar-content-left">
 
     <div class="col h-100 bg-dark text-center sodar-pr-sidebar" id="sodar-pr-sidebar">
       <nav class="nav navbar-expand-lg navbar-dark bg-dark sodar-pr-sidebar-nav">
@@ -39,7 +39,7 @@
     {# Project breadcrumb #}
     {% block navi_sub_project %}
       {% if project %}
-        <div class="sodar-sub-navbar-container">
+        <div class="sodar-sub-navbar-container" id="sodar-sub-navbar-container">
           <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
             <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
               <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
@@ -63,7 +63,7 @@
       {% endif %}
     {% endblock navi_sub_project %}
 
-    <div class="sodar-app-container">
+    <div class="sodar-app-container" id="sodar-app-container">
 
       {# Django messages / site app messages #}
       {% include 'projectroles/_messages.html' %}

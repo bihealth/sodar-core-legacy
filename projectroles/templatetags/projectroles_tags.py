@@ -318,6 +318,15 @@ def get_login_info():
                 settings.AUTH_LDAP2_USERNAME_DOMAIN
             )
 
+        if (
+            hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
+            and settings.PROJECTROLES_ALLOW_LOCAL_USERS
+        ):
+            ret += (
+                '. To access the site with local account enter your user '
+                'name as <code>username</code>'
+            )
+
     ret += '.</p>'
     return ret
 

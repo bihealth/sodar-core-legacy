@@ -52,6 +52,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    app_userprofile
    app_taskflow
    app_timeline
+   app_sodarcache
    development
    breaking_changes
 

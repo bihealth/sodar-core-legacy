@@ -70,9 +70,18 @@ def get_user_by_username(username):
 
 
 @register.simple_tag
-def get_setting(name):
-    """Return value of Django setting by name or None if it is not found"""
-    return getattr(settings, name) if hasattr(settings, name) else None
+def get_setting(name, js=False):
+    """
+    Return value of Django setting by name or None if it is not found.
+    Return a Javascript-safe value if js=True.
+    """
+    val = getattr(settings, name) if hasattr(settings, name) else None
+
+    # If for javascript, modify
+    if js and isinstance(val, bool):
+        val = int(val)
+
+    return val
 
 
 @register.simple_tag

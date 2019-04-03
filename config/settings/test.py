@@ -70,7 +70,11 @@ LOGGING['handlers']['console']['level'] = 'ERROR'
 
 
 # Plugin settings
-ENABLED_BACKEND_PLUGINS = ['timeline_backend', 'example_backend_app']
+ENABLED_BACKEND_PLUGINS = [
+    'timeline_backend',
+    'example_backend_app',
+    'sodar_cache',
+]
 
 # Projectroles app settings
 PROJECTROLES_SITE_MODE = 'SOURCE'

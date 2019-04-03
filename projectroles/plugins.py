@@ -156,6 +156,16 @@ class ProjectAppPluginPoint(PluginPoint):
             }
         }
 
+    def update_cache(self, name=None, project=None):
+        """
+        Update cached data for this app, limitable to item ID and/or project.
+
+        :param project: Project object to limit update to (optional)
+        :param name: Item name to limit update to (string, optional)
+        """
+        # TODO: Implement this in your app plugin
+        return None
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""

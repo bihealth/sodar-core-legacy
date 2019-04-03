@@ -17,6 +17,42 @@
 
   <div class="container-fluid sodar-page-container">
 
+    {# Links to remote projects #}
+
+    {# TODO: Refactor when implementing advanced features (issue #196) #}
+    {% if object.type == 'PROJECT' %}
+      {% if object.is_remote or target_projects %}
+        <div class="card" id="sodar-pr-details-card-remote">
+          <div class="card-header">
+            <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
+          </div>
+          <div class="card-body pb-2 mr-2">
+            {% if target_projects %}
+              {% for rp in target_projects %}
+                <a class="btn btn-info mr-1 mb-1"
+                   href="{{ rp.site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
+                   role="button"
+                   title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
+                   data-toggle="tooltip"
+                   target="_blank">
+                  <i class="fa fa-globe"></i> {{ rp.site.name }}
+                </a>
+              {% endfor %}
+            {% elif object.is_remote %}
+              <a class="btn btn-info mb-1"
+                 href="{{ object.get_source_site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
+                 role="button"
+                 title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
+                 data-toggle="tooltip"
+                 target="_blank">
+                <i class="fa fa-globe"></i> {{ object.get_source_site.name }} (Master Project)
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+    {% endif %}
+
     {# README #}
 
     <div class="card" id="sodar-pr-details-card-readme">
@@ -32,7 +68,7 @@
           <p>
             No ReadMe is currently set for this {% get_display_name object.type title=False %}.
             {% if can_update_project %}
-             <a href="{% url 'projectroles:update' project=project.sodar_uuid %}#div_id_readme">You can update the ReadMe here</a>.
+             <a href="{% url 'projectroles:update' project=object.sodar_uuid %}#div_id_readme">You can update the ReadMe here</a>.
             {% endif %}
           </p>
         {% endif %}
@@ -79,7 +115,7 @@
     {% if subproject_list|length > 0 or object.type == 'CATEGORY' %}
       <div class="card">
         <div class="card-header">
-          <h4><i class="fa fa-globe"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
+          <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
         </div>
         <div class="card-body p-0">
           <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
@@ -130,6 +166,29 @@
         advanceOn: '.docs-link click',
         showCancelLink: true
     });
+
+    if ($('#sodar-pr-details-card-remote').length) {
+        tour.addStep('project_remote_card', {
+            title: 'Remote {% get_display_name "PROJECT" title=True %} Links',
+            text: 'If the {% get_display_name "PROJECT" %} is also available ' +
+                  'on other SODAR based sites, links to the project on those ' +
+                  'sites can be found here.',
+            attachTo: '#sodar-pr-details-card-remote top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
+
+    if ($('#sodar-pr-details-card-readme').length) {
+        tour.addStep('project_readme_card', {
+            title: '{% get_display_name "PROJECT" title=True %} README',
+            text: 'The {% get_display_name "PROJECT" %} README document ' +
+                  'is displayed here for e.g. important links and updates.',
+            attachTo: '#sodar-pr-details-card-readme top',
+            advanceOn: '.docs-link click',
+            showCancelLink: true
+        });
+    }
 
     if ($('.sodar-pr-app-card').length) {
         tour.addStep('project_app_cards', {

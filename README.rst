@@ -25,6 +25,7 @@ application which wants to make use of the following features:
 - Advanced project activity logging
 - Small file uploading and browsing
 - Managing server-side background jobs
+- Caching and aggregation of data from external services
 
 This repository provides the following installable Django apps:
 
@@ -34,6 +35,8 @@ This repository provides the following installable Django apps:
 - **adminalerts**: Site app for displaying site-wide messages to all users.
 - **bgjobs**: Project app for managing background jobs.
 - **filesfolders**: Storage and management of small files.
+- **sodarcache**: Generic caching and aggregation of data referring to external
+  services.
 - **taskflowbackend**: Backend app providing an API for the optional
   ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.

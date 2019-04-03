@@ -185,6 +185,9 @@ Projectroles Settings
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
 * ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
   your site (boolean)
+* ``PROJECTROLES_DEFAULT_ADMIN``: User name of the default superuser account
+  used in e.g. replacing an unavailable user or performing backend admin
+  commands (string)
 
 Example:
 
@@ -196,6 +199,7 @@ Example:
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
     PROJECTROLES_ENABLE_SEARCH = True
+    PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 
 
 Optional Projectroles Settings
@@ -219,6 +223,12 @@ The following projectroles settings are **optional**:
   project. The amount is limited to 1 per project if not set, unlimited if set
   to 0. Will be ignored for remote projects synchronized from a source site
   (int)
+* ``PROJECTROLES_BROWSER_WARNING``: If true, display a warning to users using
+  Internet Explorer (bool)
+* ``PROJECTROLES_ALLOW_LOCAL_USERS``: If true, roles for local non-LDAP users
+  can be synchronized from a source during remote project sync if they exist on
+  the target site. Similarly, local users will be selectable in member dropdowns
+  when selecting users (bool)
 
 Example:
 
@@ -232,6 +242,8 @@ Example:
     PROJECTROLES_DISABLE_CATEGORIES = True
     PROJECTROLES_HIDE_APP_LINKS = ['filesfolders']
     PROJECTROLES_DELEGATE_LIMIT = 1
+    PROJECTROLES_BROWSER_WARNING = True
+    PROJECTROLES_ALLOW_LOCAL_USERS = True
 
 .. warning::
 
@@ -239,6 +251,15 @@ Example:
     version remote site access and remote project synchronization are disabled
     if this option is used! Use only if a simple project list is specifically
     required in your site.
+
+.. warning::
+
+    Regarding ``PROJECTROLES_ALLOW_LOCAL_USERS``: Please note that this will
+    allow synchronizing project roles to local non-LDAP users based on their
+    **user name**. You should personally ensure that the users in question are
+    authorized for these roles. Furthermore, only roles for **existing** local
+    users will be synchronized. New local users will have to be added manually
+    through the Django admin or shell on the target site.
 
 
 Backend App Settings

@@ -13,6 +13,38 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.5.0 (2019-04-03)
+===================
+
+Default Admin Setting Renamed
+-----------------------------
+
+The setting ``PROJECTROLES_ADMIN_OWNER`` has been renamed into
+``PROJECTROLES_DEFAULT_ADMIN`` to better reflect its uses. Please rename this
+settings variable on your site configuration to prevent issues.
+
+.. note::
+
+    In this release, the old settings value is still accepted in remote project
+    management to avoid sudden crashes. This deprecation will be removed in the
+    next release.
+
+Bootstrap 4.3.1 Upgrade
+-----------------------
+
+The Bootstrap and Popper dependencies have been updated to the latest versions.
+Please test your site to make sure this does not result in compatibility issues.
+The known issue of HTML content not showing in popovers has already been fixed
+in ``projectroles.js``.
+
+Default Templates Modified
+--------------------------
+
+The default templates ``base_site.html`` and ``login.html`` have been modified
+in this version. If you override them with your own altered versions, please
+review the difference and update your templates as appropriate.
+
+
 v0.4.5 (2019-03-06)
 ===================
 

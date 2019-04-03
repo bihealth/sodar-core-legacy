@@ -7,6 +7,49 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.5.0 (2019-04-03)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - Warning when using an unsupported browser (#176)
+    - Setting ``PROJECTROLES_BROWSER_WARNING`` for unsupported browser warning (#176)
+    - Javascript-safe toggle for ``get_setting()`` template tag
+    - ID attributes in site containers (#173)
+    - Setting ``PROJECTROLES_ALLOW_LOCAL_USERS`` for showing and syncing non-LDAP users (#193)
+    - Allow synchronizing existing local target users for remote projects (#192)
+    - Allow selecting local users if in local user mode (#192)
+    - ``RemoteSite.get_url()`` helper
+    - Simple display of links to project on external sites in details page (#182)
+- **Sodarcache**
+    - Create app (#169)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Bootstrap 4.3.1 and Popper 1.14.7 (#181)
+- **Projectroles**
+    - Improve remote project sync logging (#184, #185)
+    - Rename ``PROJECTROLES_ADMIN_OWNER`` into ``PROJECTROLES_DEFAULT_ADMIN`` (#187)
+    - Update login template and ``get_login_info()`` to support local user mode (#192)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash in ``get_assignment()`` if called with AnonymousUser (#174)
+    - Line breaks in templates breaking ``badge-group`` elements (#180)
+
+Removed
+-------
+
+- **General**
+    - Deprecated Bootstrap 4 workaround from ``project.js`` (#178)
+
+
 v0.4.5 (2019-03-06)
 ===================
 

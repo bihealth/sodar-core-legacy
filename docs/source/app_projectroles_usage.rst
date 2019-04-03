@@ -310,7 +310,7 @@ Alternatively, the following management command can be used:
 .. note::
 
     If a local user is the owner of a synchronized project on the source site,
-    the user defined in the ``PROJECTROLES_ADMIN_OWNER`` will be given the
+    the user defined in the ``PROJECTROLES_DEFAULT_ADMIN`` will be given the
     owner role. Hence you **must** have this setting defined if you are
     implementing a SODAR site in target mode.
 

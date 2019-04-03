@@ -325,6 +325,9 @@ class RoleAssignmentManager(models.Manager):
 
     def get_assignment(self, user, project):
         """Return assignment of user to project, or None if not found"""
+        if not user.is_authenticated:  # Anonymous users can't have roles
+            return None
+
         try:
             return super().get_queryset().get(user=user, project=project)
 
@@ -790,6 +793,12 @@ class RemoteSite(models.Model):
 
         if projects.count() > 0:
             return projects.first().date_access
+
+    def get_url(self):
+        """Return sanitized site URL"""
+        if self.url[-1] == '/':
+            return self.url[:-1]
+        return self.url
 
 
 # RemoteProject ----------------------------------------------------------------

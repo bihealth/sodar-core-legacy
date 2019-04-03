@@ -82,6 +82,8 @@ LOCAL_APPS = [
     'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
+    # External Data Cache app
+    'sodarcache.apps.SodarCacheConfig',
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
     # Example site app
@@ -412,6 +414,11 @@ def set_logging(debug):
                 'handlers': ['console'],
                 'propagate': False,
             },
+            'sodarcache': {
+                'level': 'DEBUG' if debug else 'INFO',
+                'handlers': ['console'],
+                'propagate': False,
+            },
         },
     }
 
@@ -453,8 +460,13 @@ PROJECTROLES_SITE_MODE = env.str('PROJECTROLES_SITE_MODE', 'SOURCE')
 # Enable or disable project creation if site is in TARGET mode
 PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
 
-# Admin user to replace non-LDAP project owners in remote sync (for TARGET site)
-PROJECTROLES_ADMIN_OWNER = env.str('PROJECTROLES_ADMIN_OWNER', 'admin')
+# Username of default admin for when regular users cannot be assigned to a task
+PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
+
+# Allow showing and synchronizing local non-admin users
+PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
+    'PROJECTROLES_ALLOW_LOCAL_USERS', False
+)
 
 # General projectroles settings
 PROJECTROLES_DISABLE_CATEGORIES = env.bool(
@@ -472,6 +484,9 @@ PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)
 PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
+
+# Warn about unsupported browsers (IE)
+PROJECTROLES_BROWSER_WARNING = True
 
 # Timeline app settings
 TIMELINE_PAGINATION = 15
