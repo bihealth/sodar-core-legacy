@@ -740,6 +740,7 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
 
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_user_autocomplete_api(self):
         """Test UserAutocompleteAPIView access"""
         good_users = [

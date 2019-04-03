@@ -628,7 +628,7 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
                     'select2-results__message'
                 )
             ),
-            0,
+            1,
         )
 
 
