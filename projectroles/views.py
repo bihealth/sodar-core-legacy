@@ -2256,7 +2256,7 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
         )
 
         if not allow_local and not current_user.is_superuser:
-            qs = qs.exclude(groups__name='system')
+            qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
 
         if self.q:
             qs = qs.filter(

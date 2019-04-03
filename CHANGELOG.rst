@@ -42,6 +42,7 @@ Fixed
 - **Projectroles**
     - Crash in ``get_assignment()`` if called with AnonymousUser (#174)
     - Line breaks in templates breaking ``badge-group`` elements (#180)
+    - User autocomplete for users with no group (#199)
 
 Removed
 -------
