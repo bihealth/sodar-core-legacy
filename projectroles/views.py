@@ -488,6 +488,12 @@ class ProjectDetailView(
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
 
+        if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
+            # TODO: See issue #197
+            context['target_projects'] = RemoteProject.objects.filter(
+                project_uuid=self.object.sodar_uuid
+            ).order_by('site__name')
+
         return context
 
 

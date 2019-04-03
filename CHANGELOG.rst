@@ -21,6 +21,8 @@ Added
     - Setting ``PROJECTROLES_ALLOW_LOCAL_USERS`` for showing and syncing non-LDAP users (#193)
     - Allow synchronizing existing local target users for remote projects (#192)
     - Allow selecting local users if in local user mode (#192)
+    - ``RemoteSite.get_url()`` helper
+    - Simple display of links to project on external sites in details page (#182)
 - **Sodarcache**
     - Create app (#169)
 

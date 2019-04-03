@@ -794,6 +794,12 @@ class RemoteSite(models.Model):
         if projects.count() > 0:
             return projects.first().date_access
 
+    def get_url(self):
+        """Return sanitized site URL"""
+        if self.url[-1] == '/':
+            return self.url[:-1]
+        return self.url
+
 
 # RemoteProject ----------------------------------------------------------------
 
