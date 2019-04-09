@@ -29,6 +29,7 @@ Fixed
 
 - **Projectroles**
     - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
+    - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
 - **Sodarcache**
     - Modify app configuration to follow naming conventions (#202)
 
