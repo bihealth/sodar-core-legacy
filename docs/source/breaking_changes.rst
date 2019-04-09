@@ -13,6 +13,32 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.5.1 (WIP)
+============
+
+Sodarcache App Changes
+----------------------
+
+The following potentially breaking changes have been made to the sodarcache app.
+
+App configuration naming has been changed to
+``sodarcache.apps.SodarcacheConfig``. Please update ``config/settings/base.py``
+accordingly.
+
+The field ``user`` has been made optional in models and the API.
+
+An optional ``user`` argument has been added to
+``ProjectAppPlugin.update_cache()``. Correspondingly, the similar argument in
+``ProjectCacheAPI.set_cache_item()`` has been made optional. Please update your
+plugin implementations and function calls accordingly.
+
+Helper get_app_names() Fixed
+-----------------------------
+
+The ``projectroles.utils.get_app_names()`` function will now return nested app
+names properly instead of omitting everything beyond the topmost module.
+
+
 v0.5.0 (2019-04-03)
 ===================
 

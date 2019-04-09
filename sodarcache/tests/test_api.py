@@ -133,6 +133,41 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
 
         self.assertEqual(model_to_dict(update_item), expected)
 
+    def test_set_cache_value_no_user(self):
+        """Test updating a cache with no user"""
+
+        # Assert precondition
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
+
+        item = self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+
+        # Assert object status after insert
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+
+        update_item = self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            name='test_item',
+            data={'test_key': 'new_test_val'},
+        )
+
+        expected = {
+            'id': item.pk,
+            'project': self.project.pk,
+            'app_name': 'sodarcache',
+            'user': None,
+            'name': 'test_item',
+            'data': {'test_key': 'new_test_val'},
+            'sodar_uuid': item.sodar_uuid,
+        }
+
+        self.assertEqual(model_to_dict(update_item), expected)
+
     def test_get_cache_item(self):
         """Test getting a cache item"""
 

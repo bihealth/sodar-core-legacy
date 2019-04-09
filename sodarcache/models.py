@@ -45,9 +45,12 @@ class BaseCacheItem(models.Model):
         auto_now_add=True, help_text='DateTime of the update'
     )
 
-    #: User who updated the item
+    #: User who updated the item (optional)
     user = models.ForeignKey(
-        AUTH_USER_MODEL, help_text='User who updated the item'
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        help_text='User who updated the item (optional)',
     )
 
     #: UUID for the item

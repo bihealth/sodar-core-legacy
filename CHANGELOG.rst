@@ -7,6 +7,32 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Optional ``user`` argument in ``ProjectAppPlugin.update_cache()`` (#203)
+- **Sodarcache**
+    - API logging (#207)
+
+Changed
+-------
+
+- **Sodarcache**
+    - Make ``user`` field optional in models and API (#204)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
+- **Sodarcache**
+    - Modify app configuration to follow naming conventions (#202)
+
+
 v0.5.0 (2019-04-03)
 ===================
 

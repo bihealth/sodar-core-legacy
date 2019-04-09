@@ -69,7 +69,7 @@ class SodarCacheGetAPIView(
             ret_data = {
                 'sodar_uuid': str(item.sodar_uuid),
                 'project_uuid': str(item.project.sodar_uuid),
-                'user_uuid': str(item.user.sodar_uuid),
+                'user_uuid': str(item.user.sodar_uuid) if item.user else None,
                 'name': item.name,
                 'data': item.data,
             }

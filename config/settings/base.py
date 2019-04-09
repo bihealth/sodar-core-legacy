@@ -83,7 +83,7 @@ LOCAL_APPS = [
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
     # External Data Cache app
-    'sodarcache.apps.SodarCacheConfig',
+    'sodarcache.apps.SodarcacheConfig',
     # Example project app
     'example_project_app.apps.ExampleProjectAppConfig',
     # Example site app
