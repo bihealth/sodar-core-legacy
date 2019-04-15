@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Missing curl dependency in ``install_os_dependencies.sh`` (#211)
 - **Projectroles**
     - Optional ``user`` argument in ``ProjectAppPlugin.update_cache()`` (#203)
 - **Sodarcache**
