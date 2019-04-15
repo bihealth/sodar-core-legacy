@@ -45,6 +45,8 @@ Fixed
 Removed
 -------
 
+- **General**
+    - Django debug toolbar workarounds from ``project.css`` and ``project.scss`` (#215)
 - **Projectroles**
     - ``PROJECTROLES_ADMIN_OWNER`` deprecation protection: use ``PROJECTROLES_DEFAULT_ADMIN`` (#190)
 
