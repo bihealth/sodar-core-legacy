@@ -16,6 +16,15 @@ be missing. Please click "display source" if you want to read this in GitLab.
 v0.5.1 (WIP)
 ============
 
+Site App Templates
+------------------
+
+Templates for **site apps** should extend ``projectroles/base.html``. In earlier
+versions the documentation erroneously stated ``projectroles/project_base.html``
+as the base template to use. Extending that document does work in this version
+as long as you override the given template blocks. However, it is not
+recommended and may break in the future.
+
 Sodarcache App Changes
 ----------------------
 

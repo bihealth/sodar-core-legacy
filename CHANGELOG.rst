@@ -24,6 +24,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Extend ``projectroles/base.html`` for all site app templates, update docs (#217)
 - **Sodarcache**
     - Make ``user`` field optional in models and API (#204)
     - Rename app configuration into ``SodarcacheConfig`` to follow naming conventions (#202)
