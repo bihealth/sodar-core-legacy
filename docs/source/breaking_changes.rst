@@ -32,6 +32,8 @@ An optional ``user`` argument has been added to
 ``ProjectCacheAPI.set_cache_item()`` has been made optional. Please update your
 plugin implementations and function calls accordingly.
 
+The ``updatecache`` management command has been renamed to ``synccache``.
+
 Helper get_app_names() Fixed
 -----------------------------
 
