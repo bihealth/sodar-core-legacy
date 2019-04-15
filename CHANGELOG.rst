@@ -34,6 +34,7 @@ Fixed
 
 - **General**
     - Add missing curl dependency in ``install_os_dependencies.sh`` (#211)
+    - Django debug toolbar not displayed when using local configuration (#213)
 - **Projectroles**
     - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
     - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
