@@ -25,6 +25,8 @@ Changed
 
 - **Sodarcache**
     - Make ``user`` field optional in models and API (#204)
+    - Rename app configuration into ``SodarcacheConfig` to follow naming conventions (#202)
+    - Rename ``updatecache`` management command to ``synccache`` (#208)
 
 Fixed
 -----
@@ -34,8 +36,6 @@ Fixed
     - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
     - Long category paths breaking remote project list (#84)
     - Incorrect table rows displayed during project list initialization (#212)
-- **Sodarcache**
-    - Modify app configuration to follow naming conventions (#202)
 
 
 v0.5.0 (2019-04-03)

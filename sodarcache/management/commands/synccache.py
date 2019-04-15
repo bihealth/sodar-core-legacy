@@ -1,7 +1,7 @@
 import logging
 
 from django.conf import settings
-from django.core.management.base import BaseCommand  # , CommandError
+from django.core.management.base import BaseCommand
 
 from projectroles.plugins import get_active_plugins, get_backend_api
 
@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
-    help = 'Updates cached data from external services'
+    help = 'Synchronizes cached data from external services'
 
     def add_arguments(self, parser):
         pass
@@ -32,4 +32,4 @@ class Command(BaseCommand):
         for plugin in plugins:
             plugin.update_cache()
 
-        logger.info('Updated cached data for all projects and apps')
+        logger.info('Synchronized cached data for all projects and apps')
