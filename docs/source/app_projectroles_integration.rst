@@ -287,6 +287,17 @@ line:
     **mandatory** for Projectroles-based views to work without modifications.
 
 
+Site Error Templates
+====================
+
+The projectroles app contains default error templates to use on your site.
+These are located in the ``projectroles/error/`` template directory. You can
+use them by entering ``{% extends 'projectroles/error/*.html %}`` in the
+corresponding files found in the ``{SITE_NAME}/templates/`` directory. You have
+the options of extending or replacing content on the templates, or simply
+implementing your own.
+
+
 All Done!
 =========
 

@@ -15,6 +15,7 @@ Added
 
 - **General**
     - Bgjobs/Celery updates from Kiosc (#175)
+    - Default error templates in ``projectroles/error/*.html`` (#210)
 - **Projectroles**
     - Optional ``user`` argument in ``ProjectAppPlugin.update_cache()`` (#203)
     - Migration for missing ``RemoteProject`` foreign keys (#197)
@@ -26,6 +27,7 @@ Changed
 
 - **General**
     - Extend ``projectroles/base.html`` for all site app templates, update docs (#217)
+    - Use projectroles error templates on the example site (#210)
 - **Sodarcache**
     - Make ``user`` field optional in models and API (#204)
     - Rename app configuration into ``SodarcacheConfig`` to follow naming conventions (#202)
