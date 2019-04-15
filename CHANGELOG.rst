@@ -41,6 +41,7 @@ Fixed
     - Long category paths breaking remote project list (#84)
     - Incorrect table rows displayed during project list initialization (#212)
     - Field ``project`` not set for source site ``RemoteProject`` objects (#197)
+    - Crash from ``project_base.html`` in site app if not overriding title block (#216)
 
 Removed
 -------
