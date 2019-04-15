@@ -180,7 +180,9 @@ class RemoteProjectMixin:
             'site': site,
             'level': level,
             'date_access': date_access,
-            'project': project,
+            'project': project
+            if project
+            else Project.objects.filter(sodar_uuid=project_uuid).first(),
         }
         remote_project = RemoteProject(**values)
         remote_project.save()

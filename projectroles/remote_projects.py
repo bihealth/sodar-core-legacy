@@ -560,7 +560,7 @@ class RemoteProjectAPI:
         # Create/update a RemoteProject object
         try:
             remote_project = RemoteProject.objects.get(
-                site=self.source_site, project_uuid=project.sodar_uuid
+                site=self.source_site, project=project
             )
             remote_project.level = p_data['level']
             remote_project.project = project

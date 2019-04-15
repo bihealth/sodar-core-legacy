@@ -14,10 +14,10 @@ Added
 -----
 
 - **General**
-    - Missing curl dependency in ``install_os_dependencies.sh`` (#211)
     - Bgjobs/Celery updates from Kiosc (#175)
 - **Projectroles**
     - Optional ``user`` argument in ``ProjectAppPlugin.update_cache()`` (#203)
+    - Migration for missing ``RemoteProject`` foreign keys (#197)
 - **Sodarcache**
     - API logging (#207)
 
@@ -26,17 +26,20 @@ Changed
 
 - **Sodarcache**
     - Make ``user`` field optional in models and API (#204)
-    - Rename app configuration into ``SodarcacheConfig` to follow naming conventions (#202)
+    - Rename app configuration into ``SodarcacheConfig`` to follow naming conventions (#202)
     - Rename ``updatecache`` management command to ``synccache`` (#208)
 
 Fixed
 -----
 
+- **General**
+    - Add missing curl dependency in ``install_os_dependencies.sh`` (#211)
 - **Projectroles**
     - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
     - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
     - Long category paths breaking remote project list (#84)
     - Incorrect table rows displayed during project list initialization (#212)
+    - Field ``project`` not set for source site ``RemoteProject`` objects (#197)
 
 Removed
 -------
