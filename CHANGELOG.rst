@@ -37,6 +37,12 @@ Fixed
     - Long category paths breaking remote project list (#84)
     - Incorrect table rows displayed during project list initialization (#212)
 
+Removed
+-------
+
+- **Projectroles**
+    - ``PROJECTROLES_ADMIN_OWNER`` deprecation protection: use ``PROJECTROLES_DEFAULT_ADMIN`` (#190)
+
 
 v0.5.0 (2019-04-03)
 ===================

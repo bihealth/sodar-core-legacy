@@ -40,6 +40,12 @@ Helper get_app_names() Fixed
 The ``projectroles.utils.get_app_names()`` function will now return nested app
 names properly instead of omitting everything beyond the topmost module.
 
+Default Admin Setting Deprecation Removed
+-----------------------------------------
+
+The ``PROJECTROLES_ADMIN_OWNER`` setting no longer works. Use
+``PROJECTROLES_DEFAULT_ADMIN`` instead.
+
 
 v0.5.0 (2019-04-03)
 ===================
