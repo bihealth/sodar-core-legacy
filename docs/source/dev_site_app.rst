@@ -149,7 +149,7 @@ Site App Messages
 =================
 
 The site app provides a way to display certain messages to users. For this, you
-need to implement ``get_mesasges()`` in the ``SiteAppPlugin`` class.
+need to implement ``get_messages()`` in the ``SiteAppPlugin`` class.
 
 If you need to control e.g. which user should see the message or removal of a
 message after showing, you need to implement relevant logic in the function.
