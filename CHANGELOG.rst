@@ -33,6 +33,7 @@ Fixed
     - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
     - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
     - Long category paths breaking remote project list (#84)
+    - Incorrect table rows displayed during project list initialization (#212)
 - **Sodarcache**
     - Modify app configuration to follow naming conventions (#202)
 
