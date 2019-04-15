@@ -7,9 +7,20 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
+    .table#sodar-pr-remote-project-table {
+        table-layout: fixed;
+    }
+
     .table#sodar-pr-remote-project-table thead tr th:last-child,
     .table#sodar-pr-remote-project-table tbody tr td:last-child {
       width: 250px;
+      min-width: 250px;
+    }
+
+    .table#sodar-pr-remote-project-table thead tr th:nth-child(2),
+    .table#sodar-pr-remote-project-table tbody tr td:nth-child(2) {
+      width: 170px;
+      min-width: 170px;
     }
 
     @media screen and (max-width: 900px) {
