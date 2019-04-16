@@ -21,6 +21,7 @@ Added
     - Migration for missing ``RemoteProject`` foreign keys (#197)
 - **Sodarcache**
     - API logging (#207)
+    - Indexing of identifying fields (#218)
 
 Changed
 -------
