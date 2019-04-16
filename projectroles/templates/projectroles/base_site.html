@@ -19,9 +19,9 @@
       {{ site_title }}{% if site_subtitle %} {{ site_subtitle }}{% endif %}:
       {% block title %}Page Title{% endblock title %}
     </title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="description" content="">
-      <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
 
     {% block head_javascript %}
       <!-- Critical Javascript includes -->
@@ -103,7 +103,6 @@
     {# Include your Javascript here #}
     {% block javascript %}
       <!-- Settings -->
-      <!-- Settings for Javascript -->
       <script type="text/javascript">
         {% get_setting name='PROJECTROLES_BROWSER_WARNING' js=True as browser_warning %}
         window.sodarBrowserWarning = {{ browser_warning }};

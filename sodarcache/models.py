@@ -12,11 +12,12 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 
 class BaseCacheItem(models.Model):
-    """abstract class representing a cached item"""
+    """Abstract class representing a cached item"""
 
     class Meta:
         abstract = True
         unique_together = (('project', 'app_name', 'name'),)
+        indexes = [models.Index(fields=['project', 'app_name', 'name'])]
 
     #: Project in which the item belongs (optional)
     project = models.ForeignKey(
@@ -45,9 +46,12 @@ class BaseCacheItem(models.Model):
         auto_now_add=True, help_text='DateTime of the update'
     )
 
-    #: User who updated the item
+    #: User who updated the item (optional)
     user = models.ForeignKey(
-        AUTH_USER_MODEL, help_text='User who updated the item'
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        help_text='User who updated the item (optional)',
     )
 
     #: UUID for the item
@@ -57,7 +61,7 @@ class BaseCacheItem(models.Model):
 
 
 class JSONCacheItem(BaseCacheItem):
-    """class representing a cached item in JSON format"""
+    """Class representing a cached item in JSON format"""
 
     #: Cached data as JSON
     data = JSONField(default=dict, help_text='Cached data as JSON')

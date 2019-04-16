@@ -6,6 +6,17 @@
 
 {% block title %}Home{% endblock title %}
 
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    tr.sodar-pr-home-display-filtered,
+    tr.sodar-pr-home-display-notfound,
+    tr.sodar-pr-home-display-nostars {
+      display: none;
+    }
+  </style>
+{% endblock css %}
+
 {% block projectroles %}
 
 {% has_perm 'projectroles.create_project' request.user as can_create_project %}

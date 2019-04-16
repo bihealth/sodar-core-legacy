@@ -110,7 +110,7 @@ management command.
 
 .. code-block:: console
 
-    $ ./manage.py updatecache
+    $ ./manage.py synccache
 
 Similarly, there is a command to delete all cached data:
 

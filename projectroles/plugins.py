@@ -156,12 +156,13 @@ class ProjectAppPluginPoint(PluginPoint):
             }
         }
 
-    def update_cache(self, name=None, project=None):
+    def update_cache(self, name=None, project=None, user=None):
         """
         Update cached data for this app, limitable to item ID and/or project.
 
-        :param project: Project object to limit update to (optional)
         :param name: Item name to limit update to (string, optional)
+        :param project: Project object to limit update to (optional)
+        :param user: User object to denote user triggering the update (optional)
         """
         # TODO: Implement this in your app plugin
         return None

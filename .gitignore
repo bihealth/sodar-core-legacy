@@ -69,7 +69,6 @@ node_modules/
 # User-uploaded media
 example_site/media/
 
-
 # Static files
 staticfiles/
 
@@ -82,3 +81,6 @@ flamegraph.pl
 # Certificate files
 *.crt
 *.pem
+
+# Celery
+celerybeat-schedule

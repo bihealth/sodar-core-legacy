@@ -7,6 +7,56 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.5.1 (2019-04-16)
+===================
+
+Added
+-----
+
+- **General**
+    - Bgjobs/Celery updates from Kiosc (#175)
+    - Default error templates in ``projectroles/error/*.html`` (#210)
+- **Projectroles**
+    - Optional ``user`` argument in ``ProjectAppPlugin.update_cache()`` (#203)
+    - Migration for missing ``RemoteProject`` foreign keys (#197)
+- **Sodarcache**
+    - API logging (#207)
+    - Indexing of identifying fields (#218)
+
+Changed
+-------
+
+- **General**
+    - Extend ``projectroles/base.html`` for all site app templates, update docs (#217)
+    - Use projectroles error templates on the example site (#210)
+- **Sodarcache**
+    - Make ``user`` field optional in models and API (#204)
+    - Rename app configuration into ``SodarcacheConfig`` to follow naming conventions (#202)
+    - Rename ``updatecache`` management command to ``synccache`` (#208)
+
+Fixed
+-----
+
+- **General**
+    - Add missing curl dependency in ``install_os_dependencies.sh`` (#211)
+    - Django debug toolbar not displayed when using local configuration (#213)
+- **Projectroles**
+    - Nested app names not properly returned by ``utils.get_app_names()`` (#206)
+    - Forced width set for all Bootstrap modals in ``projectroles.css`` (#209)
+    - Long category paths breaking remote project list (#84)
+    - Incorrect table rows displayed during project list initialization (#212)
+    - Field ``project`` not set for source site ``RemoteProject`` objects (#197)
+    - Crash from ``project_base.html`` in site app if not overriding title block (#216)
+
+Removed
+-------
+
+- **General**
+    - Django debug toolbar workarounds from ``project.css`` and ``project.scss`` (#215)
+- **Projectroles**
+    - ``PROJECTROLES_ADMIN_OWNER`` deprecation protection: use ``PROJECTROLES_DEFAULT_ADMIN`` (#190)
+
+
 v0.5.0 (2019-04-03)
 ===================
 

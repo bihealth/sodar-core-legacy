@@ -1947,6 +1947,7 @@ class RemoteProjectsBatchUpdateView(
 
         for k, v in access_fields.items():
             project_uuid = k.split('_')[2]
+            project = Project.objects.filter(sodar_uuid=project_uuid).first()
 
             # Update or create a RemoteProject object
             try:
@@ -1957,13 +1958,15 @@ class RemoteProjectsBatchUpdateView(
 
             except RemoteProject.DoesNotExist:
                 rp = RemoteProject(
-                    site=site, project_uuid=project_uuid, level=v
+                    site=site,
+                    project_uuid=project_uuid,
+                    project=project,
+                    level=v,
                 )
 
             rp.save()
 
-            if timeline:
-                project = Project.objects.get(sodar_uuid=project_uuid)
+            if timeline and project:
                 tl_desc = 'update remote access for site {{{}}} to {}'.format(
                     'site',
                     v,

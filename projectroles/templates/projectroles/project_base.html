@@ -4,7 +4,11 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% block title %}{% get_display_name project.type title=True %} "{{ project.title }}"{% endblock title %}
+{% block title %}
+  {% if project %}
+    {% get_display_name project.type title=True %} {{ project.title }}
+  {% endif %}
+{% endblock title %}
 
 {% block projectroles %}
 

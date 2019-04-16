@@ -1,5 +1,5 @@
 from django.apps import AppConfig
 
 
-class SodarCacheConfig(AppConfig):
+class SodarcacheConfig(AppConfig):
     name = 'sodarcache'

@@ -1,4 +1,6 @@
-"""SodarCache API for adding and updating cache items"""
+"""Sodarcache API for adding and updating cache items"""
+
+import logging
 
 from django.contrib.auth import get_user_model
 
@@ -12,11 +14,12 @@ from sodarcache.models import JSONCacheItem
 # Local variables
 APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
-
 CACHE_TYPES = ['json']
 
 # Access Django user model
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 class SodarCacheAPI:
@@ -61,18 +64,19 @@ class SodarCacheAPI:
         return JSONCacheItem.objects.filter(project=project)
 
     @classmethod
-    def update_cache(cls, name=None, project=None):
+    def update_cache(cls, name=None, project=None, user=None):
         """
         Update items by certain name within a project by calling implemented
         functions in project app plugins.
 
-        :param project: Project object to limit update to (optional)
         :param name: Item name to limit update to (string, optional)
+        :param project: Project object to limit update to (optional)
+        :param user: User object to denote user triggering the update (optional)
         """
         plugins = get_active_plugins(plugin_type='project_app')
 
         for plugin in plugins:
-            plugin.update_cache(name, project)
+            plugin.update_cache(name, project, user)
 
     @classmethod
     def get_cache_item(cls, app_name, name, project=None):
@@ -97,17 +101,17 @@ class SodarCacheAPI:
 
     @classmethod
     def set_cache_item(
-        cls, app_name, name, user, data, data_type='json', project=None
+        cls, app_name, name, data, data_type='json', project=None, user=None
     ):
         """
         Create or update and save a cache item.
 
         :param app_name: name of the app which sets the item (string)
         :param name: Item name (string)
-        :param user: User creating/updating the item
         :param data: item data (dict)
         :param data_type: string stating the data type of the cache items
         :param project: Project object (optional)
+        :param user: User object to denote user triggering the update (optional)
         :return: JSONCacheItem object
         :raise: ValueError if app_name is invalid
         :raise: ValueError if data_type is invalid
@@ -115,6 +119,7 @@ class SodarCacheAPI:
         cls._check_app_name(app_name)
         cls._check_data_type(data_type)
         item = cls.get_cache_item(app_name, name, project)
+        log_msg = 'Updated item "{}:{}"'.format(app_name, name)
 
         if not item:
             if data_type == 'json':
@@ -122,13 +127,20 @@ class SodarCacheAPI:
                 item.name = name
                 item.app_name = app_name
 
-        item.user = user
         item.data = data
 
         if project:
             item.project = project
+            log_msg += ' in project "{}" ({})'.format(
+                project.title, project.sodar_uuid
+            )
+
+        if user:
+            item.user = user
+            log_msg += ' by user "{}"'.format(user.username)
 
         item.save()
+        logger.info(log_msg)
         return item
 
     @classmethod

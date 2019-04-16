@@ -90,16 +90,19 @@ def get_expiry_date():
 
 
 def get_app_names():
-    """Return list of names for local apps."""
+    """Return list of names for locally installed non-django apps"""
+    ret = []
 
-    # TODO: Restrict this to SODAR Core apps
-    return sorted(
-        [
-            a.split('.')[0]
-            for a in settings.INSTALLED_APPS
-            if a.split('.')[0] not in ['django', settings.SITE_PACKAGE]
-        ]
-    )
+    for a in settings.INSTALLED_APPS:
+        s = a.split('.')
+
+        if s[0] not in ['django', settings.SITE_PACKAGE]:
+            if len(s) > 1 and 'apps' in s:
+                ret.append('.'.join(s[0 : s.index('apps')]))
+            else:
+                ret.append(s[0])
+
+    return sorted(ret)
 
 
 def set_user_group(user):

@@ -560,7 +560,7 @@ class RemoteProjectAPI:
         # Create/update a RemoteProject object
         try:
             remote_project = RemoteProject.objects.get(
-                site=self.source_site, project_uuid=project.sodar_uuid
+                site=self.source_site, project=project
             )
             remote_project.level = p_data['level']
             remote_project.project = project
@@ -704,15 +704,10 @@ class RemoteProjectAPI:
         self.updated_parents = []
 
         # Get default owner if remote projects have a local owner
-
-        if hasattr(settings, 'PROJECTROLES_DEFAULT_ADMIN'):
-            admin_username = settings.PROJECTROLES_DEFAULT_ADMIN
-
-        else:  # Avoiding crash if the variable is not renamed, will be removed
-            admin_username = settings.PROJECTROLES_ADMIN_OWNER
-
         try:
-            self.default_owner = User.objects.get(username=admin_username)
+            self.default_owner = User.objects.get(
+                username=settings.PROJECTROLES_DEFAULT_ADMIN
+            )
 
         except User.DoesNotExist:
             error_msg = (

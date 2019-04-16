@@ -117,13 +117,13 @@ allowed to access a view are properly redirected. Example:
 Templates
 =========
 
-It is recommended for you to extend ``projectroles/project_base.html`` and put
-your actual app content within the ``projectroles`` block. Example:
+It is recommended for you to extend ``projectroles/base.html`` and put your
+actual app content within the ``projectroles`` block. Example:
 
 .. code-block:: django
 
     {# Projectroles dependency #}
-    {% extends 'projectroles/project_base.html' %}
+    {% extends 'projectroles/base.html' %}
     {% load projectroles_common_tags %}
 
     {% block title %}
@@ -149,7 +149,7 @@ Site App Messages
 =================
 
 The site app provides a way to display certain messages to users. For this, you
-need to implement ``get_mesasges()`` in the ``SiteAppPlugin`` class.
+need to implement ``get_messages()`` in the ``SiteAppPlugin`` class.
 
 If you need to control e.g. which user should see the message or removal of a
 message after showing, you need to implement relevant logic in the function.
