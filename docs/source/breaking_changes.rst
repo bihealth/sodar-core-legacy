@@ -13,8 +13,8 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-v0.5.1 (WIP)
-============
+v0.5.1 (2019-04-16)
+===================
 
 Site App Templates
 ------------------
