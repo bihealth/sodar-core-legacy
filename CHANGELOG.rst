@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Bgjobs**
+    - Date formatting in templates (#220)
+
+
 v0.5.1 (2019-04-16)
 ===================
 
