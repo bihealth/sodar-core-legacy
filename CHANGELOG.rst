@@ -16,6 +16,9 @@ Changed
 - **General**
     - Upgrade site to django-sodar-core v0.5.1 (#480)
     - Upgrade to ChromeDriver v74 (#221)
+- **Bgjobs**
+    - Changed ordering of background job for homgenization with downstream Varfish.
+      Varfish will now move to the SODAR core ``bgjobs`` module.
 
 Fixed
 -----
