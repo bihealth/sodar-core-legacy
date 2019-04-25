@@ -10,6 +10,13 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade site to django-sodar-core v0.5.1 (#480)
+    - Upgrade to ChromeDriver v74 (#221)
+
 Fixed
 -----
 
