@@ -58,3 +58,10 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 100
+
+    #: Example/test user settings
+    user_settings = {
+        'str_setting': {'type': 'STRING', 'default': ''},
+        'int_setting': {'type': 'INTEGER', 'default': 0},
+        'bool_setting': {'type': 'BOOLEAN', 'default': False},
+    }

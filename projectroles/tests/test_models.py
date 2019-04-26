@@ -113,7 +113,9 @@ class ProjectSettingMixin:
     """Helper mixin for ProjectSetting creation"""
 
     @classmethod
-    def _make_setting(cls, app_name, project, name, setting_type, value):
+    def _make_setting(
+        cls, app_name, name, setting_type, value, project=None, user=None
+    ):
         """Make and save a ProjectSetting"""
         values = {
             'app_plugin': get_app_plugin(app_name).get_model(),
@@ -121,6 +123,7 @@ class ProjectSettingMixin:
             'name': name,
             'type': setting_type,
             'value': value,
+            'user': user,
         }
         setting = ProjectSetting(**values)
         setting.save()
@@ -757,7 +760,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 class TestProjectSetting(
     ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
 ):
-    """Tests for model.ProjectSetting"""
+    """Tests for model.ProjectSetting with ``user == None``"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -778,28 +781,28 @@ class TestProjectSetting(
         # Init test setting
         self.setting_str = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
-            project=self.project,
             name='str_setting',
             setting_type='STRING',
             value='test',
+            project=self.project,
         )
 
         # Init integer setting
         self.setting_int = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
-            project=self.project,
             name='int_setting',
             setting_type='INTEGER',
             value=170,
+            project=self.project,
         )
 
         # Init boolean setting
         self.setting_bool = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
-            project=self.project,
             name='bool_setting',
             setting_type='BOOLEAN',
             value=True,
+            project=self.project,
         )
 
     def test_initialization(self):
@@ -810,6 +813,7 @@ class TestProjectSetting(
             'project': self.project.pk,
             'name': 'str_setting',
             'type': 'STRING',
+            'user': None,
             'value': 'test',
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
@@ -823,6 +827,7 @@ class TestProjectSetting(
             'project': self.project.pk,
             'name': 'int_setting',
             'type': 'INTEGER',
+            'user': None,
             'value': '170',
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
@@ -835,9 +840,104 @@ class TestProjectSetting(
 
     def test__repr__(self):
         """Test ProjectSetting __repr__()"""
-        expected = (
-            "ProjectSetting('TestProject', '{}', "
-            "'str_setting')".format(EXAMPLE_APP_NAME)
+        expected = "ProjectSetting('TestProject', None, '{}', 'str_setting')".format(
+            EXAMPLE_APP_NAME
+        )
+        self.assertEqual(repr(self.setting_str), expected)
+
+    def test_get_value_str(self):
+        """Test get_value() with type STRING"""
+        val = self.setting_str.get_value()
+        self.assertIsInstance(val, str)
+        self.assertEqual(val, 'test')
+
+    def test_get_value_int(self):
+        """Test get_value() with type INTEGER"""
+        val = self.setting_int.get_value()
+        self.assertIsInstance(val, int)
+        self.assertEqual(val, 170)
+
+    def test_get_value_bool(self):
+        """Test get_value() with type BOOLEAN"""
+        val = self.setting_bool.get_value()
+        self.assertIsInstance(val, bool)
+        self.assertEqual(val, True)
+
+
+class TestUserSetting(
+    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
+):
+    """Tests for model.ProjectSetting with ``project == None``"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        # Init user & role
+        self.user = self.make_user('owner')
+
+        # Init test setting
+        self.setting_str = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='str_setting',
+            setting_type='STRING',
+            value='test',
+            user=self.user,
+        )
+
+        # Init integer setting
+        self.setting_int = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='int_setting',
+            setting_type='INTEGER',
+            value=170,
+            user=self.user,
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            user=self.user,
+        )
+
+    def test_initialization(self):
+        """Test ProjectSetting initialization"""
+        expected = {
+            'id': self.setting_str.pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'project': None,
+            'name': 'str_setting',
+            'type': 'STRING',
+            'user': self.user.pk,
+            'value': 'test',
+            'sodar_uuid': self.setting_str.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.setting_str), expected)
+
+    def test_initialization_integer(self):
+        """Test initialization with integer value"""
+        expected = {
+            'id': self.setting_int.pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'project': None,
+            'name': 'int_setting',
+            'type': 'INTEGER',
+            'user': self.user.pk,
+            'value': '170',
+            'sodar_uuid': self.setting_int.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.setting_int), expected)
+
+    def test__str__(self):
+        """Test ProjectSetting __str__()"""
+        expected = 'owner: {} / str_setting'.format(EXAMPLE_APP_NAME)
+        self.assertEqual(str(self.setting_str), expected)
+
+    def test__repr__(self):
+        """Test ProjectSetting __repr__()"""
+        expected = "ProjectSetting(None, 'owner', '{}', 'str_setting')".format(
+            EXAMPLE_APP_NAME
         )
         self.assertEqual(repr(self.setting_str), expected)
 

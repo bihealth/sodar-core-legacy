@@ -16,6 +16,13 @@ Changed
 - **General**
     - Upgrade site to django-sodar-core v0.5.1 (#480)
     - Upgrade to ChromeDriver v74 (#221)
+- **Projectroles**
+    - Writing the empty dict ``{}`` for ``project_settings`` in plugins by default.
+    - Interpreting optional ``"label"`` key for settings.
+    - Adding ``user_settings`` field to project plugins.
+    - Enabling to link settings to users instead of projects for user settings.
+- **Userprofiles**
+    - Adding UI for displaying and updating user settings.
 - **Bgjobs**
     - Changed ordering of background job for homgenization with downstream Varfish.
       Varfish will now move to the SODAR core ``bgjobs`` module.
