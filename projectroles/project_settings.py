@@ -20,6 +20,8 @@ def get_default_setting(app_name, setting_name):
         and setting_name in app_plugin.project_settings
     ):
         return app_plugin.project_settings[setting_name]['default']
+    elif app_plugin.user_settings and setting_name in app_plugin.user_settings:
+        return app_plugin.user_settings[setting_name]['default']
 
     raise KeyError(
         'Setting "{}" not found in app plugin "{}"'.format(
@@ -41,7 +43,7 @@ def get_project_setting(project, app_name, setting_name):
     if project:
         try:
             return ProjectSetting.objects.get_setting_value(
-                project, app_name, setting_name
+                app_name, setting_name, project=project
             )
 
         except ProjectSetting.DoesNotExist:

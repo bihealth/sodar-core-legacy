@@ -40,6 +40,15 @@ Projectroles provides helper functions for getting or setting project settings.
     :members:
 
 
+User Settings API
+=================
+
+Projectroles also provides helper functions for getting or setting user settings.
+
+.. automodule:: projectroles.user_settings
+    :members:
+
+
 Common Template Tags
 ====================
 

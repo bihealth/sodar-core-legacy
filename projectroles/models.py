@@ -466,28 +466,43 @@ class RoleAssignment(models.Model):
 class ProjectSettingManager(models.Manager):
     """Manager for custom table-level ProjectSetting queries"""
 
-    def get_setting_value(self, project, app_name, setting_name):
+    def get_setting_value(
+        self, app_name, setting_name, project=None, user=None
+    ):
         """
-        Return value of setting_name for app_name in project.
+        Return value of setting_name for app_name in project or for user.
 
-        :param project: Project object or pk
+        Note that either project or user must be None but not both.
+
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
+        :param project: Project object or pk
+        :param user: User object or pk
         :return: Value (string)
         :raise: ProjectSetting.DoesNotExist if setting is not found
         """
+        if (project is None) == (user is None):
+            raise ValueError("Either project or user has to be None.")
         setting = (
             super()
             .get_queryset()
-            .get(app_plugin__name=app_name, project=project, name=setting_name)
+            .get(
+                app_plugin__name=app_name,
+                name=setting_name,
+                project=project,
+                user=user,
+            )
         )
         return setting.get_value()
 
 
 class ProjectSetting(models.Model):
     """
-    Project settings variable. These are generated based on the
-    "project_settings" definition in app plugins (plugins.py)
+    Project and users settings value.
+
+    Projects are based on the ``project_settings`` definition in app plugins whereas user settings are based on the
+    ``user_settings`` definition (``plugins.py``).  Project AND user-specific settings are currently not supported
+    and settings that belong to neither are also unsupported at the moment.
     """
 
     #: App to which the setting belongs
@@ -502,9 +517,19 @@ class ProjectSetting(models.Model):
     #: Project to which the setting belongs
     project = models.ForeignKey(
         Project,
-        null=False,
-        related_name='settings',
+        null=True,
+        blank=True,
+        related_name='settings',  # TODO: rename to project_settings?
         help_text='Project to which the setting belongs',
+    )
+
+    #: Project to which the setting belongs
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='user_settings',
+        help_text='User to which the setting belongs',
     )
 
     #: Name of the setting
@@ -542,12 +567,19 @@ class ProjectSetting(models.Model):
         unique_together = ('project', 'app_plugin', 'name')
 
     def __str__(self):
-        return '{}: {} / {}'.format(
-            self.project.title, self.app_plugin.name, self.name
-        )
+        if self.project:
+            label = self.project.title
+        else:
+            label = self.user.username
+        return '{}: {} / {}'.format(label, self.app_plugin.name, self.name)
 
     def __repr__(self):
-        values = (self.project.title, self.app_plugin.name, self.name)
+        values = (
+            self.project.title if self.project else None,
+            self.user.username if self.user else None,
+            self.app_plugin.name,
+            self.name,
+        )
         return 'ProjectSetting({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):

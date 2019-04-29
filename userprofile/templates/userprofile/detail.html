@@ -34,5 +34,39 @@
     </div>
   </div>
 
+  <div class="card" id="sodar-user-details-card">
+    <div class="card-header">
+      <h4>
+        <i class="fa fa-sliders"></i> Settings
+        <a role="button" class="btn btn-primary pull-right" href="{% url 'userprofile:update-settings' %}">
+          <i class="fa fa-edit"></i> Update
+        </a>
+      </h4>
+    </div>
+    <div class="card-body">
+      <div class="row">
+        <div class="col px-0">
+          <dl class="row">
+            {% for setting in user_settings %}
+              <dt class="col-2 font-weight-bold">{{ setting.label }}</dt>
+              <dd class="col-10">
+                {% if not setting.value %}
+                  <span class="font-italic">not set</span>
+                {% else %}
+                  {{ setting.value }}
+                {% endif %}
+                {% if setting.description %}
+                  <br>
+                  <small class="text-muted font-italic">{{ setting.description }}</small>
+                {% endif %}
+              </dd>
+            {% empty %}
+              <dd class="col-12 text-center text-muted font-italic">No user settings available.</dd>
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock projectroles %}

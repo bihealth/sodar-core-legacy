@@ -123,11 +123,13 @@ class ProjectForm(forms.ModelForm):
 
         for p in self.app_plugins:
             for s_key in sorted(p.project_settings):
+                s_value = p.project_settings[s_key]
                 s = p.project_settings[s_key]
                 s_field = 'settings.{}.{}'.format(p.name, s_key)
                 setting_kwargs = {
                     'required': False,
-                    'label': '{}.{}'.format(p.name, s_key),
+                    'label': s_value.get('label')
+                    or '{}.{}'.format(p.name, s_key),
                     'help_text': s['description'],
                 }
 

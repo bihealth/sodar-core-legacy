@@ -1,0 +1,46 @@
+{% extends 'projectroles/base.html' %}
+
+{% load rules %}
+{% load crispy_forms_filters %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+{% block title %}
+  Update User Settings
+{% endblock title %}
+
+{% block head_extend %}
+  {{ form.media }}
+{% endblock head_extend %}
+
+{% block projectroles %}
+  <div class="row sodar-pr-content-title">
+    <h2 class="sodar-pr-content-title">{{ request.user.get_full_name }}</h2>
+    <div class="sodar-pr-content-title-secondary text-muted">
+      User Profile
+    </div>
+  </div>
+
+  <div class="row sodar-subtitle-container">
+    <h3>Update Settings</h3>
+  </div>
+
+  <div class="container-fluid sodar-page-container">
+    <form method="post">
+      {% csrf_token %}
+      {{ form | crispy }}
+      <div class="row">
+        <div class="btn-group ml-auto" role="group">
+          <a role="button" class="btn btn-secondary"
+             href="{{ request.session.real_referer }}">
+            <i class="fa fa-arrow-circle-left"></i> Cancel
+          </a>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa fa-check"></i>
+              Update
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+{% endblock projectroles %}
