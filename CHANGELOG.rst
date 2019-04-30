@@ -10,22 +10,26 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - User settings for settings linked to users instead of projects (#16)
+    - ``user_settings`` field in project plugins (#16)
+    - Optional ``label`` key for settings
+- **Userprofiles**
+    - Form for displaying and updating user settings (#16)
+
 Changed
 -------
 
 - **General**
     - Upgrade site to django-sodar-core v0.5.1 (#480)
     - Upgrade to ChromeDriver v74 (#221)
-- **Projectroles**
-    - Writing the empty dict ``{}`` for ``project_settings`` in plugins by default.
-    - Interpreting optional ``"label"`` key for settings.
-    - Adding ``user_settings`` field to project plugins.
-    - Enabling to link settings to users instead of projects for user settings.
-- **Userprofiles**
-    - Adding UI for displaying and updating user settings.
 - **Bgjobs**
-    - Changed ordering of background job for homgenization with downstream Varfish.
-      Varfish will now move to the SODAR core ``bgjobs`` module.
+    - Ordering of background job for homgenization with downstream Varfish
+- **Projectroles**
+    - Write an empty dict ``{}`` for ``project_settings`` in by default
 
 Fixed
 -----
