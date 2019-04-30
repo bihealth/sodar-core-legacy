@@ -86,7 +86,20 @@ class TestJsonCacheItem(JsonCacheItemMixin, TestJsonCacheItemBase):
         expected = 'TestProject: sodarcache: test_item'
         self.assertEqual(str(self.item), expected)
 
-    # TODO assert datetime
     def test__repr__(self):
         expected = "JSONCacheItem('TestProject', 'sodarcache', 'test_item')"
         self.assertEqual(repr(self.item), expected)
+
+    def test__repr__no_project(self):
+        """Test __repr__() with no project"""
+
+        new_item = self._make_item(
+            project=None,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item2',
+            data={'test_key': 'test_val'},
+        )
+
+        expected = "JSONCacheItem('N/A', 'sodarcache', 'test_item2')"
+        self.assertEqual(repr(new_item), expected)

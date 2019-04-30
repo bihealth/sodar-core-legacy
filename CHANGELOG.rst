@@ -36,6 +36,8 @@ Fixed
 
 - **Bgjobs**
     - Date formatting in templates (#220)
+- **Sodarcache**
+    - Crash from ``__repr()__`` if project not set (#223)
 
 
 v0.5.1 (2019-04-16)
