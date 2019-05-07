@@ -40,7 +40,7 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-create',
     'sodar-pr-link-project-star',
 ]
-
+DEFAULT_WAIT_LOC = 'ID'
 
 User = auth.get_user_model()
 
@@ -148,8 +148,18 @@ class TestUIBase(
         """Build absolute URL to work with Selenium"""
         return '{}{}'.format(self.live_server_url, url)
 
-    def login_and_redirect(self, user, url):
-        """Login with Selenium and wait for redirect to given url"""
+    def login_and_redirect(
+        self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
+    ):
+        """
+        Login with Selenium and wait for redirect to given URL.
+
+        :param user: User object
+        :param url: URL to redirect to (string)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
+        """
 
         self.selenium.get(self.build_selenium_url('/'))
 
@@ -213,16 +223,36 @@ class TestUIBase(
             )
         )
 
-    def assert_element_exists(self, users, url, element_id, exists):
+        # Wait for optional element
+        if wait_elem:
+            WebDriverWait(self.selenium, self.wait_time).until(
+                ec.presence_of_element_located(
+                    (getattr(By, wait_loc), wait_elem)
+                )
+            )
+
+    def assert_element_exists(
+        self,
+        users,
+        url,
+        element_id,
+        exists,
+        wait_elem=None,
+        wait_loc=DEFAULT_WAIT_LOC,
+    ):
         """
         Assert existence of element on webpage based on logged user.
+
         :param users: User objects to test (list)
         :param url: URL to test (string)
         :param element_id: ID of element (string)
         :param exists: Whether element should or should not exist (boolean)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
         """
         for user in users:
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, url, wait_elem, wait_loc)
 
             if exists:
                 self.assertIsNotNone(
@@ -234,21 +264,31 @@ class TestUIBase(
                     self.selenium.find_element_by_id(element_id)
 
     def assert_element_count(
-        self, expected, url, search_string, attribute='id'
+        self,
+        expected,
+        url,
+        search_string,
+        attribute='id',
+        wait_elem=None,
+        wait_loc=DEFAULT_WAIT_LOC,
     ):
         """
         Assert count of elements containing specified id or class based on
         the logged user.
+
         :param expected: List of tuples with user (string), count (int)
         :param url: URL to test (string)
         :param search_string: ID substring of element (string)
         :param attribute: Attribute to search for (string, default=id)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
         """
         for e in expected:
             expected_user = e[0]  # Just to clarify code
             expected_count = e[1]
 
-            self.login_and_redirect(expected_user, url)
+            self.login_and_redirect(expected_user, url, wait_elem, wait_loc)
 
             if expected_count > 0:
                 self.assertEqual(
@@ -271,19 +311,30 @@ class TestUIBase(
                         )
                     )
 
-    def assert_element_set(self, expected, all_elements, url):
+    def assert_element_set(
+        self,
+        expected,
+        all_elements,
+        url,
+        wait_elem=None,
+        wait_loc=DEFAULT_WAIT_LOC,
+    ):
         """
         Assert existence of expected elements webpage based on logged user, as
         well as non-existence non-expected elements.
+
         :param expected: List of tuples with user (string), elements (list)
         :param all_elements: All possible elements in the set (list of strings)
         :param url: URL to test (string)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
         """
         for e in expected:
             user = e[0]
             elements = e[1]
 
-            self.login_and_redirect(user, url)
+            self.login_and_redirect(user, url, wait_elem, wait_loc)
 
             for element in elements:
                 self.assertIsNotNone(self.selenium.find_element_by_id(element))
@@ -294,16 +345,28 @@ class TestUIBase(
                 with self.assertRaises(NoSuchElementException):
                     self.selenium.find_element_by_id(n)
 
-    def assert_element_active(self, user, element_id, all_elements, url):
+    def assert_element_active(
+        self,
+        user,
+        element_id,
+        all_elements,
+        url,
+        wait_elem=None,
+        wait_loc=DEFAULT_WAIT_LOC,
+    ):
         """
         Assert the "active" status of an element based on logged user as well
         as unset status of other elements.
+
         :param user: User for logging in
         :param element_id: ID of element to test (string)
         :param all_elements: All possible elements in the set (list of strings)
         :param url: URL to test (string)
+        :param wait_elem: Wait for existence of an element (string, optional)
+        :param wait_loc: Locator of optional wait element (string, corresponds
+                         to selenium "By" class members)
         """
-        self.login_and_redirect(user, url)
+        self.login_and_redirect(user, url, wait_elem, wait_loc)
 
         # Wait for element to be present (sometimes this is too slow)
         WebDriverWait(self.selenium, self.wait_time).until(

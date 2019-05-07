@@ -17,6 +17,7 @@ Added
     - User settings for settings linked to users instead of projects (#16)
     - ``user_settings`` field in project plugins (#16)
     - Optional ``label`` key for settings
+    - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
 - **Userprofiles**
     - Form for displaying and updating user settings (#16)
 
