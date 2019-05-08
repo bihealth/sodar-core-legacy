@@ -1,8 +1,8 @@
 .. _app_sodarcache_install:
 
 
-Sodar Cache Installation
-^^^^^^^^^^^^^^^^^^^^^^^^
+Sodarcache Installation
+^^^^^^^^^^^^^^^^^^^^^^^
 
 This document provides instructions and guidelines for installing the
 ``sodarcache`` app to be used with your SODAR Core enabled Django site.

@@ -1,8 +1,8 @@
 .. _app_sodarcache:
 
 
-Sodar Cache App
-^^^^^^^^^^^^^^^
+Sodarcache App
+^^^^^^^^^^^^^^
 
 The ``sodarcache`` app provides a generic data caching functionality for
 a SODAR Core based site. This can be used to e.g. locally cache and aggregate
