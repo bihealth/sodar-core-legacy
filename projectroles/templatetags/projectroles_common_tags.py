@@ -194,6 +194,18 @@ def highlight_search_term(item, term):
 
 
 @register.simple_tag
+def get_info_link(content, html=False):
+    """Return info popover link icon"""
+    return (
+        '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
+        'data-trigger="focus" data-placement="top" data-content="{}" '
+        '{}><i class="fa fa-info-circle text-info"></i></a>'.format(
+            content, 'data-html="true"' if html else ''
+        )
+    )
+
+
+@register.simple_tag
 def get_remote_icon(project, request):
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:

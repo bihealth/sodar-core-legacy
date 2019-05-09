@@ -1,5 +1,7 @@
 {% extends 'projectroles/base.html' %}
 
+{% load projectroles_common_tags %}
+
 {% block title %}User Profile for {{ request.user.get_full_name }}{% endblock %}
 
 {% block projectroles %}
@@ -24,8 +26,10 @@
         {% endif %}
         <dt class="col-md-2">Username</dt>
         <dd class="col-md-10">{{ request.user.username }}</dd>
-        <dt class="col-md-2">Email</dt>
-        <dd class="col-md-10"><a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a></dd>
+        {% if request.user.email %}
+          <dt class="col-md-2">Email</dt>
+          <dd class="col-md-10"><a href="mailto:{{ request.user.email }}">{{ request.user.email }}</a></dd>
+        {% endif %}
         <dt class="col-md-2">UUID</dt>
         <dd class="col-md-10"><code>{{ request.user.sodar_uuid }}</code></dd>
         <dt class="col-md-2">Date Joined</dt>
@@ -38,35 +42,37 @@
     <div class="card-header">
       <h4>
         <i class="fa fa-sliders"></i> Settings
-        <a role="button" class="btn btn-primary pull-right" href="{% url 'userprofile:update-settings' %}">
-          <i class="fa fa-edit"></i> Update
+        <span class="sodar-header-input-group pull-right">
+        <a role="button" class="btn btn-primary"
+           href="{% url 'userprofile:update-settings' %}">
+          <i class="fa fa-pencil"></i> Update
         </a>
+        </span>
       </h4>
     </div>
     <div class="card-body">
-      <div class="row">
-        <div class="col px-0">
-          <dl class="row">
-            {% for setting in user_settings %}
-              <dt class="col-2 font-weight-bold">{{ setting.label }}</dt>
-              <dd class="col-10">
-                {% if not setting.value %}
-                  <span class="font-italic">not set</span>
-                {% else %}
-                  {{ setting.value }}
-                {% endif %}
-                {% if setting.description %}
-                  <br>
-                  <small class="text-muted font-italic">{{ setting.description }}</small>
-                {% endif %}
-              </dd>
-            {% empty %}
-              <dd class="col-12 text-center text-muted font-italic">No user settings available.</dd>
-            {% endfor %}
-          </dl>
-        </div>
-      </div>
+      <dl class="row">
+        {% for setting in user_settings %}
+          <dt class="col-md-4 font-weight-bold">
+            {{ setting.label }}
+          {% if setting.description %}
+            {% get_info_link setting.description as info_link %}
+            {{ info_link | safe }}
+          {% endif %}
+          </dt>
+          <dd class="col-md-8">
+            {% if not setting.value %}
+              <span class="text-muted font-italic">Not set</span>
+            {% else %}
+              {{ setting.value }}
+            {% endif %}
+          </dd>
+        {% empty %}
+          <dd class="col-12 text-center text-muted font-italic">No user settings available.</dd>
+        {% endfor %}
+      </dl>
     </div>
   </div>
+
 </div>
 {% endblock projectroles %}

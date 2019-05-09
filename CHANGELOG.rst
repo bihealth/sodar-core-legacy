@@ -18,10 +18,11 @@ Added
     - ``user_settings`` field in project plugins (#16)
     - Optional ``label`` key for settings
     - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
+    - ``get_info_link()``template tag (#239)
 - **Sodarcache**
     - Optional ``--project`` argument for the ``synccache`` command (#232)
 - **Userprofiles**
-    - Form for displaying and updating user settings (#16)
+    - View and form for displaying and updating user settings (#16)
 
 Changed
 -------
@@ -32,7 +33,7 @@ Changed
 - **Bgjobs**
     - Ordering of background job for homgenization with downstream Varfish
 - **Projectroles**
-    - Write an empty dict ``{}`` for ``project_settings`` in by default
+    - Write an empty dict for ``project_settings`` in by default
 
 Fixed
 -----

@@ -13,7 +13,7 @@ class UserSettingsForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         #: The user to display the settings for.
-        self.user = kwargs.pop("current_user")
+        self.user = kwargs.pop('current_user')
 
         super().__init__(*args, **kwargs)
 

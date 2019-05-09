@@ -63,5 +63,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     user_settings = {
         'str_setting': {'type': 'STRING', 'default': ''},
         'int_setting': {'type': 'INTEGER', 'default': 0},
-        'bool_setting': {'type': 'BOOLEAN', 'default': False},
+        'bool_setting': {
+            'type': 'BOOLEAN',
+            'default': False,
+            'description': 'Example description',
+        },
     }
