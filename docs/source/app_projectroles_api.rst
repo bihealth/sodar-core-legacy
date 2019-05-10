@@ -34,10 +34,10 @@ management as well as linking objects to projects.
 App Settings
 ============
 
-Projectroles provides helper functions for getting or setting project and user
+Projectroles provides an API for getting or setting project and user
 specific settings.
 
-.. automodule:: projectroles.app_settings
+.. autoclass:: projectroles.app_settings.AppSettingAPI
     :members:
 
 
