@@ -16,7 +16,7 @@ class BackendPlugin(BackendPluginPoint):
     title = 'Sodar Cache Backend'
 
     #: FontAwesome icon ID string
-    icon = 'file-alt'
+    icon = 'shopping-basket'
 
     #: Description string
     description = (

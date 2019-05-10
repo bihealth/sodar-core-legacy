@@ -55,6 +55,7 @@ Fixed
     - Date formatting in templates (#220)
 - **Sodarcache**
     - Crash from ``__repr__()`` if project not set (#223)
+    - Broken backend plugin icon (#250)
 
 Removed
 -------
