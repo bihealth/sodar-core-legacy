@@ -39,6 +39,8 @@ urlpatterns = [
     url(r'^user/', include('userprofile.urls')),
     # Admin Alerts URLs
     url(r'^alerts/', include('adminalerts.urls')),
+    # Site Info URLs
+    url(r'^siteinfo/', include('siteinfo.urls')),
     # Background Jobs URLs
     url(r'^bgjobs/', include('bgjobs.urls')),
     # Data Cache app

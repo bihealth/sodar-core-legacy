@@ -68,6 +68,11 @@ The following variables and functions are **mandatory**:
 - ``get_api()``: Function for retrieving the API class for the backend, to be
   implemented
 
+Implementing the following is **optional**:
+
+- ``get_statistics()``: Return statistics for the siteinfo app. See details in
+  :ref:`the siteinfo documentation <app_siteinfo>`.
+
 .. hint::
 
     If you want to implement a backend API which is closely tied to a project

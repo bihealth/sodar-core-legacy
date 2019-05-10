@@ -1,0 +1,24 @@
+{% load projectroles_common_tags %}
+
+<div class="card" id="sodar-si-{{ plugin.name }}-app-stats-card">
+  <div class="card-header">
+    <h4><i class="fa fa-{{ plugin.icon }}"></i> {{ plugin.title }} Statistics</h4>
+  </div>
+  <div class="card-body">
+    <dl class="row">
+      {% for stat_key, stat in plugin.get_statistics.items %}
+        <dt class="col-md-3">{{ stat.label }}
+          {% if stat.description %}
+            {% get_info_link stat.description as info_link %}
+            {{ info_link | safe }}
+          {% endif %}
+        </dt>
+        {% if stat.url %}
+          <dd class="col-md-9"><a href="{{ stat.url }}">{{ stat.value }}</a></dd>
+        {% else %}
+          <dd class="col-md-9">{{ stat.value }}</dd>
+        {% endif %}
+       {% endfor %}
+     </dl>
+  </div>
+</div>

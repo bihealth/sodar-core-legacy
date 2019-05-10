@@ -6,6 +6,7 @@ from projectroles.plugins import ProjectAppPluginPoint, BackendPluginPoint
 from projectroles.utils import get_display_name
 
 from .api import TimelineAPI
+from .models import ProjectEvent
 from .urls import urlpatterns
 
 
@@ -52,6 +53,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 40
+
+    def get_statistics(self):
+        return {
+            'event_count': {
+                'label': 'Events',
+                'value': ProjectEvent.objects.all().count(),
+            }
+        }
 
 
 class BackendPlugin(BackendPluginPoint):

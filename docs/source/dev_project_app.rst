@@ -215,6 +215,8 @@ Implementing the following is **optional**:
   by ``django-sodar-timeline``.
 - ``search()``: Function called when searching for data related to the app if
   search is enabled
+- ``get_statistics()``: Return statistics for the siteinfo app. See details in
+  :ref:`the siteinfo documentation <app_siteinfo>`.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create

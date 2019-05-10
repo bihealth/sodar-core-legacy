@@ -1,3 +1,5 @@
+from django.urls import reverse
+
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
@@ -79,3 +81,17 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 100
+
+    def get_statistics(self):
+        return {
+            'example_stat': {
+                'label': 'Example Stat',
+                'value': 9000,
+                'description': 'Optional description goes here',
+            },
+            'second_example': {
+                'label': 'Second Example w/ Link',
+                'value': 56000,
+                'url': reverse('home'),
+            },
+        }

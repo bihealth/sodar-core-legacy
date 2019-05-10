@@ -158,3 +158,19 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'items': items,
             }
         }
+
+    def get_statistics(self):
+        return {
+            'file_count': {
+                'label': 'Files',
+                'value': File.objects.all().count(),
+            },
+            'folder_count': {
+                'label': 'Folders',
+                'value': Folder.objects.all().count(),
+            },
+            'link_count': {
+                'label': 'Hyperlinks',
+                'value': HyperLink.objects.all().count(),
+            },
+        }

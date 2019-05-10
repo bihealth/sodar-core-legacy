@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **Filesfolders**
+    - Provide app statistics for siteinfo (#18)
 - **Projectroles**
     - User settings for settings linked to users instead of projects (#16)
     - ``user_settings`` field in project plugins (#16)
@@ -22,8 +24,12 @@ Added
     - ``get_setting_defs()`` API function for retrieving project and user setting definitions (#225)
     - ``get_all_defaults()`` API function for retrieving all default setting values (#225)
     - Human readable labels for app settings (#9)
+- **Siteinfo**
+    - Add app for site info and statistics (#18)
 - **Sodarcache**
     - Optional ``--project`` argument for the ``synccache`` command (#232)
+- **Timeline**
+    - Provide app statistics for siteinfo (#18)
 - **Userprofiles**
     - View and form for displaying and updating user settings (#16)
 
