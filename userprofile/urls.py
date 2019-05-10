@@ -9,6 +9,6 @@ urlpatterns = [
     url(
         regex=r'^profile/settings/update$',
         view=views.UserSettingUpdateView.as_view(),
-        name='update-settings',
+        name='settings_update',
     ),
 ]

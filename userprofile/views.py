@@ -4,14 +4,22 @@ from django.urls import reverse_lazy
 from django.views.generic import TemplateView, FormView
 
 # Projectroles dependency
-from projectroles.plugins import ProjectAppPluginPoint
-from projectroles.user_settings import get_user_setting, set_user_setting
+from projectroles.app_settings import AppSettingAPI
+from projectroles.models import SODAR_CONSTANTS
+from projectroles.plugins import get_active_plugins
 from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin
 
 from .forms import UserSettingsForm
 
-#: The user model to use
+
+# SODAR Constants
+APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+
+# The user model to use
 User = auth.get_user_model()
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
@@ -26,21 +34,19 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
     def _get_user_settings(self):
-        app_plugins = sorted(
-            [p for p in ProjectAppPluginPoint.get_plugins() if p.user_settings],
-            key=lambda x: x.name,
-        )
+        for plugin in get_active_plugins():
+            p_settings = app_settings.get_setting_defs(
+                plugin, APP_SETTING_SCOPE_USER
+            )
 
-        for p in app_plugins:
-            for s_key in sorted(p.user_settings):
-                s_value = p.user_settings[s_key]
-                s = p.user_settings[s_key]
-
+            for s_key, s_val in p_settings.items():
                 yield {
-                    'label': s_value.get('label')
-                    or '{}.{}'.format(p.name, s_key),
-                    'value': get_user_setting(self.request.user, p.name, s_key),
-                    'description': s.get('description'),
+                    'label': s_val.get('label')
+                    or '{}.{}'.format(plugin.name, s_key),
+                    'value': app_settings.get_app_setting(
+                        plugin.name, s_key, user=self.request.user
+                    ),
+                    'description': s_val.get('description'),
                 }
 
 
@@ -61,10 +67,11 @@ class UserSettingUpdateView(
 
     def form_valid(self, form):
         result = super().form_valid(form)
+
         for key, value in form.cleaned_data.items():
             if key.startswith('settings.'):
                 _, app_name, setting_name = key.split('.', 3)
-                set_user_setting(
-                    self.request.user, app_name, setting_name, value
+                app_settings.set_app_setting(
+                    app_name, setting_name, value, user=self.request.user
                 )
         return result

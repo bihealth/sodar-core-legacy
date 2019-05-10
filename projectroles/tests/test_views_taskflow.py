@@ -24,11 +24,14 @@ from ..models import (
     SODAR_CONSTANTS,
 )
 from ..plugins import get_backend_api, change_plugin_status
-from ..project_settings import get_all_settings
+from ..app_settings import AppSettingAPI
 from .test_models import ProjectInviteMixin
 
 
 User = auth.get_user_model()
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 # SODAR constants
@@ -43,6 +46,7 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
     'SUBMIT_STATUS_PENDING_TASKFLOW'
 ]
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
@@ -70,7 +74,9 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'description': description,
             'sodar_url': self.live_server_url,
         }  # HACK: Override callback URL
-        values.update(get_all_settings())  # Add default settings
+        values.update(
+            app_settings.get_all_defaults(APP_SETTING_SCOPE_PROJECT)
+        )  # Add default settings
 
         post_kwargs = {'project': parent.sodar_uuid} if parent else {}
 
@@ -158,7 +164,9 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'owner': self.user.sodar_uuid,
             'description': 'description',
         }
-        values.update(get_all_settings())  # Add default settings
+        values.update(
+            app_settings.get_all_defaults(APP_SETTING_SCOPE_PROJECT)
+        )  # Add default settings
 
         with self.login(self.user):
             self.client.post(reverse('projectroles:create'), values)
@@ -250,7 +258,9 @@ class TestProjectUpdateView(TestTaskflowBase):
         values['description'] = 'updated description'
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['readme'] = 'updated readme'
-        values.update(get_all_settings())  # Add default settings
+        values.update(
+            app_settings.get_all_settings(project=self.project)
+        )  # Add default settings
         values['sodar_url'] = self.live_server_url  # HACK
 
         with self.login(self.user):

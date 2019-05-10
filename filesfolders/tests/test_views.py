@@ -10,7 +10,7 @@ from test_plus.test import TestCase
 # Projectroles dependency
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
-from projectroles.project_settings import set_project_setting
+from projectroles.app_settings import AppSettingAPI
 
 from ..models import File, Folder, HyperLink
 from .test_models import FolderMixin, FileMixin, HyperLinkMixin
@@ -32,6 +32,10 @@ SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 TEST_DATA_PATH = os.path.dirname(__file__) + '/data/'
 ZIP_PATH = TEST_DATA_PATH + 'unpack_test.zip'
 ZIP_PATH_NO_FILES = TEST_DATA_PATH + 'no_files.zip'
+
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 class TestViewsBase(
@@ -72,7 +76,9 @@ class TestViewsBase(
         )
 
         # Change public link setting from default
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', True)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', True, project=self.project
+        )
 
         # Init file content
         self.file_content = bytes('content'.encode('utf-8'))
@@ -717,7 +723,9 @@ class TestFileServePublicView(TestViewsBase):
     def test_bad_request_setting(self):
         """Test bad request response from the public serving view if public
         linking is disabled via settings"""
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', False)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', False, project=self.project
+        )
 
         with self.login(self.user):
             response = self.client.get(
@@ -787,7 +795,9 @@ class TestFilePublicLinkView(TestViewsBase):
     def test_redirect_setting(self):
         """Test redirecting from the public link view if public linking is
         disabled via settings """
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', False)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', False, project=self.project
+        )
 
         with self.login(self.user):
             response = self.client.get(

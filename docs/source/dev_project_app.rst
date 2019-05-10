@@ -205,9 +205,8 @@ The following variables and functions are **mandatory**:
 
 Implementing the following is **optional**:
 
-- ``project_settings``: Implement if project-specific settings for the app are
-  needed
-- ``user_settings``: Implement if user-specific settings for the app are needed
+- ``app_settings``: Implement if project or user specific settings for the app
+  are needed. See the plugin point definition for an example.
 - ``search_types``: Implement if searching the data of the app is enabled
 - ``search_template``: Implement if searching the data of the app is enabled
 - ``get_taskflow_sync_data()``: Applicable only if working with

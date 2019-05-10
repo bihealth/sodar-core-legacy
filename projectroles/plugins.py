@@ -26,37 +26,25 @@ class ProjectAppPluginPoint(PluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = []
 
-    #: Project settings definition
+    #: App settings definition
     #:
-    #: For example ::
+    #: Example ::
     #:
-    #:     project_settings = {
+    #:     app_settings = {
     #:         'example_setting': {
+    #:             'scope': 'PROJECT',  # PROJECT/USER
     #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
     #:             'default': 'example',
-    #:             'label': 'Example project setting',  # Optional, defaults to name/key
+    #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
-    project_settings = {}
+    app_settings = {}
 
-    #: User settings (NOT project specific)
-    #:
-    #: For example ::
-    #:
-    #:     user_settings = {
-    #:         'example_setting': {
-    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'label': 'Example user setting label',  # Optional, defaults to name/key
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Description for example user setting',  # Optional
-    #:         }
-    #:     }
-    # TODO: Define user specific settings in your app plugin, example above
-    user_settings = {}
+    # DEPRECATED, will be removed in the next SODAR Core release
+    project_settings = {}
 
     #: FontAwesome icon ID string
     # TODO: Implement this in your app plugin

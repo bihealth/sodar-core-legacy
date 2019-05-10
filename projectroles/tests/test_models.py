@@ -17,7 +17,7 @@ from projectroles.models import (
     Role,
     RoleAssignment,
     ProjectInvite,
-    ProjectSetting,
+    AppSetting,
     ProjectUserTag,
     RemoteSite,
     RemoteProject,
@@ -109,14 +109,14 @@ class ProjectInviteMixin:
         return invite
 
 
-class ProjectSettingMixin:
-    """Helper mixin for ProjectSetting creation"""
+class AppSettingMixin:
+    """Helper mixin for AppSetting creation"""
 
     @classmethod
     def _make_setting(
         cls, app_name, name, setting_type, value, project=None, user=None
     ):
-        """Make and save a ProjectSetting"""
+        """Make and save a AppSetting"""
         values = {
             'app_plugin': get_app_plugin(app_name).get_model(),
             'project': project,
@@ -125,7 +125,7 @@ class ProjectSettingMixin:
             'value': value,
             'user': user,
         }
-        setting = ProjectSetting(**values)
+        setting = AppSetting(**values)
         setting.save()
         return setting
 
@@ -758,9 +758,9 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
 
 class TestProjectSetting(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
+    ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.ProjectSetting with ``user == None``"""
+    """Tests for model.AppSetting with ``user == None``"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -806,7 +806,7 @@ class TestProjectSetting(
         )
 
     def test_initialization(self):
-        """Test ProjectSetting initialization"""
+        """Test AppSetting initialization"""
         expected = {
             'id': self.setting_str.pk,
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
@@ -834,13 +834,13 @@ class TestProjectSetting(
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
-        """Test ProjectSetting __str__()"""
+        """Test AppSetting __str__()"""
         expected = 'TestProject: {} / str_setting'.format(EXAMPLE_APP_NAME)
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
-        """Test ProjectSetting __repr__()"""
-        expected = "ProjectSetting('TestProject', None, '{}', 'str_setting')".format(
+        """Test AppSetting __repr__()"""
+        expected = "AppSetting('TestProject', None, '{}', 'str_setting')".format(
             EXAMPLE_APP_NAME
         )
         self.assertEqual(repr(self.setting_str), expected)
@@ -865,9 +865,9 @@ class TestProjectSetting(
 
 
 class TestUserSetting(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestCase
+    ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.ProjectSetting with ``project == None``"""
+    """Tests for model.AppSetting with ``project == None``"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -902,7 +902,7 @@ class TestUserSetting(
         )
 
     def test_initialization(self):
-        """Test ProjectSetting initialization"""
+        """Test AppSetting initialization"""
         expected = {
             'id': self.setting_str.pk,
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
@@ -930,13 +930,13 @@ class TestUserSetting(
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test__str__(self):
-        """Test ProjectSetting __str__()"""
+        """Test AppSetting __str__()"""
         expected = 'owner: {} / str_setting'.format(EXAMPLE_APP_NAME)
         self.assertEqual(str(self.setting_str), expected)
 
     def test__repr__(self):
-        """Test ProjectSetting __repr__()"""
-        expected = "ProjectSetting(None, 'owner', '{}', 'str_setting')".format(
+        """Test AppSetting __repr__()"""
+        expected = "AppSetting(None, 'owner', '{}', 'str_setting')".format(
             EXAMPLE_APP_NAME
         )
         self.assertEqual(repr(self.setting_str), expected)

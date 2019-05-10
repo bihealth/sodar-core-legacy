@@ -25,13 +25,13 @@ SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-PROJECT_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
-PROJECT_SETTING_TYPE_CHOICES = [
+APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
+APP_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
     ('STRING', 'String'),
 ]
-PROJECT_SETTING_VAL_MAXLENGTH = 255
+APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 
@@ -460,11 +460,11 @@ class RoleAssignment(models.Model):
             )
 
 
-# ProjectSetting ---------------------------------------------------------------
+# AppSetting ---------------------------------------------------------------
 
 
-class ProjectSettingManager(models.Manager):
-    """Manager for custom table-level ProjectSetting queries"""
+class AppSettingManager(models.Manager):
+    """Manager for custom table-level AppSetting queries"""
 
     def get_setting_value(
         self, app_name, setting_name, project=None, user=None
@@ -479,10 +479,10 @@ class ProjectSettingManager(models.Manager):
         :param project: Project object or pk
         :param user: User object or pk
         :return: Value (string)
-        :raise: ProjectSetting.DoesNotExist if setting is not found
+        :raise: AppSetting.DoesNotExist if setting is not found
         """
         if (project is None) == (user is None):
-            raise ValueError("Either project or user has to be None.")
+            raise ValueError('Either project or user has to be None.')
         setting = (
             super()
             .get_queryset()
@@ -496,13 +496,14 @@ class ProjectSettingManager(models.Manager):
         return setting.get_value()
 
 
-class ProjectSetting(models.Model):
+class AppSetting(models.Model):
     """
     Project and users settings value.
 
-    Projects are based on the ``project_settings`` definition in app plugins whereas user settings are based on the
-    ``user_settings`` definition (``plugins.py``).  Project AND user-specific settings are currently not supported
-    and settings that belong to neither are also unsupported at the moment.
+    The settings are defined in the "app_settings" member in a SODAR project
+    app's plugin. The scope of each setting can be either "USER" or "PROJECT",
+    defined for each setting in app_settings. Project AND user-specific settings
+    or settings which don't belong to either are are currently not supported.
     """
 
     #: App to which the setting belongs
@@ -519,7 +520,7 @@ class ProjectSetting(models.Model):
         Project,
         null=True,
         blank=True,
-        related_name='settings',  # TODO: rename to project_settings?
+        related_name='settings',
         help_text='Project to which the setting belongs',
     )
 
@@ -541,26 +542,26 @@ class ProjectSetting(models.Model):
     type = models.CharField(
         max_length=64,
         unique=False,
-        choices=PROJECT_SETTING_TYPE_CHOICES,
+        choices=APP_SETTING_TYPE_CHOICES,
         help_text='Type of the setting',
     )
 
     #: Value of the setting
     value = models.CharField(
-        max_length=PROJECT_SETTING_VAL_MAXLENGTH,
+        max_length=APP_SETTING_VAL_MAXLENGTH,
         unique=False,
         null=True,
         blank=True,
         help_text='Value of the setting',
     )
 
-    #: ProjectSetting SODAR UUID
+    #: AppSetting SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4, unique=True, help_text='ProjectSetting SODAR UUID'
+        default=uuid.uuid4, unique=True, help_text='AppSetting SODAR UUID'
     )
 
     # Set manager for custom queries
-    objects = ProjectSettingManager()
+    objects = AppSettingManager()
 
     class Meta:
         ordering = ['project__title', 'app_plugin__name', 'name']
@@ -580,7 +581,7 @@ class ProjectSetting(models.Model):
             self.app_plugin.name,
             self.name,
         )
-        return 'ProjectSetting({})'.format(', '.join(repr(v) for v in values))
+        return 'AppSetting({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):
         """Version of save() to convert 'value' data according to 'type'"""

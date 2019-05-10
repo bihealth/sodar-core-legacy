@@ -1,4 +1,5 @@
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
 
 from .urls import urlpatterns
@@ -20,13 +21,33 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: Project settings definition
-    project_settings = {
-        'example_setting': {
+    #: Project and user settings
+    app_settings = {
+        'project_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'BOOLEAN',
             'default': False,
-            'description': 'Example setting',
-        }
+            'description': 'Example project setting',
+        },
+        'user_str_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'String example',
+            'default': '',
+            'description': 'Example user setting',
+        },
+        'user_int_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'INTEGER',
+            'label': 'Int example',
+            'default': 0,
+        },
+        'user_bool_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'BOOLEAN',
+            'label': 'Bool Example',
+            'default': False,
+        },
     }
 
     #: FontAwesome icon ID string
@@ -58,14 +79,3 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 100
-
-    #: Example/test user settings
-    user_settings = {
-        'str_setting': {'type': 'STRING', 'default': ''},
-        'int_setting': {'type': 'INTEGER', 'default': 0},
-        'bool_setting': {
-            'type': 'BOOLEAN',
-            'default': False,
-            'description': 'Example description',
-        },
-    }

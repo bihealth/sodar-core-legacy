@@ -47,6 +47,7 @@ from rest_framework.views import APIView
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
+from .app_settings import AppSettingAPI
 from .email import (
     send_role_change_mail,
     send_invite_mail,
@@ -76,18 +77,9 @@ from .models import (
     PROJECT_TAG_STARRED,
 )
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
-from .project_settings import (
-    set_project_setting,
-    get_project_setting,
-    get_all_settings,
-)
 from .project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date, get_display_name
-
-
-# Access Django user model
-User = auth.get_user_model()
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -108,6 +100,7 @@ REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -130,6 +123,13 @@ SODAR_API_ALLOWED_VERSIONS = (
     if hasattr(settings, 'SODAR_API_ALLOWED_VERSIONS')
     else [SODAR_API_DEFAULT_VERSION]
 )
+
+
+# Access Django user model
+User = auth.get_user_model()
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 # General mixins ---------------------------------------------------------------
@@ -635,8 +635,8 @@ class ProjectModifyMixin(ModelFormMixin):
 
         # Settings
         for k, v in project_settings.items():
-            old_v = get_project_setting(
-                project, k.split('.')[1], k.split('.')[2]
+            old_v = app_settings.get_app_setting(
+                k.split('.')[1], k.split('.')[2], project
             )
 
             if old_v != v:
@@ -713,6 +713,7 @@ class ProjectModifyMixin(ModelFormMixin):
     def _handle_local_save(self, project, owner, project_settings):
         """Handle local saving of project data if SODAR Taskflow is not
         enabled"""
+
         # Modify owner role if it does exist
         try:
             assignment = RoleAssignment.objects.get(
@@ -732,11 +733,11 @@ class ProjectModifyMixin(ModelFormMixin):
 
         # Modify settings
         for k, v in project_settings.items():
-            set_project_setting(
-                project=project,
+            app_settings.set_app_setting(
                 app_name=k.split('.')[1],
                 setting_name=k.split('.')[2],
                 value=v,
+                project=project,
                 validate=False,
             )  # Already validated in form
 
@@ -756,9 +757,7 @@ class ProjectModifyMixin(ModelFormMixin):
         form_action = 'update' if self.object else 'create'
         old_data = {}
 
-        app_plugins = [
-            p for p in ProjectAppPluginPoint.get_plugins() if p.project_settings
-        ]
+        app_plugins = [p for p in get_active_plugins() if p.app_settings]
 
         if self.object:
             project = self.get_object()
@@ -798,9 +797,13 @@ class ProjectModifyMixin(ModelFormMixin):
         # Get settings
         project_settings = {}
 
-        for p in app_plugins:
-            for s_key in p.project_settings:
-                s_name = 'settings.{}.{}'.format(p.name, s_key)
+        for plugin in app_plugins:
+            p_settings = app_settings.get_setting_defs(
+                plugin, APP_SETTING_SCOPE_PROJECT
+            )
+
+            for s_key, s_val in p_settings.items():
+                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
                 project_settings[s_name] = form.cleaned_data.get(s_name)
 
         if timeline:
@@ -2535,7 +2538,7 @@ class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
 
         ret_data = {
             'project_uuid': project.sodar_uuid,
-            'settings': get_all_settings(project),
+            'settings': app_settings.get_all_settings(project),
         }
 
         return Response(ret_data, status=200)
@@ -2554,6 +2557,8 @@ class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
             return Response(str(ex), status=404)
 
         for k, v in json.loads(request.data['settings']).items():
-            set_project_setting(project, k.split('.')[1], k.split('.')[2], v)
+            app_settings.set_app_setting(
+                k.split('.')[1], k.split('.')[2], v, project
+            )
 
         return Response('ok', status=200)

@@ -3,8 +3,8 @@
 from django.urls import reverse
 
 # Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.project_settings import set_project_setting
 from projectroles.tests.test_permissions import TestProjectPermissionBase
 
 from filesfolders.tests.test_models import (
@@ -24,6 +24,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 # Local constants
 APP_NAME = 'filesfolders'
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
+
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
@@ -112,7 +116,9 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
     def setUp(self):
         super().setUp()
 
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', True)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', True, project=self.project
+        )
 
         self.file_content = bytes('content'.encode('utf-8'))
 
@@ -244,7 +250,9 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
 
     def test_file_serve_public_disabled(self):
         """Test public file serving if not allowed in project, should fail"""
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', False)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', False, project=self.project
+        )
         url = reverse(
             'filesfolders:file_serve_public',
             kwargs={'secret': SECRET, 'file_name': self.file.name},

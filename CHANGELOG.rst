@@ -19,6 +19,9 @@ Added
     - Optional ``label`` key for settings
     - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
     - ``get_info_link()``template tag (#239)
+    - ``get_setting_defs()`` API function for retrieving project and user setting definitions (#225)
+    - ``get_all_defaults()`` API function for retrieving all default setting values (#225)
+    - Human readable labels for app settings (#9)
 - **Sodarcache**
     - Optional ``--project`` argument for the ``synccache`` command (#232)
 - **Userprofiles**
@@ -32,8 +35,12 @@ Changed
     - Upgrade to ChromeDriver v74 (#221)
 - **Bgjobs**
     - Ordering of background job for homgenization with downstream Varfish
+- **Filesfolders**
+    - Update app settings (#246)
 - **Projectroles**
-    - Write an empty dict for ``project_settings`` in by default
+    - Rename ``project_settings`` module to ``app_settings`` (#225)
+    - App settings API updated to support project and user settings (#225)
+    - Write an empty dict for ``app_settings`` by default
 
 Fixed
 -----
@@ -42,6 +49,12 @@ Fixed
     - Date formatting in templates (#220)
 - **Sodarcache**
     - Crash from ``__repr__()`` if project not set (#223)
+
+Removed
+-------
+
+- **Timeline**
+    - Unused and deprecated project settings (#246)
 
 
 v0.5.1 (2019-04-16)

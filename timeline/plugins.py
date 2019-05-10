@@ -25,27 +25,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: Project settings definition
-    project_settings = {}
-
-    # Project settings example:
-    '''
-    {
-    'example_boolean_setting': {
-        'type': 'BOOLEAN',
-        'default': False,
-        'description': 'Example boolean setting'},
-    'example_string_setting': {
-        'type': 'STRING',
-        'default': 'Example',
-        'description': 'Example string setting'},
-    'example_int_setting': {
-        'type': 'INTEGER',
-        'default': 1000,
-        'description': 'Example integer setting'}
-    }
-    '''
-
     #: FontAwesome icon ID string
     icon = 'clock-o'
 

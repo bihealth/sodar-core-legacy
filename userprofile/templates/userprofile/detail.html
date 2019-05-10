@@ -44,7 +44,7 @@
         <i class="fa fa-sliders"></i> Settings
         <span class="sodar-header-input-group pull-right">
         <a role="button" class="btn btn-primary"
-           href="{% url 'userprofile:update-settings' %}">
+           href="{% url 'userprofile:settings_update' %}">
           <i class="fa fa-pencil"></i> Update
         </a>
         </span>
@@ -61,7 +61,7 @@
           {% endif %}
           </dt>
           <dd class="col-md-8">
-            {% if not setting.value %}
+            {% if setting.value == None %}
               <span class="text-muted font-italic">Not set</span>
             {% else %}
               {{ setting.value }}

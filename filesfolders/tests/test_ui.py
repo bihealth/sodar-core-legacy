@@ -5,9 +5,9 @@ from urllib.parse import urlencode
 from django.urls import reverse
 
 # Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
+from projectroles.models import AppSetting, SODAR_CONSTANTS
 from projectroles.tests.test_ui import TestUIBase
-from projectroles.models import ProjectSetting, SODAR_CONSTANTS
-from projectroles.project_settings import set_project_setting
 from projectroles.utils import build_secret
 
 from .test_models import FolderMixin, FileMixin, HyperLinkMixin
@@ -25,13 +25,19 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 APP_NAME = 'filesfolders'
 
 
+# App settings API
+app_settings = AppSettingAPI()
+
+
 class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
     """Tests for filesfolders main file list view UI"""
 
     def setUp(self):
         super().setUp()
 
-        set_project_setting(self.project, APP_NAME, 'allow_public_links', True)
+        app_settings.set_app_setting(
+            APP_NAME, 'allow_public_links', True, project=self.project
+        )
 
         self.file_content = bytes('content'.encode('utf-8'))
         self.secret_file_owner = build_secret()
@@ -236,7 +242,7 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
     def test_public_link_disable(self):
         """Test public link visibility if allow_public_links is set to False"""
-        setting = ProjectSetting.objects.get(
+        setting = AppSetting.objects.get(
             project=self.project.pk,
             app_plugin__name=APP_NAME,
             name='allow_public_links',

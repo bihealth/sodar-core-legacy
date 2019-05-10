@@ -28,7 +28,7 @@ from .utils import build_public_url
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
-from projectroles.project_settings import get_project_setting
+from projectroles.app_settings import AppSettingAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.views import (
     LoggedInPermissionMixin,
@@ -47,6 +47,7 @@ LINK_BAD_REQUEST_MSG = settings.FILESFOLDERS_LINK_BAD_REQUEST_MSG
 SERVE_AS_ATTACHMENT = settings.FILESFOLDERS_SERVE_AS_ATTACHMENT
 
 storage = DatabaseFileStorage()
+app_settings = AppSettingAPI()
 
 
 # Mixins -----------------------------------------------------------------
@@ -684,8 +685,8 @@ class FileServePublicView(FileServeMixin, View):
             file = File.objects.get(secret=kwargs['secret'])
 
             # Check if sharing public files is not allowed in project settings
-            if not get_project_setting(
-                file.project, APP_NAME, 'allow_public_links'
+            if not app_settings.get_app_setting(
+                APP_NAME, 'allow_public_links', file.project
             ):
                 return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
 
@@ -726,8 +727,8 @@ class FilePublicLinkView(
             messages.error(self.request, 'File not found!')
             return redirect(reverse('home'))
 
-        if not get_project_setting(
-            file.project, APP_NAME, 'allow_public_links'
+        if not app_settings.get_app_setting(
+            APP_NAME, 'allow_public_links', file.project
         ):
             messages.error(
                 self.request,

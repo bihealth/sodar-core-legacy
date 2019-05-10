@@ -16,7 +16,48 @@ be missing. Please click "display source" if you want to read this in GitLab.
 v0.6.0 (WIP)
 ============
 
-TODO
+App Settings (Formerly Project Settings)
+----------------------------------------
+
+The former Project Settings module has been completely overhauled in this
+version and requries changes to your app plugins.
+
+The ``projectroles.project_settings`` module has been renamed into
+``projectroles.app_settings``. Please update your dependencies accordingly.
+
+Settings must now be defined in ``app_settings``. The format is identical to
+the previous ``project_settings`` dictionary, except that a ``scope`` field is
+expected for each settings. Currently valid values are "PROJECT" and "USER". It
+is recommended to use the related constants from ``SODAR_CONSTANTS``
+instead of hard coded strings.
+
+Example of settings:
+
+.. code-block:: python
+
+    #: Project and user settings
+    app_settings = {
+        'project_bool_setting': {
+            'scope': 'PROJECT',
+            'type': 'BOOLEAN',
+            'default': False,
+            'description': 'Example project setting',
+        },
+        'user_str_setting': {
+            'scope': 'USER',
+            'type': 'STRING',
+            'label': 'String example',
+            'default': '',
+            'description': 'Example user setting',
+        },
+    }
+
+.. warning::
+
+    Deprecation protection is place in this version for retrieving settings from
+    ``project_settings`` if it has not been changed into ``app_settings`` in
+    your project apps. This protection **will be removed** in the next SODAR
+    Core release.
 
 
 v0.5.1 (2019-04-16)

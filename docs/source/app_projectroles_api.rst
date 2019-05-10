@@ -31,21 +31,13 @@ management as well as linking objects to projects.
     :members:
 
 
-Project Settings API
-====================
+App Settings
+============
 
-Projectroles provides helper functions for getting or setting project settings.
+Projectroles provides helper functions for getting or setting project and user
+specific settings.
 
-.. automodule:: projectroles.project_settings
-    :members:
-
-
-User Settings API
-=================
-
-Projectroles also provides helper functions for getting or setting user settings.
-
-.. automodule:: projectroles.user_settings
+.. automodule:: projectroles.app_settings
     :members:
 
 
