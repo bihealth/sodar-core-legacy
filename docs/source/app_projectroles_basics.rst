@@ -34,7 +34,7 @@ The default setup of role types used in SODAR sites:
 - **project delegate**
     - Full read/write access to project data
     - Can modify roles except for owner and delegate
-    - One per project (as default, the limit can be increased in the settings)
+    - One per project (as default, the limit can be increased in site settings)
     - Assigned by owner
 - **project contributor**
     - Can read and write project data
@@ -115,8 +115,8 @@ Other Features
 
 Other features in the projectroles app:
 
-- **Project settings**: Setting values for app and project specific variables,
-  which can be defined in project plugins
+- **App settings**: Setting values for project or user specific variables,
+  which can be defined in project app plugins
 - **Project starring**: Ability for users to star projects as their favourites
 - **Project search**: Functionality for searching data within projects using
   functions implemented in project app plugins

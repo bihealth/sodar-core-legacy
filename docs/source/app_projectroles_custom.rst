@@ -124,7 +124,7 @@ Project and Category Display Names
 
 If the *project* and *category* labels don't match your use case, it is possible
 to change the labels displayed to the user by editing ``SODAR_CONSTANTS`` in
-your settings file. Example:
+your Django site settings file. Example:
 
 .. code-block:: python
 

@@ -34,8 +34,8 @@ app. Note that overwriting of files is not currently allowed.
     Filesfolders main view
 
 
-Project Settings
-================
+App Settings
+============
 
 In the project create/update form, set the boolean setting
 ``filesfolders.allow_public_links`` true to allow providing public links to

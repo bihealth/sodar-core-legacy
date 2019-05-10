@@ -13,16 +13,12 @@ from .models import (
     ProjectInvite,
     RemoteSite,
     SODAR_CONSTANTS,
-    PROJECT_SETTING_VAL_MAXLENGTH,
+    APP_SETTING_VAL_MAXLENGTH,
 )
 
-from .plugins import ProjectAppPluginPoint
+from .plugins import get_active_plugins
 from .utils import get_display_name, get_user_display_name, build_secret
-from projectroles.project_settings import (
-    validate_project_setting,
-    get_project_setting,
-    get_default_setting,
-)
+from .app_settings import AppSettingAPI
 
 
 # SODAR constants
@@ -43,6 +39,7 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants and settings
 APP_NAME = 'projectroles'
@@ -112,48 +109,47 @@ class ProjectForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         # Add settings fields
-        self.app_plugins = sorted(
-            [
-                p
-                for p in ProjectAppPluginPoint.get_plugins()
-                if p.project_settings
-            ],
-            key=lambda x: x.name,
-        )
+        self.app_settings = AppSettingAPI()
+        self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
-        for p in self.app_plugins:
-            for s_key in sorted(p.project_settings):
-                s = p.project_settings[s_key]
-                s_field = 'settings.{}.{}'.format(p.name, s_key)
+        for plugin in self.app_plugins:
+            p_settings = self.app_settings.get_setting_defs(
+                plugin, APP_SETTING_SCOPE_PROJECT
+            )
+
+            for s_key, s_val in p_settings.items():
+                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
                 setting_kwargs = {
                     'required': False,
-                    'label': '{}.{}'.format(p.name, s_key),
-                    'help_text': s['description'],
+                    'label': s_val.get('label')
+                    or '{}.{}'.format(plugin.name, s_key),
+                    'help_text': s_val['description'],
                 }
 
-                if s['type'] == 'STRING':
+                if s_val['type'] == 'STRING':
                     self.fields[s_field] = forms.CharField(
-                        max_length=PROJECT_SETTING_VAL_MAXLENGTH,
-                        **setting_kwargs
+                        max_length=APP_SETTING_VAL_MAXLENGTH, **setting_kwargs
                     )
 
-                elif s['type'] == 'INTEGER':
+                elif s_val['type'] == 'INTEGER':
                     self.fields[s_field] = forms.IntegerField(**setting_kwargs)
 
-                elif s['type'] == 'BOOLEAN':
+                elif s_val['type'] == 'BOOLEAN':
                     self.fields[s_field] = forms.BooleanField(**setting_kwargs)
 
                 # Set initial value
                 if self.instance.pk:
-                    self.initial[s_field] = get_project_setting(
-                        project=self.instance,
-                        app_name=p.name,
+                    self.initial[s_field] = self.app_settings.get_app_setting(
+                        app_name=plugin.name,
                         setting_name=s_key,
+                        project=self.instance,
                     )
 
                 else:
-                    self.initial[s_field] = get_default_setting(
-                        app_name=p.name, setting_name=s_key
+                    self.initial[
+                        s_field
+                    ] = self.app_settings.get_default_setting(
+                        app_name=plugin.name, setting_name=s_key
                     )
 
         # Access parent project if present
@@ -294,12 +290,16 @@ class ProjectForm(forms.ModelForm):
             )
 
         # Verify settings fields
-        for p in self.app_plugins:
-            for s_key in sorted(p.project_settings):
-                s = p.project_settings[s_key]
-                s_field = 'settings.{}.{}'.format(p.name, s_key)
+        for plugin in self.app_plugins:
+            p_settings = self.app_settings.get_setting_defs(
+                plugin, APP_SETTING_SCOPE_PROJECT
+            )
 
-                if not validate_project_setting(
+            for s_key in p_settings:
+                s = p_settings[s_key]
+                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+
+                if not self.app_settings.validate_setting(
                     setting_type=s['type'],
                     setting_value=self.cleaned_data.get(s_field),
                 ):

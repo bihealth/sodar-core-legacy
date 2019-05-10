@@ -1,10 +1,15 @@
 from django.urls import reverse
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
 
 from .models import File, Folder, HyperLink
 from .urls import urlpatterns
+
+
+# SODAR Constants
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -23,12 +28,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: Project settings definition
-    project_settings = {
+    #: App settings definition
+    app_settings = {
         'allow_public_links': {
+            'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'BOOLEAN',
             'default': False,
-            'description': 'Allow generation of public links for files',
+            'label': 'Allow Public Links',
+            'description': 'Allow generation of public links for small files',
         }
     }
 
@@ -150,4 +157,20 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'search_types': ['file', 'folder', 'link'],
                 'items': items,
             }
+        }
+
+    def get_statistics(self):
+        return {
+            'file_count': {
+                'label': 'Files',
+                'value': File.objects.all().count(),
+            },
+            'folder_count': {
+                'label': 'Folders',
+                'value': Folder.objects.all().count(),
+            },
+            'link_count': {
+                'label': 'Hyperlinks',
+                'value': HyperLink.objects.all().count(),
+            },
         }

@@ -4,9 +4,9 @@
 Userprofile App
 ^^^^^^^^^^^^^^^
 
-The ``userprofile`` app is a site app, which currently provides a user profile
-view for projectroles-compatible Django users. It will later be expanded to
-cover user-specific settings for SODAR Core based sites.
+The ``userprofile`` app is a site app which provides a user profile
+view for projectroles-compatible Django users and management of user specific
+settings.
 
 **NOTE:** When viewing this document in GitLab critical content will by default
 be missing. Please click "display source" if you want to read this in GitLab.
@@ -15,9 +15,9 @@ be missing. Please click "display source" if you want to read this in GitLab.
 Installation
 ============
 
-It is **recommended** to install the userprofile app into your site when using
-projectroles, unless you require a specific user profile providing app of your
-own.
+It is **strongly recommended** to install the userprofile app into your site
+when using projectroles, unless you require a specific user profile providing
+app of your own.
 
 .. warning::
 
@@ -76,3 +76,9 @@ After successful installation, the link for "User Profile" should be available
 in the user dropdown menu in the top-right corner of the website UI after you
 have logged in.
 
+
+User Settings
+=============
+
+User settings are configured in the ``app_settings`` dictionary in your project
+app plugins.

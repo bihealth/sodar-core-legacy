@@ -26,15 +26,25 @@ class ProjectAppPluginPoint(PluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = []
 
-    #: Project settings definition
-    # TODO: Define project specific settings in your app plugin, example below
-    project_settings = {
-        'example_setting': {
-            'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-            'default': 'example',
-            'description': 'Example setting',  # Optional
-        }
-    }
+    #: App settings definition
+    #:
+    #: Example ::
+    #:
+    #:     app_settings = {
+    #:         'example_setting': {
+    #:             'scope': 'PROJECT',  # PROJECT/USER
+    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:             'default': 'example',
+    #:             'label': 'Project setting',  # Optional, defaults to name/key
+    #:             'placeholder': 'Enter example setting here',  # Optional
+    #:             'description': 'Example project setting',  # Optional
+    #:         }
+    #:     }
+    # TODO: Define project specific settings in your app plugin, example above
+    app_settings = {}
+
+    # DEPRECATED, will be removed in the next SODAR Core release
+    project_settings = {}
 
     #: FontAwesome icon ID string
     # TODO: Implement this in your app plugin
@@ -167,6 +177,16 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return None
 
+    def get_statistics(self):
+        """
+        Return app statistics as a dict. Should take the form of
+        {id: {label, value, url (optional), description (optional)}}.
+
+        :return: Dict
+        """
+        # TODO: Implement this in your app plugin
+        return {}
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
@@ -187,6 +207,16 @@ class BackendPluginPoint(PluginPoint):
         """Return API entry point object."""
         # TODO: Implement this in your backend plugin
         raise NotImplementedError
+
+    def get_statistics(self):
+        """
+        Return backend statistics as a dict. Should take the form of
+        {id: {label, value, url (optional), description (optional)}}.
+
+        :return: Dict
+        """
+        # TODO: Implement this in your backend plugin
+        return {}
 
 
 class SiteAppPluginPoint(PluginPoint):

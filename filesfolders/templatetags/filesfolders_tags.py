@@ -1,7 +1,7 @@
 from django import template
 
 # Projectroles dependency
-from projectroles.project_settings import get_project_setting
+from projectroles.app_settings import AppSettingAPI
 
 from ..models import File, HyperLink, FILESFOLDERS_FLAGS
 
@@ -9,6 +9,9 @@ from ..models import File, HyperLink, FILESFOLDERS_FLAGS
 APP_NAME = 'filesfolders'
 
 register = template.Library()
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 @register.filter
@@ -31,7 +34,7 @@ def get_details_items(project):
 @register.simple_tag
 def allow_public_links(project):
     """Return the boolean value for allow_public_links in project settings"""
-    return get_project_setting(project, APP_NAME, 'allow_public_links')
+    return app_settings.get_app_setting(APP_NAME, 'allow_public_links', project)
 
 
 @register.simple_tag

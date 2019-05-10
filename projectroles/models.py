@@ -25,13 +25,13 @@ SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-PROJECT_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
-PROJECT_SETTING_TYPE_CHOICES = [
+APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
+APP_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
     ('STRING', 'String'),
 ]
-PROJECT_SETTING_VAL_MAXLENGTH = 255
+APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
 
@@ -460,34 +460,50 @@ class RoleAssignment(models.Model):
             )
 
 
-# ProjectSetting ---------------------------------------------------------------
+# AppSetting ---------------------------------------------------------------
 
 
-class ProjectSettingManager(models.Manager):
-    """Manager for custom table-level ProjectSetting queries"""
+class AppSettingManager(models.Manager):
+    """Manager for custom table-level AppSetting queries"""
 
-    def get_setting_value(self, project, app_name, setting_name):
+    def get_setting_value(
+        self, app_name, setting_name, project=None, user=None
+    ):
         """
-        Return value of setting_name for app_name in project.
+        Return value of setting_name for app_name in project or for user.
 
-        :param project: Project object or pk
+        Note that either project or user must be None but not both.
+
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
+        :param project: Project object or pk
+        :param user: User object or pk
         :return: Value (string)
-        :raise: ProjectSetting.DoesNotExist if setting is not found
+        :raise: AppSetting.DoesNotExist if setting is not found
         """
+        if (project is None) == (user is None):
+            raise ValueError('Either project or user has to be None.')
         setting = (
             super()
             .get_queryset()
-            .get(app_plugin__name=app_name, project=project, name=setting_name)
+            .get(
+                app_plugin__name=app_name,
+                name=setting_name,
+                project=project,
+                user=user,
+            )
         )
         return setting.get_value()
 
 
-class ProjectSetting(models.Model):
+class AppSetting(models.Model):
     """
-    Project settings variable. These are generated based on the
-    "project_settings" definition in app plugins (plugins.py)
+    Project and users settings value.
+
+    The settings are defined in the "app_settings" member in a SODAR project
+    app's plugin. The scope of each setting can be either "USER" or "PROJECT",
+    defined for each setting in app_settings. Project AND user-specific settings
+    or settings which don't belong to either are are currently not supported.
     """
 
     #: App to which the setting belongs
@@ -502,9 +518,19 @@ class ProjectSetting(models.Model):
     #: Project to which the setting belongs
     project = models.ForeignKey(
         Project,
-        null=False,
+        null=True,
+        blank=True,
         related_name='settings',
         help_text='Project to which the setting belongs',
+    )
+
+    #: Project to which the setting belongs
+    user = models.ForeignKey(
+        AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        related_name='user_settings',
+        help_text='User to which the setting belongs',
     )
 
     #: Name of the setting
@@ -516,39 +542,46 @@ class ProjectSetting(models.Model):
     type = models.CharField(
         max_length=64,
         unique=False,
-        choices=PROJECT_SETTING_TYPE_CHOICES,
+        choices=APP_SETTING_TYPE_CHOICES,
         help_text='Type of the setting',
     )
 
     #: Value of the setting
     value = models.CharField(
-        max_length=PROJECT_SETTING_VAL_MAXLENGTH,
+        max_length=APP_SETTING_VAL_MAXLENGTH,
         unique=False,
         null=True,
         blank=True,
         help_text='Value of the setting',
     )
 
-    #: ProjectSetting SODAR UUID
+    #: AppSetting SODAR UUID
     sodar_uuid = models.UUIDField(
-        default=uuid.uuid4, unique=True, help_text='ProjectSetting SODAR UUID'
+        default=uuid.uuid4, unique=True, help_text='AppSetting SODAR UUID'
     )
 
     # Set manager for custom queries
-    objects = ProjectSettingManager()
+    objects = AppSettingManager()
 
     class Meta:
         ordering = ['project__title', 'app_plugin__name', 'name']
         unique_together = ('project', 'app_plugin', 'name')
 
     def __str__(self):
-        return '{}: {} / {}'.format(
-            self.project.title, self.app_plugin.name, self.name
-        )
+        if self.project:
+            label = self.project.title
+        else:
+            label = self.user.username
+        return '{}: {} / {}'.format(label, self.app_plugin.name, self.name)
 
     def __repr__(self):
-        values = (self.project.title, self.app_plugin.name, self.name)
-        return 'ProjectSetting({})'.format(', '.join(repr(v) for v in values))
+        values = (
+            self.project.title if self.project else None,
+            self.user.username if self.user else None,
+            self.app_plugin.name,
+            self.name,
+        )
+        return 'AppSetting({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):
         """Version of save() to convert 'value' data according to 'type'"""

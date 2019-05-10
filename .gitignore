@@ -1,3 +1,7 @@
+### pip ###
+src/
+*.egg-info/
+
 ### Documentation ###
 /docs*/build/
 

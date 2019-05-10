@@ -77,6 +77,7 @@ SODAR_API_VERSION = '0.1'
 SODAR_API_VERSION_INVALID = '9.9'
 
 
+# TODO: Refactor or remove this (API should be enough?)
 class ProjectSettingMixin:
     """Helper mixin for Project settings"""
 

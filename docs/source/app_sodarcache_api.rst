@@ -1,8 +1,8 @@
 .. _app_sodarcache_api:
 
 
-Sodar Cache Backend API Documentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sodarcache Backend API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This document contains API documentation for the backend plugin in the
 ``sodarcache`` app. Included are functionalities and classes intended to be used

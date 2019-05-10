@@ -74,5 +74,9 @@ class JSONCacheItem(BaseCacheItem):
         )
 
     def __repr__(self):
-        values = (self.project.title, self.app_name, self.name)
+        values = (
+            self.project.title if self.project else 'N/A',
+            self.app_name,
+            self.name,
+        )
         return 'JSONCacheItem({})'.format(', '.join(repr(v) for v in values))

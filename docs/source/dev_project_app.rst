@@ -205,8 +205,8 @@ The following variables and functions are **mandatory**:
 
 Implementing the following is **optional**:
 
-- ``project_settings``: Implement if project-specific settings for the app are
-  needed
+- ``app_settings``: Implement if project or user specific settings for the app
+  are needed. See the plugin point definition for an example.
 - ``search_types``: Implement if searching the data of the app is enabled
 - ``search_template``: Implement if searching the data of the app is enabled
 - ``get_taskflow_sync_data()``: Applicable only if working with
@@ -215,6 +215,8 @@ Implementing the following is **optional**:
   by ``django-sodar-timeline``.
 - ``search()``: Function called when searching for data related to the app if
   search is enabled
+- ``get_statistics()``: Return statistics for the siteinfo app. See details in
+  :ref:`the siteinfo documentation <app_siteinfo>`.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create

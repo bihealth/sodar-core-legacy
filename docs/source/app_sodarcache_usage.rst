@@ -112,6 +112,13 @@ management command.
 
     $ ./manage.py synccache
 
+To limit the sync to a specific project, you can provide the ``-p`` or
+``--project`` argument with the project UUID.
+
+.. code-block:: console
+
+    $ ./manage.py synccache -p e9701604-4ccc-426c-a67c-864c15aff6e2
+
 Similarly, there is a command to delete all cached data:
 
 .. code-block:: console

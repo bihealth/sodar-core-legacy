@@ -20,6 +20,8 @@ The following Django apps will be installed when installing the
   content management. All other apps require the integration of projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
 - **bgjobs**: Project app for managing background jobs.
+- **siteinfo**: Site app for displaying site information and statistics for
+  administrators.
 - **sodarcache**: Generic caching and aggregation of data referring to external
   services.
 - **taskflowbackend**: Backend app providing an API for the optional
@@ -52,9 +54,9 @@ in the repository.
 - Library requirements (see the ``utility`` directory and/or your own Django
   project)
 - Python 3.6+ (**NOTE:** Python 3.5 no longer supported)
-- Django 1.11.18+ (**NOTE:** 2.x not currently supported)
+- Django 1.11.20+ (**NOTE:** 2.x not currently supported)
 - PostgreSQL 9.6+ and psycopg2-binary
-- Bootstrap 4.2.1
+- Bootstrap 4.3.1
 - JQuery 3.3.1
 - Shepherd 1.8.1 with Tether 1.4.4
 - Clipboard.js 2.0.0

@@ -6,6 +6,7 @@ from projectroles.plugins import ProjectAppPluginPoint, BackendPluginPoint
 from projectroles.utils import get_display_name
 
 from .api import TimelineAPI
+from .models import ProjectEvent
 from .urls import urlpatterns
 
 
@@ -24,27 +25,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     urls = urlpatterns
 
     # Properties defined in ProjectAppPluginPoint -----------------------
-
-    #: Project settings definition
-    project_settings = {}
-
-    # Project settings example:
-    '''
-    {
-    'example_boolean_setting': {
-        'type': 'BOOLEAN',
-        'default': False,
-        'description': 'Example boolean setting'},
-    'example_string_setting': {
-        'type': 'STRING',
-        'default': 'Example',
-        'description': 'Example string setting'},
-    'example_int_setting': {
-        'type': 'INTEGER',
-        'default': 1000,
-        'description': 'Example integer setting'}
-    }
-    '''
 
     #: FontAwesome icon ID string
     icon = 'clock-o'
@@ -73,6 +53,14 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 40
+
+    def get_statistics(self):
+        return {
+            'event_count': {
+                'label': 'Events',
+                'value': ProjectEvent.objects.all().count(),
+            }
+        }
 
 
 class BackendPlugin(BackendPluginPoint):

@@ -25,3 +25,8 @@ class BackendPlugin(BackendPluginPoint):
     def get_api(self):
         """Return API entry point object."""
         return ExampleAPI()
+
+    def get_statistics(self):
+        return {
+            'backend_example_stat': {'label': 'Backend example', 'value': True}
+        }

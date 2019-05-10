@@ -155,18 +155,19 @@ before will be presented to the user.
 
     Category/project updating form
 
-Project Settings
-----------------
+App Settings
+------------
 
-Project apps may define app and project specific settings definable by users
-with sufficient project access. These will also be shown in the project creation
-and updating form.
+Project apps may define project or user specific settings, modifiable by users
+with sufficient project access. Widgets for project specific settings will show
+up in the project creation and updating form. User specific settings will be
+displayed in the :ref:`Userpforile app <app_userprofile>`.
 
 .. note::
 
-    Currently, settings are also enabled for categories but do not actually do
-    anything. The behaviour regarding this (remove settings / inherit by nested
-    projects / etc) is currently TBD.
+    Currently, project specific app settings are also enabled for categories but
+    do not actually do anything. The behaviour regarding this (remove settings /
+    inherit by nested projects / etc) is TBD.
 
 
 Member Management

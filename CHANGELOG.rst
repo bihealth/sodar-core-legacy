@@ -7,6 +7,62 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.6.0 (2019-05-10)
+===================
+
+Added
+-----
+
+- **Filesfolders**
+    - Provide app statistics for siteinfo (#18)
+- **Projectroles**
+    - User settings for settings linked to users instead of projects (#16)
+    - ``user_settings`` field in project plugins (#16)
+    - Optional ``label`` key for settings
+    - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
+    - ``get_info_link()``template tag (#239)
+    - ``get_setting_defs()`` API function for retrieving project and user setting definitions (#225)
+    - ``get_all_defaults()`` API function for retrieving all default setting values (#225)
+    - Human readable labels for app settings (#9)
+- **Siteinfo**
+    - Add app for site info and statistics (#18)
+- **Sodarcache**
+    - Optional ``--project`` argument for the ``synccache`` command (#232)
+- **Timeline**
+    - Provide app statistics for siteinfo (#18)
+- **Userprofiles**
+    - View and form for displaying and updating user settings (#16)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to ChromeDriver v74 (#221)
+- **Bgjobs**
+    - Ordering of background job for homgenization with downstream Varfish
+- **Filesfolders**
+    - Update app settings (#246)
+- **Projectroles**
+    - Rename ``project_settings`` module to ``app_settings`` (#225)
+    - App settings API updated to support project and user settings (#225)
+    - Write an empty dict for ``app_settings`` by default
+
+Fixed
+-----
+
+- **Bgjobs**
+    - Date formatting in templates (#220)
+- **Sodarcache**
+    - Crash from ``__repr__()`` if project not set (#223)
+    - Broken backend plugin icon (#250)
+
+Removed
+-------
+
+- **Timeline**
+    - Unused and deprecated project settings (#246)
+
+
 v0.5.1 (2019-04-16)
 ===================
 

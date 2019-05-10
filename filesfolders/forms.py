@@ -7,9 +7,9 @@ from django.template.defaultfilters import filesizeformat
 from db_file_storage.form_widgets import DBClearableFileInput
 
 # Projectroles dependency
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project
 from projectroles.utils import build_secret
-from projectroles.project_settings import get_project_setting
 
 from .models import File, Folder, HyperLink
 
@@ -20,6 +20,9 @@ MAX_ARCHIVE_SIZE = settings.FILESFOLDERS_MAX_ARCHIVE_SIZE
 
 # Local constants
 APP_NAME = 'filesfolders'
+
+
+app_settings = AppSettingAPI()
 
 
 class FilesfoldersItemForm(forms.ModelForm):
@@ -223,8 +226,8 @@ class FileForm(FilesfoldersItemForm):
             self.project = self.instance.project
 
         # Disable public URL creation if setting is false
-        if not get_project_setting(
-            self.project, APP_NAME, 'allow_public_links'
+        if not app_settings.get_app_setting(
+            APP_NAME, 'allow_public_links', project=self.project
         ):
             self.fields['public_url'].disabled = True
 
@@ -397,8 +400,8 @@ class FileForm(FilesfoldersItemForm):
             obj.owner = self.instance.owner
             obj.project = self.instance.project
 
-            if get_project_setting(
-                self.instance.project, APP_NAME, 'allow_public_links'
+            if app_settings.get_app_setting(
+                APP_NAME, 'allow_public_links', project=self.instance.project
             ):
                 obj.public_url = self.instance.public_url
 
