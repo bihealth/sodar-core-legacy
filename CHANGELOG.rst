@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - Chrome and Chromedriver version mismatch in Travis-CI config (#254)
+
+
 v0.6.0 (2019-05-10)
 ===================
 
