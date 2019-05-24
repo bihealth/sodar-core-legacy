@@ -16,6 +16,8 @@ Changed
 - **Projectroles**
     - Refactor ``RemoteProject.get_project()`` (#262)
     - Use ``get_info_link()`` in remote site list (#264)
+- **Userprofile**
+    - Disable user settings link if no settings are available (#260)
 
 Fixed
 -----
