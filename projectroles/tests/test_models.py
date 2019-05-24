@@ -1187,3 +1187,13 @@ class TestRemoteProject(
             )
         except ValidationError as e:
             self.fail(e)
+
+    def test_get_project(self):
+        """Test get_project() with project and project_uuid"""
+        self.assertEqual(self.remote_project.get_project(), self.project)
+
+    def test_get_project_no_foreignkey(self):
+        """Test get_project() with no project foreign key"""
+        self.remote_project.project = None
+        self.remote_project.save()
+        self.assertEqual(self.remote_project.get_project(), self.project)

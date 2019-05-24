@@ -902,11 +902,10 @@ class RemoteProject(models.Model):
 
     def get_project(self):
         """Get the related Project object"""
-        try:
-            return Project.objects.get(sodar_uuid=self.project_uuid)
-
-        except Project.DoesNotExist:
-            return None
+        return (
+            self.project
+            or Project.objects.filter(sodar_uuid=self.project_uuid).first()
+        )
 
 
 # Abstract User Model ----------------------------------------------------------

@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Projectroles**
+    - Refactor ``RemoteProject.get_project()`` (#262)
+
 Fixed
 -----
 
