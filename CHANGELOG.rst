@@ -25,6 +25,12 @@ Fixed
 - **General**
     - Chrome and Chromedriver version mismatch in Travis-CI config (#254)
 
+Removed
+-------
+
+- **Sodarcache**
+    - Unused ``TaskflowCacheUpdateAPIView`` (#205)
+
 
 v0.6.0 (2019-05-10)
 ===================
