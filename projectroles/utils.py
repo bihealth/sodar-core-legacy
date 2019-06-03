@@ -6,7 +6,8 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import SODAR_CONSTANTS
+from .constants import get_sodar_constants
+
 
 # Settings
 SECRET_LENGTH = (
@@ -15,6 +16,9 @@ SECRET_LENGTH = (
     else 32
 )
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
+
+# SODAR constants
+SODAR_CONSTANTS = get_sodar_constants()
 
 
 def get_display_name(key, title=False, count=1, plural=False):
