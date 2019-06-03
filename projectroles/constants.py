@@ -40,6 +40,8 @@ SODAR_CONSTANTS = {
         'CATEGORY': {'default': 'category', 'plural': 'categories'},
         'PROJECT': {'default': 'project', 'plural': 'projects'},
     },
+    # System user group
+    'SYSTEM_USER_GROUP': 'system',
 }
 
 

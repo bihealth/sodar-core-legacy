@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
+from .models import SODAR_CONSTANTS
 
 # Settings
 SECRET_LENGTH = (
@@ -14,7 +15,6 @@ SECRET_LENGTH = (
     else 32
 )
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-SYSTEM_USER_GROUP = 'system'
 
 
 def get_display_name(key, title=False, count=1, plural=False):
@@ -112,7 +112,7 @@ def set_user_group(user):
         group_name = user.username.split('@')[1].lower()
 
     else:
-        group_name = SYSTEM_USER_GROUP
+        group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
     group, created = Group.objects.get_or_create(name=group_name)
 
