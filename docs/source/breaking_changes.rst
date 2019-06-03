@@ -13,6 +13,12 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.6.1 (WIP)
+============
+
+N/A
+
+
 v0.6.0 (2019-05-10)
 ===================
 
