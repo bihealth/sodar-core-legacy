@@ -501,7 +501,7 @@ FILESFOLDERS_MAX_ARCHIVE_SIZE = env.int(
 )
 FILESFOLDERS_SERVE_AS_ATTACHMENT = False
 FILESFOLDERS_LINK_BAD_REQUEST_MSG = 'Invalid request'
-
+FILESFOLDERS_SHOW_LIST_COLUMNS = True  # Custom project list column example
 
 # Adminalerts app settings
 ADMINALERTS_PAGINATION = 15

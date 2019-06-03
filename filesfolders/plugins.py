@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -10,6 +11,13 @@ from .urls import urlpatterns
 
 # SODAR Constants
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+
+# Local constants
+SHOW_LIST_COLUMNS = (
+    settings.FILESFOLDERS_SHOW_LIST_COLUMNS
+    if hasattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS')
+    else False
+)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -70,6 +78,23 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Position in plugin ordering
     plugin_ordering = 30
+
+    project_list_columns = {
+        'files': {
+            'title': 'Files',
+            'width': 75,
+            'description': 'Small files stored for the project',
+            'active': SHOW_LIST_COLUMNS,
+            'align': 'right',
+        },
+        'links': {
+            'title': 'Links',
+            'width': 75,
+            'description': 'Hyperlinks defined in the small files app',
+            'active': SHOW_LIST_COLUMNS,
+            'align': 'right',
+        },
+    }
 
     def get_taskflow_sync_data(self):
         """
@@ -174,3 +199,28 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'value': HyperLink.objects.all().count(),
             },
         }
+
+    def get_project_list_value(self, column_id, project):
+        """
+        Return a value for the optional additional project list column specific
+        to a project.
+
+        :param column_id: ID of the column (string)
+        :param project: Project object
+        :return: String (may contain HTML) or None
+        """
+        if column_id == 'files':
+            count = File.objects.filter(project=project).count()
+
+        elif column_id == 'links':
+            count = HyperLink.objects.filter(project=project).count()
+
+        if count > 0:
+            return '<a href="{}">{}'.format(
+                reverse(
+                    'filesfolders:list', kwargs={'project': project.sodar_uuid}
+                ),
+                count,
+            )
+
+        return count

@@ -10,6 +10,15 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Filesfolders**
+    - Example project list columns (#265)
+    - Setting ``FILESFOLDERS_SHOW_LIST_COLUMNS`` to manage example project list columns (#265)
+- **Projectroles**
+    - Optional project list columns for project apps (#265)
+
 Changed
 -------
 
@@ -64,7 +73,7 @@ Changed
 - **General**
     - Upgrade to ChromeDriver v74 (#221)
 - **Bgjobs**
-    - Ordering of background job for homgenization with downstream Varfish
+    - Job order to match downstream Varfish
 - **Filesfolders**
     - Update app settings (#246)
 - **Projectroles**

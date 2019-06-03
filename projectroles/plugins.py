@@ -86,6 +86,22 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Implement this in your app plugin (must be an integer)
     plugin_ordering = 50
 
+    #: Optional project list column definition
+    #:
+    #: Example ::
+    #:
+    #:     project_list_columns = {
+    #:         'column_id': {
+    #:             'title': 'Column Title',
+    #:             'width': 100,  # Desired width of column in pixels
+    #:             'description': 'Description',  # Optional description string
+    #:             'active': True,  # Boolean for whether the column is active
+    #:             'align': 'left'  # Alignment of content
+    #:         }
+    #:     }
+    # TODO: Define project list column data in your app plugin (optional)
+    project_list_columns = {}
+
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
         """
@@ -186,6 +202,18 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         # TODO: Implement this in your app plugin
         return {}
+
+    def get_project_list_value(self, column_id, project):
+        """
+        Return a value for the optional additional project list column specific
+        to a project.
+
+        :param column_id: ID of the column (string)
+        :param project: Project object
+        :return: String (may contain HTML) or None
+        """
+        # TODO: Implement this in your app plugin (optional)
+        return None
 
 
 class BackendPluginPoint(PluginPoint):

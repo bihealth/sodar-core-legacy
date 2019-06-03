@@ -453,10 +453,10 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
             user=self.request.user, role__name=PROJECT_ROLE_DELEGATE
         ).count()
 
-        backend_plugins = get_active_plugins(plugin_type='backend')
-
-        if backend_plugins:
-            context['backend_plugins'] = backend_plugins
+        context['project_app_plugins'] = get_active_plugins(
+            plugin_type='project_app'
+        )
+        context['backend_plugins'] = get_active_plugins(plugin_type='backend')
 
         return context
 

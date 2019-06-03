@@ -178,14 +178,14 @@ $(document).ready(function() {
             $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
 
             $('.sodar-pr-home-display-filtered').each(function () {
-                var titleTxt = $(this).find('td:nth-child(1)').attr('orig-txt');
-                var descTxt = $(this).find('td:nth-child(2)').attr('orig-txt');
+                var titleTxt = $(this).find('td:first-child').attr('orig-txt');
+                var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
 
-                if ($(this).find('td:nth-child(1) div a').text().toLowerCase().indexOf(v) !== -1 ||
-                    $(this).find('td:nth-child(2)').text().toLowerCase().indexOf(v) !== -1) {
+                if ($(this).find('td:first-child div a').text().toLowerCase().indexOf(v) !== -1 ||
+                    $(this).find('td:nth-last-child(2)').text().toLowerCase().indexOf(v) !== -1) {
                     // Reset content for updating the highlight
-                    $(this).find('td:nth-child(1) div a').html(titleTxt);
-                    $(this).find('td:nth-child(2)').html(descTxt);
+                    $(this).find('td:first-child div a').html(titleTxt);
+                    $(this).find('td:nth-last-child(2)').html(descTxt);
 
                     // Highlight
                     var pattern = new RegExp("(" + v + ")", "gi");
@@ -194,12 +194,12 @@ $(document).ready(function() {
 
                     if (titlePos !== -1) {
                         var titleVal = titleTxt.substring(titlePos, titlePos + v.length);
-                        $(this).find('td:nth-child(1) div a').html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
+                        $(this).find('td:first-child div a').html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
                     }
 
                     if (descPos !== -1) {
                         var descVal = descTxt.substring(descPos, descPos + v.length);
-                        $(this).find('td:nth-child(2)').html(descTxt.replace(pattern, '<span class="sodar-search-highlight">' + descVal + '</span>'));
+                        $(this).find('td:nth-last-child(2)').html(descTxt.replace(pattern, '<span class="sodar-search-highlight">' + descVal + '</span>'));
                     }
 
                     $(this).show();
@@ -237,10 +237,10 @@ $(document).ready(function() {
         // Reset search terms
         $('.sodar-pr-home-display-filtered').each(function () {
             // Reset filter highlights and value
-            var titleTxt = $(this).find('td:nth-child(1)').attr('orig-txt');
-            var descTxt = $(this).find('td:nth-child(2)').attr('orig-txt');
-            $(this).find('td:nth-child(1) a').html(titleTxt);
-            $(this).find('td:nth-child(2)').html(descTxt);
+            var titleTxt = $(this).find('td:first-child').attr('orig-txt');
+            var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
+            $(this).find('td:first-child a').html(titleTxt);
+            $(this).find('td:nth-last-child(2)').html(descTxt);
             $(this).hide();
             $('#sodar-pr-project-list-filter').val('');
         });
