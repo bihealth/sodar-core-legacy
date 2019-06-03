@@ -21,6 +21,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 TEST_APP_NAME = 'sodarcache'
+INVALID_APP_NAME = 'timeline'  # Valid app name but but no data is created
 
 
 class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
@@ -203,7 +204,6 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
 
     def test_get_project_cache(self):
         """Test getting all cache item of a project"""
-
         first_item = self.cache_backend.set_cache_item(
             project=self.project,
             app_name=TEST_APP_NAME,
@@ -230,7 +230,6 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
 
     def test_get_update_time(self):
         """Test getting the time of the latest update of a cache item"""
-
         item = self.cache_backend.set_cache_item(
             project=self.project,
             app_name=TEST_APP_NAME,
@@ -244,3 +243,78 @@ class TestSodarCacheAPI(JsonCacheItemMixin, TestJsonCacheItemBase):
         )
 
         self.assertEqual(update_time, item.date_modified.timestamp())
+
+    def test_delete(self):
+        """Test delete_cache() with no arguments"""
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+        delete_status = self.cache_backend.delete_cache()
+        self.assertEqual(delete_status, 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
+
+    def test_delete_app(self):
+        """Test delete_cache() with app name argument"""
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+        delete_status = self.cache_backend.delete_cache(app_name=TEST_APP_NAME)
+        self.assertEqual(delete_status, 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
+
+    def test_delete_app_empty(self):
+        """Test delete_cache() on an app name without created items"""
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+        delete_status = self.cache_backend.delete_cache(
+            app_name=INVALID_APP_NAME
+        )
+        self.assertEqual(delete_status, 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+
+    def test_delete_project(self):
+        """Test delete_cache() with project argument"""
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+        delete_status = self.cache_backend.delete_cache(project=self.project)
+        self.assertEqual(delete_status, 1)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 0)
+
+    def test_delete_project_empty(self):
+        """Test delete_cache() on a project without created items"""
+        new_project = self._make_project(
+            'NewProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.cache_backend.set_cache_item(
+            project=self.project,
+            app_name=TEST_APP_NAME,
+            user=self.user_owner,
+            name='test_item',
+            data={'test_key': 'test_val'},
+        )
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
+        delete_status = self.cache_backend.delete_cache(project=new_project)
+        self.assertEqual(delete_status, 0)
+        self.assertEqual(JSONCacheItem.objects.all().count(), 1)
