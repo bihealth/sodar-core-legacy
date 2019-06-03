@@ -16,7 +16,12 @@ be missing. Please click "display source" if you want to read this in GitLab.
 v0.6.1 (WIP)
 ============
 
-N/A
+App Settings Deprecation Protection Removed
+-------------------------------------------
+
+The deprecation protection set up in the previous release has been removed.
+Project app plugins are now expected to declare ``app_settings`` in the format
+introduced in v0.6.0.
 
 
 v0.6.0 (2019-05-10)

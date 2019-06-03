@@ -14,20 +14,6 @@ VALID_SCOPES = [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_USER]
 
 class AppSettingAPI:
     @classmethod
-    def _get_settings_dict(cls, app_plugin):
-        """
-        TEMPORARY DEPRECATION PROTECTION HELPER, TO BE REMOVED IN THE NEXT
-        RELEASE
-
-        :param app_plugin: Project app plugin object
-        :return: Dict
-        """
-        if not app_plugin.app_settings and app_plugin.project_settings:
-            return app_plugin.project_settings
-
-        return app_plugin.app_settings
-
-    @classmethod
     def _check_project_and_user(cls, project, user):
         """
         Ensure one of the project and user parameters is set.
@@ -68,11 +54,8 @@ class AppSettingAPI:
         """
         app_plugin = get_app_plugin(app_name)
 
-        # NOTE: Deprecation protection, to be removed in the next release
-        settings_defs = cls._get_settings_dict(app_plugin)
-
-        if setting_name in settings_defs:
-            return settings_defs[setting_name]['default']
+        if setting_name in app_plugin.app_settings:
+            return app_plugin.app_settings[setting_name]['default']
 
         raise KeyError(
             'Setting "{}" not found in app plugin "{}"'.format(
@@ -202,17 +185,15 @@ class AppSettingAPI:
 
         except AppSetting.DoesNotExist:
             app_plugin = get_app_plugin(app_name)
-            # NOTE: Deprecation protection, to be removed in the next release
-            settings_defs = cls._get_settings_dict(app_plugin)
 
-            if setting_name not in settings_defs:
+            if setting_name not in app_plugin.app_settings:
                 raise KeyError(
                     'Setting "{}" not found in app plugin "{}"'.format(
                         setting_name, app_name
                     )
                 )
 
-            s_type = settings_defs[setting_name]['type']
+            s_type = app_plugin.app_settings[setting_name]['type']
 
             if validate:
                 cls.validate_setting(s_type, value)
@@ -267,22 +248,8 @@ class AppSettingAPI:
         """
         cls._check_scope(scope)
 
-        # NOTE: Deprecation protection, to be removed in the next release
-        if (
-            not plugin.app_settings
-            and plugin.project_settings
-            and scope == APP_SETTING_SCOPE_PROJECT
-        ):
-            ret = plugin.project_settings
-
-        elif plugin.app_settings:
-            ret = {
-                k: v
-                for k, v in plugin.app_settings.items()
-                if 'scope' in v and v['scope'] == scope
-            }
-
-        else:
-            ret = {}
-
-        return ret
+        return {
+            k: v
+            for k, v in plugin.app_settings.items()
+            if 'scope' in v and v['scope'] == scope
+        }

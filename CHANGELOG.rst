@@ -39,6 +39,7 @@ Removed
 
 - **Projectroles**
     - Unused project statistics in the home view (#269)
+    - App settings deprecation protection (#245)
 - **Sodarcache**
     - Unused ``TaskflowCacheUpdateAPIView`` (#205)
 
