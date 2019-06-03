@@ -37,6 +37,8 @@ Fixed
 Removed
 -------
 
+- **Projectroles**
+    - Unused project statistics in the home view (#269)
 - **Sodarcache**
     - Unused ``TaskflowCacheUpdateAPIView`` (#205)
 

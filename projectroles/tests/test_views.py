@@ -230,12 +230,6 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response.context['project_list'][1].pk, self.project.pk
         )
 
-        # Assert statistics values
-        self.assertEqual(response.context['count_categories'], 1)
-        self.assertEqual(response.context['count_projects'], 1)
-        self.assertEqual(response.context['count_users'], 1)
-        self.assertEqual(response.context['count_assignments'], 1)
-
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search view"""
