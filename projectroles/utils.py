@@ -33,8 +33,6 @@ def get_display_name(key, title=False, count=1, plural=False):
                    (boolean, optional)
     :return: String
     """
-    from projectroles.models import SODAR_CONSTANTS  # Must import here
-
     ret = SODAR_CONSTANTS['DISPLAY_NAMES'][key][
         'plural' if count != 1 or plural else 'default'
     ]
