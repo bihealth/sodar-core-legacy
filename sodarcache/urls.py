@@ -21,9 +21,4 @@ urlpatterns = [
         view=views.SodarCacheGetDateAPIView.as_view(),
         name='cache_get_date',
     ),
-    url(
-        regex=r'^taskflow/update$',
-        view=views.TaskflowCacheUpdateAPIView.as_view(),
-        name='taskflow_update',
-    ),
 ]

@@ -7,6 +7,51 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.6.1 (2019-06-05)
+===================
+
+Added
+-----
+
+- **Filesfolders**
+    - Example project list columns (#265)
+    - Setting ``FILESFOLDERS_SHOW_LIST_COLUMNS`` to manage example project list columns (#265)
+- **Projectroles**
+    - Optional project list columns for project apps (#265)
+- **Sodarcache**
+    - ``delete_cache()`` API function (#257)
+
+Changed
+-------
+
+- **Projectroles**
+    - Refactor ``RemoteProject.get_project()`` (#262)
+    - Use ``get_info_link()`` in remote site list (#264)
+    - Define ``SYSTEM_USER_GROUP`` in ``SODAR_CONSTANTS`` (#251)
+    - Make pagedown textarea element resizeable and increase minimum height (#273)
+- **Sodarcache**
+    - Handle and log raised exceptions in ``synccache`` management command (#272)
+- **Userprofile**
+    - Disable user settings link if no settings are available (#260)
+
+Fixed
+-----
+
+- **General**
+    - Chrome and Chromedriver version mismatch in Travis-CI config (#254)
+- **Projectroles**
+    - Remove redundant ``get_project_list()`` call from ``project_detail.html``
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused project statistics in the home view (#269)
+    - App settings deprecation protection (#245)
+- **Sodarcache**
+    - Unused ``TaskflowCacheUpdateAPIView`` (#205)
+
+
 v0.6.0 (2019-05-10)
 ===================
 
@@ -20,7 +65,7 @@ Added
     - ``user_settings`` field in project plugins (#16)
     - Optional ``label`` key for settings
     - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
-    - ``get_info_link()``template tag (#239)
+    - ``get_info_link()`` template tag (#239)
     - ``get_setting_defs()`` API function for retrieving project and user setting definitions (#225)
     - ``get_all_defaults()`` API function for retrieving all default setting values (#225)
     - Human readable labels for app settings (#9)
@@ -39,7 +84,7 @@ Changed
 - **General**
     - Upgrade to ChromeDriver v74 (#221)
 - **Bgjobs**
-    - Ordering of background job for homgenization with downstream Varfish
+    - Job order to match downstream Varfish
 - **Filesfolders**
     - Update app settings (#246)
 - **Projectroles**

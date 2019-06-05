@@ -450,3 +450,27 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
             + urlencode({'s': 'test type:Jaix1au'})
         )
         self.assert_element_count(expected, url, 'sodar-ff-search-item')
+
+
+class TestHomeView(TestUIBase):
+    """Tests for appearance of filesfolders specific data in the home view"""
+
+    def test_project_list(self):
+        """Test custom filesfolders project list column visibility"""
+
+        users = [
+            self.superuser,
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        url = reverse('home')
+
+        self.assert_element_exists(
+            users, url, 'sodar-pr-project-list-header-filesfolders-files', True
+        )
+        self.assert_element_exists(
+            users, url, 'sodar-pr-project-list-header-filesfolders-links', True
+        )

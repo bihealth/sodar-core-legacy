@@ -26,6 +26,8 @@ which wants to make use of the following features:
 - Advanced project activity logging
 - Small file uploading and browsing
 - Managing server-side background jobs
+- Caching and aggregation of data from external services
+- Tracking site information and statistics
 
 Basics of Django site setup and instructions for third party packages used are
 considered out of scope for this documentation. Please refer instead to official

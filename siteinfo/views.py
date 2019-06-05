@@ -5,7 +5,6 @@ from django.views.generic import TemplateView
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
-from projectroles.utils import SYSTEM_USER_GROUP
 from projectroles.views import LoggedInPermissionMixin
 
 
@@ -14,7 +13,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
-
+SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Access Django user model
 User = auth.get_user_model()

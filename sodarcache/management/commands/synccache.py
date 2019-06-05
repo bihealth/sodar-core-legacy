@@ -65,6 +65,14 @@ class Command(BaseCommand):
         plugins = get_active_plugins(plugin_type='project_app')
 
         for plugin in plugins:
-            plugin.update_cache(**update_kwargs)
+            try:
+                plugin.update_cache(**update_kwargs)
+
+            except Exception as ex:
+                logger.error(
+                    'Update failed for plugin "{}": "{}"'.format(
+                        plugin.name, ex
+                    )
+                )
 
         logger.info('Cache synchronization OK')

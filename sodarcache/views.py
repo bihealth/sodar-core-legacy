@@ -7,13 +7,7 @@ from rest_framework.views import APIView
 
 # Projectroles dependency
 from projectroles.plugins import get_backend_api
-from projectroles.views import (
-    ProjectPermissionMixin,
-    APIPermissionMixin,
-    BaseTaskflowAPIView,
-)
-
-from projectroles.models import Project
+from projectroles.views import ProjectPermissionMixin, APIPermissionMixin
 
 APP_NAME = 'sodarcache'
 
@@ -100,17 +94,3 @@ class SodarCacheGetDateAPIView(
             return Response({'update_time': update_time}, status=200)
 
         return Response({'message': 'Not found'}, status=404)
-
-
-class TaskflowCacheUpdateAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for updating cache items of a project with a specific
-    item ID"""
-
-    def post(self, request):
-        cache_backend = get_backend_api('sodar_cache')
-        project = Project.objects.get(sodar_uuid=request.data['project_uuid'])
-        # TODO: Run this as celery job
-        cache_backend.update_cache(
-            name=request.data['item_name'], project=project
-        )
-        return Response('ok', status=200)

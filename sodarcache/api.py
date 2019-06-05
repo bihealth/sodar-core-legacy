@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 class SodarCacheAPI:
     """SodarCache backend API to be used by Django apps."""
 
+    # TODO: Make model selection dynamic once we introduce types other than JSON
+
     # Internal functions -------------------------------------------------------
 
     @classmethod
@@ -56,7 +58,7 @@ class SodarCacheAPI:
         Return all cached data for a project.
 
         :param project: Project object
-        :param data_type: string stating the data type of the cache items
+        :param data_type: String stating the data type of the cache items
         :return: QuerySet
         :raise: ValueError if data_type is invalid
         """
@@ -79,13 +81,47 @@ class SodarCacheAPI:
             plugin.update_cache(name, project, user)
 
     @classmethod
+    def delete_cache(cls, app_name=None, project=None):
+        """
+        Delete cache items. Optionallly limit to project and/or user.
+
+        :param app_name: Name of the app which sets the item (string)
+        :param project: Project object (optional)
+        :return: Integer (deleted item count)
+        :raise: ValueError if app_name is given but invalid
+        """
+        if app_name:
+            cls._check_app_name(app_name)
+
+        if not app_name and not project:
+            items = JSONCacheItem.objects.all()
+
+        else:
+            query_params = {}
+
+            if app_name:
+                query_params['app_name'] = app_name
+
+            if project:
+                query_params['project'] = project
+
+            items = JSONCacheItem.objects.filter(**query_params)
+
+        if items:
+            item_count = items.count()
+            items.delete()
+            return item_count
+
+        return 0
+
+    @classmethod
     def get_cache_item(cls, app_name, name, project=None):
         """
         Return cached data by app_name, name (identifier) and optional project.
         Returns None if not found.
 
         :param name: Item name (string)
-        :param app_name: name of the app which sets the item (string)
+        :param app_name: Name of the app which sets the item (string)
         :param project: Project object (optional)
         :return: JSONCacheItem object
         :raise: ValueError if app_name is invalid
@@ -106,10 +142,10 @@ class SodarCacheAPI:
         """
         Create or update and save a cache item.
 
-        :param app_name: name of the app which sets the item (string)
+        :param app_name: Name of the app which sets the item (string)
         :param name: Item name (string)
-        :param data: item data (dict)
-        :param data_type: string stating the data type of the cache items
+        :param data: Item data (dict)
+        :param data_type: String stating the data type of the cache items
         :param project: Project object (optional)
         :param user: User object to denote user triggering the update (optional)
         :return: JSONCacheItem object
@@ -150,7 +186,7 @@ class SodarCacheAPI:
         epoch.
 
         :param name: Item name (string)
-        :param app_name: name of the app which sets the item (string)
+        :param app_name: Name of the app which sets the item (string)
         :param project: Project object (optional)
         :return: Float
         """

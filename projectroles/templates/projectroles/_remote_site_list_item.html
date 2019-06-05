@@ -1,14 +1,13 @@
+{% load projectroles_common_tags %}
+
 <tr>
   <td>
     <a href="{% url 'projectroles:remote_projects' remotesite=site.sodar_uuid %}">
       {{ site.name }}
     </a>
     {% if site.description %}
-      <a class="sodar-pr-site-desc-link" tabindex="0" data-toggle="popover"
-         data-trigger="focus" data-placement="top" data-html="true"
-         data-content="{{ site.description }}">
-        <i class="fa fa-info-circle text-info"></i>
-      </a>
+      {% get_info_link site.description as info_link %}
+      {{ info_link | safe }}
     {% endif %}
   </td>
   <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>

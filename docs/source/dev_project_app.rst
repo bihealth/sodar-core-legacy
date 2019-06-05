@@ -209,6 +209,8 @@ Implementing the following is **optional**:
   are needed. See the plugin point definition for an example.
 - ``search_types``: Implement if searching the data of the app is enabled
 - ``search_template``: Implement if searching the data of the app is enabled
+- ``project_list_columns``: Optional custom columns do be shown in the project
+  list. See the plugin point definition for an example.
 - ``get_taskflow_sync_data()``: Applicable only if working with
   ``sodar_taskflow`` and iRODS
 - ``get_object_link()``: If Django models are associated with the app. Used e.g.
@@ -217,6 +219,9 @@ Implementing the following is **optional**:
   search is enabled
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
+- ``get_project_list_value()``: A function which **must** be implemented if
+  ``project_list_columns`` are defined, to retrieve a column cell value for a
+  specific project.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
@@ -630,7 +635,7 @@ the result:
        }
 
 Search Template
-----------------
+---------------
 
 Projectroles will provide your template context the ``search_results`` object,
 which corresponds to the result dict of the aforementioned function. There are

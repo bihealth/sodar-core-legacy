@@ -43,7 +43,8 @@
       <h4>
         <i class="fa fa-sliders"></i> Settings
         <span class="sodar-header-input-group pull-right">
-        <a role="button" class="btn btn-primary"
+        <a role="button"
+           class="btn btn-primary {% if not user_settings or user_settings|length == 0 %}disabled{% endif %}"
            href="{% url 'userprofile:settings_update' %}">
           <i class="fa fa-pencil"></i> Update
         </a>

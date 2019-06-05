@@ -33,6 +33,21 @@
       {% endif %}
     </div>
   </td>
+  {% for app_plugin in app_plugins %}
+     {% for k, v in app_plugin.project_list_columns.items %}
+       {% if v.active %}
+         {% if p.type == 'PROJECT' %}
+           {% get_project_list_value app_plugin k p as cell_value %}
+           <td class="text-{{ v.align }}"
+               {% if v.width %} style="width: {{ v.width }}px !important"{% endif %}>
+             {{ cell_value | safe }}
+           </td>
+         {% else %}
+           <td></td>
+         {% endif %}
+       {% endif %}
+     {% endfor %}
+  {% endfor %}
   {% if p.description %}
     <td>{{ p.description }}</td>
   {% else %}

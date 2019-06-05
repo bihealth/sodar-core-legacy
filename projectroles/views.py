@@ -434,29 +434,8 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['count_categories'] = Project.objects.filter(
-            type=PROJECT_TYPE_CATEGORY
-        ).count()
-        context['count_projects'] = Project.objects.filter(
-            type=PROJECT_TYPE_PROJECT
-        ).count()
-        context['count_users'] = auth.get_user_model().objects.all().count()
-        context['count_assignments'] = RoleAssignment.objects.all().count()
-
-        context['user_projects'] = RoleAssignment.objects.filter(
-            user=self.request.user
-        ).count()
-        context['user_owner'] = RoleAssignment.objects.filter(
-            user=self.request.user, role__name=PROJECT_ROLE_OWNER
-        ).count()
-        context['user_delegate'] = RoleAssignment.objects.filter(
-            user=self.request.user, role__name=PROJECT_ROLE_DELEGATE
-        ).count()
-
-        backend_plugins = get_active_plugins(plugin_type='backend')
-
-        if backend_plugins:
-            context['backend_plugins'] = backend_plugins
+        context['app_plugins'] = get_active_plugins(plugin_type='project_app')
+        context['backend_plugins'] = get_active_plugins(plugin_type='backend')
 
         return context
 

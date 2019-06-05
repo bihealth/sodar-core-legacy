@@ -2,6 +2,21 @@
 
 <tr class="sodar-pr-project-list-header">
  <th id="sodar-pr-project-list-header-project">{% get_display_name 'PROJECT' title=True %}</th>
+ {% for app_plugin in app_plugins %}
+   {% for k, v in app_plugin.project_list_columns.items %}
+     {% if v.active %}
+       <th id="sodar-pr-project-list-header-{{ app_plugin.name }}-{{ k }}"
+           class="text-nowrap"
+           {% if v.width %} style="width: {{ v.width }}px !important"{% endif %}>
+         {{ v.title }}
+         {% if v.description %}
+           {% get_info_link v.description as info_link %}
+           {{ info_link | safe }}
+         {% endif %}
+       </th>
+     {% endif %}
+   {% endfor %}
+ {% endfor %}
  <th id="sodar-pr-project-list-header-description">Description</th>
  <th id="sodar-pr-project-list-header-role">Your&nbsp;Role</th>
 </tr>

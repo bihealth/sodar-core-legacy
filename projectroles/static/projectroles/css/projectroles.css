@@ -312,7 +312,7 @@ tr.sodar-pr-project-list-header th:nth-child(1) {
   width: 40%;
 }
 
-tr.sodar-pr-project-list-header th:nth-child(3) {
+tr.sodar-pr-project-list-header th:last-child {
   width: 120px;
 }
 
@@ -321,7 +321,7 @@ tr.sodar-pr-project-list-item td:nth-child(1) {
   text-overflow: ellipsis;
 }
 
-tr.sodar-pr-project-list-item td:nth-child(2) {
+tr.sodar-pr-project-list-item td:nth-last-child(2) {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -541,7 +541,9 @@ a.sodar-nav-link-last {
 
 /* Pagedown textarea height modification ("rows" attribute does not work) */
 textarea.wmd-input {
-  height: 125px !important;
+  height: 175px;
+  min-height: 175px;
+  resize: vertical;
 }
 
 /* Pagedown layout fixes */
@@ -549,6 +551,7 @@ div.wmd-panel {
   margin-left: 0;
   margin-right: 0;
   width: 100%;
+  resize: vertical;
 }
 
 /* Select2 autocomplete field tweaks */
@@ -719,16 +722,16 @@ pre {
 
 /* Project list */
 
-@media screen and (max-width: 1000px) {
-  .table.sodar-pr-project-list-table tr th:nth-child(3),
-  .table.sodar-pr-project-list-table tr td:nth-child(3) {
+@media screen and (max-width: 1200px) {
+  .table.sodar-pr-project-list-table tr th:last-child,
+  .table.sodar-pr-project-list-table tr td:last-child {
     display: none;
   }
 }
 
-@media screen and (max-width: 800px) {
-  .table.sodar-pr-project-list-table tr th:nth-child(2),
-  .table.sodar-pr-project-list-table tr td:nth-child(2) {
+@media screen and (max-width: 1000px) {
+  .table.sodar-pr-project-list-table tr th:nth-child(n+2),
+  .table.sodar-pr-project-list-table tr td:nth-child(n+2) {
     display: none;
   }
 }
