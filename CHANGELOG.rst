@@ -28,6 +28,7 @@ Changed
     - Refactor ``RemoteProject.get_project()`` (#262)
     - Use ``get_info_link()`` in remote site list (#264)
     - Define ``SYSTEM_USER_GROUP`` in ``SODAR_CONSTANTS`` (#251)
+    - Make pagedown textarea element resizeable and increase minimum height (#273)
 - **Userprofile**
     - Disable user settings link if no settings are available (#260)
 
