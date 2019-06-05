@@ -123,7 +123,6 @@
              {% include 'projectroles/_project_list_header.html' %}
            </thead>
            <tbody>
-             {% get_project_list user=request.user parent=object as subproject_list %}
              {% if subproject_list|length > 0 %}
                {% for p in subproject_list %}
                  {% include 'projectroles/_project_list_item.html' with list_parent=object %}

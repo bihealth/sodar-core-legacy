@@ -434,9 +434,7 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
 
-        context['project_app_plugins'] = get_active_plugins(
-            plugin_type='project_app'
-        )
+        context['app_plugins'] = get_active_plugins(plugin_type='project_app')
         context['backend_plugins'] = get_active_plugins(plugin_type='backend')
 
         return context

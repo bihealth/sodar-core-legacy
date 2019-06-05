@@ -39,6 +39,8 @@ Fixed
 
 - **General**
     - Chrome and Chromedriver version mismatch in Travis-CI config (#254)
+- **Projectroles**
+    - Remove redundant ``get_project_list()`` call from ``project_detail.html``
 
 Removed
 -------

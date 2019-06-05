@@ -21,7 +21,7 @@
       {{ project_star|safe }}
     </div>
   </td>
-  {% for app_plugin in project_app_plugins %}
+  {% for app_plugin in app_plugins %}
      {% for k, v in app_plugin.project_list_columns.items %}
        {% if v.active %}
          {% if p.type == 'PROJECT' %}
