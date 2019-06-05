@@ -13,8 +13,8 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
-v0.6.1 (WIP)
-============
+v0.6.1 (2019-06-05)
+===================
 
 App Settings Deprecation Protection Removed
 -------------------------------------------

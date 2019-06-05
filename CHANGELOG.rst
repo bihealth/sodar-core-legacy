@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.6.1 (2019-06-05)
+===================
 
 Added
 -----
@@ -63,7 +63,7 @@ Added
     - ``user_settings`` field in project plugins (#16)
     - Optional ``label`` key for settings
     - Optional "wait for element" args in UI test helpers to ease Javascript testing (#230)
-    - ``get_info_link()``template tag (#239)
+    - ``get_info_link()`` template tag (#239)
     - ``get_setting_defs()`` API function for retrieving project and user setting definitions (#225)
     - ``get_all_defaults()`` API function for retrieving all default setting values (#225)
     - Human readable labels for app settings (#9)
