@@ -18,6 +18,7 @@ Added
     - Setting ``FILESFOLDERS_SHOW_LIST_COLUMNS`` to manage example project list columns (#265)
 - **Projectroles**
     - Optional project list columns for project apps (#265)
+    - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
 - **Sodarcache**
     - ``delete_cache()`` API function (#257)
 
