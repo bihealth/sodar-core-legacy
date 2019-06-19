@@ -114,7 +114,7 @@ class ProjectForm(forms.ModelForm):
 
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT
+                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -292,7 +292,7 @@ class ProjectForm(forms.ModelForm):
         # Verify settings fields
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT
+                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
             )
 
             for s_key in p_settings:

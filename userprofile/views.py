@@ -36,7 +36,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     def _get_user_settings(self):
         for plugin in get_active_plugins():
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_USER
+                plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():

@@ -3,7 +3,7 @@
 {% load rules %}
 
 {% allow_project_creation as allow_creation %}
-{% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+{% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
 <div class="btn-group sodar-sidebar-alt-btn pull-left" role="group" id="sodar-pr-sidebar-alt-btn">
   <button class="btn btn-dark dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

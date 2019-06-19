@@ -30,6 +30,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'type': 'BOOLEAN',
             'default': False,
             'description': 'Example project setting',
+            'user_modifiable': True,
+        },
+        'project_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'STRING',
+            'label': 'Hidden project setting',
+            'default': '',
+            'description': 'Should not be displayed in forms',
+            'user_modifiable': False,
         },
         'user_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
@@ -37,18 +46,29 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'label': 'String example',
             'default': '',
             'description': 'Example user setting',
+            'user_modifiable': True,
         },
         'user_int_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'INTEGER',
             'label': 'Int example',
             'default': 0,
+            'user_modifiable': True,
         },
         'user_bool_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'BOOLEAN',
             'label': 'Bool Example',
             'default': False,
+            'user_modifiable': True,
+        },
+        'user_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'STRING',
+            'label': 'Hidden user setting',
+            'default': '',
+            'description': 'Should not be displayed in forms',
+            'user_modifiable': False,
         },
     }
 

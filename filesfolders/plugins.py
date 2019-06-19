@@ -44,6 +44,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'default': False,
             'label': 'Allow Public Links',
             'description': 'Allow generation of public links for small files',
+            'user_modifiable': True,
         }
     }
 

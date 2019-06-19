@@ -13,6 +13,18 @@ version. For a complete list of changes in the current release, see the
 be missing. Please click "display source" if you want to read this in GitLab.
 
 
+v0.6.2 (WIP)
+============
+
+Template Tag for Django Settings Access Renamed
+-----------------------------------------------
+
+The ``get_setting()`` template tag in ``projectroles_common_tags`` has been
+renamed into ``get_django_setting()``. In this version the old tag still works,
+but this deprecation protection will be removed in the next release. Please
+update any references to this tag in your templates.
+
+
 v0.6.1 (2019-06-05)
 ===================
 
@@ -26,7 +38,6 @@ introduced in v0.6.0.
 
 v0.6.0 (2019-05-10)
 ===================
-
 
 App Settings (Formerly Project Settings)
 ----------------------------------------

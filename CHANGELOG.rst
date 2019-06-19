@@ -7,6 +7,27 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
+    - Common template tag ``get_app_setting()`` (#281)
+    - Hiding app settings from forms with ``user_modifiable`` (#267)
+    - ``AppSetting.value_json`` field (#268)
+- **Userprofile**
+    - Support for ``AppSetting.user_modifiable`` (#267)
+
+Changed
+-------
+
+- **Projectroles**
+    - ``get_setting()`` template tag renamed into ``get_django_setting()`` (#281)
+
+
 v0.6.1 (2019-06-05)
 ===================
 
@@ -18,7 +39,6 @@ Added
     - Setting ``FILESFOLDERS_SHOW_LIST_COLUMNS`` to manage example project list columns (#265)
 - **Projectroles**
     - Optional project list columns for project apps (#265)
-    - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
 - **Sodarcache**
     - ``delete_cache()`` API function (#257)
 

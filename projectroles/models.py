@@ -4,6 +4,7 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.signals import user_logged_in
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -553,6 +554,17 @@ class AppSetting(models.Model):
         null=True,
         blank=True,
         help_text='Value of the setting',
+    )
+
+    # TODO: Implement the use of this in release v0.7 (see #268)
+    #: Optional JSON value for the setting
+    value_json = JSONField(
+        default=dict, help_text='Optional JSON value for the setting'
+    )
+
+    #: Setting visibility in forms
+    user_modifiable = models.BooleanField(
+        default=True, help_text='Setting visibility in forms'
     )
 
     #: AppSetting SODAR UUID
