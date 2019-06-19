@@ -13,6 +13,9 @@ SODAR Core
 .. image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/ambv/black
 
+.. image:: https://zenodo.org/badge/165220058.svg
+    :target: https://zenodo.org/badge/latestdoi/165220058
+
 SODAR (System for Omics Data Access and Retrieval) is a specialized system for
 managing data in omics research projects.
 

@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Zenodo DOI badge (#274)
 - **Projectroles**
     - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
     - Common template tag ``get_app_setting()`` (#281)
