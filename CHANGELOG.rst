@@ -26,6 +26,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to 1.11.21 (#278)
 - **Projectroles**
     - ``get_setting()`` template tag renamed into ``get_django_setting()`` (#281)
 

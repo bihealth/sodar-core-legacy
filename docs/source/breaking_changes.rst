@@ -16,6 +16,11 @@ be missing. Please click "display source" if you want to read this in GitLab.
 v0.6.2 (WIP)
 ============
 
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.21.
+
 Template Tag for Django Settings Access Renamed
 -----------------------------------------------
 
