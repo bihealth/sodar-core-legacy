@@ -20,6 +20,8 @@ Added
     - Common template tag ``get_app_setting()`` (#281)
     - Hiding app settings from forms with ``user_modifiable`` (#267)
     - ``AppSetting.value_json`` field (#268)
+- **Sodarcache**
+    - Logging in ``delete_cache()`` (#279)
 - **Userprofile**
     - Support for ``AppSetting.user_modifiable`` (#267)
 

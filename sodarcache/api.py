@@ -110,8 +110,21 @@ class SodarCacheAPI:
         if items:
             item_count = items.count()
             items.delete()
+            logger.info(
+                'Deleted {} item{} from cache(app={}, project={})'.format(
+                    item_count,
+                    's' if item_count != 1 else '',
+                    app_name,
+                    project.sodar_uuid if project else None,
+                )
+            )
             return item_count
 
+        logger.info(
+            'No items found for deletion (app={}, project={})'.format(
+                app_name, project.sodar_uuid if project else None
+            )
+        )
         return 0
 
     @classmethod
