@@ -15,6 +15,8 @@ Added
 
 - **General**
     - Badges for Readthedocs documentation and Zenodo DOI (#274)
+- **Bgjobs**
+    - ``BackgroundJobFactory`` for tests from Varfish-web
 - **Projectroles**
     - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
     - Common template tag ``get_app_setting()`` (#281)
