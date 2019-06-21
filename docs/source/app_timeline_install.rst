@@ -7,9 +7,6 @@ Timeline Installation
 This document provides instructions and guidelines for installing the
 ``timeline`` app to be used with your SODAR Core enabled Django site.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 .. warning::
 
     To install this app you **must** have the ``django-sodar-core`` package

@@ -14,9 +14,6 @@ projectroles. While inclusion of other SODAR Core apps can be optional, having
 projectroles installed is **mandatory** for working with the SODAR project and
 app structure.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 .. toctree::
    :maxdepth: 3
    :caption: Contents:

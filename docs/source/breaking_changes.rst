@@ -9,12 +9,9 @@ recommended to review these notes whenever upgrading from an older SODAR Core
 version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
 
-
-v0.6.2 (WIP)
-============
+v0.6.2 (2019-06-21)
+===================
 
 System Prerequisites
 --------------------

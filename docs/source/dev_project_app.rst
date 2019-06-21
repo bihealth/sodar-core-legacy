@@ -8,9 +8,6 @@ This document details instructions and guidelines for developing
 **project apps** to be used with the SODAR Core framework. This also applies for
 modifying existing Django apps into project apps.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 .. hint::
 
    The package ``example_project_app`` in the projectroles repository provides

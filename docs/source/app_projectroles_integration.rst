@@ -6,9 +6,6 @@ Projectroles Integration
 This document provides instructions and guidelines for integrating projectroles
 and other SODAR Core apps into your Django site.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Installation on a New Site
 **************************

@@ -23,9 +23,6 @@ For values retrieved from environment variables, make sure to configure your
 env accordingly. For development and testing, using ``DJANGO_READ_DOT_ENV_FILE``
 is recommended.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Site Package and Paths
 ======================

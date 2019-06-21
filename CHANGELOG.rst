@@ -14,7 +14,7 @@ Added
 -----
 
 - **General**
-    - Zenodo DOI badge (#274)
+    - Badges for Readthedocs documentation and Zenodo DOI (#274)
 - **Projectroles**
     - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
     - Common template tag ``get_app_setting()`` (#281)
@@ -30,6 +30,12 @@ Changed
     - Upgrade minimum Django version to 1.11.21 (#278)
 - **Projectroles**
     - ``get_setting()`` template tag renamed into ``get_django_setting()`` (#281)
+
+Fixed
+-----
+
+- **General**
+    - Documentation sections for Readthedocs
 
 
 v0.6.1 (2019-06-05)

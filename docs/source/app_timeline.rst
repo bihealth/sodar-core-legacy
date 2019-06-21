@@ -8,9 +8,6 @@ The ``timeline`` app enables the developer of a SODAR Core based site to log
 project related user events and link objects (both existing and deleted) to
 those events.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 Unlike the standard Django object history accessible in the admin
 site, these events are not restricted to creation/modification of objects in the
 Django database, but can concern any user-triggered activity.

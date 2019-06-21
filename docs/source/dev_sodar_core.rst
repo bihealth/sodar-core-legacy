@@ -7,9 +7,6 @@ SODAR Core Development
 This document details instructions and guidelines for development of the SODAR
 Core package.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Installation
 ============

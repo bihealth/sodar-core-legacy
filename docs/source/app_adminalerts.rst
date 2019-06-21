@@ -7,9 +7,6 @@ Adminalerts App
 The ``adminalerts`` site app enables system administrators to display site-wide
 messages to all users with an expiration date.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Basics
 ======

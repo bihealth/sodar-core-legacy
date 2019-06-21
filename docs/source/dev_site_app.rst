@@ -9,9 +9,6 @@ to be used with the SODAR Core framework.
 
 It is recommended to read :ref:`dev_project_app` before this document.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Site App Basics
 ===============
