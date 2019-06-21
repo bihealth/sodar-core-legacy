@@ -90,10 +90,11 @@
                 {% else %}
                   {{ plugin.title }}
                 {% endif %}
+                <span class="pull-right">
+                  {% get_info_link plugin.description as info_link %}
+                  {{ info_link | safe }}
+                </span>
               </h4>
-            </div>
-            <div class="card-body sodar-card-body-info">
-                <i class="fa fa-info-circle"></i> {{ plugin.description }}
             </div>
             {% if plugin.details_template %}
               <div class="card-body p-0">

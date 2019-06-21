@@ -34,6 +34,7 @@ Changed
     - Upgrade minimum Django version to 1.11.21 (#278)
 - **Projectroles**
     - ``get_setting()`` template tag renamed into ``get_django_setting()`` (#281)
+    - Implement project app descriptions on details page with ``get_info_link()`` (#277)
 
 Fixed
 -----
