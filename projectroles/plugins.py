@@ -38,6 +38,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
+    #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above

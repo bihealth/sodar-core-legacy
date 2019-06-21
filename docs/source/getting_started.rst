@@ -6,9 +6,6 @@ Getting Started
 
 Basic concepts of SODAR Core apps are detailed in this document.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Repository Contents
 ===================

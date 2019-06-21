@@ -10,9 +10,6 @@ setup contains the separate **SODAR Taskflow** data transaction service.
 If you have not set up a SODAR Taskflow service for any purpose, this backend
 is not needed and can be ignored.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 
 Basics
 ======

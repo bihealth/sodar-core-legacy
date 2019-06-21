@@ -236,11 +236,20 @@ class TestAppSettingAPI(
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'project_bool_setting': {
-                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'BOOLEAN',
                 'default': False,
                 'description': 'Example project setting',
-            }
+                'user_modifiable': True,
+            },
+            'project_hidden_setting': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'STRING',
+                'label': 'Hidden project setting',
+                'default': '',
+                'description': 'Should not be displayed in forms',
+                'user_modifiable': False,
+            },
         }
         defs = app_settings.get_setting_defs(
             app_plugin, APP_SETTING_SCOPE_PROJECT
@@ -257,22 +266,45 @@ class TestAppSettingAPI(
                 'label': 'String example',
                 'default': '',
                 'description': 'Example user setting',
+                'user_modifiable': True,
             },
             'user_int_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'INTEGER',
                 'label': 'Int example',
                 'default': 0,
+                'user_modifiable': True,
             },
             'user_bool_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'BOOLEAN',
                 'label': 'Bool Example',
                 'default': False,
+                'user_modifiable': True,
+            },
+            'user_hidden_setting': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'STRING',
+                'label': 'Hidden user setting',
+                'default': '',
+                'description': 'Should not be displayed in forms',
+                'user_modifiable': False,
             },
         }
         defs = app_settings.get_setting_defs(app_plugin, APP_SETTING_SCOPE_USER)
         self.assertEqual(defs, expected)
+
+    def test_get_setting_defs_modifiable(self):
+        """Test get_setting_defs() with the user_modifiable arg"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        defs = app_settings.get_setting_defs(
+            app_plugin, APP_SETTING_SCOPE_PROJECT
+        )
+        self.assertEqual(len(defs), 2)
+        defs = app_settings.get_setting_defs(
+            app_plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+        )
+        self.assertEqual(len(defs), 1)
 
     def test_get_setting_defs_invalid(self):
         """Test get_setting_defs() with an invalid scope"""

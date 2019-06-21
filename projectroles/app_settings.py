@@ -193,7 +193,13 @@ class AppSettingAPI:
                     )
                 )
 
-            s_type = app_plugin.app_settings[setting_name]['type']
+            s_def = app_plugin.app_settings[setting_name]
+            s_type = s_def['type']
+            s_mod = (
+                bool(s_def['user_modifiable'])
+                if 'user_modifiable' in s_def
+                else True
+            )
 
             if validate:
                 cls.validate_setting(s_type, value)
@@ -205,6 +211,7 @@ class AppSettingAPI:
                 name=setting_name,
                 type=s_type,
                 value=value,
+                user_modifiable=s_mod,
             )
             setting.save()
             return True
@@ -237,12 +244,14 @@ class AppSettingAPI:
         return True
 
     @classmethod
-    def get_setting_defs(cls, plugin, scope):
+    def get_setting_defs(cls, plugin, scope, user_modifiable=False):
         """
         Return app setting definitions of a specific scope from a plugin.
 
         :param plugin: project app plugin object extending ProjectAppPluginPoint
         :param scope: PROJECT or USER
+        :param user_modifiable: Only return modifiable settings if True
+                                (boolean)
         :return: Dict
         :raise: ValueError if scope is invalid
         """
@@ -251,5 +260,15 @@ class AppSettingAPI:
         return {
             k: v
             for k, v in plugin.app_settings.items()
-            if 'scope' in v and v['scope'] == scope
+            if (
+                'scope' in v
+                and v['scope'] == scope
+                and (
+                    not user_modifiable
+                    or (
+                        'user_modifiable' not in v
+                        or v['user_modifiable'] is True
+                    )
+                )
+            )
         }

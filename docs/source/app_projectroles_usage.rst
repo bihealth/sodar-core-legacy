@@ -7,9 +7,6 @@ Projectroles Usage
 This document provides instructions for using the ``projectroles`` app which has
 been integrated into your Django site.
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
 .. hint::
 
     Detailed instructions for many pages can be found in an interactive tour by

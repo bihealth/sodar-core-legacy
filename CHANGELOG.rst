@@ -7,6 +7,42 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.6.2 (2019-06-21)
+===================
+
+Added
+-----
+
+- **General**
+    - Badges for Readthedocs documentation and Zenodo DOI (#274)
+- **Bgjobs**
+    - ``BackgroundJobFactory`` for tests from Varfish-web
+- **Projectroles**
+    - Unit test to assure owner user creation during project update when using SODAR Taskflow (sodar_taskflow#49)
+    - Common template tag ``get_app_setting()`` (#281)
+    - Hiding app settings from forms with ``user_modifiable`` (#267)
+    - ``AppSetting.value_json`` field (#268)
+- **Sodarcache**
+    - Logging in ``delete_cache()`` (#279)
+- **Userprofile**
+    - Support for ``AppSetting.user_modifiable`` (#267)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.21 (#278)
+- **Projectroles**
+    - ``get_setting()`` template tag renamed into ``get_django_setting()`` (#281)
+    - Implement project app descriptions on details page with ``get_info_link()`` (#277)
+
+Fixed
+-----
+
+- **General**
+    - Documentation sections for Readthedocs
+
+
 v0.6.1 (2019-06-05)
 ===================
 

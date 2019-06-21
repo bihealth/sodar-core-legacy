@@ -301,6 +301,39 @@ class TestProjectUpdateView(TestTaskflowBase):
                 ),
             )
 
+    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
+    def test_update_project_new_owner(self):
+        """Test Project updating with new user as owner"""
+
+        new_user = self.make_user('new_test_user')
+
+        # Assert precondition
+        self.assertEqual(Project.objects.all().count(), 2)
+
+        values = model_to_dict(self.project)
+        values['title'] = 'updated title'
+        values['description'] = 'updated description'
+        values['owner'] = new_user.sodar_uuid
+        values['readme'] = 'updated readme'
+        values.update(
+            app_settings.get_all_settings(project=self.project)
+        )  # Add default settings
+        values['sodar_url'] = self.live_server_url  # HACK
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert Project and owner role state after update
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.get_owner().user, new_user)
+
 
 class TestRoleAssignmentCreateView(TestTaskflowBase):
     """Tests for RoleAssignment creation view"""

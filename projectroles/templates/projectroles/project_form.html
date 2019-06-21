@@ -6,7 +6,7 @@
 {% load projectroles_common_tags %}
 
 {% block title %}
-  {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+  {% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
   {% get_display_name 'PROJECT' title=True as project_display %}
   {% get_display_name 'CATEGORY' title=True as category_display %}
 
@@ -26,7 +26,7 @@
 {% endblock head_extend %}
 
 {% block projectroles %}
-  {% get_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+  {% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
   {% get_display_name 'PROJECT' title=True as project_display %}
   {% get_display_name 'CATEGORY' title=True as category_display %}
 

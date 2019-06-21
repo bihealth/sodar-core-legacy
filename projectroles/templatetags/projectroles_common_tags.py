@@ -11,16 +11,22 @@ from django.template.loader import get_template
 from django.urls import reverse
 
 import projectroles
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.utils import get_display_name as _get_display_name
 
 
+# SODAR constants
+SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+
+
 site = import_module(settings.SITE_PACKAGE)
 User = get_user_model()
 
-SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
-SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+# App settings API
+app_settings = AppSettingAPI()
 
 register = template.Library()
 
@@ -70,7 +76,7 @@ def get_user_by_username(username):
 
 
 @register.simple_tag
-def get_setting(name, js=False):
+def get_django_setting(name, js=False):
     """
     Return value of Django setting by name or None if it is not found.
     Return a Javascript-safe value if js=True.
@@ -82,6 +88,24 @@ def get_setting(name, js=False):
         val = int(val)
 
     return val
+
+
+# DEPRECATION PROTECTION: To be removed in v0.7.0, use get_django_setting()
+@register.simple_tag
+def get_setting(name, js=False):
+    """
+    Return value of Django setting by name or None if it is not found.
+    Return a Javascript-safe value if js=True.
+    """
+    return get_setting(name, js)
+
+
+@register.simple_tag
+def get_app_setting(app_name, setting_name, project=None, user=None):
+    """
+    Get a project/user specific app setting from AppSettingAPI
+    """
+    return app_settings.get_app_setting(app_name, setting_name, project, user)
 
 
 @register.simple_tag

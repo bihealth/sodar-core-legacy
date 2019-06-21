@@ -8,10 +8,6 @@ The ``siteinfo`` site app enables system administrators and developers to view
 site details and statistics gathered from project and backend apps.
 
 
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
-
-
 Basics
 ======
 

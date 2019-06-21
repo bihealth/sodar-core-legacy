@@ -114,7 +114,14 @@ class AppSettingMixin:
 
     @classmethod
     def _make_setting(
-        cls, app_name, name, setting_type, value, project=None, user=None
+        cls,
+        app_name,
+        name,
+        setting_type,
+        value,
+        user_modifiable=True,
+        project=None,
+        user=None,
     ):
         """Make and save a AppSetting"""
         values = {
@@ -123,6 +130,8 @@ class AppSettingMixin:
             'name': name,
             'type': setting_type,
             'value': value,
+            'value_json': {},  # TODO: Implement usage in v0.7
+            'user_modifiable': user_modifiable,
             'user': user,
         }
         setting = AppSetting(**values)
@@ -815,6 +824,8 @@ class TestProjectSetting(
             'type': 'STRING',
             'user': None,
             'value': 'test',
+            'value_json': {},
+            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -829,6 +840,8 @@ class TestProjectSetting(
             'type': 'INTEGER',
             'user': None,
             'value': '170',
+            'value_json': {},
+            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
@@ -911,6 +924,8 @@ class TestUserSetting(
             'type': 'STRING',
             'user': self.user.pk,
             'value': 'test',
+            'value_json': {},
+            'user_modifiable': True,
             'sodar_uuid': self.setting_str.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_str), expected)
@@ -925,6 +940,8 @@ class TestUserSetting(
             'type': 'INTEGER',
             'user': self.user.pk,
             'value': '170',
+            'value_json': {},
+            'user_modifiable': True,
             'sodar_uuid': self.setting_int.sodar_uuid,
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)

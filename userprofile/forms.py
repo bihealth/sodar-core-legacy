@@ -30,7 +30,7 @@ class UserSettingsForm(forms.Form):
 
         for plugin in self.app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_USER
+                plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -69,7 +69,7 @@ class UserSettingsForm(forms.Form):
 
         for plugin in self.app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_USER
+                plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():

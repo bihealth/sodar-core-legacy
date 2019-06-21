@@ -160,7 +160,7 @@
 
   <!-- Settings for Javascript -->
   <script type="text/javascript">
-    {% get_setting 'PROJECTROLES_SEARCH_PAGINATION' as search_pagination %}
+    {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' as search_pagination %}
 
     {% if search_pagination %}
       window.searchPagination = {{ search_pagination }};

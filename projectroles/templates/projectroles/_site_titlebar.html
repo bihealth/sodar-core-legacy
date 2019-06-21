@@ -6,8 +6,8 @@
 {% load rules %}
 
 {# Local variables #}
-{% get_setting 'SITE_TITLE' as site_title %}
-{% get_setting 'SITE_SUBTITLE' as site_subtitle %}
+{% get_django_setting 'SITE_TITLE' as site_title %}
+{% get_django_setting 'SITE_SUBTITLE' as site_subtitle %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 
 <div class="m-b-1 sodar-titlebar-container">
@@ -36,7 +36,7 @@
 
         {# Search #}
         {% if request.user.is_authenticated %}
-          {% get_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+          {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
           {% if enable_search %}
             <li class="nav-item">
               {% include 'projectroles/_site_titlebar_search.html' %}
