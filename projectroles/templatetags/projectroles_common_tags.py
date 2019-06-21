@@ -97,7 +97,7 @@ def get_setting(name, js=False):
     Return value of Django setting by name or None if it is not found.
     Return a Javascript-safe value if js=True.
     """
-    return get_setting(name, js)
+    return get_django_setting(name, js)
 
 
 @register.simple_tag
