@@ -93,7 +93,7 @@ def get_django_setting(name, js=False):
 # DEPRECATION PROTECTION: To be removed in v0.7.0, use get_django_setting()
 @register.simple_tag
 def get_setting(name, js=False):
-    """
+    """bb
     Return value of Django setting by name or None if it is not found.
     Return a Javascript-safe value if js=True.
     """
@@ -160,10 +160,10 @@ def get_project_link(project, full_title=False, request=None):
     if request:
         remote_icon = get_remote_icon(project, request)
 
-    return '<a href="{}">{}</a> {}'.format(
+    return '<a href="{}">{}</a>{}'.format(
         reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
         project.get_full_title() if full_title else project.title,
-        remote_icon,
+        ' ' + remote_icon if remote_icon else '',
     )
 
 
