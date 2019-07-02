@@ -63,8 +63,8 @@ We also found the ability to reduce dependency of development teams from each ot
 
 On the other hand, project and authorization generally should be shared between the data management and data analysis projects.
 To prevent users from having to manually replicate projects and authorization configuration SODAR Core provides a *remote site* feature.
-An application instance can either be a *master* or a *mirror* site.
-Mirror sites can be connected to a target master site and obtain project and authorization information from the master site.
+An application instance can either be a *source* or a *target* site.
+Target sites can be connected to a source site and obtain project and authorization information from the source site.
 
 ## Auditing and Timelines
 
