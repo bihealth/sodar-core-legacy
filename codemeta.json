@@ -1,0 +1,51 @@
+{
+  "@context": "https://raw.githubusercontent.com/mbjones/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "https://orcid.org/0000-0002-4180-8810",
+      "@type": "Person",
+      "email": "mikko.nieminen@bihealth.de",
+      "name": "Mikko Nieminen",
+      "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-8686-2941",
+      "@type": "Person",
+      "email": "oliver.stolpe@bihealth.de",
+      "name": "Oliver Stolpe",
+      "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-1332-4894",
+      "@type": "Person",
+      "email": "franziska.schumann@bihealth.de",
+      "name": "Franziska Schumann",
+      "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-3051-1763",
+      "@type": "Person",
+      "email": "manuel.holtgrewe@bihealth.de",
+      "name": "Manuel Holtgrewe",
+      "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-3284-0632",
+      "@type": "Person",
+      "email": "dieter.beule@bihealth.de",
+      "name": "Dieter Beule",
+      "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
+    }
+  ],
+  "identifier": "https://zenodo.org/record/3251782",
+  "codeRepository": "https://github.com/bihealth/sodar_core",
+  "datePublished": "2019-06-26",
+  "dateModified": "2019-06-26",
+  "dateCreated": "2019-06-26",
+  "description": "SODAR Core: A Django-based framework for scientific data management and analysis web apps",
+  "keywords": "Python, Django, scientific data managmenent, software library",
+  "license": "MIT",
+  "title": "SODAR Core",
+  "version": "v0.6.2"
+}
