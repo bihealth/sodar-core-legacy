@@ -16,6 +16,12 @@ Fixed
 - **Projectroles**
     - Output of template tag ``get_project_link()``
 
+Removed
+-------
+
+- **Projectroles**
+    - Duplicate database indexes from ``RoleAssignment`` (#285)
+
 
 v0.6.2 (2019-06-21)
 ===================

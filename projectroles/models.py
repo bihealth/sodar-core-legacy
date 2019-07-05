@@ -377,10 +377,6 @@ class RoleAssignment(models.Model):
             'role__name',
             'user__username',
         ]
-        indexes = [
-            models.Index(fields=['project']),
-            models.Index(fields=['user']),
-        ]
 
     def __str__(self):
         return '{}: {}: {}'.format(self.project, self.role, self.user)
