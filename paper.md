@@ -35,9 +35,9 @@ A major source of data are so-called omics (e.g., genomics, metabolomics, or pro
 Consequently, management and analysis of scientific data has become a major challenge.
 Further, the heterogeneity of projects makes "one size fits all" data analysis systems infeasible and calls for specialized data analysis platforms.
 
-The authors are actively developing applications for the FAIR (findable, accessible, interoperable, and reuseable, cf. Wilkinson et al. 2016) data management of omics data and their analysis.
+The authors are actively developing applications for the FAIR (findable, accessible, interoperable, and reuseable, cf. @Wilkinson:2016 data management of omics data and their analysis.
 In order to prevent duplication of work, we have extracted the commonly useful components into *SODAR Core*, a Python framework on top of Django.
-It is used in our actively developed applications Digestiflow (Holtgrewe et al., 2019), VarFish (Holtgrewe et al., 2019a), and SODAR (Nieminen et al., 2020) and also proved useful in internal web app prototypes.
+It is used in our actively developed applications Digestiflow [@Holtgrewe:2019], VarFish [@Holtgrewe:2019a], and SODAR [@Nieminen:2020] and also proved useful in internal web app prototypes.
 
 # Features
 
@@ -100,14 +100,9 @@ We believe that other people will find the components useful in their projects a
 
 # License and Availability
 
-SODAR Core is distributed under the MIT license and available from Github at https://github.com/bihealth/sodar_core.
+SODAR Core is distributed under the MIT license and available from Github at https://github.com/bihealth/sodar\_core.
 Each release is also stored to Zenodo.
 The current version 0.6.2 is available with the DOI 10.5281/zenodo.3251782.
 An example Django site is contained in the SODAR Core Git repository and up-to date documentation is available at https://sodar-core.readthedocs.org.
 
 # References
-
-- Manuel Holtgrewe, Mikko Nieminen, Clemens Messerschmidt, and Dieter Beule. "DigestiFlow-reproducible demultiplexing for the single cell era." PeerJ PrePrints 7 (2019): e27717v1.
-- Manuel Holtgrewe et al. "VarFish – an integrated platform for efficient collaborative exome variant analysis" (2019a). In preparation.
-- Mikko Nieminen, Manuel Holtgrewe, ..., and Dieter Beule. "SODAR: Management of mass and meta data for Omics data" (2020). In preparation.
-- Wilkinson, Mark D., Michel Dumontier, IJsbrand Jan Aalbersberg, Gabrielle Appleton, Myles Axton, Arie Baak, Niklas Blomberg et al. "The FAIR Guiding Principles for scientific data management and stewardship." Scientific data 3 (2016).

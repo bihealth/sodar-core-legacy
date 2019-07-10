@@ -54,4 +54,4 @@ This repository provides the following installable Django apps:
 
 Also included are resources and examples for developing SODAR compatible apps.
 
-See ``docs`` for detailed documentation on use, integration and development.
+See [docs](https://sodar-core.readthedocs.io/en/latest/?badge=latest) for detailed documentation on use, integration and development.
