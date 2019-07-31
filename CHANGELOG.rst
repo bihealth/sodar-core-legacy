@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade Chromedriver to version 76.0.3809.68
+
 Fixed
 -----
 
