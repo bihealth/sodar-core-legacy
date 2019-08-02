@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Development env file example ``env.example`` (#297)
+
 Changed
 -------
 
