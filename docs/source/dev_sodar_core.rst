@@ -44,14 +44,19 @@ testing).
     $ ALTER USER sodar_core CREATEDB;
     $ \q
 
-You have to add the credentials in the environment variable ``DATABASE_URL``.
-For development it is recommended to place this variable in an ``.env`` file and
-set ``DJANGO_READ_DOT_ENV_FILE=1`` in your actual environment. See
-``config/settings/base.py`` for more information.
+You have to set the database URL and credentials for Django in the environment
+variable ``DATABASE_URL``. For development it is recommended to place
+environment variables in file ``.env`` located in your project root. To enable
+loading the file in Django, set ``DJANGO_READ_DOT_ENV_FILE=1`` in your
+environment variables when running SODAR or any of its management commands.
+See ``config/settings/base.py`` for more information and the ``env.example``
+file for an example environment file.
+
+Example of the database URL variable as set within an ``.env`` file:
 
 .. code-block:: console
 
-    $ export DATABASE_URL='postgres://sodar_core:sodar_core@127.0.0.1/sodar_core'
+    DATABASE_URL=postgres://sodar_core:sodar_core@127.0.0.1/sodar_core
 
 Project Setup
 -------------
