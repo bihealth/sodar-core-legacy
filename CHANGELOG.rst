@@ -15,6 +15,7 @@ Changed
 
 - **General**
     - Upgrade Chromedriver to version 76.0.3809.68
+    - Upgrade minimum Django version to 1.11.23 (#295)
 
 Fixed
 -----

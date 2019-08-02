@@ -10,6 +10,15 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
+v0.6.3 (TBD)
+============
+
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.23.
+
+
 v0.6.2 (2019-06-21)
 ===================
 
