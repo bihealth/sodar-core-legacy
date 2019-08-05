@@ -13,7 +13,7 @@
 
     {# Clear owned jobs #}
     {% if can_clear_own_jobs %}
-      <a class="dropdown-item"
+      <a class="dropdown-item text-danger"
          href="{% url 'bgjobs:clear_own' project=project.sodar_uuid %}">
         <i class="fa fa-fw fa-trash"></i> Clear Own Jobs
       </a>
@@ -21,7 +21,7 @@
 
     {# Clear all jobs #}
     {% if can_clear_all_jobs %}
-      <a class="dropdown-item"
+      <a class="dropdown-item text-danger"
          href="{% url 'bgjobs:clear_all' project=project.sodar_uuid %}">
         <i class="fa fa-fw fa-trash"></i> Clear All Jobs
       </a>
