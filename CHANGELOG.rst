@@ -15,6 +15,7 @@ Added
 
 - **General**
     - Development env file example ``env.example`` (#297)
+    - Postgres database development setup script (#302)
 
 Changed
 -------
@@ -22,12 +23,14 @@ Changed
 - **General**
     - Upgrade Chromedriver to version 76.0.3809.68
     - Upgrade minimum Django version to 1.11.23 (#295)
+    - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
 
 Fixed
 -----
 
 - **Projectroles**
     - Output of template tag ``get_project_link()``
+    - Redundant inheritance in ``CurrentUserFormMixin`` (#12)
 
 Removed
 -------
