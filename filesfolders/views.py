@@ -35,6 +35,7 @@ from projectroles.views import (
     ProjectContextMixin,
     HTTPRefererMixin,
     ProjectPermissionMixin,
+    CurrentUserFormMixin,
 )
 
 
@@ -337,6 +338,7 @@ class BaseCreateView(
     FormValidMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,
+    CurrentUserFormMixin,
     CreateView,
 ):
     """Base File/Folder/HyperLink creation view"""
@@ -358,7 +360,6 @@ class BaseCreateView(
     def get_form_kwargs(self):
         """Pass current user and URL kwargs to form"""
         kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
 
         if 'folder' in self.kwargs:
             kwargs.update({'folder': self.kwargs['folder']})

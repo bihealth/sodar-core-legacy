@@ -414,7 +414,7 @@ class APIPermissionMixin(PermissionRequiredMixin):
         return HttpResponseForbidden()
 
 
-class CurrentUserFormMixin(ModelFormMixin):
+class CurrentUserFormMixin:
     """Mixin for passing current user to form as current_user"""
 
     def get_form_kwargs(self):
@@ -854,6 +854,7 @@ class ProjectCreateView(
     ProjectModifyMixin,
     ProjectContextMixin,
     HTTPRefererMixin,
+    CurrentUserFormMixin,
     CreateView,
 ):
     """Project creation view"""
@@ -876,7 +877,6 @@ class ProjectCreateView(
         """Pass URL arguments to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
-        kwargs.update({'current_user': self.request.user})
         return kwargs
 
     def get(self, request, *args, **kwargs):
@@ -920,6 +920,7 @@ class ProjectUpdateView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     ProjectModifyMixin,
+    CurrentUserFormMixin,
     UpdateView,
 ):
     """Project updating view"""
@@ -929,11 +930,6 @@ class ProjectUpdateView(
     form_class = ProjectForm
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
 
 
 # RoleAssignment Views ---------------------------------------------------------
@@ -1095,6 +1091,7 @@ class RoleAssignmentCreateView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
+    CurrentUserFormMixin,
     RoleAssignmentModifyMixin,
     CreateView,
 ):
@@ -1108,7 +1105,6 @@ class RoleAssignmentCreateView(
         """Pass URL arguments and current user to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
-        kwargs.update({'current_user': self.request.user})
         return kwargs
 
 
@@ -1117,6 +1113,7 @@ class RoleAssignmentUpdateView(
     RolePermissionMixin,
     ProjectContextMixin,
     RoleAssignmentModifyMixin,
+    CurrentUserFormMixin,
     UpdateView,
 ):
     """RoleAssignment updating view"""
@@ -1127,18 +1124,13 @@ class RoleAssignmentUpdateView(
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
 
-    def get_form_kwargs(self):
-        """Pass current user to form"""
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
-
 
 class RoleAssignmentDeleteView(
     LoginRequiredMixin,
     RolePermissionMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
+    CurrentUserFormMixin,
     DeleteView,
 ):
     """RoleAssignment deletion view"""
@@ -1230,12 +1222,6 @@ class RoleAssignmentDeleteView(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
         )
-
-    def get_form_kwargs(self):
-        """Pass current user to form"""
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
 
 
 # ProjectInvite Views ----------------------------------------------------------
@@ -1332,6 +1318,7 @@ class ProjectInviteCreateView(
     ProjectContextMixin,
     ProjectModifyPermissionMixin,
     ProjectInviteMixin,
+    CurrentUserFormMixin,
     CreateView,
 ):
     """ProjectInvite creation view"""
@@ -1363,7 +1350,6 @@ class ProjectInviteCreateView(
     def get_form_kwargs(self):
         """Pass current user (and possibly mail address and role pk) to form"""
         kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
 
         mail = self.request.GET.get('forwarded-email', None)
