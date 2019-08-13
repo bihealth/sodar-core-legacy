@@ -29,20 +29,11 @@ First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
 Database Setup
 --------------
 
-Create a PostgreSQL user and a database for your application. In the example,
-we use ``sodar_core`` for the database, user name and password. Make sure to
-give the user the permission to create further PostgreSQL databases (used for
-testing).
+Next you need to setup the database and postgres user. You'll be prompted to enter a database name, a username and a password.
 
 .. code-block:: console
 
-    $ sudo su - postgres
-    $ psql
-    $ CREATE DATABASE sodar_core;
-    $ CREATE USER sodar_core WITH PASSWORD 'sodar_core';
-    $ GRANT ALL PRIVILEGES ON DATABASE sodar_core to sodar_core;
-    $ ALTER USER sodar_core CREATEDB;
-    $ \q
+    $ sudo utility/setup_database.sh
 
 You have to set the database URL and credentials for Django in the environment
 variable ``DATABASE_URL``. For development it is recommended to place
