@@ -130,7 +130,7 @@
                {% endfor %}
              {% else %}
                <tr>
-                 <td class="bg-faded font-italic text-center text-danger" colspan="3">
+                 <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
                    No {% get_display_name 'CATEGORY' title=False count=2 %}
                    or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
                </tr>
