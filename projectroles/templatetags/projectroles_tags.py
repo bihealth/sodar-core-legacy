@@ -213,6 +213,22 @@ def get_project_list_value(app_plugin, column_id, project):
 
 
 @register.simple_tag
+def get_project_column_count(app_plugins):
+    def get_active_list_columns(app_plugin):
+        return len(
+            [
+                column
+                for column, attributes in app_plugin.project_list_columns.items()
+                if attributes['active']
+            ]
+        )
+
+    return 3 + max(
+        [get_active_list_columns(app_plugin) for app_plugin in app_plugins]
+    )
+
+
+@register.simple_tag
 def get_user_role_html(project, user):
     """Return user role HTML"""
     if user.is_superuser:

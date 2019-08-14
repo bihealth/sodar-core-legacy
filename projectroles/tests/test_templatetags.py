@@ -12,7 +12,7 @@ from test_plus.test import TestCase
 
 import projectroles
 from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
-from projectroles.plugins import get_app_plugin
+from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.project_tags import set_tag_state
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
@@ -365,6 +365,15 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         # TODO: second return value instead of HTML
         self.assertEqual(
             tags.get_project_list_value(app_plugin, 'files', self.project), 0
+        )
+
+    def test_get_project_column_count(self):
+        """Test get_project_column_count()"""
+        app_plugins = get_active_plugins()
+
+        self.assertEqual(
+            tags.get_project_column_count(app_plugins),
+            len(["Projectname", "Description", "Your Role"]) + 2,
         )
 
     def test_get_user_role_html(self):

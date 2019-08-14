@@ -64,20 +64,20 @@
            {% endfor %}
            {# Not found message for filtering #}
            <tr class="sodar-pr-home-display-notfound">
-             <td class="bg-faded font-italic text-center text-danger" colspan="3">
+             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
                No {% get_display_name 'PROJECT' title=False plural=True %} found matching current filter
              </td>
            </tr>
            <tr class="sodar-pr-home-display-nostars">
-             <td class="bg-faded font-italic text-center text-danger" colspan="3">
+             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
                No starred {% get_display_name 'PROJECT' title=False plural=True %} found
              </td>
            </tr>
         {% else %}
            <tr>
-             <td class="bg-faded font-italic text-center text-danger" colspan="3">
+             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
                No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
-             </td>
+              </td>
            </tr>
         {% endif %}
        </tbody>
