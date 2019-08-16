@@ -214,6 +214,8 @@ def get_project_list_value(app_plugin, column_id, project):
 
 @register.simple_tag
 def get_project_column_count(app_plugins):
+    """Return the amount of columns shown in project listings"""
+
     def get_active_list_columns(app_plugin):
         return len(
             [

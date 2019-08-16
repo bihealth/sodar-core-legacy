@@ -371,10 +371,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         """Test get_project_column_count()"""
         app_plugins = get_active_plugins()
 
-        self.assertEqual(
-            tags.get_project_column_count(app_plugins),
-            len(["Projectname", "Description", "Your Role"]) + 2,
-        )
+        self.assertEqual(tags.get_project_column_count(app_plugins), 5)
 
     def test_get_user_role_html(self):
         """Test get_user_role_html()"""
