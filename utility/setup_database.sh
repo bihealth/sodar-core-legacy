@@ -21,7 +21,7 @@ done
 while [[ -z "$password" ]]
 do
     echo -n "Password: "
-    read password
+    read -s password
 done
 
 sudo su -c "psql -c \"CREATE DATABASE $db_name;\"" postgres
