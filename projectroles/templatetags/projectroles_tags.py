@@ -16,6 +16,7 @@ from ..models import (
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
 
+
 # Settings
 HELP_HIGHLIGHT_DAYS = (
     settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS

@@ -16,6 +16,10 @@ Added
 - **General**
     - Development env file example ``env.example`` (#297)
     - Postgres database development setup script (#302)
+- **Projectroles**
+    - ``get_backend_include()`` common template tag (#261)
+    - ``css_url`` member variable in ``BackendPluginPoint`` (#261)
+    - Example of on-demand Javascript/CSS inclusion in example apps (#261)
 
 Changed
 -------
@@ -24,6 +28,9 @@ Changed
     - Upgrade Chromedriver to version 76.0.3809.68
     - Upgrade minimum Django version to 1.11.23 (#295)
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
+- **Projectroles**
+    - Improve user name placeholder in `login.html` (#294)
+    - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
 
 Fixed
 -----

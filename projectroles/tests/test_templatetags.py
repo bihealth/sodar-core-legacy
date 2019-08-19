@@ -286,6 +286,68 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         self.assertEqual(c_tags.get_class(self.project), 'Project')
         self.assertEqual(c_tags.get_class(self.project, lower=True), 'project')
 
+    def test_include_invalid_plugin(self):
+        """Test get_backend_include() plugin checks"""
+        self.assertEqual(
+            c_tags.get_backend_include('NON_EXISTING_PLUGIN', 'js'), ''
+        )
+        # Testing a plugin which is not backend
+        self.assertEqual(c_tags.get_backend_include('filesfolders', 'js'), '')
+
+    def test_include_none_value(self):
+        """Test get_backend_include none attribute check"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+        type(backend_plugin).javascript_url = None
+        type(backend_plugin).css_url = None
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'), ''
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'), ''
+        )
+
+    def test_include_invalid_url(self):
+        """Test get_backend_include file existence check"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/NOT_EXISTING_JS.js'
+        type(
+            backend_plugin
+        ).css_url = 'example_backend_app/css/NOT_EXISTING_CSS.css'
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'), ''
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'), ''
+        )
+
+    def test_get_backend_include(self):
+        """Test get_backend_include"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/greeting.js'
+        type(backend_plugin).css_url = 'example_backend_app/css/greeting.css'
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'),
+            '<script type="text/javascript" '
+            'src="/static/example_backend_app/js/greeting.js"></script>',
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'),
+            '<link rel="stylesheet" type="text/css" '
+            'href="/static/example_backend_app/css/greeting.css"/>',
+        )
+
 
 class TestProjectrolesTemplateTags(TestTemplateTagsBase):
     """Test for template tags in projectroless_tags"""
