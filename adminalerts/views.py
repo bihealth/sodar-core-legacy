@@ -1,7 +1,13 @@
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.http import (
+    HttpResponseRedirect,
+    HttpRequest,
+    HttpResponseBadRequest,
+    JsonResponse,
+)
 from django.urls import reverse
+from django.views import View
 from django.views.generic import (
     DetailView,
     UpdateView,
@@ -97,6 +103,25 @@ class AdminAlertUpdateView(
     permission_required = 'adminalerts.update_alert'
     slug_url_kwarg = 'uuid'
     slug_field = 'sodar_uuid'
+
+
+class AdminAlertActivationView(LoggedInPermissionMixin, HTTPRefererMixin, View):
+
+    permission_required = 'adminalerts.update_alert'
+    http_method_names = ['post']
+
+    def post(self, request: HttpRequest):
+        uuid = request.POST.get('uuid', None)
+
+        alert = None
+        try:
+            alert = AdminAlert.objects.get(sodar_uuid__exact=uuid)
+        except AdminAlert.DoesNotExist:
+            return HttpResponseBadRequest()
+
+        alert.active = not alert.active
+        alert.save()
+        return JsonResponse({'is_active': alert.active})
 
 
 class AdminAlertDeleteView(
