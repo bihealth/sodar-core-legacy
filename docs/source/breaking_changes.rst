@@ -18,6 +18,15 @@ System Prerequisites
 
 The minimum version requirement for Django has been bumped to 1.11.23.
 
+Backend Javascript Include
+--------------------------
+
+The code in ``base.html`` which was including javascript from backend apps to
+all templates in projectsroles was removed. Instead, Javascript and CSS
+associated to a backend plugin should now be included in app templates as
+needed. This is done using the newly introduced ``get_backend_include()``
+template tag in ``projectroles_common_tags``.
+
 
 v0.6.2 (2019-06-21)
 ===================

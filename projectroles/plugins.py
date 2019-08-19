@@ -232,6 +232,10 @@ class BackendPluginPoint(PluginPoint):
     # TODO: Implement this in your backend plugin if applicable
     javascript_url = None
 
+    #: URL of optional css file to be included
+    # TODO: Implement this in your backend plugin if applicable
+    css_url = None
+
     def get_api(self):
         """Return API entry point object."""
         # TODO: Implement this in your backend plugin

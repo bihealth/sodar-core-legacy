@@ -7,13 +7,15 @@ from django import template
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
+from django.templatetags.static import static
 from django.urls import reverse
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import get_backend_api, BackendPluginPoint
 from projectroles.utils import get_display_name as _get_display_name
 
 
@@ -175,6 +177,39 @@ def get_user_html(user):
         'data-placement="top">{}'
         '</a>'.format(user.get_full_name(), user.email, user.username)
     )
+
+
+@register.simple_tag
+def get_backend_include(backend_name, include_type='js'):
+    """Returns import string for backend app Javascript or CSS.
+    Returns empty string if not found."""
+
+    # TODO: Replace with get_app_plugin() and if None check
+    # TODO: once get_app_plugin() can be used for backend plugins
+    # TODO: Don't forget to remove ObjectDoesNotExist import
+    try:
+        plugin = BackendPluginPoint.get_plugin(backend_name)
+    except ObjectDoesNotExist:
+        return ''
+
+    include = ''
+    include_string = ''
+    try:
+        if include_type == 'js':
+            include = plugin.javascript_url
+            include_string = '<script type="text/javascript" src="{}"></script>'
+        elif include_type == 'css':
+            include = plugin.css_url
+            include_string = (
+                '<link rel="stylesheet" type="text/css" href="{}"/>'
+            )
+    except AttributeError:
+        return ''
+
+    if include and finders.find(include):
+        return include_string.format(static(include))
+
+    return ''
 
 
 @register.simple_tag

@@ -20,7 +20,10 @@ class BackendPlugin(BackendPluginPoint):
     description = 'Example Backend API'
 
     #: URL of optional javascript file to be included
-    javascript_url = None
+    javascript_url = 'example_backend_app/js/greeting.js'
+
+    #: URL of optional css file to be included
+    css_url = 'example_backend_app/css/greeting.css'
 
     def get_api(self):
         """Return API entry point object."""
