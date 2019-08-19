@@ -16,6 +16,8 @@ Added
 - **General**
     - Development env file example ``env.example`` (#297)
     - Postgres database development setup script (#302)
+- **Adminalerts**
+    - Activate/suspend button in alert list (#42)
 - **Projectroles**
     - ``get_backend_include()`` common template tag (#261)
     - ``css_url`` member variable in ``BackendPluginPoint`` (#261)
