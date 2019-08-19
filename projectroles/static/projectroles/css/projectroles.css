@@ -560,7 +560,7 @@ span.select2-container {
 }
 
 span.select2-selection {
-  padding-left: 0px !important;
+  padding-left: 0 !important;
   height: 38px !important;
   border: 1px solid #ced4da !important;
 }
