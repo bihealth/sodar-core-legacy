@@ -83,6 +83,7 @@ class TestViewsBase(
         # Init file content
         self.file_content = bytes('content'.encode('utf-8'))
         self.file_content_alt = bytes('alt content'.encode('utf-8'))
+        self.file_content_empty = bytes(''.encode('utf-8'))
 
         # Init file
         self.file = self._make_file(
@@ -246,6 +247,43 @@ class TestFileCreateView(TestViewsBase):
             )
 
         self.assertEqual(File.objects.all().count(), 2)
+
+    def test_create_empty(self):
+        """Test empty file creation (should fail)"""
+
+        self.assertEqual(File.objects.all().count(), 1)
+
+        post_data = {
+            'name': 'new_file.txt',
+            'file': SimpleUploadedFile(
+                'empty_file.txt', self.file_content_empty
+            ),
+            'folder': '',
+            'description': '',
+            'flag': '',
+            'public_url': False,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'filesfolders:file_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                post_data,
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(
+                bytes(
+                    '<p id="error_1_id_file" class="invalid-feedback"><strong>The submitted file is empty.</strong></p>'.encode(
+                        'utf-8'
+                    )
+                )
+                in response.content
+            )
+
+        self.assertEqual(File.objects.all().count(), 1)
 
     def test_create_in_folder(self):
         """Test file creation within a folder"""
@@ -537,6 +575,43 @@ class TestFileUpdateView(TestViewsBase):
         self.assertEqual(File.objects.all().count(), 1)
         self.file.refresh_from_db()
         self.assertEqual(self.file.file.read(), self.file_content_alt)
+
+    def test_update_empty(self):
+        """Test file update with empty content"""
+        self.assertEqual(File.objects.all().count(), 1)
+        self.assertEqual(self.file.file.read(), self.file_content)
+
+        post_data = {
+            'name': 'file.txt',
+            'file': SimpleUploadedFile('file.txt', self.file_content_empty),
+            'folder': '',
+            'description': '',
+            'flag': '',
+            'public_url': False,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'filesfolders:file_update',
+                    kwargs={'item': self.file.sodar_uuid},
+                ),
+                post_data,
+            )
+
+            self.assertEqual(response.status_code, 200)
+            self.assertTrue(
+                bytes(
+                    '<p id="error_1_id_file" class="invalid-feedback"><strong>The submitted file is empty.</strong></p>'.encode(
+                        'utf-8'
+                    )
+                )
+                in response.content
+            )
+
+        self.assertEqual(File.objects.all().count(), 1)
+        self.file.refresh_from_db()
+        self.assertEqual(self.file.file.read(), self.file_content)
 
     def test_update_existing(self):
         """Test file update with a file name that already exists (should fail)"""

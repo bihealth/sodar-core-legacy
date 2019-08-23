@@ -238,6 +238,7 @@ class FileForm(FilesfoldersItemForm):
                 self.folder.sodar_uuid if self.folder else None
             )
             self.fields['folder'].widget = forms.HiddenInput()
+            self.fields['file'].required = True
 
         # Updating
         else:
@@ -258,6 +259,9 @@ class FileForm(FilesfoldersItemForm):
         project = self.instance.project if self.instance.pk else self.project
         folder = self.cleaned_data.get('folder')
         file = self.cleaned_data.get('file')
+        if not file:
+            return self.cleaned_data
+
         unpack_archive = self.cleaned_data.get('unpack_archive')
         new_filename = file.name.split('/')[-1]
         size = self._get_file_size(file)
