@@ -22,6 +22,7 @@ Added
     - ``get_backend_include()`` common template tag (#261)
     - ``css_url`` member variable in ``BackendPluginPoint`` (#261)
     - Example of on-demand Javascript/CSS inclusion in example apps (#261)
+    - Remote project link display toggle for target sites (#276)
 
 Changed
 -------
@@ -31,7 +32,7 @@ Changed
     - Upgrade minimum Django version to 1.11.23 (#295)
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
 - **Projectroles**
-    - Improve user name placeholder in `login.html` (#294)
+    - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
 
 Fixed
@@ -40,6 +41,8 @@ Fixed
 - **Projectroles**
     - Output of template tag ``get_project_link()``
     - Redundant inheritance in ``CurrentUserFormMixin`` (#12)
+    - Trailing slashes not parsed correctly in remote project URLs (#319)
+    - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
 
 Removed
 -------

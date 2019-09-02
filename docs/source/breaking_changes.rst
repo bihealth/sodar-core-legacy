@@ -10,7 +10,7 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
-v0.6.3 (TBD)
+v0.7.0 (TBD)
 ============
 
 System Prerequisites
