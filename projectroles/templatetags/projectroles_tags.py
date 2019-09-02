@@ -227,7 +227,8 @@ def get_project_column_count(app_plugins):
         )
 
     return 3 + max(
-        [get_active_list_columns(app_plugin) for app_plugin in app_plugins]
+        [get_active_list_columns(app_plugin) for app_plugin in app_plugins],
+        default=0,
     )
 
 
