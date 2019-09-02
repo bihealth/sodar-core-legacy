@@ -58,11 +58,11 @@ class Command(BaseCommand):
 
         logger.info(
             'Retrieving data from remote site "{}" ({})..'.format(
-                site.name, site.url
+                site.name, site.get_url()
             )
         )
 
-        api_url = site.url + reverse(
+        api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
 
