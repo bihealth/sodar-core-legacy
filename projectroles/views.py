@@ -2003,7 +2003,7 @@ class RemoteProjectsSyncView(
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
 
-        api_url = site.url + reverse(
+        api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
 
