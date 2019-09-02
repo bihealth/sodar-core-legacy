@@ -357,6 +357,12 @@ def get_login_info():
 
 
 @register.simple_tag
+def get_target_projects_visible(target_projects):
+    """Return whether at least one target_project is user_visible"""
+    return bool(len([tp for tp in target_projects if tp.site.user_display]))
+
+
+@register.simple_tag
 def get_target_project_select(site, project):
     """Return remote target project level selection HTML"""
     current_level = None

@@ -557,7 +557,7 @@ class RemoteSiteForm(forms.ModelForm):
 
     class Meta:
         model = RemoteSite
-        fields = ['name', 'url', 'description', 'secret']
+        fields = ['name', 'url', 'description', 'user_display', 'secret']
 
     def __init__(self, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -575,6 +575,9 @@ class RemoteSiteForm(forms.ModelForm):
         # Special cases for SOURCE
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             self.fields['secret'].widget.attrs['readonly'] = True
+            self.fields['user_display'].widget = forms.CheckboxInput()
+        elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
+            self.fields['user_display'].widget = forms.HiddenInput()
 
         # Creation
         if not self.instance.pk:

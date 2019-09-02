@@ -174,5 +174,10 @@ rules.add_perm(
     'projectroles.import_roles', is_project_owner & is_modifiable_project
 )
 
-# Allow updating remtote sites and remote project access
+# Allow updating remote sites and remote project access
 rules.add_perm('projectroles.update_remote', rules.is_superuser)
+
+# Allow viewing hidden target sites
+rules.add_perm(
+    'projectroles.view_hidden_target', rules.is_superuser | is_project_owner
+)

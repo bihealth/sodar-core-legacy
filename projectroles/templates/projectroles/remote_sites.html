@@ -50,6 +50,9 @@
               <th>URL</th>
               <th class="text-right">{% get_display_name 'PROJECT' title=True plural=True %}</th>
               <th>Token</th>
+              {% if site_mode == 'SOURCE' %}
+                <th>Visible to users</th>
+              {% endif %}
               <th>Accessed</th>
               <th></th>
             </tr>

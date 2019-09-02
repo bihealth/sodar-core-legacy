@@ -65,6 +65,7 @@ REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'description'
 REMOTE_SITE_SECRET = build_secret()
+REMOTE_SITE_USER_DISPLAY = True
 
 REMOTE_SITE_NEW_NAME = 'New name'
 REMOTE_SITE_NEW_URL = 'https://new.url'
@@ -1796,7 +1797,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_as_target(self):
-        """Test rendering the remote site list view as source"""
+        """Test rendering the remote site list view as target"""
 
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:remote_sites'))
@@ -1883,6 +1884,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -1902,6 +1904,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -1923,6 +1926,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -1942,6 +1946,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -1971,6 +1976,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': build_secret(),
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -2019,6 +2025,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(form['description'].initial, REMOTE_SITE_DESC)
         self.assertEqual(form['secret'].initial, REMOTE_SITE_SECRET)
         self.assertEqual(form.fields['secret'].widget.attrs['readonly'], True)
+        self.assertEqual(form['user_display'].initial, REMOTE_SITE_USER_DISPLAY)
 
     def test_update(self):
         """Test creating a target site as source"""
@@ -2031,6 +2038,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -2054,6 +2062,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -2083,6 +2092,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
