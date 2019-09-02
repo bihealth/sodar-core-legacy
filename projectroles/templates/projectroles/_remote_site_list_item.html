@@ -13,6 +13,9 @@
   <td><a href="{{ site.get_url }}" target="_blank">{{ site.get_url }}</a></td>
   <td class="text-right">{{ site.projects.all.count }}</td>
   <td class="text-nowrap"><code>{{ site.secret }}</code></td>
+  {% if site_mode == 'SOURCE' %}
+    <td class="text-nowrap">{% if site.user_display %}Yes{% else %}No{% endif %}</td>
+  {% endif %}
   <td class="text-nowrap">
     {% if site.get_access_date %}
       {{ site.get_access_date|date:'Y-m-d H:i' }}

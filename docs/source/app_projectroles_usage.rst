@@ -251,6 +251,11 @@ remote site. A secret string is generated automatically and you need to provide
 this to the administrator of the target site in question for accessing your
 site.
 
+Here you also have the option to hide the remote project link from your users.
+Users viewing the project on the source site then won't see a link to the target site.
+Owners and Superusers will still see the link (greyed out).
+This is most commonly used for internal test sites which only needs to be used by admins.
+
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
 two are currently implemented:

@@ -20,7 +20,11 @@ from projectroles.tests.test_models import (
     RoleAssignmentMixin,
     ProjectInviteMixin,
     RemoteTargetMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
 )
+
+from projectroles.utils import build_secret
 
 
 # SODAR constants
@@ -43,6 +47,11 @@ PROJECT_LINK_IDS = [
 DEFAULT_WAIT_LOC = 'ID'
 
 User = auth.get_user_model()
+
+REMOTE_SITE_NAME = 'Remote Site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_DESC = 'New description'
+REMOTE_SITE_SECRET = build_secret()
 
 
 class LiveUserMixin:
@@ -439,8 +448,51 @@ class TestProjectList(TestUIBase):
         )
 
 
-class TestProjectDetail(TestUIBase):
+class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
     """Tests for the project detail page UI functionalities"""
+
+    def setup_remote_project(self, user_visibility=True):
+        """Creates a remote site and project with given user_visibility setting"""
+        self.remote_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+            user_display=user_visibility,
+        )
+
+        # Setup remote project pointing to local object
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.remote_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            project=self.project,
+        )
+
+    def add_remote_association(self):
+        """Fills and submits add source/target site form
+        Instead we could also set up a real RemoteProject, but this makes the test run faster"""
+
+        # Is there a smarter way? I saw some post() calls in test_views, but did not get them to work
+        url = reverse('projectroles:remote_site_create')
+        self.login_and_redirect(self.superuser, url)
+
+        name_field = self.selenium.find_element_by_id('id_name')
+        url_field = self.selenium.find_element_by_id('id_url')
+        secret_field = self.selenium.find_element_by_id('id_secret')
+
+        name_field.send_keys('some name')
+        url_field.send_keys('http://url.url')
+        secret_field.send_keys('b2oitbge4rlme5yxtciqszf98vffsg2p')
+
+        secret_field.submit()
+        # Wait for form submit
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.ID, 'sodar-pr-remote-site-table')
+            )
+        )
 
     def test_project_links(self):
         """Test visibility of project links according to user
@@ -518,6 +570,112 @@ class TestProjectDetail(TestUIBase):
         )
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
+
+    def test_remote_project_visible(self):
+        """Checks project card for enabled visbility for all users"""
+        self.setup_remote_project(user_visibility=True)
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        # Visibile for all users
+        for user in users:
+            self.login_and_redirect(user, url)
+            project_details = self.selenium.find_element_by_id(
+                'sodar-pr-details-card-remote'
+            )
+            remote_project = project_details.find_element_by_class_name(
+                'btn-info'
+            )
+            self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
+
+    def test_remote_project_invisible(self):
+        """Checks project card for disabled visibility for different users"""
+        self.setup_remote_project(user_visibility=False)
+        users = [self.user_delegate, self.user_contributor, self.user_guest]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        # Invisible for basic users
+        for user in users:
+            self.login_and_redirect(user, url)
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+
+        # Greyed out for superuser and owner
+        for user in [self.superuser, self.user_owner]:
+            self.login_and_redirect(user, url)
+            project_details = self.selenium.find_element_by_id(
+                'sodar-pr-details-card-remote'
+            )
+            remote_project = project_details.find_element_by_class_name(
+                'btn-secondary'
+            )
+            self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_target_visibility(self):
+        """Test form toggle and remote site table column on target site"""
+        # Check Form Toggle visibility on TARGET site
+        url = reverse('projectroles:remote_site_create')
+        self.login_and_redirect(self.superuser, url)
+
+        self.assertFalse(
+            self.selenium.find_element_by_id('id_user_display').is_displayed()
+        )
+
+        self.add_remote_association()
+        # Check Visible to User column visibility
+        remote_site_table = self.selenium.find_element_by_id(
+            'sodar-pr-remote-site-table'
+        )
+        with self.assertRaises(NoSuchElementException):
+            remote_site_table.find_element_by_xpath(
+                "//th[contains(text(), 'Visible to users')]"
+            )
+
+        with self.assertRaises(NoSuchElementException):
+            remote_site_table.find_element_by_xpath(
+                "//td[contains(text(), 'Yes')]"
+            )
+
+    def test_source_visibility(self):
+        """Test form toggle and remote site table column on source site"""
+        # Check Form Toggle visibility on SOURCE site
+        url = reverse('projectroles:remote_site_create')
+        self.login_and_redirect(self.superuser, url)
+        element = self.selenium.find_element_by_id('div_id_user_display')
+        self.assertIsNotNone(element)
+
+        self.add_remote_association()
+        # Check Visible to User column visibility
+        remote_site_table = self.selenium.find_element_by_id(
+            'sodar-pr-remote-site-table'
+        )
+        try:
+            remote_site_table.find_element_by_xpath(
+                "//th[contains(text(), 'Visible to users')]"
+            )
+        except NoSuchElementException:
+            self.fail(
+                'User Display column (header) should exist on SOURCE remote site overview'
+            )
+        try:
+            remote_site_table.find_element_by_xpath(
+                "//td[contains(text(), 'Yes')]"
+            )
+        except NoSuchElementException:
+            self.fail(
+                'User Display column (data) should exist on SOURCE remote site overview'
+            )
 
 
 class TestProjectRoles(RemoteTargetMixin, TestUIBase):

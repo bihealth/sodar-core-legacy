@@ -801,6 +801,11 @@ class RemoteSite(models.Model):
         help_text='RemoteSite relation UUID (local)',
     )
 
+    #: RemoteSite's link visibilty for users
+    user_display = models.BooleanField(
+        default=True, unique=False, help_text='RemoteSite visibility to users'
+    )
+
     class Meta:
         ordering = ['name']
         unique_together = ['url', 'mode', 'secret']
