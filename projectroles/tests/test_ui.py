@@ -471,10 +471,9 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
 
     def add_remote_association(self):
-        """Fills and submits add source/target site form
-        Instead we could also set up a real RemoteProject, but this makes the test run faster"""
-
-        # Is there a smarter way? I saw some post() calls in test_views, but did not get them to work
+        """Fills and submits add source/target site form"""
+        # Instead we could also set up a real RemoteProject, but this makes
+        # the test run faster
         url = reverse('projectroles:remote_site_create')
         self.login_and_redirect(self.superuser, url)
 
@@ -662,11 +661,12 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
         try:
             remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible to users')]"
+                "//th[contains(text(), 'Visible to Users')]"
             )
         except NoSuchElementException:
             self.fail(
-                'User Display column (header) should exist on SOURCE remote site overview'
+                'User Display column (header) should exist on SOURCE remote '
+                'site overview'
             )
         try:
             remote_site_table.find_element_by_xpath(
@@ -674,7 +674,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             )
         except NoSuchElementException:
             self.fail(
-                'User Display column (data) should exist on SOURCE remote site overview'
+                'User Display column (data) should exist on SOURCE remote site '
+                'overview'
             )
 
 
