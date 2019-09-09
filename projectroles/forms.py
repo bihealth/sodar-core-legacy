@@ -579,6 +579,8 @@ class RemoteSiteForm(forms.ModelForm):
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
             self.fields['user_display'].widget = forms.HiddenInput()
 
+        self.fields['user_display'].initial = True
+
         # Creation
         if not self.instance.pk:
             # Generate secret token for target site
