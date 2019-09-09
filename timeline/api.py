@@ -250,9 +250,14 @@ class TimelineAPI:
             # Apps with plugins
             else:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
-                link_data = app_plugin.get_object_link(
-                    ref_obj.object_model, ref_obj.object_uuid
-                )
+
+                try:
+                    link_data = app_plugin.get_object_link(
+                        ref_obj.object_model, ref_obj.object_uuid
+                    )
+
+                except Exception:
+                    link_data = None
 
                 if link_data:
                     refs[r] = '<a href="{}" {}>{}</a> {}'.format(
