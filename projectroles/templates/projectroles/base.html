@@ -13,9 +13,9 @@
   {# Sidebar #}
   <div class="sodar-content-left" id="sodar-content-left">
 
-    <div class="col h-100 bg-dark text-center sodar-pr-sidebar" id="sodar-pr-sidebar">
+    <div class="col h-100 bg-dark text-center sodar-pr-sidebar collapse show" id="sodar-pr-sidebar">
       <nav class="nav navbar-expand-lg navbar-dark bg-dark sodar-pr-sidebar-nav">
-        <div class="collapse navbar-collapse" id="sodar-pr-sidebar-navbar">
+        <div class="navbar-collapse" id="sodar-pr-sidebar-navbar">
           <ul class="navbar-nav flex-column sodar-pr-sidebar-nav-ul">
             <li id="sodar-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
               <a class="nav-link"
