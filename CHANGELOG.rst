@@ -23,6 +23,11 @@ Added
     - ``css_url`` member variable in ``BackendPluginPoint`` (#261)
     - Example of on-demand Javascript/CSS inclusion in example apps (#261)
     - Remote project link display toggle for target sites (#276)
+    - Project UUID clipboard copying button (#290)
+    - Support for app settings in site apps (#308)
+    - Initial implemenetation for common clipboard copying visualization (#333)
+- **Userprofile**
+    - User setting for project UUID clipboard copying (#290, #308)
 
 Changed
 -------

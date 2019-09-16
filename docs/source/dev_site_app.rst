@@ -82,6 +82,8 @@ The following variables and functions are **mandatory**:
 
 Implementing the following is **optional**:
 
+- ``app_settings``: Implement if project or user specific settings for the app
+  are needed. See the plugin point definition for an example.
 - ``get_messages()``: Implement if your site app needs to display site-wide
   messages for users.
 

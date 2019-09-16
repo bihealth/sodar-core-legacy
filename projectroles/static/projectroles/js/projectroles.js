@@ -338,6 +338,35 @@ $(document).ready(function() {
 });
 
 
+/* Initialize Clipboard.js for common buttons ------------------------------- */
+
+$(document).ready(function() {
+    /***************
+     Init Clipboards
+     ***************/
+    new ClipboardJS('.sodar-btn-copy');
+
+    /******************
+     Copy link handling
+     ******************/
+    $('.sodar-btn-copy').click(function () {
+        $(this).find('i').removeClass('text-muted').addClass('text-warning');
+
+        var realTitle = $(this).tooltip().attr('data-original-title');
+        $(this).attr('title', 'Copied!')
+            .tooltip('_fixTitle')
+            .tooltip('show')
+            .attr('title', realTitle)
+            .tooltip('_fixTitle');
+
+        $(this).delay(250).queue(function() {
+            $(this).find('i').removeClass('text-warning').addClass('text-muted');
+            $(this).dequeue();
+        });
+    });
+});
+
+
 /* Display Internet Explorer warning ---------------------------------------- */
 
 

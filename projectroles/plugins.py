@@ -271,6 +271,23 @@ class SiteAppPluginPoint(PluginPoint):
     # TODO: Implement this in your site app plugin (can be None)
     app_permission = None
 
+    #: User settings definition
+    #:
+    #: Example ::
+    #:
+    #:     app_settings = {
+    #:         'example_setting': {
+    #:             'scope' : 'USER',  # always USER
+    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:             'default': 'example',
+    #:             'placeholder': 'Enter example setting here',  # Optional
+    #:             'description': 'Example user setting',  # Optional
+    #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:         }
+    #:     }
+    # TODO: Define user specific settings in your app plugin, example above
+    app_settings = {}
+
     def get_messages(self, user=None):
         """
         Return a list of messages to be shown to users.
@@ -370,11 +387,11 @@ def get_app_plugin(plugin_name):
     :param plugin_name: Plugin name (string)
     :return: ProjectAppPlugin object or None if not found
     """
-    try:
-        return ProjectAppPluginPoint.get_plugin(plugin_name)
-
-    except ProjectAppPluginPoint.DoesNotExist:
-        return None
+    for k, v in PLUGIN_TYPES.items():
+        try:
+            return eval(v).get_plugin(plugin_name)
+        except Exception:
+            pass  # TODO refactor
 
 
 def get_backend_api(plugin_name, force=False):

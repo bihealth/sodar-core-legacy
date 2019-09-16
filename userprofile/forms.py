@@ -26,7 +26,9 @@ class UserSettingsForm(forms.Form):
         super().__init__(*args, **kwargs)
 
         # Add settings fields
-        self.app_plugins = get_active_plugins()
+        self.app_plugins = get_active_plugins(plugin_type='project_app')
+        self.user_plugins = get_active_plugins(plugin_type='site_app')
+        self.app_plugins = self.app_plugins + self.user_plugins
 
         for plugin in self.app_plugins:
             p_settings = app_settings.get_setting_defs(

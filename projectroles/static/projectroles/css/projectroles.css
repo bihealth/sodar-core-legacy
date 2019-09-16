@@ -407,10 +407,18 @@ dl dd {
   height: 1.65em;
 }
 
-.sodar-pr-btn-star {
-  height: 30px;
-  margin-right: 12px;
+a.sodar-pr-btn-title {
+  line-height: 30px;
   padding: 0;
+}
+
+a.sodar-pr-btn-star i {
+  font-size: 30px;
+}
+
+a.sodar-pr-btn-copy-uuid i {
+  padding-top: 3px;
+  font-size: 24px;
 }
 
 .sodar-sidebar-alt-btn {

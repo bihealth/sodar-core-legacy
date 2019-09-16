@@ -155,10 +155,11 @@ before will be presented to the user.
 App Settings
 ------------
 
-Project apps may define project or user specific settings, modifiable by users
-with sufficient project access. Widgets for project specific settings will show
-up in the project creation and updating form. User specific settings will be
-displayed in the :ref:`Userpforile app <app_userprofile>`.
+Project and site apps may define project or user specific :term:`app settings`.
+Widgets for project specific settings will show up in the project creation and
+updating form. User specific settings will be displayed in the :ref:`Userpforile
+app <app_userprofile>`. Project settings can only be modified by users with
+sufficient project access.
 
 .. note::
 

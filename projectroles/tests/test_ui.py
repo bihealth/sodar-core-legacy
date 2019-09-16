@@ -22,6 +22,7 @@ from selenium.webdriver.support import expected_conditions as ec
 
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
+from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -52,6 +53,9 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-star',
 ]
 DEFAULT_WAIT_LOC = 'ID'
+
+# App settings API
+app_settings = AppSettingAPI()
 
 User = auth.get_user_model()
 
@@ -621,6 +625,39 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
 
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
+
+    def test_copy_uuid_visibility_default(self):
+        """Test default UUID copy button visibility (should not be visible)"""
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        for user in users:
+            self.login_and_redirect(user, url)
+
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element_by_id('sodar-pr-btn-copy-uuid')
+
+    def test_copy_uuid_visibility_enabled(self):
+        """Test UUID copy button visibility with setting enabled"""
+        ret = app_settings.set_app_setting(
+            app_name='userprofile',
+            setting_name='enable_project_uuid_copy',
+            value=True,
+            user=self.user_owner,
+        )
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_exists(
+            [self.user_owner], url, 'sodar-pr-btn-copy-uuid', True
+        )
 
     def test_remote_project_visible(self):
         """Checks project card for enabled visbility for all users"""
