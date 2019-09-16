@@ -16,7 +16,7 @@ v0.7.0 (TBD)
 System Prerequisites
 --------------------
 
-The minimum version requirement for Django has been bumped to 1.11.23.
+The minimum version requirement for Django has been bumped to 1.11.24.
 
 Backend Javascript Include
 --------------------------

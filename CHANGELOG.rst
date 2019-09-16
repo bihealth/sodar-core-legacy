@@ -29,11 +29,13 @@ Changed
 
 - **General**
     - Upgrade Chromedriver to version 76.0.3809.68
-    - Upgrade minimum Django version to 1.11.23 (#295)
+    - Upgrade minimum Django version to 1.11.24 (#324)
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
+    - Run tests in parallel where applicable
 - **Projectroles**
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
+    - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
 
 Fixed
 -----
@@ -43,6 +45,8 @@ Fixed
     - Redundant inheritance in ``CurrentUserFormMixin`` (#12)
     - Trailing slashes not parsed correctly in remote project URLs (#319)
     - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
+- **Timeline**
+    - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 
 Removed
 -------
