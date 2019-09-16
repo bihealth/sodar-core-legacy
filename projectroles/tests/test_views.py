@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.core import mail
 from django.core.urlresolvers import reverse
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
@@ -449,6 +450,7 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.all()[0]
         self.assertIsNotNone(project)
+        self.assertEqual(len(mail.outbox), 1)
 
         expected = {
             'id': project.pk,
@@ -490,6 +492,85 @@ class TestProjectCreateView(
                     kwargs={'project': project.sodar_uuid},
                 ),
             )
+
+    def test_create_project(self):
+        """Test Project creation with taskflow"""
+        # create category (no assertions, cause that is covered by other testcase)
+
+        # Issue POST request
+        values = {
+            'title': 'TestCategory',
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': None,
+            'owner': self.user.sodar_uuid,
+            'submit_status': SUBMIT_STATUS_OK,
+            'description': 'description',
+        }
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(reverse('projectroles:create'), values)
+
+        category = Project.objects.all()[0]
+
+        # Make project with owner in Django
+        values = {
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.pk,
+            'owner': self.user.sodar_uuid,
+            'description': 'description',
+        }
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert Project state after creation
+        self.assertEqual(Project.objects.all().count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertIsNotNone(project)
+        # 2 mails should be send, for the project and for the category
+        self.assertEqual(len(mail.outbox), 2)
+
+        expected = {
+            'id': project.pk,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.pk,
+            'submit_status': SUBMIT_STATUS_OK,
+            'description': 'description',
+            'sodar_uuid': project.sodar_uuid,
+        }
+
+        model_dict = model_to_dict(project)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        # Assert owner role assignment
+        owner_as = RoleAssignment.objects.get(
+            project=project, role=self.role_owner
+        )
+
+        expected = {
+            'id': owner_as.pk,
+            'project': project.pk,
+            'role': self.role_owner.pk,
+            'user': self.user.pk,
+            'sodar_uuid': owner_as.sodar_uuid,
+        }
+
+        self.assertEqual(model_to_dict(owner_as), expected)
 
 
 class TestProjectUpdateView(
@@ -555,6 +636,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.all()[0]
         self.assertIsNotNone(project)
+        # no mail should be send, cause the owner has not changed
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -581,6 +664,33 @@ class TestProjectUpdateView(
                     kwargs={'project': project.sodar_uuid},
                 ),
             )
+
+    def test_update_project_owner(self):
+        """Light version of test_update_project. Only to test if a mail is send,
+         when updating the owner of a project and that the project owner is updated correctly"""
+        new_owner = self.make_user('New Owner')
+
+        values = model_to_dict(self.project)
+        values['owner'] = new_owner.sodar_uuid  # NOTE: Must add owner
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # mail should be send, cause the owner has changed
+        self.assertEqual(len(mail.outbox), 1)
+        new_owner_ra = RoleAssignment.objects.get_assignment(
+            new_owner, self.project
+        )
+        self.assertEqual(new_owner_ra.role, self.role_owner)
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
