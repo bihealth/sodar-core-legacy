@@ -836,6 +836,16 @@ class ProjectModifyMixin(ModelFormMixin):
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
+        if SEND_EMAIL and (not self.object or old_data['owner'] != owner):
+            # send mail
+            send_role_change_mail(
+                form_action,
+                project,
+                owner,
+                RoleAssignment.objects.get_assignment(owner, project).role,
+                self.request,
+            )
+
         if tl_event:
             tl_event.set_status('OK')
 
