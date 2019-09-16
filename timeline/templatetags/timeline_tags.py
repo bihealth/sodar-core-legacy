@@ -1,3 +1,5 @@
+import html
+
 from django import template
 from django.urls import reverse
 from django.utils.timezone import localtime
@@ -10,7 +12,6 @@ from timeline.models import ProjectEvent
 
 register = template.Library()
 
-
 STATUS_STYLES = {
     'OK': 'bg-success',
     'INIT': 'bg-secondary',
@@ -19,6 +20,7 @@ STATUS_STYLES = {
     'INFO': 'bg-info',
     'CANCEL': 'bg-dark',
 }
+
 
 # Event helpers ----------------------------------------------------------------
 
@@ -111,3 +113,106 @@ def get_event_details(event):
         )
     ret += '\n</tbody>\n</table>'
     return ret
+
+
+@register.simple_tag
+def get_event_extra_data(event):
+    return json_to_html(event.extra_data)
+
+
+def json_to_html(obj):
+    str_list = []
+    html_print_obj(obj, str_list, 0)
+    return ''.join(str_list)
+
+
+def html_print_obj(obj, str_list: list, indent):
+    if isinstance(obj, dict):
+        html_print_dict(obj, str_list, indent)
+    elif isinstance(obj, list):
+        html_print_array(obj, str_list, indent)
+    elif isinstance(obj, str):
+        str_list.append('&quot;')
+        str_list.append(html.escape(obj))
+        str_list.append('&quot;')
+    elif isinstance(obj, bool):
+        str_list.append(str(obj))
+    elif obj is None:
+        str_list.append('Null')
+
+
+def html_print_dict(dct: dict, str_list, indent):
+    str_list.append('<span class="json-open-bracket">{</span>\n')
+    str_list.append('<span class="json-collapse-1" style="display: inline;">')
+
+    indent += 1
+    for key, value in dct.items():
+        str_list.append('<span class="json-indent">')
+        str_list.append('  ' * indent)
+        str_list.append('</span>')
+        str_list.append('<span class="json-property">')
+
+        str_list.append(html.escape(str(key)))
+
+        str_list.append('</span>')
+        str_list.append('<span class="json-semi-colon">: </span>')
+
+        str_list.append('<span class="json-value">')
+        html_print_obj(value, str_list, indent)
+
+        str_list.append('</span>')
+        str_list.append('<span class="json-comma">,</span>\n')
+
+    if len(dct) > 0:
+        del str_list[-1]
+        str_list.append('\n')
+
+    str_list.append('</span>')
+    str_list.append('  ' * (indent - 1))
+    str_list.append('<span class="json-close-bracket">}</span>')
+
+
+def html_print_array(array, str_list, indent):
+    str_list.append('<span class="json-open-bracket">[</span>\n')
+    str_list.append('<span class="json-collapse-1" style="display: inline;">')
+
+    indent += 1
+    for value in array:
+        str_list.append('<span class="json-indent">')
+        str_list.append('  ' * indent)
+        str_list.append('</span>')
+        str_list.append('<span class="json-value">')
+        html_print_obj(value, str_list, indent)
+        str_list.append('</span>')
+        str_list.append('<span class="json-comma">,</span>\n')
+    if len(array) > 0:
+        del str_list[-1]
+        str_list.append('\n')
+
+    str_list.append('</span>')
+    str_list.append('  ' * (indent - 1))
+    str_list.append('<span class="json-close-bracket">]</span>')
+
+
+# Filters ----------------------------------------------------------------------
+
+
+@register.filter
+def collect_extra_data(event: ProjectEvent):
+    ls = []
+    if event.extra_data is not None and len(event.extra_data) > 0:
+        ls.append(('extra-data', 'Extra Data', event))
+    for status in event.get_status_changes():
+        if status.extra_data is not None and len(status.extra_data) > 0:
+            ls.append(('status-extra-data', status.status_type, status))
+    return ls
+
+
+@register.filter
+def has_extra_data(event: ProjectEvent):
+    if event.extra_data is not None and len(event.extra_data) > 0:
+        return True
+    for status in event.get_status_changes():
+        if status.extra_data is not None and len(status.extra_data) > 0:
+            return True
+    return False

@@ -1,0 +1,65 @@
+{% load timeline_tags %}
+
+{% block css %}
+    <style type="text/css">
+        .json-open-bracket, .json-close-bracket {
+            color: #CC0011;
+        }
+
+        .json-property {
+            color: #1A5988;
+        }
+
+        .json-semi-colon {
+            color: #14171A;
+        }
+
+        .json-value {
+            color: #222222;
+        }
+
+        .clp-copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+{% endblock css %}
+
+<!-- Modal -->
+<div id="sodar-tl-modal-{{ event.pk }}" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div style="flex: 1; flex-direction: row; display: flex; flex-wrap: wrap; border-bottom: 1px solid #dee2e6">
+                <ul class="nav nav-tabs border-bottom-0">
+                    {% for data in event|collect_extra_data %}
+                        <li class="nav-item">
+                            <a class="nav-link" id="{{ data.0 }}-tab-{{ data.2.pk }}" data-toggle="tab"
+                               href="#{{ data.0 }}-{{ data.2.pk }}" role="tab">
+                                {{ data.1 }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close"
+                        style="width: 2rem; border-left: 1px solid #dee2e6">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body tab-content">
+                {% for data in event|collect_extra_data %}
+                    <div class="tab-pane" role="tabpanel" id="{{ data.0 }}-{{ data.2.pk }}">
+                        <pre id="{{ data.0 }}-pre-{{ data.2.pk }}">{% autoescape off %}{% get_event_extra_data data.2 %}{% endautoescape %}</pre>
+                        <button class="fa fa-copy clp-copy-btn btn btn-primary"
+                        data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}">
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#sodar-tl-modal-{{ event.pk }}').find('.nav-tabs a:first').tab('show');
+</script>

@@ -334,6 +334,7 @@ class TestUIBase(
         url,
         search_string,
         attribute='id',
+        path='//',
         wait_elem=None,
         wait_loc=DEFAULT_WAIT_LOC,
     ):
@@ -359,8 +360,8 @@ class TestUIBase(
                 self.assertEqual(
                     len(
                         self.selenium.find_elements_by_xpath(
-                            '//*[contains(@{}, "{}")]'.format(
-                                attribute, search_string
+                            '{}*[contains(@{}, "{}")]'.format(
+                                path, attribute, search_string
                             )
                         )
                     ),
@@ -371,8 +372,8 @@ class TestUIBase(
             else:
                 with self.assertRaises(NoSuchElementException):
                     self.selenium.find_element_by_xpath(
-                        '//*[contains(@{}, "{}")]'.format(
-                            attribute, search_string
+                        '{}*[contains(@{}, "{}")]'.format(
+                            path, attribute, search_string
                         )
                     )
 
