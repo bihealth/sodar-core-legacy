@@ -26,6 +26,9 @@ Added
     - Project UUID clipboard copying button (#290)
     - Support for app settings in site apps (#308)
     - Initial implemenetation for common clipboard copying visualization (#333)
+    - Send email for owner role assignment (#325)
+- **Timeline**
+    - Display event extra data as JSON (#6)
 - **Userprofile**
     - User setting for project UUID clipboard copying (#290, #308)
 
@@ -40,6 +43,7 @@ Changed
 - **Projectroles**
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
+    - Make sidebar hiding dynamic by content height (#316)
 
 Fixed
 -----
