@@ -49,7 +49,6 @@ html,
 .sodar-content-left {
   height: 100%;
   flex: 0 0 auto;
-  overflow: hidden;
 }
 
 .sodar-content-right {
@@ -424,7 +423,6 @@ a.sodar-pr-btn-copy-uuid i {
 .sodar-sidebar-alt-btn {
   height: 100%;
   margin-right: 12px;
-  display: none;
   font-size: 100%;
   z-index: 1100;
 }
@@ -689,7 +687,7 @@ pre {
   display: none;
 }
 
-/* Navbar (width) */
+/* Navbar (width)*/
 @media screen and (max-width: 990px) {
   .sodar-navbar-user-dropdown {
     display: none;
@@ -706,7 +704,7 @@ pre {
   }
 }
 
-/* Sidebar */
+/* Sidebar
 @media screen and (max-width: 1000px) {
   .sodar-content-left {
     display: none !important;
@@ -715,18 +713,7 @@ pre {
   .sodar-sidebar-alt-btn {
     display: inherit !important;
   }
-}
-
-/* Sidebar (height) */
-@media screen and (max-height: 650px) {
-  .sodar-content-left {
-    display: none !important;
-  }
-
-  .sodar-sidebar-alt-btn {
-    display: inherit !important;
-  }
-}
+}*/
 
 /* Project list */
 
