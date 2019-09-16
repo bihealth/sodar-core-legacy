@@ -20,6 +20,10 @@ By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you
 to the relevant view for the object on your Django site.
 
+Certain events have a file icon in their description. If clicked,
+a popup showing a collection of extra data for the given event will appear.
+It will show the extra data of the event itself and of the different states the event went through, if there are any.
+
 Admin users are able to see certain *"classified"* level events hidden from
 normal users.
 

@@ -6,6 +6,7 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.tests.test_ui import TestUIBase
+from timeline.templatetags.timeline_tags import collect_extra_data
 
 from .test_models import ProjectEventMixin, ProjectEventStatusMixin
 
@@ -108,3 +109,193 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
+
+
+class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+    """Tests for the timeline list view UI extra data"""
+
+    def setUp(self):
+        super().setUp()
+
+        self.timeline = get_backend_api('timeline_backend')
+
+        # Init default event
+        self.event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init classified event
+        self.extra_less_event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={},
+        )
+
+    def test_extra_data_badge_visibility(self):
+        """Test visibility of extra data badges to open a model in the timeline event list"""
+        expected = [
+            (self.superuser, 1),
+            (self.as_owner.user, 1),
+            (self.as_delegate.user, 1),
+            (self.as_contributor.user, 1),
+            (self.as_guest.user, 1),
+        ]
+
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        self.assert_element_count(
+            expected,
+            url,
+            'modal',
+            attribute='data-toggle',
+            path='//table[@id="sodar-tl-table"]/tbody/tr/td/',
+        )
+
+    def test_status_extra_data_only_badge_visibility(self):
+        """Test visibility when event only has extra data in one of its states."""
+        self.event_with_status = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={},
+            status_extra_data={'acclerator': 'railgun'},
+            status_type="OK",
+        )
+
+        expected = [
+            (self.superuser, 2),
+            (self.as_owner.user, 2),
+            (self.as_delegate.user, 2),
+            (self.as_contributor.user, 2),
+            (self.as_guest.user, 2),
+        ]
+
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        self.assert_element_count(
+            expected,
+            url,
+            'modal',
+            attribute='data-toggle',
+            path='//table/tbody/tr/td/',
+        )
+
+    def test_object_event_extra_data_badge_visibility(self):
+        """Test visibility of object related events events in the timeline event list"""
+
+        # Add user as an object reference
+        self.ref_obj = self.event.add_object(
+            obj=self.superuser, label='user', name=self.superuser.username
+        )
+
+        expected = [
+            (self.superuser, 1),
+            (self.as_owner.user, 1),
+            (self.as_delegate.user, 1),
+            (self.as_contributor.user, 1),
+            (self.as_guest.user, 1),
+        ]
+
+        url = reverse(
+            'timeline:list_object',
+            kwargs={
+                'project': self.project.sodar_uuid,
+                'object_model': self.ref_obj.object_model,
+                'object_uuid': self.ref_obj.object_uuid,
+            },
+        )
+
+        self.assert_element_count(
+            expected,
+            url,
+            'modal',
+            attribute='data-toggle',
+            path='//table[@id="sodar-tl-table"]/tbody/tr/td/',
+        )
+
+    def test_event_extra_data_badge_visibility_details(self):
+        """Test visibility of events on the project details page"""
+        expected = [
+            (self.superuser, 1),
+            (self.as_owner.user, 1),
+            (self.as_delegate.user, 1),
+            (self.as_contributor.user, 1),
+            (self.as_guest.user, 1),
+        ]
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(
+            expected,
+            url,
+            'modal',
+            attribute='data-toggle',
+            path='//table/tbody/tr/td/',
+        )
+
+    def test_extra_data_content_existence(self):
+        """Test existence of modal content"""
+        expected = [
+            (self.superuser, 1),
+            (self.as_owner.user, 1),
+            (self.as_delegate.user, 1),
+            (self.as_contributor.user, 1),
+            (self.as_guest.user, 1),
+        ]
+
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        data = collect_extra_data(self.event)[0]
+
+        self.assert_element_count(
+            expected, url, '{}-{}'.format(data[0], data[2].pk), attribute='id'
+        )
+
+    def test_status_extra_data_content_existence(self):
+        """Test existence of modal content for status extra data"""
+        self.event_with_status = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={},
+            status_extra_data={'acclerator': 'railgun'},
+            status_type='OK',
+        )
+
+        expected = [
+            (self.superuser, 1),
+            (self.as_owner.user, 1),
+            (self.as_delegate.user, 1),
+            (self.as_contributor.user, 1),
+            (self.as_guest.user, 1),
+        ]
+
+        url = reverse(
+            'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
+        )
+
+        data = collect_extra_data(self.event_with_status)[0]
+
+        self.assert_element_count(
+            expected, url, '{}-{}'.format(data[0], data[2].pk), attribute='id'
+        )
