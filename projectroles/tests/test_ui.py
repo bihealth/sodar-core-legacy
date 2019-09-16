@@ -646,7 +646,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
     def test_copy_uuid_visibility_enabled(self):
         """Test UUID copy button visibility with setting enabled"""
-        ret = app_settings.set_app_setting(
+        app_settings.set_app_setting(
             app_name='userprofile',
             setting_name='enable_project_uuid_copy',
             value=True,
