@@ -164,7 +164,7 @@ class TestUIBase(
         """Build absolute URL to work with Selenium"""
         return '{}{}'.format(self.live_server_url, url)
 
-    def login_and_redirect_using_ui(
+    def login_and_redirect(
         self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
     ):
         """
@@ -247,7 +247,7 @@ class TestUIBase(
                 )
             )
 
-    def login_and_redirect(
+    def login_and_redirect_with_cookie(
         self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
     ):
         """
