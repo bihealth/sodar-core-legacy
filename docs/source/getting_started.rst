@@ -4,11 +4,31 @@
 Getting Started
 ^^^^^^^^^^^^^^^
 
-Basic concepts of SODAR Core apps are detailed in this document.
+Installation and basic concepts of the SODAR Core framework and its apps are
+detailed in this document.
 
 
-Repository Contents
-===================
+Installation
+============
+
+The ``django-sodar-core`` package can be installed from GitHub using pip as
+follows. It is strongly recommended to specify a version tag, as the package is
+under active development and breaking changes can be expected. PyPI install is
+forthcoming.
+
+.. code-block:: console
+
+    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.6.2#egg=django-sodar-core
+
+Please note that the django-sodar-core package only installs
+:term:`Django apps<Django App>`, which you need to include in a
+:term:`Django web site<Django Site>` project. For instructions for integrating
+SODAR Core into an existing Django site or setting up a new site,
+see the :ref:`projectroles app documentation <app_projectroles>`.
+
+
+SODAR Core Apps
+===============
 
 The following Django apps will be installed when installing the
 ``django-sodar-core`` package:
@@ -26,41 +46,27 @@ The following Django apps will be installed when installing the
 - **timeline**: Project app for logging and viewing project-related activity.
 - **userprofile**: Site app for viewing user profiles.
 
-The following packages are included in the repository for development and
-as examples:
-
-- **config**: Example Django site configuration
-- **docs**: Usage and development documentation
-- **example_backend_app**: Example SODAR Core compatible backend app
-- **example_project_app**: Example SODAR Core compatible project app
-- **example_site**: Example/development Django site
-- **example_site_app**: Example SODAR Core compatible site-wide app
-- **requirements**: Requirements for SODAR Core  and development
-- **utility**: Setup scripts for development
-
 
 Requirements
 ============
 
 Major requirements for integrating projectroles and other SODAR Core apps into
-your Django site and/or participating in development are listed below. For a
-complete requirement list, see the ``requirements`` and ``utility`` directories
-in the repository.
+your Django site are listed below. For a complete requirement list, see the
+``requirements`` and ``utility`` directories in the repository.
 
-- Ubuntu 16.04 Xenial (**NOTE:** Older releases no longer supported)
-- Library requirements (see the ``utility`` directory and/or your own Django
-  project)
-- Python 3.6+ (**NOTE:** Python 3.5 no longer supported)
-- Django 1.11.20+ (**NOTE:** 2.x not currently supported)
+- Ubuntu (16.04 Xenial recommended and supported) / CentOS 7
+- System library requirements (see the ``utility`` directory and/or your own
+  Django project)
+- Python 3.6 (**NOTE:** Python 3.5 no longer supported)
+- Django 1.11 (**NOTE:** 2.x not currently supported)
 - PostgreSQL 9.6+ and psycopg2-binary
-- Bootstrap 4.3.1
-- JQuery 3.3.1
-- Shepherd 1.8.1 with Tether 1.4.4
-- Clipboard.js 2.0.0
-- DataTables 1.10.18 with JQuery UI, FixedColumns, FixedHeader, Buttons,
-  KeyTables
+- Bootstrap 4
+- JQuery 3.3.x
+- Shepherd and Tether
+- Clipboard.js
+- DataTables
 
-For more detailed instructions on what to install for local development, see
+For more details on installation and requirements for local development, see
 :ref:`dev_sodar_core`.
 
 

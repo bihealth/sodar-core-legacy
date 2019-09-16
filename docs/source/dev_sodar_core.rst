@@ -8,12 +8,37 @@ This document details instructions and guidelines for development of the SODAR
 Core package.
 
 
+Repository Contents
+===================
+
+In addition to the apps which will be installed by the package, the following
+directories are included in the repository for development use and as examples:
+
+- **config**: Example Django site configuration
+- **docs**: Usage and development documentation
+- **example_backend_app**: Example SODAR Core compatible backend app
+- **example_project_app**: Example SODAR Core compatible project app
+- **example_site**: Example SODAR Core based Django site for development
+- **example_site_app**: Example SODAR Core compatible site-wide app
+- **requirements**: Requirements for SODAR Core and development
+- **utility**: Setup scripts for development
+
+
 Installation
 ============
 
-Instructions on how to install a local development version of SODAR Core.
-Ubuntu 16.04 LTS (Xenial) is the supported OS at this time. System dependencies
-may vary for different OS versions or distributions.
+Instructions on how to install a local development version of SODAR Core are
+detailed here. Ubuntu 16.04 LTS (Xenial) is the supported OS at this time.
+Later Ubuntu versions and Centos 7 have also been proven to to work, but some
+system dependencies may vary for different OS versions or distributions.
+
+Installation and development should be possible on most recent versions of
+Linux, Mac and Windows, but this may require extra work and your mileage may
+vary.
+
+If you need to set up the accompanying example site in Docker, please see online
+for up-to-date Docker setup tutorials for Django related to your operating
+system of choice.
 
 System Installation
 -------------------
@@ -29,7 +54,8 @@ First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
 Database Setup
 --------------
 
-Next you need to setup the database and postgres user. You'll be prompted to enter a database name, a username and a password.
+Next you need to setup the database and postgres user. You'll be prompted to
+enter a database name, a username and a password.
 
 .. code-block:: console
 

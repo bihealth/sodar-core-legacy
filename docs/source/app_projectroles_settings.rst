@@ -4,8 +4,9 @@
 Projectroles Django Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This document describes the Django settings for the ``projectroles`` app, which
-also control the configuration of other apps in a SODAR Core based site.
+This document describes the :term:`Django settings` for the ``projectroles``
+app, which also control the configuration of other apps in a SODAR Core based
+site.
 
 These settings are usually found in ``config/settings/*.py``, with
 ``config/settings/base.py`` being the default configuration other files may
@@ -15,13 +16,15 @@ If your site is based on ``sodar_django_site``, mandatory settings are already
 set to their default values. In that case, you only need to modify or customize
 them where applicable.
 
-If you are integrating django-sodar-core with an existing Djagno site or
+If you are integrating django-sodar-core with an existing Django site or
 building your site from scratch without the recommended template, make sure to
 add all mandatory settings into your project.
 
 For values retrieved from environment variables, make sure to configure your
-env accordingly. For development and testing, using ``DJANGO_READ_DOT_ENV_FILE``
-is recommended.
+env accordingly. For development and testing, it is highly recommended to set
+``DJANGO_READ_DOT_ENV_FILE=1`` in your system's environment variables and
+place the env variables into a ``.env`` file in the root directory of your
+Django site repository. See ``env.example`` for an example of such a file.
 
 
 Site Package and Paths

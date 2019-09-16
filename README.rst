@@ -23,6 +23,10 @@ SODAR Core
 SODAR (System for Omics Data Access and Retrieval) is a specialized system for
 managing data in omics research projects.
 
+
+Introduction
+============
+
 The SODAR Core repository containes reusable and non-domain-specific apps making
 up the base of the SODAR system. These apps can be used for any Django
 application which wants to make use of the following features:
@@ -54,5 +58,18 @@ This repository provides the following installable Django apps:
 
 Also included are resources and examples for developing SODAR compatible apps.
 
-See `docs <https://sodar-core.readthedocs.io/en/latest/?badge=latest>`_ for
-detailed documentation on use, integration and development.
+
+Installation
+============
+
+The ``django-sodar-core`` package can be installed from GitHub as follows. PyPI
+installation is forthcoming.
+
+.. code-block:: console
+
+    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.6.2#egg=django-sodar-core
+
+Please note that This package installs a collection Django apps to
+be used in a Django web site project. See
+`SODAR Core documentation <https://sodar-core.readthedocs.io/en/latest/?badge=latest>`_
+for detailed documentation on use, integration and development.
