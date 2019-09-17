@@ -92,16 +92,6 @@ def get_django_setting(name, js=False):
     return val
 
 
-# DEPRECATION PROTECTION: To be removed in v0.7.0, use get_django_setting()
-@register.simple_tag
-def get_setting(name, js=False):
-    """
-    Return value of Django setting by name or None if it is not found.
-    Return a Javascript-safe value if js=True.
-    """
-    return get_django_setting(name, js)
-
-
 @register.simple_tag
 def get_app_setting(app_name, setting_name, project=None, user=None):
     """

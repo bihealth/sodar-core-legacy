@@ -69,6 +69,7 @@ Removed
 
 - **Projectroles**
     - Duplicate database indexes from ``RoleAssignment`` (#285)
+    - Deprecated ``get_setting()`` tag from ``projectroles_common_tags`` (#283)
 
 
 v0.6.2 (2019-06-21)

@@ -27,6 +27,13 @@ associated to a backend plugin should now be included in app templates as
 needed. This is done using the newly introduced ``get_backend_include()``
 template tag in ``projectroles_common_tags``.
 
+Deprecated get_settings() Tag Removed
+-------------------------------------
+
+The deprecated ``get_setting()`` template tag has been removed from
+``projectroles_common_tags``. Please use ``get_django_setting()`` in your
+templates instead.
+
 
 v0.6.2 (2019-06-21)
 ===================
