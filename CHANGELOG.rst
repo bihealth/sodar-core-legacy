@@ -44,6 +44,7 @@ Changed
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
     - Make sidebar hiding dynamic by content height (#316)
+    - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
 
 Fixed
 -----
@@ -53,6 +54,7 @@ Fixed
     - Redundant inheritance in ``CurrentUserFormMixin`` (#12)
     - Trailing slashes not parsed correctly in remote project URLs (#319)
     - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
+    - UI test helper ``build_selenium_url()`` refactored to work with Chrome v77 (#337)
 - **Timeline**
     - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 

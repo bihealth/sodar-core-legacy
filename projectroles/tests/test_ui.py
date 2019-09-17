@@ -164,11 +164,57 @@ class TestUIBase(
         self.selenium.quit()
         super().tearDown()
 
-    def build_selenium_url(self, url):
+    def build_selenium_url(self, url=''):
         """Build absolute URL to work with Selenium"""
-        return '{}{}'.format(self.live_server_url, url)
+        # NOTE: Chrome v77 refuses to accept cookies for "localhost" (see #337)
+        return '{}{}'.format(
+            self.live_server_url.replace('localhost', '127.0.0.1'), url
+        )
 
     def login_and_redirect(
+        self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
+    ):
+        """
+        Login with Selenium by setting a cookie, wait for redirect to given URL.
+
+        :param user: User object
+        :param url: URL to redirect to (string)
+        """
+        self.selenium.get(self.build_selenium_url('/blank/'))
+
+        session = SessionStore()
+        session[SESSION_KEY] = user.id
+        session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[1]
+        session[HASH_SESSION_KEY] = user.get_session_auth_hash()
+        session.save()
+
+        cookie = {
+            'name': settings.SESSION_COOKIE_NAME,
+            'value': session.session_key,
+            'path': '/',
+            'domain': self.build_selenium_url().split('//')[1].split(':')[0],
+        }
+
+        self.selenium.add_cookie(cookie)
+        self.selenium.get(self.build_selenium_url(url))
+
+        # Wait for redirect
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (By.ID, 'sodar-navbar-user-dropdown')
+            )
+        )
+
+        # Wait for optional element
+        if wait_elem:
+            WebDriverWait(self.selenium, self.wait_time).until(
+                ec.presence_of_element_located(
+                    (getattr(By, wait_loc), wait_elem)
+                )
+            )
+
+    # NOTE: Replaced by the cookie-based function above, should not be used
+    def login_and_redirect_with_ui(
         self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
     ):
         """
@@ -235,51 +281,6 @@ class TestUIBase(
         self.selenium.find_element_by_xpath(
             '//button[contains(., "Log In")]'
         ).click()
-
-        # Wait for redirect
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located(
-                (By.ID, 'sodar-navbar-user-dropdown')
-            )
-        )
-
-        # Wait for optional element
-        if wait_elem:
-            WebDriverWait(self.selenium, self.wait_time).until(
-                ec.presence_of_element_located(
-                    (getattr(By, wait_loc), wait_elem)
-                )
-            )
-
-    def login_and_redirect_with_cookie(
-        self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
-    ):
-        """
-        Login with Selenium and wait for redirect to given URL.
-
-        :param user: User object
-        :param url: URL to redirect to (string)
-        """
-        self.selenium.get(self.build_selenium_url('/blank/'))
-
-        session = SessionStore()
-        session[SESSION_KEY] = user.id
-        session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[1]
-        session[HASH_SESSION_KEY] = user.get_session_auth_hash()
-        session.save()
-
-        cookie = {
-            'name': settings.SESSION_COOKIE_NAME,
-            'value': session.session_key,
-            'path': '/',
-            'domain': self.live_server_url.rpartition('://')[2]
-            .split('/')[0]
-            .split(':')[0],
-        }
-
-        self.selenium.add_cookie(cookie)
-
-        self.selenium.get(self.build_selenium_url(url))
 
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
