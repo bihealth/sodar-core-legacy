@@ -18,7 +18,7 @@
       color: #222222;
     }
 
-    .clp-copy-btn {
+    .sodar-tl-copy-btn {
       position: absolute;
       top: 10px;
       right: 10px;
@@ -50,8 +50,10 @@
         {% for data in event|collect_extra_data %}
           <div class="tab-pane" role="tabpanel" id="{{ data.0 }}-{{ data.2.pk }}">
             <pre id="{{ data.0 }}-pre-{{ data.2.pk }}">{% autoescape off %}{% get_event_extra_data data.2 %}{% endautoescape %}</pre>
-            <button class="fa fa-copy clp-copy-btn btn btn-primary"
-                data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}">
+            <button class="btn btn-secondary sodar-list-btn sodar-copy-btn sodar-tl-copy-btn"
+                    data-clipboard-target="#{{ data.0 }}-pre-{{ data.2.pk }}"
+                    title="Copy to clipboard" data-toggle="tooltip">
+              <i class="fa fa-clipboard"></i>
             </button>
           </div>
         {% endfor %}

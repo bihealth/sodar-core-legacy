@@ -329,13 +329,23 @@ $(document).ready(function() {
     /***************
      Init Clipboards
      ***************/
-    new ClipboardJS('.sodar-btn-copy');
+    new ClipboardJS('.sodar-copy-btn');
 
     /******************
      Copy link handling
      ******************/
-    $('.sodar-btn-copy').click(function () {
-        $(this).find('i').removeClass('text-muted').addClass('text-warning');
+    $('.sodar-copy-btn').click(function () {
+        // NOTE: Temporary hack, see issue #333
+        var icon = $(this).find('i');
+        var mutedRemoved = false;
+
+        // Title bar links are currently rendered a bit differently
+        if (icon.hasClass('text-muted')) {
+            icon.removeClass('text-muted');
+            mutedRemoved = true;
+        }
+
+        icon.addClass('text-warning');
 
         var realTitle = $(this).tooltip().attr('data-original-title');
         $(this).attr('title', 'Copied!')
@@ -345,7 +355,12 @@ $(document).ready(function() {
             .tooltip('_fixTitle');
 
         $(this).delay(250).queue(function() {
-            $(this).find('i').removeClass('text-warning').addClass('text-muted');
+            icon.removeClass('text-warning');
+
+            if (mutedRemoved) {
+                icon.addClass('text-muted');
+            }
+
             $(this).dequeue();
         });
     });
