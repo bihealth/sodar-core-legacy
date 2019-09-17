@@ -27,6 +27,7 @@ Added
     - Support for app settings in site apps (#308)
     - Initial implemenetation for common clipboard copying visualization (#333)
     - Send email for owner role assignment (#325)
+    - Common pagination include template ``_pagination.html`` (#334)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -45,6 +46,8 @@ Changed
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
     - Make sidebar hiding dynamic by content height (#316)
     - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
+- **Timeline**
+    - Use common pagination template (#336)
 
 Fixed
 -----

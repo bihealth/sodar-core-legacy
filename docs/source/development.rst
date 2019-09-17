@@ -12,7 +12,7 @@ Core package itself.
    :maxdepth: 2
    :caption: Contents:
 
-   General Guidelines <dev_general>
+   General <dev_general>
    Project Apps <dev_project_app>
    Site Apps <dev_site_app>
    Backend Apps <dev_backend_app>
