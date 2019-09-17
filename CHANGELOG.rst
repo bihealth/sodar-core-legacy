@@ -18,6 +18,9 @@ Added
     - Postgres database development setup script (#302)
 - **Adminalerts**
     - Activate/suspend button in alert list (#42)
+- **Bgjobs**
+    - Pagination for background job list (#335)
+    - ``BGJOBS_PAGINATION`` Django setting (#335)
 - **Projectroles**
     - ``get_backend_include()`` common template tag (#261)
     - ``css_url`` member variable in ``BackendPluginPoint`` (#261)

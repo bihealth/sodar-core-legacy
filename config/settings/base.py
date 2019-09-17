@@ -490,6 +490,11 @@ PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 # Warn about unsupported browsers (IE)
 PROJECTROLES_BROWSER_WARNING = True
 
+
+# Bgjobs app settings
+BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
+
+
 # Timeline app settings
 TIMELINE_PAGINATION = 15
 
@@ -502,6 +507,7 @@ FILESFOLDERS_MAX_ARCHIVE_SIZE = env.int(
 FILESFOLDERS_SERVE_AS_ATTACHMENT = False
 FILESFOLDERS_LINK_BAD_REQUEST_MSG = 'Invalid request'
 FILESFOLDERS_SHOW_LIST_COLUMNS = True  # Custom project list column example
+
 
 # Adminalerts app settings
 ADMINALERTS_PAGINATION = 15
