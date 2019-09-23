@@ -420,6 +420,11 @@ a.sodar-pr-btn-copy-uuid i {
   font-size: 24px;
 }
 
+a.sodar-pr-btn-copy-secret i {
+  padding-top: 3px;
+  font-size: 24px;
+}
+
 .sodar-sidebar-alt-btn {
   height: 100%;
   margin-right: 12px;

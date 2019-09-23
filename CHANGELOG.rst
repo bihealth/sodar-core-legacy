@@ -32,6 +32,7 @@ Added
     - Send email for owner role assignment (#325)
     - Common pagination include template ``_pagination.html`` (#334)
     - Synchronization and display of ``PEER`` sites in remote site management (#200)
+    - Link for copying remote site secret token in remote site list (#332)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
