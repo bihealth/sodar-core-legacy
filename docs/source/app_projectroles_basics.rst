@@ -66,13 +66,17 @@ SODAR Core allows optionally reading and synchronizing project metadata between
 multiple SODAR-based Django sites. A superuser is able to set desired levels of
 remote access for specific sites on a per-project basis.
 
-A SODAR site must be set in either **source** or **target** mode.
+A SODAR site can have one of three modes: **source**, **target** or **peer** mode.
+A SODAR site can be set by the user in either **source** or **target** mode.
 
 - **Source site** is one expecting to (potentially) serve project metadata to
   an arbitrary number of other SODAR sites.
 - **Target site** can be linked with exactly one source site, from which it
   can retrieve project metadata. Creation of local projects can be enabled or
   disabled according to local configuration.
+- **Peer** mode is used only if two or more Target sites link to the same Source site.
+  If synchronizing a project which has multiple accessing Target sites, metadata
+  about those other Target sites is included and stored in Peer mode site objects.
 
 Among the data which can be synchronized:
 
@@ -80,6 +84,7 @@ Among the data which can be synchronized:
 - Project category structure
 - User roles in projects
 - User accounts for LDAP/AD users (required for the previous step)
+- Information of other Target Sites linking a common project
 
 
 Rule System

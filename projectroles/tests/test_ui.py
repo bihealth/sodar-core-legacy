@@ -44,6 +44,7 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 
 # Local constants
 PROJECT_LINK_IDS = [
@@ -510,12 +511,14 @@ class TestProjectList(TestUIBase):
 class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
     """Tests for the project detail page UI functionalities"""
 
-    def setup_remote_project(self, user_visibility=True):
+    def setup_remote_project(
+        self, site_mode=SITE_MODE_TARGET, user_visibility=True
+    ):
         """Creates a remote site and project with given user_visibility setting"""
         self.remote_site = self._make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
-            mode=SITE_MODE_TARGET,
+            mode=site_mode,
             description='',
             secret=REMOTE_SITE_SECRET,
             user_display=user_visibility,
@@ -525,7 +528,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         self.remote_project = self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.remote_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL'],
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
             project=self.project,
         )
 
@@ -711,6 +714,100 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
                 'btn-secondary'
             )
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
+
+    def test_peer_project_source_invisible(self):
+        """Checks visibility of peer projects on SOURCE site"""
+        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(self.superuser, url)
+
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_peer_project_target_visible(self):
+        """Checks visibility of peer projects on TARGET site (user_display=False)"""
+        # There needs to be a source mode remote project as master project
+        # otherwise peer project logic wont be reached
+        # TODO: Clean up when implementing #196 (refactoring project_detail.html logic)
+        source_site = self._make_site(
+            name='Second Remote Site',
+            url='second_remote.site',
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=build_secret(),
+            user_display=True,
+        )
+
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+            project=self.project,
+        )
+
+        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(self.superuser, url)
+
+        projects_on_other_sites = self.selenium.find_element_by_id(
+            'sodar-pr-details-card-remote'
+        )
+
+        details = projects_on_other_sites.find_elements_by_css_selector('a')
+        self.assertEqual(len(details), 2)
+        self.assertEqual(
+            details[0].text, source_site.name + ' (Master Project)'
+        )
+        self.assertEqual(
+            details[1].text, self.remote_site.name + ' (Peer Project)'
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_peer_project_target_invisible(self):
+        """Checks invisibility of peer projects on TARGET site (user_display=False)"""
+        # There needs to be a source mode remote project as master project
+        # otherwise peer project logic wont be reached
+        # TODO: Clean up when implementing #196 (refactoring project_detail.html logic)
+        source_site = self._make_site(
+            name='Second Remote Site',
+            url='second_remote.site',
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=build_secret(),
+            user_display=False,
+        )
+
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+            project=self.project,
+        )
+
+        self.setup_remote_project(
+            site_mode=SITE_MODE_PEER, user_visibility=False
+        )
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.login_and_redirect(self.superuser, url)
+
+        projects_on_other_sites = self.selenium.find_element_by_id(
+            'sodar-pr-details-card-remote'
+        )
+        details = projects_on_other_sites.find_elements_by_css_selector('a')
+        self.assertEqual(len(details), 1)
+        self.assertEqual(
+            details[0].text, source_site.name + ' (Master Project)'
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_target_visibility(self):

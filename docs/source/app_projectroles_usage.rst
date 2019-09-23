@@ -298,6 +298,9 @@ using the provided secret string as the access token.
 
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.
+Additionaly if the remote Source site is synchronized with multiple Target Sites,
+information about those other Target sites will be synchronized as well an displayed
+as *Peer Sites*.
 
 Alternatively, the following management command can be used:
 
