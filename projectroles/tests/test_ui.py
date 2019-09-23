@@ -850,7 +850,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
         try:
             remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible to Users')]"
+                "//th[contains(text(), 'Visible')]"
             )
         except NoSuchElementException:
             self.fail(
