@@ -32,6 +32,11 @@ Glossary
         Web site built on the Django framework, including (but not limited to)
         any website based on SODAR Core.
 
+    Peer Site
+        A SODAR Core based web site which mirrors one or more projects also
+        mirrored on the currrently active site. This allows linking to remote
+        projects on other sites where the user would have access.
+
     Project App
         SODAR Core application with the scope of providing data and
         functionality related to a specific project. Uses project-based access

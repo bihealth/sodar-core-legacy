@@ -21,13 +21,14 @@ SODAR_CONSTANTS = {
     # RemoteSite mode
     'SITE_MODE_SOURCE': 'SOURCE',
     'SITE_MODE_TARGET': 'TARGET',
+    'SITE_MODE_PEER': 'PEER',
     # RemoteProject access types
     'REMOTE_LEVEL_NONE': 'NONE',
     'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
     'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
     'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES',
     # RemoteSite modes
-    'SITE_MODES': ['SOURCE', 'TARGET'],
+    'SITE_MODES': ['SOURCE', 'TARGET', 'PEER'],
     # RemoteProject access type legend
     'REMOTE_ACCESS_LEVELS': {
         'NONE': 'No access',

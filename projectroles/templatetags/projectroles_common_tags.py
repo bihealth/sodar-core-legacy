@@ -22,6 +22,7 @@ from projectroles.utils import get_display_name as _get_display_name
 # SODAR constants
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 
 
 site = import_module(settings.SITE_PACKAGE)
@@ -259,7 +260,9 @@ def get_remote_icon(project, request):
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:
         try:
-            remote_project = RemoteProject.objects.get(project=project)
+            remote_project = RemoteProject.objects.get(
+                project=project, site__mode=SITE_MODE_SOURCE
+            )
             return (
                 '<i class="fa fa-globe text-info mx-1 '
                 'sodar-pr-remote-project-icon" title="Remote project from '
@@ -271,6 +274,18 @@ def get_remote_icon(project, request):
             pass
 
     return ''
+
+
+@register.simple_tag
+def get_visible_peer_projects(project):
+    """All relates RemoteProject's on a PEER mode site that are visible"""
+
+    return [
+        peer_project
+        for peer_project in RemoteProject.objects.filter(project=project)
+        if peer_project.site.mode == SITE_MODE_PEER
+        and peer_project.site.user_display is True
+    ]
 
 
 @register.simple_tag

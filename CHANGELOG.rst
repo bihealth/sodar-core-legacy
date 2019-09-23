@@ -31,6 +31,7 @@ Added
     - Initial implemenetation for common clipboard copying visualization (#333)
     - Send email for owner role assignment (#325)
     - Common pagination include template ``_pagination.html`` (#334)
+    - Synchronization and display of ``PEER`` sites in remote site management (#200)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -61,6 +62,7 @@ Fixed
     - Trailing slashes not parsed correctly in remote project URLs (#319)
     - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
     - UI test helper ``build_selenium_url()`` refactored to work with Chrome v77 (#337)
+    - Disallow empty values in ``RemoteSite.name``
 - **Timeline**
     - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 

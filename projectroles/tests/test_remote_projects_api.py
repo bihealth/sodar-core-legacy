@@ -14,6 +14,7 @@ from projectroles.models import (
     Role,
     RoleAssignment,
     RemoteProject,
+    RemoteSite,
     SODAR_CONSTANTS,
 )
 
@@ -42,6 +43,7 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
@@ -74,6 +76,17 @@ TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
 TARGET_SITE_DESC = 'Target description'
 TARGET_SITE_SECRET = build_secret()
+
+PEER_SITE_UUID = str(uuid.uuid4())
+PEER_SITE_NAME = 'Peer name'
+PEER_SITE_URL = 'https://peer.url'
+PEER_SITE_DESC = 'peer description'
+PEER_SITE_SECRET = build_secret()
+PEER_SITE_USER_DISPLAY = True
+
+NEW_PEER_NAME = PEER_SITE_NAME + ' new'
+NEW_PEER_DESC = PEER_SITE_DESC + ' new'
+NEW_PEER_USER_DISPLAY = not PEER_SITE_USER_DISPLAY
 
 
 class TestGetTargetData(
@@ -131,6 +144,15 @@ class TestGetTargetData(
             secret=TARGET_SITE_SECRET,
         )
 
+        # Init peer site
+        self.peer_site = self._make_site(
+            name=PEER_SITE_NAME,
+            url=PEER_SITE_URL,
+            mode=SITE_MODE_PEER,
+            description=PEER_SITE_DESC,
+            secret=PEER_SITE_SECRET,
+        )
+
         self.remote_api = RemoteProjectAPI()
 
     def test_view_avail(self):
@@ -138,6 +160,12 @@ class TestGetTargetData(
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
+            level=REMOTE_LEVEL_VIEW_AVAIL,
+        )
+
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.peer_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
         )
 
@@ -151,8 +179,10 @@ class TestGetTargetData(
                     'type': PROJECT_TYPE_PROJECT,
                     'level': REMOTE_LEVEL_VIEW_AVAIL,
                     'available': True,
+                    'remote_sites': [],
                 }
             },
+            'peer_sites': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -162,6 +192,12 @@ class TestGetTargetData(
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
+            level=REMOTE_LEVEL_READ_INFO,
+        )
+
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.peer_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
 
@@ -185,7 +221,16 @@ class TestGetTargetData(
                     'description': self.project.description,
                     'readme': self.project.readme.raw,
                     'parent_uuid': str(self.category.sodar_uuid),
+                    'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
+            },
+            'peer_sites': {
+                str(self.peer_site.sodar_uuid): {
+                    'name': self.peer_site.name,
+                    'url': self.peer_site.url,
+                    'description': self.peer_site.description,
+                    'user_display': self.peer_site.user_display,
+                }
             },
         }
 
@@ -235,8 +280,10 @@ class TestGetTargetData(
                     'description': self.project.description,
                     'readme': self.project.readme.raw,
                     'parent_uuid': str(sub_category.sodar_uuid),
+                    'remote_sites': [],
                 },
             },
+            'peer_sites': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -246,6 +293,12 @@ class TestGetTargetData(
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.peer_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
@@ -290,7 +343,16 @@ class TestGetTargetData(
                             'role': self.project_owner_as.role.name,
                         }
                     },
+                    'remote_sites': [str(self.peer_site.sodar_uuid)],
                 },
+            },
+            'peer_sites': {
+                str(self.peer_site.sodar_uuid): {
+                    'name': self.peer_site.name,
+                    'url': self.peer_site.url,
+                    'description': self.peer_site.description,
+                    'user_display': self.peer_site.user_display,
+                }
             },
         }
 
@@ -300,7 +362,7 @@ class TestGetTargetData(
         """Test get data with no project access set in the source site"""
         sync_data = self.remote_api.get_target_data(self.target_site)
 
-        expected = {'users': {}, 'projects': {}}
+        expected = {'users': {}, 'projects': {}, 'peer_sites': {}}
 
         self.assertEqual(sync_data, expected)
 
@@ -383,7 +445,16 @@ class TestSyncSourceData(
                             'role': self.role_owner.name,
                         }
                     },
+                    'remote_sites': [PEER_SITE_UUID],
                 },
+            },
+            'peer_sites': {
+                PEER_SITE_UUID: {
+                    'name': PEER_SITE_NAME,
+                    'url': PEER_SITE_URL,
+                    'description': PEER_SITE_DESC,
+                    'user_display': PEER_SITE_USER_DISPLAY,
+                }
             },
         }
 
@@ -396,6 +467,7 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
@@ -407,7 +479,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         new_user = User.objects.get(username=SOURCE_USER_USERNAME)
 
@@ -491,6 +564,38 @@ class TestSyncSourceData(
         }
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
+        peer_site_obj = RemoteSite.objects.get(
+            sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
+        )
+
+        expected = {
+            'name': PEER_SITE_NAME,
+            'url': PEER_SITE_URL,
+            'mode': SITE_MODE_PEER,
+            'description': PEER_SITE_DESC,
+            'secret': None,
+            'sodar_uuid': uuid.UUID(PEER_SITE_UUID),
+            'user_display': PEER_SITE_USER_DISPLAY,
+        }
+        peer_site_dict = model_to_dict(peer_site_obj)
+        peer_site_dict.pop('id')
+        self.assertEqual(peer_site_dict, expected)
+
+        peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
+
+        expected = {
+            'site': peer_site_obj.pk,
+            'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
+        }
+
+        peer_project_dict = model_to_dict(peer_project_obj)
+        peer_project_dict.pop('id')
+        peer_project_dict.pop('sodar_uuid')
+        peer_project_dict.pop('level')
+        peer_project_dict.pop('date_access')
+        self.assertEqual(peer_project_dict, expected)
+
         # Assert remote_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'created'
@@ -514,6 +619,7 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         remote_data = self.default_data
 
@@ -545,7 +651,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 3)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 4)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         new_user = User.objects.get(username=SOURCE_USER_USERNAME)
 
@@ -601,6 +708,7 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         remote_data = self.default_data
 
@@ -619,7 +727,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 1)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         self.assertEqual(category_obj.get_owner().user, self.admin_user)
@@ -678,11 +787,32 @@ class TestSyncSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
+        # Set up Peer Objects
+        peer_site = RemoteSite.objects.create(
+            **{
+                'name': PEER_SITE_NAME,
+                'url': PEER_SITE_URL,
+                'mode': SITE_MODE_PEER,
+                'description': PEER_SITE_DESC,
+                'secret': None,
+                'sodar_uuid': PEER_SITE_UUID,
+                'user_display': PEER_SITE_USER_DISPLAY,
+            }
+        )
+
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=peer_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+        )
+
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         remote_data = self.default_data
 
@@ -704,6 +834,14 @@ class TestSyncSourceData(
             'role': PROJECT_ROLE_CONTRIBUTOR,
         }
 
+        # Change Peer Site data
+
+        remote_data['peer_sites'][PEER_SITE_UUID]['name'] = NEW_PEER_NAME
+        remote_data['peer_sites'][PEER_SITE_UUID]['description'] = NEW_PEER_DESC
+        remote_data['peer_sites'][PEER_SITE_UUID][
+            'user_display'
+        ] = NEW_PEER_USER_DISPLAY
+
         original_data = deepcopy(remote_data)
 
         # Do sync
@@ -713,7 +851,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         new_user = User.objects.get(username=new_user_username)
 
@@ -806,6 +945,38 @@ class TestSyncSourceData(
         }
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
+        peer_site_obj = RemoteSite.objects.get(
+            sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
+        )
+
+        expected = {
+            'name': NEW_PEER_NAME,
+            'url': PEER_SITE_URL,
+            'mode': SITE_MODE_PEER,
+            'description': NEW_PEER_DESC,
+            'secret': None,
+            'user_display': NEW_PEER_USER_DISPLAY,
+        }
+        peer_site_dict = model_to_dict(peer_site_obj)
+        peer_site_dict.pop('id')
+        peer_site_dict.pop('sodar_uuid')
+        self.assertEqual(peer_site_dict, expected)
+
+        peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
+
+        expected = {
+            'site': peer_site_obj.pk,
+            'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
+        }
+
+        peer_project_dict = model_to_dict(peer_project_obj)
+        peer_project_dict.pop('id')
+        peer_project_dict.pop('sodar_uuid')
+        peer_project_dict.pop('level')
+        peer_project_dict.pop('date_access')
+        self.assertEqual(peer_project_dict, expected)
+
         # Assert update_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
@@ -863,6 +1034,26 @@ class TestSyncSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
+        # Set up Peer Objects
+        peer_site = RemoteSite.objects.create(
+            **{
+                'name': PEER_SITE_NAME,
+                'url': PEER_SITE_URL,
+                'mode': SITE_MODE_PEER,
+                'description': PEER_SITE_DESC,
+                'secret': None,
+                'sodar_uuid': PEER_SITE_UUID,
+                'user_display': PEER_SITE_USER_DISPLAY,
+            }
+        )
+
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=peer_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+        )
+
         # Add new user and contributor role in target site
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
         new_user = self.make_user(new_user_username)
@@ -875,7 +1066,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
@@ -887,7 +1079,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         with self.assertRaises(RoleAssignment.DoesNotExist):
             RoleAssignment.objects.get(
@@ -956,11 +1149,32 @@ class TestSyncSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
+        # Set up Peer Objects
+        peer_site = RemoteSite.objects.create(
+            **{
+                'name': PEER_SITE_NAME,
+                'url': PEER_SITE_URL,
+                'mode': SITE_MODE_PEER,
+                'description': PEER_SITE_DESC,
+                'secret': None,
+                'sodar_uuid': PEER_SITE_UUID,
+                'user_display': PEER_SITE_USER_DISPLAY,
+            }
+        )
+
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=peer_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+        )
+
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
@@ -972,7 +1186,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         category_obj.refresh_from_db()
         expected = {
@@ -1050,6 +1265,38 @@ class TestSyncSourceData(
         }
         self.assertEqual(model_to_dict(remote_project_obj), expected)
 
+        peer_site_obj = RemoteSite.objects.get(
+            sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
+        )
+
+        expected = {
+            'name': PEER_SITE_NAME,
+            'url': PEER_SITE_URL,
+            'mode': SITE_MODE_PEER,
+            'description': PEER_SITE_DESC,
+            'secret': None,
+            'sodar_uuid': uuid.UUID(PEER_SITE_UUID),
+            'user_display': PEER_SITE_USER_DISPLAY,
+        }
+        peer_site_dict = model_to_dict(peer_site_obj)
+        peer_site_dict.pop('id')
+        self.assertEqual(peer_site_dict, expected)
+
+        peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
+
+        expected = {
+            'site': peer_site_obj.pk,
+            'project_uuid': project_obj.sodar_uuid,
+            'project': project_obj.pk,
+        }
+
+        peer_project_dict = model_to_dict(peer_project_obj)
+        peer_project_dict.pop('id')
+        peer_project_dict.pop('sodar_uuid')
+        peer_project_dict.pop('level')
+        peer_project_dict.pop('date_access')
+        self.assertEqual(peer_project_dict, expected)
+
         # Assert no changes between update_data and remote_data
         self.assertEqual(original_data, remote_data)
 
@@ -1076,6 +1323,7 @@ class TestSyncSourceData(
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         # Assert no changes between update_data and remote_data
         self.assertEqual(original_data, remote_data)
@@ -1111,7 +1359,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -1148,7 +1397,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -1182,7 +1432,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -1221,7 +1472,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         # Assert owner role
         new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
@@ -1264,7 +1516,8 @@ class TestSyncSourceData(
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         # Assert owner role
         new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)

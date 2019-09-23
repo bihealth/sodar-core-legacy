@@ -470,7 +470,7 @@ class ProjectDetailView(
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             # TODO: See issue #197
             context['target_projects'] = RemoteProject.objects.filter(
-                project_uuid=self.object.sodar_uuid
+                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).order_by('site__name')
 
         return context

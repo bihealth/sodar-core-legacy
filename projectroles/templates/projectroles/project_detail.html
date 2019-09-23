@@ -59,6 +59,19 @@
                 target="_blank">
               <i class="fa fa-globe"></i> {{ object.get_source_site.name }} (Master Project)
             </a>
+            {% get_visible_peer_projects object as peer_projects %}
+            {% if peer_projects %}
+              {% for peer_p in peer_projects %}
+                <a class="btn btn-info mb-1"
+                    href="{{ peer_p.site.get_url }}{% url 'projectroles:detail' project=peer_p.sodar_uuid %}"
+                    role="button"
+                    title="{% if peer_p.site.description %}{{ peer_p.site.description }}{% endif %}"
+                    data-toggle="tooltip"
+                    target="_blank">
+                  <i class="fa fa-globe"></i> {{ peer_p.site.name }} (Peer Project)
+                </a>
+              {% endfor %}
+            {% endif %}
           </div>
         </div>
       {% endif %}
