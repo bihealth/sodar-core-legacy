@@ -20,9 +20,9 @@ from .plugins import get_active_plugins
 from .utils import get_display_name, get_user_display_name, build_secret
 from .app_settings import AppSettingAPI
 
-
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
@@ -202,17 +202,7 @@ class ProjectForm(forms.ModelForm):
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
 
-            # Only owner/superuser has rights to modify owner
-            if current_user.has_perm(
-                'projectroles.update_project_owner', self.instance
-            ):
-                # Set current owner as initial value
-                owner = self.instance.get_owner().user
-                self.initial['owner'] = owner.sodar_uuid
-
-            # Else hide owner selection
-            else:
-                self.fields['owner'].widget = forms.HiddenInput()
+            self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
             if parent_project:
@@ -427,6 +417,101 @@ class RoleAssignmentForm(forms.ModelForm):
         return self.cleaned_data
 
 
+# Owner change form ------------------------------------------------------------
+
+
+class RoleAssignmentChangeOwnerForm(forms.Form):
+    def __init__(self, project, current_user, current_owner, *args, **kwargs):
+        """Override for form initialization"""
+        super().__init__(*args, **kwargs)
+
+        # Get current user for checking permissions for form items
+        self.current_user = current_user
+
+        # Get the project for which role is being assigned
+        self.project = project
+        self.current_owner = current_owner
+
+        # ------------------------------
+        self.selectable_roles = get_role_choices(
+            self.project, self.current_user
+        )
+        self.fields['owners_new_role'] = forms.ChoiceField(
+            label='New role for {}'.format(self.current_owner.username),
+            help_text='New role for the current owner. Select "Remove" in the '
+            'member list to remove the user\'s membership.',
+            choices=self.selectable_roles,
+            initial=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).pk,
+        )
+        self.fields['new_owner'] = forms.ModelChoiceField(
+            label='New owner',
+            help_text='Select a member of the project to become owner.',
+            queryset=User.objects.all(),
+            to_field_name='sodar_uuid',
+            widget=UserAutocompleteWidget(
+                url='projectroles:autocomplete_user', forward=['project']
+            ),
+        )
+        self.fields['project'] = forms.Field(
+            widget=forms.HiddenInput(), initial=self.project.sodar_uuid
+        )
+
+    def clean_owners_new_role(self):
+        try:
+            role = int(self.cleaned_data['owners_new_role'])
+        except ValueError:
+            raise forms.ValidationError(
+                'Selection couldn\'t be converted to an integer'
+            )
+
+        role = next(
+            (choice for choice in self.selectable_roles if choice[0] == role),
+            None,
+        )
+
+        if not role:
+            raise forms.ValidationError('Unknown role has been choosen')
+
+        try:
+            role = Role.objects.get(name=role[1])
+        except Role.DoesNotExist:
+            raise forms.ValidationError('Selected role does not exist')
+
+        if role.name == PROJECT_ROLE_DELEGATE:
+            # Ensure current user has permission to set delegate
+            if not self.current_user.has_perm(
+                'projectroles.update_project_delegate', obj=self.project
+            ):
+                raise forms.ValidationError(
+                    'Insufficient permissions for assigning a delegate role'
+                )
+
+            # Ensure user can't attempt to add another delegate if limit is
+            # reached
+            delegates = self.project.get_delegates()
+
+            if DELEGATE_LIMIT != 0:
+                if len(delegates) >= DELEGATE_LIMIT:
+                    raise forms.ValidationError(
+                        'The limit ({}) of delegates for this project has '
+                        'already been reached.'.format(DELEGATE_LIMIT)
+                    )
+        return role
+
+    def clean_new_owner(self):
+        user = self.cleaned_data['new_owner']
+        if user == self.current_owner:
+            raise forms.ValidationError(
+                'The new owner shouldn\'t be the current owner'
+            )
+        ra = RoleAssignment.objects.get_assignment(user, self.project)
+        if ra.project != self.project:
+            raise forms.ValidationError(
+                'The new owner should be from this project'
+            )
+        return user
+
+
 # ProjectInvite form -----------------------------------------------------------
 
 
@@ -608,7 +693,9 @@ class RemoteSiteForm(forms.ModelForm):
 # Helper functions -------------------------------------------------------------
 
 
-def get_role_choices(project, current_user, allow_delegate=True):
+def get_role_choices(
+    project, current_user, allow_delegate=True, allow_owner=False
+):
     """
     Return valid role choices according to permissions of current user
     :param project: Project in which role will be assigned
@@ -617,7 +704,12 @@ def get_role_choices(project, current_user, allow_delegate=True):
     """
 
     # Owner cannot be changed in role assignment
-    role_excludes = [PROJECT_ROLE_OWNER]
+    role_excludes = []
+
+    if not allow_owner or not current_user.has_perm(
+        'projectroles.update_project_owner', obj=project
+    ):
+        role_excludes.append(PROJECT_ROLE_OWNER)
 
     # Exclude delegate if not allowed or current user lacks perms
     if not allow_delegate or not current_user.has_perm(

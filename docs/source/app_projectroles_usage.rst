@@ -204,8 +204,8 @@ Modifying Members
 -----------------
 
 Changing or removing user roles can be done from links next to each role on the
-member list. The exception for this  is the *project owner* role which can only
-be modified on the **Update Project** page.
+member list. Project ownership can be transferred to another owner from the
+dropdown next to the owner role.
 
 Invites
 -------

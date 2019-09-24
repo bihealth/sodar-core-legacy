@@ -585,6 +585,23 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
+    def test_role_transfer_owner(self):
+        """Test access to owner role update: not allowed, should fail"""
+        url = reverse(
+            'projectroles:role_transfer_owner',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [self.superuser, self.as_owner.user]
+        bad_users = [
+            self.anonymous,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
     def test_role_invite_create(self):
         """Test access to role invite creation"""
         url = reverse(

@@ -2,7 +2,6 @@ from django.conf.urls import url
 
 from . import views
 
-
 app_name = 'projectroles'
 
 urlpatterns = [
@@ -48,6 +47,11 @@ urlpatterns = [
         regex=r'^members/delete/(?P<roleassignment>[0-9a-f-]+)$',
         view=views.RoleAssignmentDeleteView.as_view(),
         name='role_delete',
+    ),
+    url(
+        regex=r'^members/transferowner/(?P<project>[0-9a-f-]+)$',
+        view=views.RoleAssignmentTransferOwnership.as_view(),
+        name='role_transfer_owner',
     ),
     # Project invite views
     url(

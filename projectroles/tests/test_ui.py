@@ -960,8 +960,8 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         """Test visibility of role management buttons according to user
         permissions"""
         expected = [
-            (self.superuser, 3),
-            (self.as_owner.user, 3),
+            (self.superuser, 4),
+            (self.as_owner.user, 4),
             (self.as_delegate.user, 2),
             (self.as_contributor.user, 0),
             (self.as_guest.user, 0),
