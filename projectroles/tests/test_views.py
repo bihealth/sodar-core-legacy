@@ -1111,6 +1111,51 @@ class TestRoleAssignmentDeleteView(
             )
 
 
+class TestRoleAssignmentTransferOwnershipView(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
+    def setUp(self):
+        super().setUp()
+
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create guest user and role
+        self.user_new = self.make_user('guest')
+        self.role_as = self._make_assignment(
+            self.project, self.user_new, self.role_guest
+        )
+
+    def test_transfer_ownership(self):
+        """Test RoleAssignment deleting"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_transfer_owner',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'owners_new_role': self.role_guest.pk,
+                    'new_owner': self.user_new.sodar_uuid,
+                },
+            )
+        self.role_as.refresh_from_db()
+        self.owner_as.refresh_from_db()
+
+        self.assertEqual(self.role_as.role, self.role_owner)
+        self.assertEqual(self.owner_as.role, self.role_guest)
+        self.assertEqual(len(mail.outbox), 2)
+
+
 class TestProjectInviteCreateView(
     ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestViewsBase
 ):

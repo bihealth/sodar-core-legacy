@@ -33,6 +33,7 @@ Added
     - Common pagination include template ``_pagination.html`` (#334)
     - Synchronization and display of ``PEER`` sites in remote site management (#200)
     - Link for copying remote site secret token in remote site list (#332)
+    - Project ownership transfer from member list (#287)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -73,6 +74,7 @@ Removed
 - **Projectroles**
     - Duplicate database indexes from ``RoleAssignment`` (#285)
     - Deprecated ``get_setting()`` tag from ``projectroles_common_tags`` (#283)
+    - Project owner change from project updating form (#287)
 
 
 v0.6.2 (2019-06-21)
