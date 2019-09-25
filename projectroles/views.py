@@ -99,6 +99,7 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
 ]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
@@ -477,6 +478,11 @@ class ProjectDetailView(
             # TODO: See issue #197
             context['target_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
+            ).order_by('site__name')
+        elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
+            # TODO: See issue #197
+            context['peer_projects'] = RemoteProject.objects.filter(
+                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
 
         return context

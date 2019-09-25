@@ -179,5 +179,5 @@ rules.add_perm('projectroles.update_remote', rules.is_superuser)
 
 # Allow viewing hidden target sites
 rules.add_perm(
-    'projectroles.view_hidden_target', rules.is_superuser | is_project_owner
+    'projectroles.view_hidden_projects', rules.is_superuser | is_project_owner
 )
