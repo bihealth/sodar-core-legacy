@@ -34,6 +34,7 @@ Added
     - Synchronization and display of ``PEER`` sites in remote site management (#200)
     - Link for copying remote site secret token in remote site list (#332)
     - Project ownership transfer from member list (#287)
+    - UI notification for disabled member management on target sites (#301)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -52,6 +53,7 @@ Changed
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
     - Make sidebar hiding dynamic by content height (#316)
     - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
+    - Refactor remote project display on details page (#196)
 - **Timeline**
     - Use common pagination template (#336)
 
