@@ -36,14 +36,27 @@
     {% has_perm 'projectroles.invite_users' request.user project as can_invite %}
 
     <div class="row sodar-subtitle-container bg-white sticky-top">
-        <h3>
-            <i class="fa fa-users"></i> {% get_display_name project.type title=True %} Members
-        </h3>
-        {% if not project.is_remote %}
-            {% if can_update_members or can_invite %}
-                {% include 'projectroles/_role_list_buttons.html' with project=project can_update_members=can_update_members can_invite=can_invite %}
-            {% endif %}
+      <h3>
+        <i class="fa fa-users"></i> {% get_display_name project.type title=True %} Members
+      </h3>
+      {% if project.is_remote %}
+        <div class="btn-group ml-auto" id="sodar-pr-btn-role-list">
+          <button class="btn btn-secondary" id="sodar-pr-btn-remote" type="button" disabled="True" title="This is a remote project.
+          You can only update or invite members on the source site of this project." data-toggle="tooltip">
+          Member Operations
+          </button>
+        </div>
+      {% else %}
+        {% if can_update_members or can_invite %}
+          {% include 'projectroles/_role_list_buttons.html' with project=project can_update_members=can_update_members can_invite=can_invite %}
+        {% else %}
+        <div class="btn-group ml-auto" id="sodar-pr-btn-role-list">
+          <button class="btn btn-secondary" id="sodar-pr-btn-no-perm" type="button" disabled="True" title="You have no permission to update or invite members" data-toggle="tooltip">
+          Member Operations
+          </button>
+        </div>
         {% endif %}
+      {% endif %}
     </div>
 
     <div class="container-fluid sodar-page-container">
@@ -102,7 +115,6 @@
                 </table>
             </div>
         </div>
-
     </div>
 
 {% endblock projectroles_extend %}

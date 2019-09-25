@@ -915,22 +915,24 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     def test_list_buttons(self):
         """Test visibility of role list button group according to user
         permissions"""
-        expected_true = [
+        users_with_perm = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
         ]
-        expected_false = [self.as_contributor.user, self.as_guest.user]
+
+        users_without_perm = [self.as_contributor.user, self.as_guest.user]
+
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
         self.assert_element_exists(
-            expected_true, url, 'sodar-pr-btn-role-list', True
+            users_with_perm, url, 'sodar-pr-btn-perm', True
         )
 
         self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list', False
+            users_without_perm, url, 'sodar-pr-btn-no-perm', True
         )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -940,7 +942,7 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
-        expected_false = [
+        users = [
             self.superuser,
             self.as_owner.user,
             self.as_delegate.user,
@@ -951,9 +953,7 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
-        self.assert_element_exists(
-            expected_false, url, 'sodar-pr-btn-role-list', False
-        )
+        self.assert_element_exists(users, url, 'sodar-pr-btn-remote', True)
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user
