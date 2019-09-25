@@ -277,14 +277,10 @@ def get_remote_icon(project, request):
 
 
 @register.simple_tag
-def get_visible_peer_projects(project):
-    """All relates RemoteProject's on a PEER mode site that are visible"""
-
+def get_visible_projects(projects, can_view_hidden_projects=False):
+    """Return all projects that are either visible by user display or by view hidden permission"""
     return [
-        peer_project
-        for peer_project in RemoteProject.objects.filter(project=project)
-        if peer_project.site.mode == SITE_MODE_PEER
-        and peer_project.site.user_display is True
+        p for p in projects if p.site.user_display or can_view_hidden_projects
     ]
 
 

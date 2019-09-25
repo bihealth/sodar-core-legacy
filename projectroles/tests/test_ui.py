@@ -722,10 +722,19 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        self.login_and_redirect(self.superuser, url)
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
 
-        with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+        for user in users:
+            self.login_and_redirect(user, url)
+
+            with self.assertRaises(NoSuchElementException):
+                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_visible(self):
@@ -754,24 +763,33 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        self.login_and_redirect(self.superuser, url)
+        users = [
+            self.superuser,
+            self.user_owner,
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
 
-        projects_on_other_sites = self.selenium.find_element_by_id(
-            'sodar-pr-details-card-remote'
-        )
+        for user in users:
+            self.login_and_redirect(user, url)
 
-        details = projects_on_other_sites.find_elements_by_css_selector('a')
-        self.assertEqual(len(details), 2)
-        self.assertEqual(
-            details[0].text, source_site.name + ' (Master Project)'
-        )
-        self.assertEqual(
-            details[1].text, self.remote_site.name + ' (Peer Project)'
-        )
+            projects_on_other_sites = self.selenium.find_element_by_id(
+                'sodar-pr-details-card-remote'
+            )
+
+            details = projects_on_other_sites.find_elements_by_css_selector('a')
+            self.assertEqual(len(details), 2)
+            self.assertEqual(
+                details[0].text, source_site.name + ' (Master Project)'
+            )
+            self.assertEqual(
+                details[1].text, self.remote_site.name + ' (Peer Project)'
+            )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_invisible(self):
-        """Checks invisibility of peer projects on TARGET site (user_display=False)"""
+        """Checks invisibility of peer projects on TARGET site for different users (user_display=False)"""
         # There needs to be a source mode remote project as master project
         # otherwise peer project logic wont be reached
         # TODO: Clean up when implementing #196 (refactoring project_detail.html logic)
@@ -798,16 +816,39 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        self.login_and_redirect(self.superuser, url)
+        expected_true = [self.superuser, self.user_owner]
+        expected_false = [
+            self.user_delegate,
+            self.user_contributor,
+            self.user_guest,
+        ]
 
-        projects_on_other_sites = self.selenium.find_element_by_id(
-            'sodar-pr-details-card-remote'
-        )
-        details = projects_on_other_sites.find_elements_by_css_selector('a')
-        self.assertEqual(len(details), 1)
-        self.assertEqual(
-            details[0].text, source_site.name + ' (Master Project)'
-        )
+        for user in expected_true:
+            self.login_and_redirect(user, url)
+
+            projects_on_other_sites = self.selenium.find_element_by_id(
+                'sodar-pr-details-card-remote'
+            )
+            details = projects_on_other_sites.find_elements_by_css_selector('a')
+            self.assertEqual(len(details), 2)
+            self.assertEqual(
+                details[0].text, source_site.name + ' (Master Project)'
+            )
+            self.assertEqual(
+                details[1].text, self.remote_site.name + ' (Peer Project)'
+            )
+
+        for user in expected_false:
+            self.login_and_redirect(user, url)
+
+            projects_on_other_sites = self.selenium.find_element_by_id(
+                'sodar-pr-details-card-remote'
+            )
+            details = projects_on_other_sites.find_elements_by_css_selector('a')
+            self.assertEqual(len(details), 1)
+            self.assertEqual(
+                details[0].text, source_site.name + ' (Master Project)'
+            )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_target_visibility(self):

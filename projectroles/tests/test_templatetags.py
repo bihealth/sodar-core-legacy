@@ -274,62 +274,47 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
 
-    def test_get_visible_peer_projects(self):
-        """Test get_visible_peer_projects()"""
+    def test_get_visible_projects(self):
+        """Test get_visible_projects()"""
         # Setup projects
         create_values = {'title': 'TestProject'}
         project = Project.objects.create(**create_values)
 
-        create_values = {'title': 'OtherTestProject'}
-        other_project = Project.objects.create(**create_values)
-
         # Setup sites
         create_values = {
-            'name': 'PeerSite',
-            'url': 'peer.site',
-            'mode': SITE_MODE_PEER,
-            'user_display': True,
-        }
-        peer_site = RemoteSite.objects.create(**create_values)
-
-        create_values = {
-            'name': 'NoPeerSite',
-            'url': 'nopeer.site',
+            'name': 'VisibleSite',
+            'url': 'visible.site',
             'mode': SITE_MODE_TARGET,
             'user_display': True,
         }
-        no_peer_site = RemoteSite.objects.create(**create_values)
+        visible_site = RemoteSite.objects.create(**create_values)
+
+        create_values = {
+            'name': 'InvisibleSite',
+            'url': 'invisible.site',
+            'mode': SITE_MODE_TARGET,
+            'user_display': False,
+        }
+        invisible_site = RemoteSite.objects.create(**create_values)
 
         # Setup remote projects
         create_values = {
             'project_uuid': project.sodar_uuid,
             'project': project,
-            'site': peer_site,
+            'site': visible_site,
             'level': REMOTE_LEVEL_READ_ROLES,
         }
-        relation_peer = RemoteProject.objects.create(**create_values)
+        visible_project = RemoteProject.objects.create(**create_values)
 
-        create_values['site'] = no_peer_site
-        relation_no_peer = RemoteProject.objects.create(**create_values)
-
-        create_values = {
-            'project_uuid': other_project.sodar_uuid,
-            'project': other_project,
-            'site': peer_site,
-            'level': REMOTE_LEVEL_READ_ROLES,
-        }
-        no_relation_peer = RemoteProject.objects.create(**create_values)
-
-        create_values['site'] = no_peer_site
-        no_relation_no_peer = RemoteProject.objects.create(**create_values)
+        create_values['site'] = invisible_site
+        invisible_project = RemoteProject.objects.create(**create_values)
 
         # Test returned peer projects
-        peer_projects = c_tags.get_visible_peer_projects(project)
+        peer_projects = c_tags.get_visible_projects(
+            [visible_project, invisible_project]
+        )
 
-        self.assertTrue(relation_peer in peer_projects)
-        self.assertFalse(relation_no_peer in peer_projects)
-        self.assertFalse(no_relation_peer in peer_projects)
-        self.assertFalse(no_relation_no_peer in peer_projects)
+        self.assertEqual(peer_projects, [visible_project])
 
     def test_render_markdown(self):
         """Test render_markdown()"""
