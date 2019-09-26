@@ -34,11 +34,13 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         return result
 
     def _get_user_settings(self):
-        for plugin in get_active_plugins():
+        plugins = get_active_plugins(
+            plugin_type='project_app'
+        ) + get_active_plugins(plugin_type='site_app')
+        for plugin in plugins:
             p_settings = app_settings.get_setting_defs(
                 plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
             )
-
             for s_key, s_val in p_settings.items():
                 yield {
                     'label': s_val.get('label')

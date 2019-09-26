@@ -5,6 +5,7 @@ import json
 from urllib.parse import urlencode
 
 from django.conf import settings
+from django.core import mail
 from django.core.urlresolvers import reverse
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
@@ -65,6 +66,7 @@ REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'description'
 REMOTE_SITE_SECRET = build_secret()
+REMOTE_SITE_USER_DISPLAY = True
 
 REMOTE_SITE_NEW_NAME = 'New name'
 REMOTE_SITE_NEW_URL = 'https://new.url'
@@ -448,6 +450,7 @@ class TestProjectCreateView(
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.all()[0]
         self.assertIsNotNone(project)
+        self.assertEqual(len(mail.outbox), 1)
 
         expected = {
             'id': project.pk,
@@ -489,6 +492,85 @@ class TestProjectCreateView(
                     kwargs={'project': project.sodar_uuid},
                 ),
             )
+
+    def test_create_project(self):
+        """Test Project creation with taskflow"""
+        # create category (no assertions, cause that is covered by other testcase)
+
+        # Issue POST request
+        values = {
+            'title': 'TestCategory',
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': None,
+            'owner': self.user.sodar_uuid,
+            'submit_status': SUBMIT_STATUS_OK,
+            'description': 'description',
+        }
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(reverse('projectroles:create'), values)
+
+        category = Project.objects.all()[0]
+
+        # Make project with owner in Django
+        values = {
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.pk,
+            'owner': self.user.sodar_uuid,
+            'description': 'description',
+        }
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert Project state after creation
+        self.assertEqual(Project.objects.all().count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertIsNotNone(project)
+        # 2 mails should be send, for the project and for the category
+        self.assertEqual(len(mail.outbox), 2)
+
+        expected = {
+            'id': project.pk,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.pk,
+            'submit_status': SUBMIT_STATUS_OK,
+            'description': 'description',
+            'sodar_uuid': project.sodar_uuid,
+        }
+
+        model_dict = model_to_dict(project)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        # Assert owner role assignment
+        owner_as = RoleAssignment.objects.get(
+            project=project, role=self.role_owner
+        )
+
+        expected = {
+            'id': owner_as.pk,
+            'project': project.pk,
+            'role': self.role_owner.pk,
+            'user': self.user.pk,
+            'sodar_uuid': owner_as.sodar_uuid,
+        }
+
+        self.assertEqual(model_to_dict(owner_as), expected)
 
 
 class TestProjectUpdateView(
@@ -554,6 +636,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.all()[0]
         self.assertIsNotNone(project)
+        # no mail should be send, cause the owner has not changed
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -580,6 +664,33 @@ class TestProjectUpdateView(
                     kwargs={'project': project.sodar_uuid},
                 ),
             )
+
+    def test_update_project_owner(self):
+        """Light version of test_update_project. Only to test if a mail is send,
+         when updating the owner of a project and that the project owner is updated correctly"""
+        new_owner = self.make_user('New Owner')
+
+        values = model_to_dict(self.project)
+        values['owner'] = new_owner.sodar_uuid  # NOTE: Must add owner
+
+        # Add settings values
+        values.update(self._get_settings())
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # mail should be send, cause the owner has changed
+        self.assertEqual(len(mail.outbox), 1)
+        new_owner_ra = RoleAssignment.objects.get_assignment(
+            new_owner, self.project
+        )
+        self.assertEqual(new_owner_ra.role, self.role_owner)
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
@@ -998,6 +1109,51 @@ class TestRoleAssignmentDeleteView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+
+class TestRoleAssignmentTransferOwnershipView(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
+    def setUp(self):
+        super().setUp()
+
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create guest user and role
+        self.user_new = self.make_user('guest')
+        self.role_as = self._make_assignment(
+            self.project, self.user_new, self.role_guest
+        )
+
+    def test_transfer_ownership(self):
+        """Test RoleAssignment deleting"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_transfer_owner',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'owners_new_role': self.role_guest.pk,
+                    'new_owner': self.user_new.sodar_uuid,
+                },
+            )
+        self.role_as.refresh_from_db()
+        self.owner_as.refresh_from_db()
+
+        self.assertEqual(self.role_as.role, self.role_owner)
+        self.assertEqual(self.owner_as.role, self.role_guest)
+        self.assertEqual(len(mail.outbox), 2)
 
 
 class TestProjectInviteCreateView(
@@ -1796,7 +1952,7 @@ class TestRemoteSiteListView(RemoteSiteMixin, TestViewsBase):
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_as_target(self):
-        """Test rendering the remote site list view as source"""
+        """Test rendering the remote site list view as target"""
 
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:remote_sites'))
@@ -1883,6 +2039,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -1902,6 +2059,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -1923,6 +2081,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_URL,
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -1942,6 +2101,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -1971,6 +2131,7 @@ class TestRemoteSiteCreateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': build_secret(),
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -2019,6 +2180,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(form['description'].initial, REMOTE_SITE_DESC)
         self.assertEqual(form['secret'].initial, REMOTE_SITE_SECRET)
         self.assertEqual(form.fields['secret'].widget.attrs['readonly'], True)
+        self.assertEqual(form['user_display'].initial, REMOTE_SITE_USER_DISPLAY)
 
     def test_update(self):
         """Test creating a target site as source"""
@@ -2031,6 +2193,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):
@@ -2054,6 +2217,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         model_dict = model_to_dict(site)
@@ -2083,6 +2247,7 @@ class TestRemoteSiteUpdateView(RemoteSiteMixin, TestViewsBase):
             'url': REMOTE_SITE_NEW_URL,
             'description': REMOTE_SITE_NEW_DESC,
             'secret': REMOTE_SITE_SECRET,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
 
         with self.login(self.user):

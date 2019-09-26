@@ -8,15 +8,20 @@
 Welcome to the SODAR Core documentation!
 ========================================
 
-This documentation provides instructions for integration, usage and development
-of reusable SODAR Core apps for projects built on the Django web server.
+This documentation provides instructions for SODAR Core usage, integration and
+development. SODAR Core is framework for project access control and project
+application management, also including multiple optional applications for
+aiding project work. SODAR Core is built on the
+`Django <https://www.djangoproject.com/>`_ web framework.
 
 **SODAR** (System for Omics Data Access and Retrieval) is a specialized system
-for managing data in omics research projects.
+for managing data in omics research projects, which was the origin of the
+components in this package.
 
-The **SODAR Core** repository containes reusable and non-domain-specific apps
-which make up the core of the SODAR system. These apps can be used for any
-Django site which wants to make use of one or more of the following features:
+The **SODAR Core** package contains the core functionality for the SODAR system
+along with reusable and non-domain-specific web apps. The package and its apps
+can be used in any Django-based web site which wants to make use of one or more
+of the following features:
 
 - Project-based user access control
 - Dynamic app content management
@@ -27,11 +32,10 @@ Django site which wants to make use of one or more of the following features:
 - Tracking site information and statistics
 
 Basics of Django site setup and instructions for third party packages used are
-considered out of scope for this documentation. Please refer instead to official
-documentation of Django and/or the packages in question.
-
-**NOTE:** When viewing this document in GitLab critical content will by default
-be missing. Please click "display source" if you want to read this in GitLab.
+considered out of scope for this documentation. Basic knowledge of the Django
+framework is assumed. For this, please refer to the
+`official Django documentation <https://docs.djangoproject.com/en/1.11/>`_
+and/or docs of related third party packages.
 
 **NOTE:** To view this document in the rendered form during development, run
 ``make html`` in the ``docs`` directory of the repository. You can find the
@@ -43,6 +47,8 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    :maxdepth: 2
    :caption: Contents:
 
+   Overview <overview>
+   glossary
    getting_started
    app_projectroles
    app_adminalerts

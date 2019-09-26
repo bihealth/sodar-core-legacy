@@ -52,6 +52,7 @@ EXAMPLE_APP_NAME = 'example_project_app'
 REMOTE_SITE_NAME = 'Test site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
+REMOTE_SITE_USER_DISPLAY = True
 
 
 class ProjectMixin:
@@ -159,6 +160,7 @@ class RemoteSiteMixin:
         cls,
         name,
         url,
+        user_display=REMOTE_SITE_USER_DISPLAY,
         mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
         description='',
         secret=build_secret(),
@@ -170,6 +172,7 @@ class RemoteSiteMixin:
             'mode': mode,
             'description': description,
             'secret': secret,
+            'user_display': user_display,
         }
         site = RemoteSite(**values)
         site.save()
@@ -1052,6 +1055,7 @@ class TestRemoteSite(
             mode=SODAR_CONSTANTS['SITE_MODE_TARGET'],
             description='',
             secret=REMOTE_SITE_SECRET,
+            user_display=REMOTE_SITE_USER_DISPLAY,
         )
 
     def test_initialization(self):
@@ -1064,6 +1068,7 @@ class TestRemoteSite(
             'description': '',
             'secret': REMOTE_SITE_SECRET,
             'sodar_uuid': self.site.sodar_uuid,
+            'user_display': REMOTE_SITE_USER_DISPLAY,
         }
         self.assertEqual(model_to_dict(self.site), expected)
 

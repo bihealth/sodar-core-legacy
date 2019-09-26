@@ -3,12 +3,12 @@
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
-<tr id="sodar-tl-list-event-{{ event.pk }}">
+<tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
   <td>
     <a class="sodar-tl-detail-link" tabindex="0" data-toggle="popover"
        data-trigger="focus" data-placement="right" data-html="true"
        data-content="{% get_event_details event %}">
-      {% get_timestamp event %}
+        {% get_timestamp event %}
     </a>
   </td>
   <td><a href="{% get_app_url event %}">{{ event.app }}</a></td>
@@ -18,9 +18,25 @@
     {% autoescape off %}
       {% get_event_description event request %}
     {% endautoescape %}
+    {% if event|has_extra_data %}
+      <a class="pull-right" tabindex="0" data-toggle="modal"
+         data-trigger="focus" data-target="#sodar-tl-modal-{{ event.pk }}" style="cursor: pointer;">
+        <i class="fa fa-fw fa-file-text" title="Extra Data"
+           data-toggle="tooltip" data-placement="left">
+        </i>
+      </a>
+    {% endif %}
     {% if event.classified %}
-      <span class="pull-right text-muted"><i class="fa fa-lock"></i></span>
+      <span class="pull-right text-muted">
+        <i class="fa fa-fw fa-lock" title="Classified"
+           data-toggle="tooltip" data-placement="left">
+        </i>
+      </span>
     {% endif %}
   </td>
   <td class="{% get_status_style event.get_current_status %} text-light">{{ event.get_current_status.status_type }}</td>
 </tr>
+
+{% if event|has_extra_data %}
+   {% include 'timeline/_extra_data_modal.html' %}
+{% endif %}

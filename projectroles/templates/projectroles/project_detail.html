@@ -10,6 +10,7 @@
 
 {% has_perm 'projectroles.view_project' request.user object as can_view_project %}
 {% has_perm 'projectroles.update_project' request.user object as can_update_project %}
+{% has_perm 'projectroles.view_hidden_projects' request.user object as can_view_hidden_projects %}
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 
 {% if can_view_project %}
@@ -18,36 +19,52 @@
   <div class="container-fluid sodar-page-container">
 
     {# Links to remote projects #}
-
-    {# TODO: Refactor when implementing advanced features (issue #196) #}
     {% if object.type == 'PROJECT' %}
-      {% if object.is_remote or target_projects %}
+      {% get_visible_projects target_projects can_view_hidden_projects as visible_target_projects %}
+      {% if visible_target_projects %}
         <div class="card" id="sodar-pr-details-card-remote">
           <div class="card-header">
             <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
           </div>
           <div class="card-body pb-2 mr-2">
-            {% if target_projects %}
-              {% for rp in target_projects %}
-                <a class="btn btn-info mr-1 mb-1"
-                   href="{{ rp.site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
-                   role="button"
-                   title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
-                   data-toggle="tooltip"
-                   target="_blank">
-                  <i class="fa fa-globe"></i> {{ rp.site.name }}
-                </a>
-              {% endfor %}
-            {% elif object.is_remote %}
-              <a class="btn btn-info mb-1"
-                 href="{{ object.get_source_site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
-                 role="button"
-                 title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
-                 data-toggle="tooltip"
-                 target="_blank">
-                <i class="fa fa-globe"></i> {{ object.get_source_site.name }} (Master Project)
+            {% for rp in visible_target_projects %}
+              <a class="btn {% if rp.site.user_display %}btn-info{% else %}btn-secondary{% endif %} mr-1 mb-1"
+                href="{{ rp.site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
+                role="button"
+                title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
+                data-toggle="tooltip"
+                target="_blank">
+                <i class="fa fa-globe"></i> {{ rp.site.name }}
               </a>
-            {% endif %}
+            {% endfor %}
+          </div>
+        </div>
+
+      {% elif object.is_remote %}
+        <div class="card" id="sodar-pr-details-card-remote">
+          <div class="card-header">
+            <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
+          </div>
+          <div class="card-body pb-2 mr-2">
+            <a class="btn btn-info mb-1"
+                href="{{ object.get_source_site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
+                role="button"
+                title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
+                data-toggle="tooltip"
+                target="_blank">
+              <i class="fa fa-globe"></i> {{ object.get_source_site.name }} (Master Project)
+            </a>
+            {% get_visible_projects peer_projects can_view_hidden_projects as visible_peer_projects %}
+            {% for peer_p in visible_peer_projects %}
+              <a class="btn btn-info mb-1"
+                  href="{{ peer_p.site.get_url }}{% url 'projectroles:detail' project=peer_p.sodar_uuid %}"
+                  role="button"
+                  title="{% if peer_p.site.description %}{{ peer_p.site.description }}{% endif %}"
+                  data-toggle="tooltip"
+                  target="_blank">
+                <i class="fa fa-globe"></i> {{ peer_p.site.name }} (Peer Project)
+              </a>
+            {% endfor %}
           </div>
         </div>
       {% endif %}
@@ -130,7 +147,7 @@
                {% endfor %}
              {% else %}
                <tr>
-                 <td class="bg-faded font-italic text-center text-danger" colspan="3">
+                 <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
                    No {% get_display_name 'CATEGORY' title=False count=2 %}
                    or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
                </tr>

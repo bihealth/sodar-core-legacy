@@ -761,7 +761,13 @@ class RemoteSite(models.Model):
     """Remote SODAR site"""
 
     #: Site name
-    name = models.CharField(max_length=255, unique=True, help_text='Site name')
+    name = models.CharField(
+        max_length=255,
+        unique=True,
+        blank=False,
+        null=False,
+        help_text='Site name',
+    )
 
     #: Site URL
     url = models.URLField(
@@ -790,7 +796,7 @@ class RemoteSite(models.Model):
         max_length=255,
         unique=False,
         blank=False,
-        null=False,
+        null=True,  # Can be NULL for Peer Mode
         help_text='Secret token for connecting to the source site',
     )
 
@@ -799,6 +805,11 @@ class RemoteSite(models.Model):
         default=uuid.uuid4,
         unique=True,
         help_text='RemoteSite relation UUID (local)',
+    )
+
+    #: RemoteSite's link visibilty for users
+    user_display = models.BooleanField(
+        default=True, unique=False, help_text='RemoteSite visibility to users'
     )
 
     class Meta:

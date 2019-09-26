@@ -155,10 +155,11 @@ before will be presented to the user.
 App Settings
 ------------
 
-Project apps may define project or user specific settings, modifiable by users
-with sufficient project access. Widgets for project specific settings will show
-up in the project creation and updating form. User specific settings will be
-displayed in the :ref:`Userpforile app <app_userprofile>`.
+Project and site apps may define project or user specific :term:`app settings`.
+Widgets for project specific settings will show up in the project creation and
+updating form. User specific settings will be displayed in the :ref:`Userpforile
+app <app_userprofile>`. Project settings can only be modified by users with
+sufficient project access.
 
 .. note::
 
@@ -203,8 +204,8 @@ Modifying Members
 -----------------
 
 Changing or removing user roles can be done from links next to each role on the
-member list. The exception for this  is the *project owner* role which can only
-be modified on the **Update Project** page.
+member list. Project ownership can be transferred to another owner from the
+dropdown next to the owner role.
 
 Invites
 -------
@@ -251,6 +252,11 @@ remote site. A secret string is generated automatically and you need to provide
 this to the administrator of the target site in question for accessing your
 site.
 
+Here you also have the option to hide the remote project link from your users.
+Users viewing the project on the source site then won't see a link to the target
+site. Owners and Superusers will still see the link (greyed out). This is most
+commonly used for internal test sites which only needs to be used by admins.
+
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
 two are currently implemented:
@@ -292,6 +298,9 @@ using the provided secret string as the access token.
 
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.
+Additionaly if the remote Source site is synchronized with multiple Target Sites,
+information about those other Target sites will be synchronized as well an displayed
+as *Peer Sites*.
 
 Alternatively, the following management command can be used:
 

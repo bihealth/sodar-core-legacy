@@ -16,6 +16,7 @@ from ..models import (
 from ..plugins import get_active_plugins
 from ..project_tags import get_tag_state
 
+
 # Settings
 HELP_HIGHLIGHT_DAYS = (
     settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
@@ -210,6 +211,25 @@ def get_not_found_alert(project_results, app_search_data, search_type):
 @register.simple_tag
 def get_project_list_value(app_plugin, column_id, project):
     return app_plugin.get_project_list_value(column_id, project)
+
+
+@register.simple_tag
+def get_project_column_count(app_plugins):
+    """Return the amount of columns shown in project listings"""
+
+    def get_active_list_columns(app_plugin):
+        return len(
+            [
+                column
+                for column, attributes in app_plugin.project_list_columns.items()
+                if attributes['active']
+            ]
+        )
+
+    return 3 + max(
+        [get_active_list_columns(app_plugin) for app_plugin in app_plugins],
+        default=0,
+    )
 
 
 @register.simple_tag

@@ -29,3 +29,7 @@
     </table>
   </div>
 </div>
+
+{% if is_paginated and object_list %}
+  {% include 'projectroles/_pagination.html' with pg_small=False %}
+{% endif %}

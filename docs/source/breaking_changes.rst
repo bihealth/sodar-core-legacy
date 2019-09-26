@@ -10,6 +10,31 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
+v0.7.0 (TBD)
+============
+
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.24.
+
+Backend Javascript Include
+--------------------------
+
+The code in ``base.html`` which was including javascript from backend apps to
+all templates in projectsroles was removed. Instead, Javascript and CSS
+associated to a backend plugin should now be included in app templates as
+needed. This is done using the newly introduced ``get_backend_include()``
+template tag in ``projectroles_common_tags``.
+
+Deprecated get_settings() Tag Removed
+-------------------------------------
+
+The deprecated ``get_setting()`` template tag has been removed from
+``projectroles_common_tags``. Please use ``get_django_setting()`` in your
+templates instead.
+
+
 v0.6.2 (2019-06-21)
 ===================
 

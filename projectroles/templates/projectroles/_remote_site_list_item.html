@@ -10,9 +10,18 @@
       {{ info_link | safe }}
     {% endif %}
   </td>
-  <td><a href="{{ site.url }}" target="_blank">{{ site.url }}</a></td>
+  <td><a href="{{ site.get_url }}" target="_blank">{{ site.get_url }}</a></td>
   <td class="text-right">{{ site.projects.all.count }}</td>
-  <td class="text-nowrap"><code>{{ site.secret }}</code></td>
+  <td class="text-nowrap">
+    <code>{{ site.secret }}</code>
+    <button
+       class="btn btn-secondary sodar-list-btn sodar-pr-btn-copy-secret sodar-copy-btn ml-1"
+       id="sodar-pr-btn-copy-secret"
+       data-clipboard-text="{{ site.secret }}"
+       title="Copy to clipboard" data-toggle="tooltip" data-placement="top">
+      <i class="fa fa-clipboard"></i>
+    </button>
+  </td>
   <td class="text-nowrap">
     {% if site.get_access_date %}
       {{ site.get_access_date|date:'Y-m-d H:i' }}
@@ -20,6 +29,9 @@
       <span class="text-muted">Never</span>
     {% endif %}
   </td>
+  {% if site_mode == 'SOURCE' %}
+    <td class="text-nowrap">{% if site.user_display %}Yes{% else %}No{% endif %}</td>
+  {% endif %}
   <td>
     {% include 'projectroles/_remote_site_buttons.html' %}
   </td>

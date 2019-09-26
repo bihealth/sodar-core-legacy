@@ -9,7 +9,7 @@ from django.contrib import auth
 from django.core.urlresolvers import reverse
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.models import model_to_dict
-from django.test import LiveServerTestCase
+from django.test import LiveServerTestCase, tag
 
 # HACK to get around https://stackoverflow.com/a/25081791
 from .taskflow_testcase import TestCase
@@ -62,6 +62,7 @@ TASKFLOW_TEST_MODE = (
 )
 
 
+@tag('Taskflow')
 class TestTaskflowBase(LiveServerTestCase, TestCase):
     """Base class for testing views and APIs with taskflow"""
 

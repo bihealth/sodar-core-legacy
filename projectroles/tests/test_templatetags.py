@@ -11,8 +11,15 @@ from django.test import override_settings, RequestFactory
 from test_plus.test import TestCase
 
 import projectroles
-from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
-from projectroles.plugins import get_app_plugin
+from projectroles.models import (
+    Role,
+    SODAR_CONSTANTS,
+    PROJECT_TAG_STARRED,
+    Project,
+    RemoteProject,
+    RemoteSite,
+)
+from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.project_tags import set_tag_state
 from projectroles.templatetags import (
     projectroles_common_tags as c_tags,
@@ -34,6 +41,8 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
+REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 
 
 # Local constants
@@ -265,6 +274,48 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
 
+    def test_get_visible_projects(self):
+        """Test get_visible_projects()"""
+        # Setup projects
+        create_values = {'title': 'TestProject'}
+        project = Project.objects.create(**create_values)
+
+        # Setup sites
+        create_values = {
+            'name': 'VisibleSite',
+            'url': 'visible.site',
+            'mode': SITE_MODE_TARGET,
+            'user_display': True,
+        }
+        visible_site = RemoteSite.objects.create(**create_values)
+
+        create_values = {
+            'name': 'InvisibleSite',
+            'url': 'invisible.site',
+            'mode': SITE_MODE_TARGET,
+            'user_display': False,
+        }
+        invisible_site = RemoteSite.objects.create(**create_values)
+
+        # Setup remote projects
+        create_values = {
+            'project_uuid': project.sodar_uuid,
+            'project': project,
+            'site': visible_site,
+            'level': REMOTE_LEVEL_READ_ROLES,
+        }
+        visible_project = RemoteProject.objects.create(**create_values)
+
+        create_values['site'] = invisible_site
+        invisible_project = RemoteProject.objects.create(**create_values)
+
+        # Test returned peer projects
+        peer_projects = c_tags.get_visible_projects(
+            [visible_project, invisible_project]
+        )
+
+        self.assertEqual(peer_projects, [visible_project])
+
     def test_render_markdown(self):
         """Test render_markdown()"""
         raw_md = '**Some markdown**'
@@ -285,6 +336,68 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         """Test get_class()"""
         self.assertEqual(c_tags.get_class(self.project), 'Project')
         self.assertEqual(c_tags.get_class(self.project, lower=True), 'project')
+
+    def test_include_invalid_plugin(self):
+        """Test get_backend_include() plugin checks"""
+        self.assertEqual(
+            c_tags.get_backend_include('NON_EXISTING_PLUGIN', 'js'), ''
+        )
+        # Testing a plugin which is not backend
+        self.assertEqual(c_tags.get_backend_include('filesfolders', 'js'), '')
+
+    def test_include_none_value(self):
+        """Test get_backend_include none attribute check"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+        type(backend_plugin).javascript_url = None
+        type(backend_plugin).css_url = None
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'), ''
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'), ''
+        )
+
+    def test_include_invalid_url(self):
+        """Test get_backend_include file existence check"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/NOT_EXISTING_JS.js'
+        type(
+            backend_plugin
+        ).css_url = 'example_backend_app/css/NOT_EXISTING_CSS.css'
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'), ''
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'), ''
+        )
+
+    def test_get_backend_include(self):
+        """Test get_backend_include"""
+        # TODO: Replace with get_app_plugin once implemented for backend plugins
+        backend_plugin = get_active_plugins('backend')[0]
+
+        type(
+            backend_plugin
+        ).javascript_url = 'example_backend_app/js/greeting.js'
+        type(backend_plugin).css_url = 'example_backend_app/css/greeting.css'
+
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'js'),
+            '<script type="text/javascript" '
+            'src="/static/example_backend_app/js/greeting.js"></script>',
+        )
+        self.assertEqual(
+            c_tags.get_backend_include(backend_plugin.name, 'css'),
+            '<link rel="stylesheet" type="text/css" '
+            'href="/static/example_backend_app/css/greeting.css"/>',
+        )
 
 
 class TestProjectrolesTemplateTags(TestTemplateTagsBase):
@@ -366,6 +479,13 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             tags.get_project_list_value(app_plugin, 'files', self.project), 0
         )
+
+    def test_get_project_column_count(self):
+        """Test get_project_column_count()"""
+        app_plugins = get_active_plugins()
+
+        self.assertEqual(tags.get_project_column_count(app_plugins), 5)
+        self.assertEqual(tags.get_project_column_count([]), 3)
 
     def test_get_user_role_html(self):
         """Test get_user_role_html()"""

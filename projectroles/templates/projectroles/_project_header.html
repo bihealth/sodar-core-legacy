@@ -9,6 +9,7 @@
 {% has_perm 'projectroles.update_project' request.user project as can_update_project %}
 
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
+{% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
 
 <div class="row sodar-pr-content-title">
 
@@ -16,20 +17,30 @@
   {% include 'projectroles/_project_menu_btn.html' %}
 
   <h2 class="sodar-pr-content-title">{{ project.title }}</h2>
+
   {# Project starring/unstarring #}
-  <div>
-    <a role="link" class="btn btn-link sodar-pr-btn-star"
-       href="#" id="sodar-pr-link-project-star"
-       star-url="{% url 'projectroles:star' project=project.sodar_uuid %}"
-       title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
-       data-toggle="tooltip" data-placement="top">
-      {% if project_starred %}
-        <i class="fa fa-star fa-2x text-warning" id="sodar-pr-btn-star-icon"></i>
-      {% else %}
-        <i class="fa fa-star-o fa-2x text-muted" id="sodar-pr-btn-star-icon"></i>
-      {% endif %}
+  <a role="link" class="btn btn-link mr-2 sodar-pr-btn-title sodar-pr-btn-star"
+     href="#" id="sodar-pr-link-project-star"
+     star-url="{% url 'projectroles:star' project=project.sodar_uuid %}"
+     title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
+     data-toggle="tooltip" data-placement="top">
+    {% if project_starred %}
+      <i class="fa fa-star text-warning" id="sodar-pr-btn-star-icon"></i>
+    {% else %}
+      <i class="fa fa-star-o text-muted" id="sodar-pr-btn-star-icon"></i>
+    {% endif %}
+  </a>
+
+  {# Project copy uuid #}
+  {% if enable_uuid_copy %}
+    <a role="submit" class="btn btn-link mr-2 sodar-pr-btn-title sodar-pr-btn-copy-uuid sodar-copy-btn"
+       id="sodar-pr-btn-copy-uuid"
+       data-clipboard-text="{{ project.sodar_uuid }}"
+       title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
+      <i class="fa fa-clipboard text-muted" aria-hidden="true"></i>
     </a>
-  </div>
+  {% endif %}
+
   {# Secondary title #}
   <div class="sodar-pr-content-title-secondary text-muted">
     {% if project.description %}{{ project.description }}{% endif %}

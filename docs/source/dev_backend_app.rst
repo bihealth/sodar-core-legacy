@@ -67,6 +67,9 @@ The following variables and functions are **mandatory**:
 
 Implementing the following is **optional**:
 
+
+- ``javascript_url``: Path to on demand includeable Javascript file
+- ``css_url``: Path to on demand includeable CSS file
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
 
@@ -91,3 +94,43 @@ function ``projectroles.plugins.get_backend_api()`` as follows:
 
     if example_api:     # Make sure the API is there, and only after that..
         pass            # ..do stuff with the API
+
+Including Backend Javascript/CSS
+--------------------------------
+
+If you want Javascript or CSS files to be associated with your plugin you can
+set the ``javascript_url`` or ``css_url`` variables to specify the path to your
+file. Note that these should correspond to ``STATIC`` paths under your app
+directory.
+
+.. code-block:: python
+
+    class BackendPlugin(BackendPluginPoint):
+
+        name = 'example_backend_app'
+        title = 'Example Backend App'
+        javascript_url = 'example_backend_app/js/example.js'
+        css_url = 'example_backend_app/css/example.css'
+
+The ``get_backend_include`` template-tag will return a ``<script>`` or
+``<link>`` html tag with your specific file path, to be used in a template of
+your app making use of the backend plugin:
+
+.. code-block:: django
+
+    {% load projectroles_common_tags %}
+    {% get_backend_include 'example_backend_app' 'js' as javascript_include_tag %}
+    {{ javascript_include_tag|safe }}
+
+    {% get_backend_include 'example_backend_app' 'css' as css_include_tag %}
+    {{ css_include_tag|safe }}
+
+This will result in the following HTML:
+
+.. code-block:: html
+
+    <script type="text/javascript" src="/static/example.js"></script>
+    <link rel="stylesheet" type="text/css" href="/static/example.css"/>
+
+Be sure to use the backend plugin's name (not the title) as the key and filter
+the result by ``safe``, so the tag won't be auto-escaped.

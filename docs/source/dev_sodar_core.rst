@@ -8,12 +8,37 @@ This document details instructions and guidelines for development of the SODAR
 Core package.
 
 
+Repository Contents
+===================
+
+In addition to the apps which will be installed by the package, the following
+directories are included in the repository for development use and as examples:
+
+- **config**: Example Django site configuration
+- **docs**: Usage and development documentation
+- **example_backend_app**: Example SODAR Core compatible backend app
+- **example_project_app**: Example SODAR Core compatible project app
+- **example_site**: Example SODAR Core based Django site for development
+- **example_site_app**: Example SODAR Core compatible site-wide app
+- **requirements**: Requirements for SODAR Core and development
+- **utility**: Setup scripts for development
+
+
 Installation
 ============
 
-Instructions on how to install a local development version of SODAR Core.
-Ubuntu 16.04 LTS (Xenial) is the supported OS at this time. System dependencies
-may vary for different OS versions or distributions.
+Instructions on how to install a local development version of SODAR Core are
+detailed here. Ubuntu 16.04 LTS (Xenial) is the supported OS at this time.
+Later Ubuntu versions and Centos 7 have also been proven to to work, but some
+system dependencies may vary for different OS versions or distributions.
+
+Installation and development should be possible on most recent versions of
+Linux, Mac and Windows, but this may require extra work and your mileage may
+vary.
+
+If you need to set up the accompanying example site in Docker, please see online
+for up-to-date Docker setup tutorials for Django related to your operating
+system of choice.
 
 System Installation
 -------------------
@@ -29,29 +54,26 @@ First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
 Database Setup
 --------------
 
-Create a PostgreSQL user and a database for your application. In the example,
-we use ``sodar_core`` for the database, user name and password. Make sure to
-give the user the permission to create further PostgreSQL databases (used for
-testing).
+Next you need to setup the database and postgres user. You'll be prompted to
+enter a database name, a username and a password.
 
 .. code-block:: console
 
-    $ sudo su - postgres
-    $ psql
-    $ CREATE DATABASE sodar_core;
-    $ CREATE USER sodar_core WITH PASSWORD 'sodar_core';
-    $ GRANT ALL PRIVILEGES ON DATABASE sodar_core to sodar_core;
-    $ ALTER USER sodar_core CREATEDB;
-    $ \q
+    $ sudo utility/setup_database.sh
 
-You have to add the credentials in the environment variable ``DATABASE_URL``.
-For development it is recommended to place this variable in an ``.env`` file and
-set ``DJANGO_READ_DOT_ENV_FILE=1`` in your actual environment. See
-``config/settings/base.py`` for more information.
+You have to set the database URL and credentials for Django in the environment
+variable ``DATABASE_URL``. For development it is recommended to place
+environment variables in file ``.env`` located in your project root. To enable
+loading the file in Django, set ``DJANGO_READ_DOT_ENV_FILE=1`` in your
+environment variables when running SODAR or any of its management commands.
+See ``config/settings/base.py`` for more information and the ``env.example``
+file for an example environment file.
+
+Example of the database URL variable as set within an ``.env`` file:
 
 .. code-block:: console
 
-    $ export DATABASE_URL='postgres://sodar_core:sodar_core@127.0.0.1/sodar_core'
+    DATABASE_URL=postgres://sodar_core:sodar_core@127.0.0.1/sodar_core
 
 Project Setup
 -------------

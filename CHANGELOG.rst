@@ -10,23 +10,73 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Development env file example ``env.example`` (#297)
+    - Postgres database development setup script (#302)
+- **Adminalerts**
+    - Activate/suspend button in alert list (#42)
+- **Bgjobs**
+    - Pagination for background job list (#335)
+    - ``BGJOBS_PAGINATION`` Django setting (#335)
+- **Projectroles**
+    - ``get_backend_include()`` common template tag (#261)
+    - ``css_url`` member variable in ``BackendPluginPoint`` (#261)
+    - Example of on-demand Javascript/CSS inclusion in example apps (#261)
+    - Remote project link display toggle for target sites (#276)
+    - Project UUID clipboard copying button (#290)
+    - Support for app settings in site apps (#308)
+    - Initial implemenetation for common clipboard copying visualization (#333)
+    - Send email for owner role assignment (#325)
+    - Common pagination include template ``_pagination.html`` (#334)
+    - Synchronization and display of ``PEER`` sites in remote site management (#200)
+    - Link for copying remote site secret token in remote site list (#332)
+    - Project ownership transfer from member list (#287)
+    - UI notification for disabled member management on target sites (#301)
+- **Timeline**
+    - Display event extra data as JSON (#6)
+- **Userprofile**
+    - User setting for project UUID clipboard copying (#290, #308)
+
 Changed
 -------
 
 - **General**
-    - Upgrade Chromedriver to version 76.0.3809.68
+    - Upgrade Chromedriver to version 77.0.3865.40
+    - Upgrade minimum Django version to 1.11.24 (#324)
+    - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
+    - Run tests in parallel where applicable
+- **Projectroles**
+    - Improve user name placeholder in ``login.html`` (#294)
+    - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
+    - Make sidebar hiding dynamic by content height (#316)
+    - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
+    - Refactor remote project display on details page (#196)
+- **Timeline**
+    - Use common pagination template (#336)
 
 Fixed
 -----
 
 - **Projectroles**
     - Output of template tag ``get_project_link()``
+    - Redundant inheritance in ``CurrentUserFormMixin`` (#12)
+    - Trailing slashes not parsed correctly in remote project URLs (#319)
+    - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
+    - UI test helper ``build_selenium_url()`` refactored to work with Chrome v77 (#337)
+    - Disallow empty values in ``RemoteSite.name``
+- **Timeline**
+    - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 
 Removed
 -------
 
 - **Projectroles**
     - Duplicate database indexes from ``RoleAssignment`` (#285)
+    - Deprecated ``get_setting()`` tag from ``projectroles_common_tags`` (#283)
+    - Project owner change from project updating form (#287)
 
 
 v0.6.2 (2019-06-21)

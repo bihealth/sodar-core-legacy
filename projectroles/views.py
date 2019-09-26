@@ -30,7 +30,7 @@ from django.views.generic import (
     DeleteView,
     View,
 )
-from django.views.generic.edit import ModelFormMixin
+from django.views.generic.edit import ModelFormMixin, FormView
 from django.views.generic.detail import ContextMixin
 
 from rest_framework.authentication import BaseAuthentication
@@ -47,6 +47,7 @@ from rest_framework.views import APIView
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
+from timeline.models import ProjectEvent
 from .app_settings import AppSettingAPI
 from .email import (
     send_role_change_mail,
@@ -65,6 +66,7 @@ from .forms import (
     RoleAssignmentForm,
     ProjectInviteForm,
     RemoteSiteForm,
+    RoleAssignmentChangeOwnerForm,
 )
 from .models import (
     Project,
@@ -75,6 +77,7 @@ from .models import (
     RemoteProject,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
+    SODARUser,
 )
 from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
 from .project_tags import get_tag_state, set_tag_state, remove_tag
@@ -96,6 +99,7 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
 ]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
@@ -158,7 +162,7 @@ class ProjectAccessMixin:
         if not kwargs:
             kwargs = self.kwargs
 
-        # First check for a kwarg named "project"
+        # First check for a kwarg named 'project'
         if 'project' in kwargs:
             return self.project_class.objects.filter(
                 sodar_uuid=kwargs['project']
@@ -317,7 +321,10 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
             )
 
             if obj.role.name == PROJECT_ROLE_OWNER:
-                # Modifying the project owner is not allowed in role views
+                """return self.request.user.has_perm(
+                    'projectroles.update_project_owner',
+                    self.get_permission_object(),
+                )"""
                 return False
 
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
@@ -414,7 +421,7 @@ class APIPermissionMixin(PermissionRequiredMixin):
         return HttpResponseForbidden()
 
 
-class CurrentUserFormMixin(ModelFormMixin):
+class CurrentUserFormMixin:
     """Mixin for passing current user to form as current_user"""
 
     def get_form_kwargs(self):
@@ -470,7 +477,12 @@ class ProjectDetailView(
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             # TODO: See issue #197
             context['target_projects'] = RemoteProject.objects.filter(
-                project_uuid=self.object.sodar_uuid
+                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
+            ).order_by('site__name')
+        elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
+            # TODO: See issue #197
+            context['peer_projects'] = RemoteProject.objects.filter(
+                project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
 
         return context
@@ -836,6 +848,16 @@ class ProjectModifyMixin(ModelFormMixin):
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
+        if SEND_EMAIL and (not self.object or old_data['owner'] != owner):
+            # send mail
+            send_role_change_mail(
+                form_action,
+                project,
+                owner,
+                RoleAssignment.objects.get_assignment(owner, project).role,
+                self.request,
+            )
+
         if tl_event:
             tl_event.set_status('OK')
 
@@ -854,6 +876,7 @@ class ProjectCreateView(
     ProjectModifyMixin,
     ProjectContextMixin,
     HTTPRefererMixin,
+    CurrentUserFormMixin,
     CreateView,
 ):
     """Project creation view"""
@@ -876,7 +899,6 @@ class ProjectCreateView(
         """Pass URL arguments to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
-        kwargs.update({'current_user': self.request.user})
         return kwargs
 
     def get(self, request, *args, **kwargs):
@@ -920,6 +942,7 @@ class ProjectUpdateView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     ProjectModifyMixin,
+    CurrentUserFormMixin,
     UpdateView,
 ):
     """Project updating view"""
@@ -929,11 +952,6 @@ class ProjectUpdateView(
     form_class = ProjectForm
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
 
 
 # RoleAssignment Views ---------------------------------------------------------
@@ -1095,6 +1113,7 @@ class RoleAssignmentCreateView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
+    CurrentUserFormMixin,
     RoleAssignmentModifyMixin,
     CreateView,
 ):
@@ -1108,7 +1127,6 @@ class RoleAssignmentCreateView(
         """Pass URL arguments and current user to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update(self.kwargs)
-        kwargs.update({'current_user': self.request.user})
         return kwargs
 
 
@@ -1117,6 +1135,7 @@ class RoleAssignmentUpdateView(
     RolePermissionMixin,
     ProjectContextMixin,
     RoleAssignmentModifyMixin,
+    CurrentUserFormMixin,
     UpdateView,
 ):
     """RoleAssignment updating view"""
@@ -1127,18 +1146,13 @@ class RoleAssignmentUpdateView(
     slug_url_kwarg = 'roleassignment'
     slug_field = 'sodar_uuid'
 
-    def get_form_kwargs(self):
-        """Pass current user to form"""
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
-
 
 class RoleAssignmentDeleteView(
     LoginRequiredMixin,
     RolePermissionMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
+    CurrentUserFormMixin,
     DeleteView,
 ):
     """RoleAssignment deletion view"""
@@ -1231,11 +1245,134 @@ class RoleAssignmentDeleteView(
             )
         )
 
+
+class RoleAssignmentTransferOwnership(
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    CurrentUserFormMixin,
+    ProjectContextMixin,
+    FormView,
+):
+    permission_required = 'projectroles.update_project_owner'
+    template_name = 'projectroles/project_roles_transfer_owner.html'
+    form_class = RoleAssignmentChangeOwnerForm
+
     def get_form_kwargs(self):
-        """Pass current user to form"""
         kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
+        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
+        kwargs.update(
+            {
+                'project': self.get_project(self.request),
+                'current_owner': owner.user,
+            }
+        )
         return kwargs
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
+        context.update({'current_owner': owner.user})
+        return context
+
+    def form_valid(self, form):
+        project = form.project
+        prev_owner = form.current_owner
+        prev_owner_ra = RoleAssignment.objects.get_assignment(
+            prev_owner, project
+        )
+
+        new_owner = form.cleaned_data['new_owner']
+        owners_new_role = form.cleaned_data['owners_new_role']
+
+        timeline_event = self.create_timeline_event(
+            prev_owner, new_owner, project
+        )
+
+        if self.transfer_ownership(
+            timeline_event, project, prev_owner_ra, new_owner, owners_new_role
+        ):
+
+            if SEND_EMAIL:
+                send_role_change_mail(
+                    'update', project, prev_owner, owners_new_role, self.request
+                )
+                send_role_change_mail(
+                    'update',
+                    project,
+                    new_owner,
+                    Role.objects.get(name=PROJECT_ROLE_OWNER),
+                    self.request,
+                )
+                messages.success(
+                    self.request,
+                    'Successfully transferred ownership  from {} to {}. A '
+                    'notification email has been send to both users.'.format(
+                        prev_owner.username, new_owner.username
+                    ),
+                )
+            else:
+                messages.success(
+                    self.request,
+                    'Successfully transferred ownership  from {} to {}.'.format(
+                        prev_owner.username, new_owner.username
+                    ),
+                )
+
+            if timeline_event:
+                timeline_event.set_status('OK')
+
+        return HttpResponseRedirect(
+            reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
+        )
+
+    def create_timeline_event(
+        self, prev_owner: SODARUser, new_owner: SODARUser, project: Project
+    ) -> ProjectEvent:
+        timeline = get_backend_api('timeline_backend')
+        # Init Timeline event
+        if not timeline:
+            return None
+
+        tl_desc = (
+            'transfer ownership from {{prev_owner}} to '
+            '{{new_owner}}'.format(prev_owner.username, new_owner.username)
+        )
+
+        tl_event = timeline.add_event(
+            project=project,
+            app_name=APP_NAME,
+            user=self.request.user,
+            event_name='role_transfer_owner',
+            description=tl_desc,
+            extra_data={
+                'prev_owner': prev_owner.username,
+                'new_owner': new_owner.username,
+            },
+        )
+        tl_event.add_object(prev_owner, 'prev_owner', prev_owner.username)
+        tl_event.add_object(new_owner, 'new_owner', new_owner.username)
+        return tl_event
+
+    def transfer_ownership(
+        self,
+        timeline_event: ProjectEvent,
+        project: Project,
+        prev_owner: RoleAssignment,
+        new_owner: SODARUser,
+        prev_owner_role: Role,
+    ) -> bool:
+
+        prev_owner.role = prev_owner_role
+        prev_owner.save()
+
+        # make it an owner
+        ra = RoleAssignment.objects.get_assignment(new_owner, project)
+        ra.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        ra.save()
+        return True
 
 
 # ProjectInvite Views ----------------------------------------------------------
@@ -1332,6 +1469,7 @@ class ProjectInviteCreateView(
     ProjectContextMixin,
     ProjectModifyPermissionMixin,
     ProjectInviteMixin,
+    CurrentUserFormMixin,
     CreateView,
 ):
     """ProjectInvite creation view"""
@@ -1363,7 +1501,6 @@ class ProjectInviteCreateView(
     def get_form_kwargs(self):
         """Pass current user (and possibly mail address and role pk) to form"""
         kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
 
         mail = self.request.GET.get('forwarded-email', None)
@@ -2017,7 +2154,7 @@ class RemoteProjectsSyncView(
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
 
-        api_url = site.url + reverse(
+        api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
 

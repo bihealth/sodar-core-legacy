@@ -12,6 +12,7 @@ from projectroles.models import (
     Role,
     RoleAssignment,
     RemoteProject,
+    RemoteSite,
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_backend_api
@@ -35,6 +36,8 @@ SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
 ]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
+
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
@@ -260,6 +263,37 @@ class RemoteProjectAPI:
             tl_event.add_object(self.source_site, 'site', self.source_site.name)
 
         logger.info('Created {}'.format(p_data['type'].lower()))
+
+    def _create_peer_site(self, uuid, site_data):
+        """Create PEER-mode remote site"""
+        create_fields = ['name', 'url', 'description', 'user_display']
+        create_values = {
+            k: v for k, v in site_data.items() if k in create_fields
+        }
+        create_values['mode'] = SITE_MODE_PEER
+        create_values['sodar_uuid'] = uuid
+        create_values['secret'] = None  # Do not share secret of other sites
+        RemoteSite.objects.create(**create_values)
+        logger.info('Created Peer Site {}'.format(create_values['name']))
+
+    def _update_peer_site(self, uuid, site_data):
+        """Update PEER-mode remote site"""
+        site = RemoteSite.objects.filter(sodar_uuid=uuid).first()
+
+        updated_fields = []
+        for k, v in site_data.items():
+            if hasattr(site, k) and str(getattr(site, k)) != str(v):
+                updated_fields.append(k)
+        if updated_fields:
+            site = self._update_obj(site, site_data, updated_fields)
+            logger.info(
+                'Updated Peer Site {}: {}'.format(
+                    str(site.name), ', '.join(sorted(updated_fields))
+                )
+            )
+
+        else:
+            logger.debug('Nothing to update')
 
     def _update_roles(self, project, p_data):
         """Create or update project roles"""
@@ -594,6 +628,51 @@ class RemoteProjectAPI:
         # Remove deleted user roles
         self._remove_deleted_roles(project, p_data)
 
+    def _sync_peer_project(self, uuid, p_data):
+        """Creates RemoteProject objects to represent local project on different peer sites"""
+
+        if p_data.get('remote_sites', None):
+            for remote_site_uuid in p_data['remote_sites']:
+                remote_site = RemoteSite.objects.filter(
+                    sodar_uuid=remote_site_uuid
+                ).first()
+
+                try:
+                    remote_project = RemoteProject.objects.get(
+                        site=remote_site, project_uuid=uuid
+                    )
+                    remote_project.level = p_data['level']
+                    remote_project.project = Project.objects.filter(
+                        sodar_uuid=uuid
+                    ).first()
+                    remote_project.date_access = (
+                        timezone.now()
+                    )  # This might not be needed for Peer Projects
+                    remote_action = 'updated'
+
+                except RemoteProject.DoesNotExist:
+                    remote_project = RemoteProject.objects.create(
+                        site=remote_site,
+                        project_uuid=uuid,
+                        project=Project.objects.filter(sodar_uuid=uuid).first(),
+                        level=p_data['level'],
+                        date_access=timezone.now(),  # This might not be needed for Peer Projects
+                    )
+                    remote_action = 'created'
+            logger.debug(
+                '{} PeerProject {} for the following peer sites: {}'.format(
+                    remote_action.capitalize(),
+                    remote_project.sodar_uuid,
+                    ', '.join(p_data['remote_sites']),
+                )
+            )
+        else:
+            logger.debug(
+                '{} is not a peer project (no remote site field)'.format(
+                    str(uuid)
+                )
+            )
+
     # API functions ------------------------------------------------------------
 
     def get_target_data(self, target_site):
@@ -603,7 +682,7 @@ class RemoteProjectAPI:
         :param target_site: RemoteSite object for the target site
         :return: Dict
         """
-        sync_data = {'users': {}, 'projects': {}}
+        sync_data = {'users': {}, 'projects': {}, 'peer_sites': {}}
 
         def _add_user(user):
             if user.username not in [
@@ -648,12 +727,42 @@ class RemoteProjectAPI:
 
                 sync_data['projects'][str(category.sodar_uuid)] = cat_data
 
+        def _add_peer_site(site):
+            # Do not add sites twice
+            if not sync_data['peer_sites'].get(str(site.sodar_uuid), None):
+
+                sync_data['peer_sites'][str(site.sodar_uuid)] = {
+                    'name': site.name,
+                    'url': site.url,
+                    'description': site.description,
+                    'user_display': site.user_display,
+                }
+
         for rp in target_site.projects.all():
             project = rp.get_project()
+
+            # All RemoteSites which also host this project with a sufficient access level
+            other_remote_sites = [
+                relation.site
+                for relation in RemoteProject.objects.filter(
+                    project_uuid=project.sodar_uuid
+                )
+                if relation.level
+                in [REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]
+                and relation.site != target_site  # Dont add current target site
+            ]
+
+            # RemoteSite data to create objects on target site
+            for site in other_remote_sites:
+                _add_peer_site(site)
+
             project_data = {
                 'level': rp.level,
                 'title': project.title,
                 'type': PROJECT_TYPE_PROJECT,
+                'remote_sites': [
+                    str(site.sodar_uuid) for site in other_remote_sites
+                ],
             }
 
             # View available projects
@@ -733,6 +842,27 @@ class RemoteProjectAPI:
             logger.info('No READ_ROLES access set, nothing to synchronize')
             return self.remote_data
 
+        ##############
+        # Peer Sites
+        ##############
+        logger.info('Synchronizing Peer Sites...')
+        if self.remote_data.get('peer_sites', None):
+            for remote_site_uuid, site_data in self.remote_data[
+                'peer_sites'
+            ].items():
+                # Create RemoteSite Objects if not yet there
+                remote_site = RemoteSite.objects.filter(
+                    sodar_uuid=remote_site_uuid
+                ).first()
+                if remote_site:
+                    self._update_peer_site(remote_site_uuid, site_data)
+                else:
+                    self._create_peer_site(remote_site_uuid, site_data)
+
+            logger.info('Peer Site Sync OK')
+        else:
+            logger.info('No new Peer Sites to sync')
+
         ########
         # Users
         ########
@@ -762,6 +892,7 @@ class RemoteProjectAPI:
             and v['level'] == REMOTE_LEVEL_READ_ROLES
         }.items():
             self._sync_project(sodar_uuid, p_data)
+            self._sync_peer_project(sodar_uuid, p_data)
 
         logger.info('Synchronization OK')
         return self.remote_data

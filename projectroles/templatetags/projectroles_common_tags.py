@@ -7,19 +7,22 @@ from django import template
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles import finders
+from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
+from django.templatetags.static import static
 from django.urls import reverse
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Project, RemoteProject, SODAR_CONSTANTS
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import get_backend_api, BackendPluginPoint
 from projectroles.utils import get_display_name as _get_display_name
 
 
 # SODAR constants
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
+SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 
 
 site = import_module(settings.SITE_PACKAGE)
@@ -88,16 +91,6 @@ def get_django_setting(name, js=False):
         val = int(val)
 
     return val
-
-
-# DEPRECATION PROTECTION: To be removed in v0.7.0, use get_django_setting()
-@register.simple_tag
-def get_setting(name, js=False):
-    """bb
-    Return value of Django setting by name or None if it is not found.
-    Return a Javascript-safe value if js=True.
-    """
-    return get_django_setting(name, js)
 
 
 @register.simple_tag
@@ -178,6 +171,39 @@ def get_user_html(user):
 
 
 @register.simple_tag
+def get_backend_include(backend_name, include_type='js'):
+    """Returns import string for backend app Javascript or CSS.
+    Returns empty string if not found."""
+
+    # TODO: Replace with get_app_plugin() and if None check
+    # TODO: once get_app_plugin() can be used for backend plugins
+    # TODO: Don't forget to remove ObjectDoesNotExist import
+    try:
+        plugin = BackendPluginPoint.get_plugin(backend_name)
+    except ObjectDoesNotExist:
+        return ''
+
+    include = ''
+    include_string = ''
+    try:
+        if include_type == 'js':
+            include = plugin.javascript_url
+            include_string = '<script type="text/javascript" src="{}"></script>'
+        elif include_type == 'css':
+            include = plugin.css_url
+            include_string = (
+                '<link rel="stylesheet" type="text/css" href="{}"/>'
+            )
+    except AttributeError:
+        return ''
+
+    if include and finders.find(include):
+        return include_string.format(static(include))
+
+    return ''
+
+
+@register.simple_tag
 def get_history_dropdown(project, obj):
     """Return link to object timeline events within project"""
     timeline = get_backend_api('timeline_backend')
@@ -234,7 +260,9 @@ def get_remote_icon(project, request):
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:
         try:
-            remote_project = RemoteProject.objects.get(project=project)
+            remote_project = RemoteProject.objects.get(
+                project=project, site__mode=SITE_MODE_SOURCE
+            )
             return (
                 '<i class="fa fa-globe text-info mx-1 '
                 'sodar-pr-remote-project-icon" title="Remote project from '
@@ -246,6 +274,14 @@ def get_remote_icon(project, request):
             pass
 
     return ''
+
+
+@register.simple_tag
+def get_visible_projects(projects, can_view_hidden_projects=False):
+    """Return all projects that are either visible by user display or by view hidden permission"""
+    return [
+        p for p in projects if p.site.user_display or can_view_hidden_projects
+    ]
 
 
 @register.simple_tag

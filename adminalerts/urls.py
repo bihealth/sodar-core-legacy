@@ -26,4 +26,9 @@ urlpatterns = [
         view=views.AdminAlertDeleteView.as_view(),
         name='delete',
     ),
+    url(
+        regex=r'^ajax/update-state',
+        view=views.AdminAlertActivationView.as_view(),
+        name='ajax_alert_activation',
+    ),
 ]

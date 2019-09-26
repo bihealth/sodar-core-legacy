@@ -1,5 +1,5 @@
 """Tests for permissions in the adminalerts app"""
-
+from django.http import HttpResponseBadRequest
 from django.urls import reverse
 
 # Projectroles dependency
@@ -70,4 +70,13 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
         self.assert_render200_ok(url, good_users)
+        self.assert_redirect(url, bad_users)
+
+    def test_alert_activation(self):
+        url = reverse('adminalerts:ajax_alert_activation')
+        good_users = [self.superuser]
+        bad_users = [self.anonymous, self.regular_user]
+        self.assert_response(
+            url, good_users, HttpResponseBadRequest.status_code, method='POST'
+        )
         self.assert_redirect(url, bad_users)

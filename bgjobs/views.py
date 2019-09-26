@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -14,6 +15,10 @@ from projectroles.plugins import get_backend_api
 from .models import BackgroundJob
 
 
+# Local variables
+DEFAULT_PAGINATION = 15
+
+
 class ProjectBackgroundJobView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
@@ -26,6 +31,11 @@ class ProjectBackgroundJobView(
     template_name = 'bgjobs/project_backgroundjobs.html'
     permission_required = 'bgjobs.view_jobs_own'
     model = BackgroundJob
+    paginate_by = (
+        settings.BGJOBS_PAGINATION
+        if hasattr(settings, 'BGJOBS_PAGINATION')
+        else DEFAULT_PAGINATION
+    )
 
     def get_queryset(self):
         # TODO: filter to user's job if can only see their own

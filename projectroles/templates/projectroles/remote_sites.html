@@ -2,7 +2,28 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}Remote SODAR Sites{% endblock %}
+{% block title %}Remote SODAR Sites{% endblock title %}
+
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    @media screen and (max-width: 1200px) {
+      .table#sodar-pr-remote-site-table thead tr th:nth-child(3),
+      .table#sodar-pr-remote-site-table tbody tr td:nth-child(3),
+      .table#sodar-pr-remote-site-table thead tr th:nth-child(5),
+      .table#sodar-pr-remote-site-table tbody tr td:nth-child(5) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 900px) {
+      .table#sodar-pr-remote-site-table thead tr th:nth-child(2),
+      .table#sodar-pr-remote-site-table tbody tr td:nth-child(2) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
 
 {% block projectroles %}
 
@@ -51,6 +72,9 @@
               <th class="text-right">{% get_display_name 'PROJECT' title=True plural=True %}</th>
               <th>Token</th>
               <th>Accessed</th>
+              {% if site_mode == 'SOURCE' %}
+                <th>Visible</th>
+              {% endif %}
               <th></th>
             </tr>
           </thead>

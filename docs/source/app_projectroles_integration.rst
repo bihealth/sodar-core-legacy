@@ -1,5 +1,6 @@
 .. _app_projectroles_integration:
 
+
 Projectroles Integration
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -10,18 +11,19 @@ and other SODAR Core apps into your Django site.
 Installation on a New Site
 **************************
 
-If you want to set up a new site for integrating projectroles, see the
+If you want to set up a new Django site for integrating projectroles, see the
 recommended options in this section.
 
 
 SODAR Django Site Template (Recommended)
 ========================================
 
-When setting up a new SODAR Core based site, it is strongly recommended to use
-`sodar_django_site <https://github.com/bihealth/sodar_django_site>`_
-as a template. The repository contains a minimal Django site pre-configured with
-projectroles and other SODAR Core apps. The master branch of this project always
-integrates the latest stable release of SODAR Core and projectroles.
+When setting up a new :term:`SODAR Core based site`, it is strongly recommended
+to use `sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as
+the template. The repository contains a minimal :term:`Django site`
+pre-configured with projectroles and other
+:term:`SODAR Core apps<SODAR Core App>`. The master branch of this project
+always integrates the latest stable release of SODAR Core and projectroles.
 
 To set up your site with this template, clone the repository and follow the
 installation instructions in the README.rst file.
@@ -75,7 +77,7 @@ chapter.
     In order to successfully set up projectroles, you are expected to **follow
     all the instructions here in the order they are presented**. Please note
     that leaving out steps may result in a non-working Django site! Attempting
-    to run the site before implementing all of the steps may (and probably will)
+    to run the site before following all of the steps may (and probably will)
     result in errors.
 
 .. warning::
@@ -92,7 +94,7 @@ desired release tag.
 .. code-block:: console
 
     -e git://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git://github.com/bihealth/sodar_core.git@v0.4.2#egg=django-sodar-core
+    -e git://github.com/bihealth/sodar_core.git@v0.6.2#egg=django-sodar-core
 
 Install the requirements for development:
 
@@ -115,10 +117,11 @@ you will have to resolve them before continuing.
 Django Settings
 ===============
 
-Next you need to modify your default Django settings file, usually located in
-``config/settings/base.py``. For sites created with an older cookiecutter-django
-version the file name may also be ``common.py``. Naturally, you should make sure
-no settings in other configuration files conflict with ones set here.
+Next you need to modify your default :term:`Django settings` file, usually
+located in ``config/settings/base.py``. For sites created with an older
+cookiecutter-django version the file name may also be ``common.py``. Naturally,
+you should make sure no settings in other configuration files conflict with ones
+set here.
 
 For values retrieved from environment variables, make sure to configure your
 env accordingly. For development and testing, using ``READ_DOT_ENV_FILE`` is
@@ -137,8 +140,8 @@ default user model.
 Extending the User Model
 ------------------------
 
-In a cookiecutter-django project, an extended user model should already exist
-in ``{SITE_NAME}/users/models.py``. The abstract model provided by the
+In a cookiecutter-django based project, an extended user model should already
+exist in ``{SITE_NAME}/users/models.py``. The abstract model provided by the
 projectroles app provides the same model with critical additions, most notably
 the ``sodar_uuid`` field used as an unique identifier for SODAR objects
 including users.
@@ -153,7 +156,7 @@ If you have not added any of your own modifications to the model, you can simply
     class User(SODARUser):
         pass
 
-If you need to add your own extra fields or functions (or have existing ones
+If you need to include your own extra fields or functions (or have existing ones
 already), you can add them in this model.
 
 After updating the user model, create and run database migrations.
@@ -298,9 +301,9 @@ implementing your own.
 All Done!
 =========
 
-After following all the instructions above, you should have a working Django
-site with Projectroles access control and support for SODAR app. To test the
-site locally execute the supplied shortcut script:
+After following all the instructions above, you should have a working SODAR Core
+based Django site with support for projectroles features and SODAR Core apps. To
+test the site locally execute the supplied shortcut script:
 
 .. code-block:: console
 

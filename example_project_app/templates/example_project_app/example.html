@@ -45,6 +45,23 @@
       </div>
     {% endif %}
 
+    {# Backend css or javacript includes #}
+    {% get_backend_include 'example_backend_app' 'css' as backend_css %}
+    {% if backend_css %}
+      <div class="alert alert-success">
+        CSS of example backend app plugin included here:
+        {{ backend_css|safe }}
+      </div>
+    {% endif %}
+
+    {% get_backend_include 'example_backend_app' 'js' as backend_js %}
+    {% if backend_js %}
+      <div class="alert alert-success">
+        Javascript of example backend app plugin included here:
+        {{ backend_js|safe}}
+      </div>
+    {% endif %}
+
   </div> <!-- sodar-page-container -->
 
 {% endblock projectroles_extend %}

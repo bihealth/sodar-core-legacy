@@ -28,6 +28,16 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: Required permission for displaying the app
     app_permission = 'userprofile.view_detail'
 
+    app_settings = {
+        'enable_project_uuid_copy': {
+            'scope': 'USER',
+            'type': 'BOOLEAN',
+            'label': 'Display project UUID copying link',
+            'default': False,
+            'user_modifiable': True,
+        }
+    }
+
     def get_messages(self, user=None):
         """
         Return a list of messages to be shown to users.
