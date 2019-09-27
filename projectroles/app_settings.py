@@ -1,4 +1,5 @@
 """Project and user settings API"""
+import json
 
 from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
@@ -173,13 +174,16 @@ class AppSettingAPI:
                 user=user,
             )
 
-            if setting.value == value:
+            if setting.value == value or setting.value_json == value:
                 return False
 
             if validate:
                 cls.validate_setting(setting.type, value)
 
-            setting.value = value
+            if setting.type == 'JSON':
+                setting.value_json = value
+            else:
+                setting.value = value
             setting.save()
             return True
 
@@ -204,15 +208,26 @@ class AppSettingAPI:
             if validate:
                 cls.validate_setting(s_type, value)
 
-            setting = AppSetting(
-                app_plugin=app_plugin.get_model(),
-                project=project,
-                user=user,
-                name=setting_name,
-                type=s_type,
-                value=value,
-                user_modifiable=s_mod,
-            )
+            if type == 'JSON':
+                setting = AppSetting(
+                    app_plugin=app_plugin.get_model(),
+                    project=project,
+                    user=user,
+                    name=setting_name,
+                    type=s_type,
+                    value_json=value,
+                    user_modifiable=s_mod,
+                )
+            else:
+                setting = AppSetting(
+                    app_plugin=app_plugin.get_model(),
+                    project=project,
+                    user=user,
+                    name=setting_name,
+                    type=s_type,
+                    value=value,
+                    user_modifiable=s_mod,
+                )
             setting.save()
             return True
 
@@ -228,19 +243,31 @@ class AppSettingAPI:
         if setting_type not in APP_SETTING_TYPES:
             raise ValueError('Invalid setting type "{}"'.format(setting_type))
 
-        if setting_type == 'BOOLEAN' and not isinstance(setting_value, bool):
-            raise ValueError(
-                'Please enter a valid boolean value ({})'.format(setting_value)
-            )
+        elif setting_type == 'BOOLEAN':
+            if not isinstance(setting_value, bool):
+                raise ValueError(
+                    'Please enter a valid boolean value ({})'.format(
+                        setting_value
+                    )
+                )
 
-        if setting_type == 'INTEGER' and (
-            not isinstance(setting_value, int)
-            and not str(setting_value).isdigit()
-        ):
-            raise ValueError(
-                'Please enter a valid integer value ({})'.format(setting_value)
-            )
-
+        elif setting_type == 'INTEGER':
+            if (
+                not isinstance(setting_value, int)
+                and not str(setting_value).isdigit()
+            ):
+                raise ValueError(
+                    'Please enter a valid integer value ({})'.format(
+                        setting_value
+                    )
+                )
+        elif setting_type == 'JSON':
+            try:
+                json.dumps(setting_value)
+            except TypeError:
+                raise ValueError(
+                    'Please enter valid json ({})'.format(setting_value)
+                )
         return True
 
     @classmethod

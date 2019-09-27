@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+from projectroles.app_settings import AppSettingAPI
 from .. import views
 from ..models import (
     Project,
@@ -41,6 +42,7 @@ from .test_models import (
     ProjectUserTagMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    AppSettingMixin,
 )
 from projectroles.utils import get_user_display_name
 
@@ -77,6 +79,11 @@ SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 SODAR_API_VERSION = '0.1'
 SODAR_API_VERSION_INVALID = '9.9'
+
+EXAMPLE_APP_NAME = 'example_project_app'
+
+# App settings API
+app_settings = AppSettingAPI()
 
 
 # TODO: Refactor or remove this (API should be enough?)
@@ -691,6 +698,119 @@ class TestProjectUpdateView(
             new_owner, self.project
         )
         self.assertEqual(new_owner_ra.role, self.role_owner)
+
+
+class TestProjectSettingsForm(
+    AppSettingMixin, TestViewsBase, ProjectMixin, RoleAssignmentMixin
+):
+    """Tests for the project settings form."""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={'Test': 'More'},
+            project=self.project,
+        )
+
+    def testGet(self):
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+
+    def testPost(self):
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'More'},
+        )
+
+        values = {
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: False,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Less"}',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Less'},
+        )
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):

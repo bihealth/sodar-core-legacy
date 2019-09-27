@@ -32,6 +32,18 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'description': 'Example project setting',
             'user_modifiable': True,
         },
+        'project_json_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'JSON',
+            'default': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            'description': 'Example project setting for JSON. Will accept '
+            'anything that json.dumps() can.',
+            'user_modifiable': True,
+        },
         'project_hidden_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'STRING',
@@ -39,6 +51,19 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'default': '',
             'description': 'Should not be displayed in forms',
             'user_modifiable': False,
+        },
+        'user_json_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
+            'type': 'JSON',
+            'label': 'Json example',
+            'default': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            'description': 'Example project setting for JSON. Will accept '
+            'anything that json.dumps() can.',
+            'user_modifiable': True,
         },
         'user_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],

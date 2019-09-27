@@ -26,11 +26,12 @@ SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
+APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
 APP_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
     ('STRING', 'String'),
+    ('JSON', 'Json'),
 ]
 APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
@@ -552,7 +553,6 @@ class AppSetting(models.Model):
         help_text='Value of the setting',
     )
 
-    # TODO: Implement the use of this in release v0.7 (see #268)
     #: Optional JSON value for the setting
     value_json = JSONField(
         default=dict, help_text='Optional JSON value for the setting'
@@ -610,6 +610,9 @@ class AppSetting(models.Model):
 
         elif self.type == 'BOOLEAN':
             return bool(int(self.value))
+
+        elif self.type == 'JSON':
+            return self.value_json
 
         return self.value
 
