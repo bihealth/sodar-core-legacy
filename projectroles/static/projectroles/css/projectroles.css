@@ -550,8 +550,10 @@ a.sodar-nav-link-last {
   border-bottom-left-radius: 0;
 }
 
-/* Pagedown textarea height modification ("rows" attribute does not work) */
-textarea.wmd-input {
+/* Pagedown and JSON setting textarea height modification */
+/* ("rows" attribute does not work) */
+textarea.wmd-input,
+textarea.sodar-json-input {
   height: 175px;
   min-height: 175px;
   resize: vertical;

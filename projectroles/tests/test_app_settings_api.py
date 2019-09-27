@@ -7,7 +7,6 @@ from ..plugins import get_app_plugin
 from ..app_settings import AppSettingAPI
 from .test_models import ProjectMixin, RoleAssignmentMixin, AppSettingMixin
 
-
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -24,7 +23,6 @@ APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 # Local settings
 EXISTING_SETTING = 'project_bool_setting'
 EXAMPLE_APP_NAME = 'example_project_app'
-
 
 # App settings API
 app_settings = AppSettingAPI()
@@ -53,40 +51,67 @@ class TestAppSettingAPI(
         )
 
         # Init test setting
-        self.setting_str = self._make_setting(
-            app_name=EXAMPLE_APP_NAME,
-            project=self.project,
-            name='str_setting',
-            setting_type='STRING',
-            value='test',
-        )
-
-        # Init integer setting
-        self.setting_int = self._make_setting(
-            app_name=EXAMPLE_APP_NAME,
-            project=self.project,
-            name='int_setting',
-            setting_type='INTEGER',
-            value=170,
-        )
-
-        # Init boolean setting
-        self.setting_bool = self._make_setting(
-            app_name=EXAMPLE_APP_NAME,
-            project=self.project,
-            name='bool_setting',
-            setting_type='BOOLEAN',
-            value=True,
-        )
+        setting_str_kwarg = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'str_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+            'update_value': 'better test',
+            'non_valid_value': False,
+        }
+        setting_int_kwarg = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'int_setting',
+            'setting_type': 'INTEGER',
+            'value': 210,
+            'update_value': 420,
+            'non_valid_value': 'Nan',
+        }
+        setting_bool_kwarg = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'bool_setting',
+            'setting_type': 'BOOLEAN',
+            'value': True,
+            'update_value': False,
+            'non_valid_value': 69,
+        }
+        setting_json_kwarg = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'json_setting',
+            'setting_type': 'JSON',
+            'value': {'Test': 'often'},
+            'update_value': {'Test_more': 'often_always'},
+            'non_valid_value': self.project,
+        }
+        self.settings = [
+            setting_int_kwarg,
+            setting_json_kwarg,
+            setting_str_kwarg,
+            setting_bool_kwarg,
+        ]
+        for s in self.settings:
+            self._make_setting(
+                app_name=s['app_name'],
+                name=s['name'],
+                setting_type=s['setting_type'],
+                value=s['value'],
+                value_json=s['value'],
+                project=s['project'],
+            )
 
     def test_get_project_setting(self):
         """Test get_app_setting()"""
-        val = app_settings.get_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            project=self.project,
-        )
-        self.assertEqual(self.setting_str.value, val)
+        for setting in self.settings:
+            val = app_settings.get_app_setting(
+                app_name=setting['app_name'],
+                setting_name=setting['name'],
+                project=setting['project'],
+            )
+            self.assertEqual(setting['value'], val)
 
     def test_get_project_setting_default(self):
         """Test get_app_setting() with default value for existing setting"""
@@ -113,58 +138,40 @@ class TestAppSettingAPI(
     def test_set_project_setting(self):
         """Test set_app_setting()"""
 
-        # Assert postcondition
-        val = app_settings.get_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            project=self.project,
-        )
-        self.assertEqual('test', val)
+        for setting in self.settings:
+            ret = app_settings.set_app_setting(
+                app_name=setting['app_name'],
+                setting_name=setting['name'],
+                project=setting['project'],
+                value=setting['update_value'],
+            )
+            self.assertEqual(ret, True)
 
-        ret = app_settings.set_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            value='updated',
-            project=self.project,
-        )
-
-        self.assertEqual(ret, True)
-
-        # Assert postcondition
-        val = app_settings.get_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            project=self.project,
-        )
-        self.assertEqual('updated', val)
+            val = app_settings.get_app_setting(
+                app_name=setting['app_name'],
+                setting_name=setting['name'],
+                project=setting['project'],
+            )
+            self.assertEqual(val, setting['update_value'])
 
     def test_set_project_setting_unchanged(self):
         """Test set_app_setting() with an unchnaged value"""
 
-        # Assert postcondition
-        val = app_settings.get_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            project=self.project,
-        )
-        self.assertEqual('test', val)
+        for setting in self.settings:
+            ret = app_settings.set_app_setting(
+                app_name=setting['app_name'],
+                setting_name=setting['name'],
+                project=setting['project'],
+                value=setting['value'],
+            )
+            self.assertEqual(ret, False)
 
-        ret = app_settings.set_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            value='test',
-            project=self.project,
-        )
-
-        self.assertEqual(ret, False)
-
-        # Assert postcondition
-        val = app_settings.get_app_setting(
-            app_name=EXAMPLE_APP_NAME,
-            setting_name='str_setting',
-            project=self.project,
-        )
-        self.assertEqual('test', val)
+            val = app_settings.get_app_setting(
+                app_name=setting['app_name'],
+                setting_name=setting['name'],
+                project=setting['project'],
+            )
+            self.assertEqual(val, setting['value'])
 
     def test_set_project_setting_new(self):
         """Test set_app_setting() with a new but defined setting"""
@@ -210,12 +217,21 @@ class TestAppSettingAPI(
                 project=self.project,
             )
 
-    def test_validate_project_setting_bool(self):
+    def test_validator(self):
         """Test validate_setting() with type BOOLEAN"""
-        self.assertEqual(app_settings.validate_setting('BOOLEAN', True), True)
-
-        with self.assertRaises(ValueError):
-            app_settings.validate_setting('BOOLEAN', 'not a boolean')
+        for setting in self.settings:
+            self.assertEqual(
+                app_settings.validate_setting(
+                    setting['setting_type'], setting['value']
+                ),
+                True,
+            )
+            if setting['setting_type'] == 'STRING':
+                continue
+            with self.assertRaises(ValueError):
+                app_settings.validate_setting(
+                    setting['setting_type'], setting['non_valid_value']
+                )
 
     def test_validate_project_setting_int(self):
         """Test validate_setting() with type INTEGER"""
@@ -240,6 +256,18 @@ class TestAppSettingAPI(
                 'type': 'BOOLEAN',
                 'default': False,
                 'description': 'Example project setting',
+                'user_modifiable': True,
+            },
+            'project_json_setting': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'JSON',
+                'default': {
+                    'Example': 'Value',
+                    'list': [1, 2, 3, 4, 5],
+                    'level_6': False,
+                },
+                'description': 'Example project setting for JSON. Will accept '
+                'anything that json.dumps() can.',
                 'user_modifiable': True,
             },
             'project_hidden_setting': {
@@ -282,6 +310,19 @@ class TestAppSettingAPI(
                 'default': False,
                 'user_modifiable': True,
             },
+            'user_json_setting': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'JSON',
+                'label': 'Json example',
+                'default': {
+                    'Example': 'Value',
+                    'list': [1, 2, 3, 4, 5],
+                    'level_6': False,
+                },
+                'description': 'Example project setting for JSON. Will accept '
+                'anything that json.dumps() can.',
+                'user_modifiable': True,
+            },
             'user_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
@@ -300,11 +341,11 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(
             app_plugin, APP_SETTING_SCOPE_PROJECT
         )
-        self.assertEqual(len(defs), 2)
+        self.assertEqual(len(defs), 3)
         defs = app_settings.get_setting_defs(
             app_plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
         )
-        self.assertEqual(len(defs), 1)
+        self.assertEqual(len(defs), 2)
 
     def test_get_setting_defs_invalid(self):
         """Test get_setting_defs() with an invalid scope"""

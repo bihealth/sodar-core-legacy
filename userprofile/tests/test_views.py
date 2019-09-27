@@ -76,6 +76,16 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             user=self.user,
         )
 
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='user_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={'Test': 'More'},
+            user=self.user,
+        )
+
     def testGet(self):
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:settings_update'))
@@ -94,6 +104,11 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         self.assertIsNotNone(
             response.context['form'].fields.get(
                 'settings.%s.user_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.user_json_setting' % EXAMPLE_APP_NAME
             )
         )
 
@@ -116,11 +131,19 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             ),
             True,
         )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
+            ),
+            {'Test': 'More'},
+        )
 
         values = {
             'settings.%s.user_str_setting' % EXAMPLE_APP_NAME: 'another-text',
             'settings.%s.user_int_setting' % EXAMPLE_APP_NAME: '123',
             'settings.%s.user_bool_setting' % EXAMPLE_APP_NAME: False,
+            'settings.%s.user_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Less"}',
         }
 
         with self.login(self.user):
@@ -150,4 +173,10 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
                 EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
             ),
             False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_json_setting', user=self.user
+            ),
+            {'Test': 'Less'},
         )
