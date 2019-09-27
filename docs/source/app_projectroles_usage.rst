@@ -296,6 +296,13 @@ As Target Site
 The source site should be set up as above using the *Set Source Site* link,
 using the provided secret string as the access token.
 
+Alternatively to creating the site in the UI, the following management command can be used
+with additional arguments to create a remote site:
+
+.. code-block:: console
+
+    $ ./manage.py addremotesite
+
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.
 Additionaly if the remote Source site is synchronized with multiple Target Sites,

@@ -35,6 +35,7 @@ Added
     - Link for copying remote site secret token in remote site list (#332)
     - Project ownership transfer from member list (#287)
     - UI notification for disabled member management on target sites (#301)
+    - Management command ``addremotesite`` for adding remote sites (#314)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
