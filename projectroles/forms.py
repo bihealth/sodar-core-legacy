@@ -234,6 +234,7 @@ class ProjectForm(forms.ModelForm):
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
 
+            self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
             self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
