@@ -73,12 +73,18 @@
                No starred {% get_display_name 'PROJECT' title=False plural=True %} found
              </td>
            </tr>
-        {% else %}
+        {% elif request.user.is_superuser %}
            <tr>
              <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
-               No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
+               No {% get_display_name 'PROJECT' title=False plural=True %} created yet!
               </td>
            </tr>
+        {% else %}
+          <tr>
+            <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+              No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
+            </td>
+          </tr>
         {% endif %}
        </tbody>
      </table>
