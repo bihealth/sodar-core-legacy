@@ -818,7 +818,7 @@ class TestProjectSetting(
             project=self.project,
         )
 
-        # Init json setting
+        # Init JSON setting
         self.setting_json = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='json_setting',
@@ -861,7 +861,7 @@ class TestProjectSetting(
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
     def test_initialization_json(self):
-        """Test initialization with integer value"""
+        """Test initialization with JSON value"""
         expected = {
             'id': self.setting_json.pk,
             'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
@@ -907,7 +907,7 @@ class TestProjectSetting(
         self.assertEqual(val, True)
 
     def test_get_value_json(self):
-        """Test get_value() with type BOOLEAN"""
+        """Test get_value() with type JSON"""
         val = self.setting_json.get_value()
         self.assertEqual(val, {'Testing': 'good'})
 

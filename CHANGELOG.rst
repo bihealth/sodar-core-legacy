@@ -56,6 +56,7 @@ Changed
     - Make sidebar hiding dynamic by content height (#316)
     - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
     - Refactor remote project display on details page (#196)
+    - Refactor AppSettingAPI (#268)
 - **Timeline**
     - Use common pagination template (#336)
 
@@ -79,6 +80,7 @@ Removed
     - Duplicate database indexes from ``RoleAssignment`` (#285)
     - Deprecated ``get_setting()`` tag from ``projectroles_common_tags`` (#283)
     - Project owner change from project updating form (#287)
+    - ``ProjectSettingMixin`` from ``projectoles.tests.test_views`` (#357)
 
 
 v0.6.2 (2019-06-21)

@@ -631,7 +631,12 @@ class ProjectModifyMixin(ModelFormMixin):
             )
 
             if old_v != v:
-                extra_data[k] = v
+                if isinstance(v, dict):
+                    extra_data[k] = v
+
+                else:
+                    extra_data[k] = '<JSON>'
+
                 upd_fields.append(k)
 
         return extra_data, upd_fields
@@ -795,7 +800,14 @@ class ProjectModifyMixin(ModelFormMixin):
 
             for s_key, s_val in p_settings.items():
                 s_name = 'settings.{}.{}'.format(plugin.name, s_key)
-                project_settings[s_name] = form.cleaned_data.get(s_name)
+
+                if s_val['type'] == 'JSON':
+                    project_settings[s_name] = json.dumps(
+                        form.cleaned_data.get(s_name)
+                    )
+
+                else:
+                    project_settings[s_name] = form.cleaned_data.get(s_name)
 
         if timeline:
             if form_action == 'create':
@@ -2652,9 +2664,15 @@ class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
 
+        project_settings = app_settings.get_all_settings(project)
+
+        for k, v in project_settings.items():
+            if isinstance(v, dict):
+                project_settings[k] = json.dumps(v)
+
         ret_data = {
             'project_uuid': project.sodar_uuid,
-            'settings': app_settings.get_all_settings(project),
+            'settings': project_settings,
         }
 
         return Response(ret_data, status=200)

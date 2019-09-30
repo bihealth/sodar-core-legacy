@@ -70,9 +70,19 @@ class UserSettingsForm(forms.Form):
                     )
 
                 # Set initial value
-                self.initial[s_field] = app_settings.get_app_setting(
-                    app_name=plugin.name, setting_name=s_key, user=self.user
-                )
+                if s_val['type'] != 'JSON':
+                    self.initial[s_field] = app_settings.get_app_setting(
+                        app_name=plugin.name, setting_name=s_key, user=self.user
+                    )
+
+                else:
+                    self.initial[s_field] = json.dumps(
+                        app_settings.get_app_setting(
+                            app_name=plugin.name,
+                            setting_name=s_key,
+                            user=self.user,
+                        )
+                    )
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -87,16 +97,18 @@ class UserSettingsForm(forms.Form):
                 if s_val['type'] == 'JSON':
                     try:
                         self.cleaned_data[s_field] = json.loads(
-                            self.cleaned_data[s_field]
+                            self.cleaned_data.get(s_field)
                         )
                     except json.JSONDecodeError as err:
+                        # TODO: Shouldn't we use add_error() instead?
                         raise forms.ValidationError(
-                            'Couldn\'t encode json.\n' + str(err)
+                            'Couldn\'t encode JSON\n' + str(err)
                         )
 
-                app_settings.validate_setting(
+                if not app_settings.validate_setting(
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
-                )
+                ):
+                    self.add_error(s_field, 'Invalid value')
 
         return self.cleaned_data

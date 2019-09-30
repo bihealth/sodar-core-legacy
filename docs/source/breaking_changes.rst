@@ -34,6 +34,13 @@ The deprecated ``get_setting()`` template tag has been removed from
 ``projectroles_common_tags``. Please use ``get_django_setting()`` in your
 templates instead.
 
+ProjectSettingMixin Removed
+---------------------------
+
+In ``projectroles.tests.test_views``, the deprecated ``ProjectSettingMixin``
+was removed. If you need to populate app settings in your tests, use the
+``AppSettingAPI`` instead.
+
 
 v0.6.2 (2019-06-21)
 ===================

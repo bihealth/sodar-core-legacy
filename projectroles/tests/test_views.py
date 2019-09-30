@@ -59,6 +59,7 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
@@ -84,33 +85,6 @@ EXAMPLE_APP_NAME = 'example_project_app'
 
 # App settings API
 app_settings = AppSettingAPI()
-
-
-# TODO: Refactor or remove this (API should be enough?)
-class ProjectSettingMixin:
-    """Helper mixin for Project settings"""
-
-    @classmethod
-    def _get_settings(cls):
-        """Get settings"""
-        ret = {}
-
-        app_plugins = sorted(
-            [
-                p
-                for p in ProjectAppPluginPoint.get_plugins()
-                if p.project_settings
-            ],
-            key=lambda x: x.name,
-        )
-
-        for p in app_plugins:
-            for s_key in p.project_settings:
-                ret[
-                    'settings.{}.{}'.format(p.name, s_key)
-                ] = p.project_settings[s_key]['default']
-
-        return ret
 
 
 class KnoxAuthMixin:
@@ -350,7 +324,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectCreateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
 ):
     """Tests for Project creation view"""
 
@@ -409,8 +383,7 @@ class TestProjectCreateView(
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub_project(self):
-        """Test rendering of Project creation form if creating a subproject
-        under a project (should fail with redirect)"""
+        """Test rendering of Project creation form if creating a subproject under a project (should fail with redirect)"""
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -448,7 +421,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), values)
@@ -501,9 +478,8 @@ class TestProjectCreateView(
             )
 
     def test_create_project(self):
-        """Test Project creation with taskflow"""
-        # create category (no assertions, cause that is covered by other testcase)
-
+        """Test Project creation"""
+        # Create category
         # Issue POST request
         values = {
             'title': 'TestCategory',
@@ -515,7 +491,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             self.client.post(reverse('projectroles:create'), values)
@@ -532,7 +512,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             self.client.post(
@@ -581,7 +565,7 @@ class TestProjectCreateView(
 
 
 class TestProjectUpdateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
 ):
     """Tests for Project updating view"""
 
@@ -628,7 +612,9 @@ class TestProjectUpdateView(
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_settings(project=self.project, post_safe=True)
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -673,15 +659,16 @@ class TestProjectUpdateView(
             )
 
     def test_update_project_owner(self):
-        """Light version of test_update_project. Only to test if a mail is send,
-         when updating the owner of a project and that the project owner is updated correctly"""
+        """Test email sending on project owner update"""
         new_owner = self.make_user('New Owner')
 
         values = model_to_dict(self.project)
         values['owner'] = new_owner.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_settings(project=self.project, post_safe=True)
+        )
 
         with self.login(self.user):
             self.client.post(
@@ -703,7 +690,7 @@ class TestProjectUpdateView(
 class TestProjectSettingsForm(
     AppSettingMixin, TestViewsBase, ProjectMixin, RoleAssignmentMixin
 ):
-    """Tests for the project settings form."""
+    """Tests for project settings in the project create/update view"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -716,12 +703,30 @@ class TestProjectSettingsForm(
             self.project, self.user, self.role_owner
         )
 
+        # Init string setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_string_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value='0',
+            project=self.project,
+        )
+
         # Init boolean setting
         self.setting_bool = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_bool_setting',
             setting_type='BOOLEAN',
-            value=True,
+            value=False,
             project=self.project,
         )
 
@@ -731,11 +736,16 @@ class TestProjectSettingsForm(
             name='project_json_setting',
             setting_type='JSON',
             value=None,
-            value_json={'Test': 'More'},
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
             project=self.project,
         )
 
-    def testGet(self):
+    def test_get(self):
+        """Test rendering the settings values"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -747,6 +757,16 @@ class TestProjectSettingsForm(
         self.assertIsNotNone(response.context['form'])
         self.assertIsNotNone(
             response.context['form'].fields.get(
+                'settings.%s.project_string_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
                 'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
             )
         )
@@ -756,24 +776,39 @@ class TestProjectSettingsForm(
             )
         )
 
-    def testPost(self):
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_string_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
         self.assertEqual(
             app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
-            True,
+            False,
         )
         self.assertEqual(
             app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
             ),
-            {'Test': 'More'},
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
 
         values = {
-            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: False,
+            'settings.%s.project_string_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
-            % EXAMPLE_APP_NAME: '{"Test": "Less"}',
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -801,15 +836,27 @@ class TestProjectSettingsForm(
         # Assert settings state after update
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_string_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
-            False,
+            True,
         )
         self.assertEqual(
             app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
             ),
-            {'Test': 'Less'},
+            {'Test': 'Updated'},
         )
 
 
