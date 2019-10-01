@@ -626,17 +626,16 @@ class ProjectModifyMixin(ModelFormMixin):
 
         # Settings
         for k, v in project_settings.items():
-            old_v = app_settings.get_app_setting(
-                k.split('.')[1], k.split('.')[2], project
-            )
+            a_name = k.split('.')[1]
+            s_name = k.split('.')[2]
+            s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+            old_v = app_settings.get_app_setting(a_name, s_name, project)
+
+            if s_def['type'] == 'JSON':
+                v = json.loads(v)
 
             if old_v != v:
-                if isinstance(v, dict):
-                    extra_data[k] = v
-
-                else:
-                    extra_data[k] = '<JSON>'
-
+                extra_data[k] = v
                 upd_fields.append(k)
 
         return extra_data, upd_fields
@@ -820,6 +819,19 @@ class ProjectModifyMixin(ModelFormMixin):
                     'description': project.description,
                     'readme': project.readme.raw,
                 }
+
+                # Add settings to extra data
+                for k, v in project_settings.items():
+                    a_name = k.split('.')[1]
+                    s_name = k.split('.')[2]
+                    s_def = app_settings.get_setting_def(
+                        s_name, app_name=a_name
+                    )
+
+                    if s_def['type'] == 'JSON':
+                        v = json.loads(v)
+
+                    extra_data[k] = v
 
             else:  # Update
                 tl_desc = 'update ' + type_str.lower()

@@ -2,6 +2,10 @@
 
 {% block css %}
   <style type="text/css">
+    .sodar-tl-modal-dialog {
+      max-width: 75% !important;
+    }
+
     .json-open-bracket, .json-close-bracket {
       color: #CC0011;
     }
@@ -27,8 +31,8 @@
 {% endblock css %}
 
 <!-- Modal -->
-<div id="sodar-tl-modal-{{ event.pk }}" class="modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-dialog-centered" role="document">
+<div id="sodar-tl-modal-{{ event.pk }}" class="modal sodar-tl-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered sodar-tl-modal-dialog" role="document">
     <div class="modal-content">
       <div style="flex: 1; flex-direction: row; display: flex; flex-wrap: wrap; border-bottom: 1px solid #dee2e6">
         <ul class="nav nav-tabs border-bottom-0">

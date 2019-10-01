@@ -27,12 +27,7 @@ from ..models import (
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
-from ..plugins import (
-    change_plugin_status,
-    get_backend_api,
-    get_active_plugins,
-    ProjectAppPluginPoint,
-)
+from ..plugins import change_plugin_status, get_backend_api, get_active_plugins
 from ..remote_projects import RemoteProjectAPI
 from ..utils import build_secret, get_display_name
 from .test_models import (
@@ -323,9 +318,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['object'].pk, self.project.pk)
 
 
-class TestProjectCreateView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project creation view"""
 
     def test_render_top(self):
@@ -564,9 +557,7 @@ class TestProjectCreateView(
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
-class TestProjectUpdateView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project updating view"""
 
     def setUp(self):
@@ -706,7 +697,7 @@ class TestProjectSettingsForm(
         # Init string setting
         self.setting_bool = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
-            name='project_string_setting',
+            name='project_str_setting',
             setting_type='STRING',
             value='',
             project=self.project,
@@ -757,7 +748,7 @@ class TestProjectSettingsForm(
         self.assertIsNotNone(response.context['form'])
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.project_string_setting' % EXAMPLE_APP_NAME
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
             )
         )
         self.assertIsNotNone(
@@ -780,7 +771,7 @@ class TestProjectSettingsForm(
         """Test modifying the settings values"""
         self.assertEqual(
             app_settings.get_app_setting(
-                EXAMPLE_APP_NAME, 'project_string_setting', project=self.project
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
             ),
             '',
         )
@@ -804,7 +795,7 @@ class TestProjectSettingsForm(
         )
 
         values = {
-            'settings.%s.project_string_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
@@ -836,7 +827,7 @@ class TestProjectSettingsForm(
         # Assert settings state after update
         self.assertEqual(
             app_settings.get_app_setting(
-                EXAMPLE_APP_NAME, 'project_string_setting', project=self.project
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
             ),
             'updated',
         )

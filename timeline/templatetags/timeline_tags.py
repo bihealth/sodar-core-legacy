@@ -135,10 +135,12 @@ def html_print_obj(obj, str_list: list, indent):
         str_list.append('&quot;')
         str_list.append(html.escape(obj))
         str_list.append('&quot;')
+    elif isinstance(obj, int):
+        str_list.append(str(obj))
     elif isinstance(obj, bool):
         str_list.append(str(obj))
     elif obj is None:
-        str_list.append('Null')
+        str_list.append('null')
 
 
 def html_print_dict(dct: dict, str_list, indent):

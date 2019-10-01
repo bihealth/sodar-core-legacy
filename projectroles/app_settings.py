@@ -335,6 +335,40 @@ class AppSettingAPI:
         return True
 
     @classmethod
+    def get_setting_def(cls, name, plugin=None, app_name=None):
+        """
+        Return definition for a single app setting, either based on an app name
+        or the plugin object.
+
+        :param name: Setting name
+        :param app_name: Name of the app plugin (string)
+        :param name: Plugin object extending ProjectAppPluginPoint
+        :return: Dict
+        :raise: ValueError if neither app_name or plugin are set or if setting
+                is not found in plugin
+        """
+        if not plugin and not app_name:
+            raise ValueError('Plugin and app name both unset')
+
+        elif not plugin:
+            plugin = get_app_plugin(app_name)
+
+            if not plugin:
+                raise ValueError(
+                    'Plugin not found with app name "{}"'.format(app_name)
+                )
+
+        if name not in plugin.app_settings:
+            raise ValueError(
+                'App setting not found in app "{}" with name "{}"'.format(
+                    plugin.name, name
+                )
+            )
+
+        return plugin.app_settings[name]
+
+    # TODO: Refactor to also take app name instead of plugin
+    @classmethod
     def get_setting_defs(cls, plugin, scope, user_modifiable=False):
         """
         Return app setting definitions of a specific scope from a plugin.

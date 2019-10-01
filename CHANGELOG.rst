@@ -37,6 +37,8 @@ Added
     - UI notification for disabled member management on target sites (#301)
     - Management command ``addremotesite`` for adding remote sites (#314)
     - JSON support for app settings (#268)
+    - ``get_setting_def()`` in app settings API
+    - Timeline logging of app settings in project creation (#359)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**

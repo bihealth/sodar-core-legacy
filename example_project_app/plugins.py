@@ -25,7 +25,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     #: Project and user settings
     app_settings = {
-        'project_string_setting': {
+        'project_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'STRING',
             'label': 'String Setting',

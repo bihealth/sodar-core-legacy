@@ -54,7 +54,7 @@ class TestAppSettingAPI(
         self.setting_str_values = {
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
-            'name': 'project_string_setting',
+            'name': 'project_str_setting',
             'setting_type': 'STRING',
             'value': 'test',
             'update_value': 'better test',
@@ -273,11 +273,73 @@ class TestAppSettingAPI(
         with self.assertRaises(ValueError):
             app_settings.validate_setting('INVALID_TYPE', 'value')
 
+    def test_get_setting_def_plugin(self):
+        """Test get_setting_def() with a plugin"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        expected = {
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': 'STRING',
+            'label': 'String Setting',
+            'default': '',
+            'description': 'Example string project setting',
+            'user_modifiable': True,
+        }
+        s_def = app_settings.get_setting_def(
+            'project_str_setting', plugin=app_plugin
+        )
+        self.assertEqual(s_def, expected)
+
+    def test_get_setting_def_app_name(self):
+        """Test get_setting_def() with an app name"""
+        expected = {
+            'scope': APP_SETTING_SCOPE_PROJECT,
+            'type': 'STRING',
+            'label': 'String Setting',
+            'default': '',
+            'description': 'Example string project setting',
+            'user_modifiable': True,
+        }
+        s_def = app_settings.get_setting_def(
+            'project_str_setting', app_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(s_def, expected)
+
+    def test_get_setting_def_user(self):
+        """Test get_setting_def() with a user setting"""
+        expected = {
+            'scope': APP_SETTING_SCOPE_USER,
+            'type': 'STRING',
+            'label': 'String Setting',
+            'default': '',
+            'description': 'Example string user setting',
+            'user_modifiable': True,
+        }
+        s_def = app_settings.get_setting_def(
+            'user_str_setting', app_name=EXAMPLE_APP_NAME
+        )
+        self.assertEqual(s_def, expected)
+
+    def test_get_setting_def_invalid(self):
+        """Test get_setting_def() with innvalid input"""
+        with self.assertRaises(ValueError):
+            app_settings.get_setting_def(
+                'non_existing_setting', app_name=EXAMPLE_APP_NAME
+            )
+
+        with self.assertRaises(ValueError):
+            app_settings.get_setting_def(
+                'project_str_setting', app_name='non_existing_app_name'
+            )
+
+        # Both app_name and plugin unset
+        with self.assertRaises(ValueError):
+            app_settings.get_setting_def('project_str_setting')
+
     def test_get_setting_defs_project(self):
         """Test get_setting_defs() with the PROJECT scope"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
-            'project_string_setting': {
+            'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
                 'label': 'String Setting',
