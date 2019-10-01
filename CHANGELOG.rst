@@ -16,6 +16,7 @@ Added
 - **General**
     - Development env file example ``env.example`` (#297)
     - Postgres database development setup script (#302)
+    - ``ENABLE_DEBUG_TOOLBAR`` setting for local development (#349)
 - **Adminalerts**
     - Activate/suspend button in alert list (#42)
 - **Bgjobs**
