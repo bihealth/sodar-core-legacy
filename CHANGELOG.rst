@@ -51,9 +51,9 @@ Changed
 
 - **General**
     - Upgrade Chromedriver to version 77.0.3865.40
-    - Upgrade minimum Django version to 1.11.24 (#324)
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
     - Run tests in parallel where applicable
+    - Upgrade minimum Django version to 1.11.25 (#346)
 - **Projectroles**
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
