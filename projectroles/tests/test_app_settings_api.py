@@ -340,7 +340,6 @@ class TestAppSettingAPI(
 
     def test_get_setting_defs_project(self):
         """Test get_setting_defs() with the PROJECT scope"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -387,13 +386,12 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_setting_defs(
-            app_plugin, APP_SETTING_SCOPE_PROJECT
+            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
     def test_get_setting_defs_user(self):
         """Test get_setting_defs() with the USER scope"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
@@ -439,12 +437,13 @@ class TestAppSettingAPI(
                 'user_modifiable': False,
             },
         }
-        defs = app_settings.get_setting_defs(app_plugin, APP_SETTING_SCOPE_USER)
+        defs = app_settings.get_setting_defs(
+            APP_SETTING_SCOPE_USER, app_name=EXAMPLE_APP_NAME
+        )
         self.assertEqual(defs, expected)
 
     def test_get_setting_defs_project_user(self):
         """Test get_setting_defs() with the PROJECT_USER scope"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         expected = {
             'project_user_string_hidden_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
@@ -476,28 +475,29 @@ class TestAppSettingAPI(
             },
         }
         defs = app_settings.get_setting_defs(
-            app_plugin, APP_SETTING_SCOPE_PROJECT_USER
+            APP_SETTING_SCOPE_PROJECT_USER, app_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(defs, expected)
 
     def test_get_setting_defs_modifiable(self):
         """Test get_setting_defs() with the user_modifiable arg"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
         defs = app_settings.get_setting_defs(
-            app_plugin, APP_SETTING_SCOPE_PROJECT
+            APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
         self.assertEqual(len(defs), 5)
         defs = app_settings.get_setting_defs(
-            app_plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+            APP_SETTING_SCOPE_PROJECT,
+            app_name=EXAMPLE_APP_NAME,
+            user_modifiable=True,
         )
         self.assertEqual(len(defs), 4)
 
     def test_get_setting_defs_invalid(self):
         """Test get_setting_defs() with an invalid scope"""
-        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
-
         with self.assertRaises(ValueError):
-            app_settings.get_setting_defs(app_plugin, 'Ri4thai8aez5ooRa')
+            app_settings.get_setting_defs(
+                'Ri4thai8aez5ooRa', app_name=EXAMPLE_APP_NAME
+            )
 
     def test_get_all_defaults_project(self):
         """Test get_all_defaults() with the PROJECT scope"""

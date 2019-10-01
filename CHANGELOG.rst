@@ -60,6 +60,7 @@ Changed
     - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
     - Refactor remote project display on details page (#196)
     - Refactor AppSettingAPI (#268)
+    - Enable calling ``AppSettingAPI.get_setting_defs()`` with app name instead of plugin object
 - **Timeline**
     - Use common pagination template (#336)
 

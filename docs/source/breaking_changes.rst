@@ -41,6 +41,15 @@ In ``projectroles.tests.test_views``, the deprecated ``ProjectSettingMixin``
 was removed. If you need to populate app settings in your tests, use the
 ``AppSettingAPI`` instead.
 
+AppSettingAPI get_setting_defs() Signature Changed
+--------------------------------------------------
+
+The ``get_settings_defs()`` function in the app settings API now accepts either
+a project app plugin or simply the name of the plugin as string. Due to this
+change, the signature of the API function including argument order has changed.
+Please see the :ref:`API documentation<app_projectroles_api>` for more details
+and update your function calls accordingly.
+
 
 v0.6.2 (2019-06-21)
 ===================

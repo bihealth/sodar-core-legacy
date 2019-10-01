@@ -69,21 +69,23 @@ class AppSettingAPI:
 
         :param value: Original value (string or dict)
         :raise: json.decoder.JSONDecodeError if string value is not valid JSON
-        :raise: ValueError if value type is not recognized
+        :raise: ValueError if value type is not recognized or if value is not
+                valid JSON
         :return: dict
         """
         if not value:
             return {}
 
-        elif isinstance(value, str):
-            return json.loads(value)
+        try:
+            if isinstance(value, str):
+                return json.loads(value)
 
-        elif isinstance(value, dict):
-            return value
+            else:
+                json.dumps(value)  # Ensure this is valid
+                return value
 
-        raise ValueError(
-            'Invalid type for value: "{}" ({})'.format(value, type(value))
-        )
+        except Exception:
+            raise ValueError('Value is not valid JSON: {}'.format(value))
 
     @classmethod
     def _compare_value(cls, setting_obj, input_value):
@@ -184,7 +186,9 @@ class AppSettingAPI:
         app_plugins = get_active_plugins()
 
         for plugin in app_plugins:
-            p_settings = cls.get_setting_defs(plugin, APP_SETTING_SCOPE_PROJECT)
+            p_settings = cls.get_setting_defs(
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
+            )
 
             for s_key in p_settings:
                 ret[
@@ -210,7 +214,7 @@ class AppSettingAPI:
         app_plugins = get_active_plugins()
 
         for plugin in app_plugins:
-            p_settings = cls.get_setting_defs(plugin, scope)
+            p_settings = cls.get_setting_defs(scope, plugin=plugin)
 
             for s_key in p_settings:
                 ret[
@@ -295,30 +299,25 @@ class AppSettingAPI:
             cls._check_project_and_user(s_def['scope'], project, user)
 
             if validate:
-                cls.validate_setting(s_type, value)
+                v = cls._get_json_value(value) if s_type == 'JSON' else value
+                cls.validate_setting(s_type, v)
 
-            # TODO: Simplfy by creating with **values instead
+            s_vals = {
+                'app_plugin': app_plugin.get_model(),
+                'project': project,
+                'user': user,
+                'name': setting_name,
+                'type': s_type,
+                'user_modifiable': s_mod,
+            }
+
             if s_type == 'JSON':
-                setting = AppSetting(
-                    app_plugin=app_plugin.get_model(),
-                    project=project,
-                    user=user,
-                    name=setting_name,
-                    type=s_type,
-                    value_json=cls._get_json_value(value),
-                    user_modifiable=s_mod,
-                )
+                s_vals['value_json'] = cls._get_json_value(value)
+
             else:
-                setting = AppSetting(
-                    app_plugin=app_plugin.get_model(),
-                    project=project,
-                    user=user,
-                    name=setting_name,
-                    type=s_type,
-                    value=value,
-                    user_modifiable=s_mod,
-                )
-            setting.save()
+                s_vals['value'] = value
+
+            AppSetting.objects.create(**s_vals)
             return True
 
     @classmethod
@@ -367,8 +366,8 @@ class AppSettingAPI:
         or the plugin object.
 
         :param name: Setting name
+        :param plugin: Plugin object extending ProjectAppPluginPoint
         :param app_name: Name of the app plugin (string)
-        :param name: Plugin object extending ProjectAppPluginPoint
         :return: Dict
         :raise: ValueError if neither app_name or plugin are set or if setting
                 is not found in plugin
@@ -393,21 +392,34 @@ class AppSettingAPI:
 
         return plugin.app_settings[name]
 
-    # TODO: Refactor to also take app name instead of plugin
     @classmethod
-    def get_setting_defs(cls, plugin, scope, user_modifiable=False):
+    def get_setting_defs(
+        cls, scope, plugin=False, app_name=False, user_modifiable=False
+    ):
         """
         Return app setting definitions of a specific scope from a plugin.
 
+        :param scope: PROJECT, USER or PROJECT_USER
         :param plugin: project app plugin object extending ProjectAppPluginPoint
-        :param scope: PROJECT or USER
+        :param app_name: Name of the app plugin (string)
         :param user_modifiable: Only return modifiable settings if True
                                 (boolean)
         :return: Dict
-        :raise: ValueError if scope is invalid
+        :raise: ValueError if scope is invalid or if if neither app_name or
+                plugin are set
         """
-        cls._check_scope(scope)
+        if not plugin and not app_name:
+            raise ValueError('Plugin and app name both unset')
 
+        if not plugin:
+            plugin = get_app_plugin(app_name)
+
+            if not plugin:
+                raise ValueError(
+                    'Plugin not found with app name "{}"'.format(app_name)
+                )
+
+        cls._check_scope(scope)
         return {
             k: v
             for k, v in plugin.app_settings.items()

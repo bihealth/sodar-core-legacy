@@ -794,7 +794,7 @@ class ProjectModifyMixin(ModelFormMixin):
 
         for plugin in app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
             )
 
             for s_key, s_val in p_settings.items():

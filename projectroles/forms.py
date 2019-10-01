@@ -116,7 +116,7 @@ class ProjectForm(forms.ModelForm):
 
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -316,7 +316,7 @@ class ProjectForm(forms.ModelForm):
         # Verify settings fields
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -331,7 +331,6 @@ class ProjectForm(forms.ModelForm):
                         self.cleaned_data[s_field] = '{}'
 
                     try:
-
                         self.cleaned_data[s_field] = json.loads(
                             self.cleaned_data.get(s_field)
                         )
