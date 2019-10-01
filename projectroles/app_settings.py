@@ -8,28 +8,48 @@ from projectroles.plugins import get_app_plugin, get_active_plugins
 # SODAR constants
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 
 # Local constants
-VALID_SCOPES = [APP_SETTING_SCOPE_PROJECT, APP_SETTING_SCOPE_USER]
+VALID_SCOPES = [
+    APP_SETTING_SCOPE_PROJECT,
+    APP_SETTING_SCOPE_USER,
+    APP_SETTING_SCOPE_PROJECT_USER,
+]
 
 
 class AppSettingAPI:
     @classmethod
-    def _check_project_and_user(cls, project, user):
+    def _check_project_and_user(cls, scope, project, user):
         """
         Ensure one of the project and user parameters is set.
 
+        :param scope: Scope of Setting (USER, PROJECT, PROJECT_USER)
         :param project: Project object
         :param user: User object
         :raise: ValueError if none or both objects exist
         """
-        if not project and not user:
-            raise ValueError('Project and user are both unset')
-
-        if project and user:
-            raise ValueError(
-                'Scope of project AND user not currently supported'
-            )
+        if scope == APP_SETTING_SCOPE_PROJECT:
+            if not project:
+                raise ValueError('Project unset for setting with project scope')
+            if user:
+                raise ValueError('User set for setting with project scope')
+        elif scope == APP_SETTING_SCOPE_USER:
+            if project:
+                raise ValueError('Project set for setting with user scope')
+            if not user:
+                raise ValueError('User unset for setting with user scope')
+        elif scope == APP_SETTING_SCOPE_PROJECT_USER:
+            if not project:
+                raise ValueError(
+                    'Project unset for setting with project_user scope'
+                )
+            if not user:
+                raise ValueError(
+                    'User unset for setting with project_user scope'
+                )
 
     @classmethod
     def _check_scope(cls, scope):
@@ -157,7 +177,8 @@ class AppSettingAPI:
         :return: Dict
         :raise: ValueError if neither project nor user are set
         """
-        cls._check_project_and_user(project, user)
+        if not project and not user:
+            raise ValueError('Project and user are both unset')
 
         ret = {}
         app_plugins = get_active_plugins()
@@ -179,7 +200,7 @@ class AppSettingAPI:
         """
         Get all default settings for a scope.
 
-        :param scope: Setting scope (PROJECT or USER)
+        :param scope: Setting scope (PROJECT, USER or PROJECT_USER)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         """
@@ -225,7 +246,9 @@ class AppSettingAPI:
         :raise: ValueError if neither project nor user are set
         :raise: KeyError if setting name is not found in plugin specification
         """
-        cls._check_project_and_user(project, user)
+
+        if not project and not user:
+            raise ValueError('Project and user are both unset')
 
         try:
             setting = AppSetting.objects.get(
@@ -267,6 +290,9 @@ class AppSettingAPI:
                 if 'user_modifiable' in s_def
                 else True
             )
+
+            cls._check_scope(s_def['scope'])
+            cls._check_project_and_user(s_def['scope'], project, user)
 
             if validate:
                 cls.validate_setting(s_type, value)

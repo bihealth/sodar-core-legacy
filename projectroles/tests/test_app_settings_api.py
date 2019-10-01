@@ -19,6 +19,9 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
+APP_SETTING_SCOPE_PROJECT_USER = SODAR_CONSTANTS[
+    'APP_SETTING_SCOPE_PROJECT_USER'
+]
 
 # Local settings
 EXISTING_SETTING = 'project_bool_setting'
@@ -439,6 +442,44 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(app_plugin, APP_SETTING_SCOPE_USER)
         self.assertEqual(defs, expected)
 
+    def test_get_setting_defs_project_user(self):
+        """Test get_setting_defs() with the PROJECT_USER scope"""
+        app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
+        expected = {
+            'project_user_string_hidden_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'STRING',
+                'default': '',
+                'description': 'Example string project user setting',
+                'user_modifiable': False,
+            },
+            'project_user_int_hidden_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'INTEGER',
+                'default': '',
+                'description': 'Example int project user setting',
+                'user_modifiable': False,
+            },
+            'project_user_bool_hidden_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'BOOLEAN',
+                'default': '',
+                'description': 'Example bool project user setting',
+                'user_modifiable': False,
+            },
+            'project_user_json_hidden_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+                'type': 'JSON',
+                'default': '',
+                'description': 'Example json project user setting',
+                'user_modifiable': False,
+            },
+        }
+        defs = app_settings.get_setting_defs(
+            app_plugin, APP_SETTING_SCOPE_PROJECT_USER
+        )
+        self.assertEqual(defs, expected)
+
     def test_get_setting_defs_modifiable(self):
         """Test get_setting_defs() with the user_modifiable arg"""
         app_plugin = get_app_plugin(EXAMPLE_APP_NAME)
@@ -462,7 +503,13 @@ class TestAppSettingAPI(
         """Test get_all_defaults() with the PROJECT scope"""
         prefix = 'settings.{}.'.format(EXAMPLE_APP_NAME)
         defaults = app_settings.get_all_defaults(APP_SETTING_SCOPE_PROJECT)
+        self.assertEqual(defaults[prefix + 'project_str_setting'], '')
+        self.assertEqual(defaults[prefix + 'project_int_setting'], 0)
         self.assertEqual(defaults[prefix + 'project_bool_setting'], False)
+        self.assertEqual(
+            defaults[prefix + 'project_json_setting'],
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
 
     def test_get_all_defaults_user(self):
         """Test get_all_defaults() with the USER scope"""
@@ -471,3 +518,7 @@ class TestAppSettingAPI(
         self.assertEqual(defaults[prefix + 'user_str_setting'], '')
         self.assertEqual(defaults[prefix + 'user_int_setting'], 0)
         self.assertEqual(defaults[prefix + 'user_bool_setting'], False)
+        self.assertEqual(
+            defaults[prefix + 'user_json_setting'],
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )

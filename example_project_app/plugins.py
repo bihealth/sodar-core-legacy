@@ -111,6 +111,34 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'description': 'Example hidden user setting',
             'user_modifiable': False,
         },
+        'project_user_string_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'STRING',
+            'default': '',
+            'description': 'Example string project user setting',
+            'user_modifiable': False,
+        },
+        'project_user_int_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'INTEGER',
+            'default': '',
+            'description': 'Example int project user setting',
+            'user_modifiable': False,
+        },
+        'project_user_bool_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'BOOLEAN',
+            'default': '',
+            'description': 'Example bool project user setting',
+            'user_modifiable': False,
+        },
+        'project_user_json_hidden_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
+            'type': 'JSON',
+            'default': '',
+            'description': 'Example json project user setting',
+            'user_modifiable': False,
+        },
     }
 
     #: FontAwesome icon ID string

@@ -39,6 +39,7 @@ Added
     - JSON support for app settings (#268)
     - ``get_setting_def()`` in app settings API
     - Timeline logging of app settings in project creation (#359)
+    - "Project and user" scope for app settings (#266)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
