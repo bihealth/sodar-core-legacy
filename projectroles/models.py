@@ -470,7 +470,7 @@ class AppSettingManager(models.Manager):
         """
         Return value of setting_name for app_name in project or for user.
 
-        Note that either project or user must be None but not both.
+        Note that project and/or user must be set.
 
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
@@ -479,8 +479,8 @@ class AppSettingManager(models.Manager):
         :return: Value (string)
         :raise: AppSetting.DoesNotExist if setting is not found
         """
-        if (project is None) == (user is None):
-            raise ValueError('Either project or user has to be None.')
+        if (project is None) and (user is None):
+            raise ValueError('Project and user unset.')
         setting = (
             super()
             .get_queryset()
