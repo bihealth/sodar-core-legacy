@@ -540,7 +540,6 @@ class AppSetting(models.Model):
     type = models.CharField(
         max_length=64,
         unique=False,
-        choices=APP_SETTING_TYPE_CHOICES,
         help_text='Type of the setting',
     )
 
