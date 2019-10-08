@@ -232,8 +232,10 @@ class TestAdminAlertDeleteView(TestViewsBase):
 
 
 class TestAdminAlertActivationView(TestViewsBase):
+    """Tests for the AdminAlert activation API view"""
+
     def test_deactivate_alert(self):
-        """There is 1 active alert currently. Try to deactivate it."""
+        """Test alert deactivation"""
         with self.login(self.superuser):
             self.assertTrue(self.alert.active)
 
@@ -246,10 +248,10 @@ class TestAdminAlertActivationView(TestViewsBase):
             data = json.loads(response.content)
             self.alert.refresh_from_db()
             self.assertFalse(self.alert.active)
-            self.assertFalse(data["is_active"])
+            self.assertFalse(data['is_active'])
 
     def test_activate_alert(self):
-        """There is 1 active alert currently. Try to deactivate it."""
+        """Test alert activation"""
         with self.login(self.superuser):
             self.alert.active = False
             self.alert.save()
@@ -263,4 +265,4 @@ class TestAdminAlertActivationView(TestViewsBase):
             data = json.loads(response.content)
             self.alert.refresh_from_db()
             self.assertTrue(self.alert.active)
-            self.assertTrue(data["is_active"])
+            self.assertTrue(data['is_active'])

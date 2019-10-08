@@ -86,7 +86,8 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             user=self.user,
         )
 
-    def testGet(self):
+    def test_get(self):
+        """Test GET request on settings update form"""
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:settings_update'))
         self.assertEqual(response.status_code, 200)
@@ -112,7 +113,8 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             )
         )
 
-    def testPost(self):
+    def test_post(self):
+        """Test POST request on settings update form"""
         self.assertEqual(
             app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'user_str_setting', user=self.user

@@ -511,10 +511,10 @@ class TestProjectList(TestUIBase):
 class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
     """Tests for the project detail page UI functionalities"""
 
-    def setup_remote_project(
+    def _setup_remote_project(
         self, site_mode=SITE_MODE_TARGET, user_visibility=True
     ):
-        """Creates a remote site and project with given user_visibility setting"""
+        """Create a remote site and project with given user_visibility setting"""
         self.remote_site = self._make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
@@ -532,8 +532,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             project=self.project,
         )
 
-    def add_remote_association(self):
-        """Fills and submits add source/target site form"""
+    def _add_remote_association(self):
+        """Fill an submits add source/target site form"""
         # Instead we could also set up a real RemoteProject, but this makes
         # the test run faster
         url = reverse('projectroles:remote_site_create')
@@ -666,8 +666,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
 
     def test_remote_project_visible(self):
-        """Checks project card for enabled visbility for all users"""
-        self.setup_remote_project(user_visibility=True)
+        """Test project card for enabled visbility for all users"""
+        self._setup_remote_project(user_visibility=True)
         users = [
             self.superuser,
             self.user_owner,
@@ -691,8 +691,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
     def test_remote_project_invisible(self):
-        """Checks project card for disabled visibility for different users"""
-        self.setup_remote_project(user_visibility=False)
+        """Test project card for disabled visibility for different users"""
+        self._setup_remote_project(user_visibility=False)
         users = [self.user_delegate, self.user_contributor, self.user_guest]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -716,8 +716,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
     def test_peer_project_source_invisible(self):
-        """Checks visibility of peer projects on SOURCE site"""
-        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+        """Test visibility of peer projects on SOURCE site"""
+        self._setup_remote_project(site_mode=SITE_MODE_PEER)
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -755,7 +755,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
             project=self.project,
         )
-        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+        self._setup_remote_project(site_mode=SITE_MODE_PEER)
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -804,7 +804,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             project=self.project,
         )
 
-        self.setup_remote_project(
+        self._setup_remote_project(
             site_mode=SITE_MODE_PEER, user_visibility=False
         )
 
@@ -855,7 +855,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.selenium.find_element_by_id('id_user_display').is_displayed()
         )
 
-        self.add_remote_association()
+        self._add_remote_association()
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element_by_id(
             'sodar-pr-remote-site-table'
@@ -878,7 +878,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         element = self.selenium.find_element_by_id('div_id_user_display')
         self.assertIsNotNone(element)
 
-        self.add_remote_association()
+        self._add_remote_association()
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element_by_id(
             'sodar-pr-remote-site-table'

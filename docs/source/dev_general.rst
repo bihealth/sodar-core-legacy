@@ -27,6 +27,19 @@ Common Helpers
 Via the projectroles app, SODAR Core provides optional templates for aiding in
 maintaining common functionality and layout. Those are defined here.
 
+App Setting API
+---------------
+
+For accessing and modifying app settings for project or site apps, you should
+use the ``AppSettingAPI``. Below is an example of invoking the API. For the full
+API docs, see :ref:`app_projectroles_api`.
+
+.. code-block:: python
+
+    from projectroles.app_settings import AppSettingAPI
+    app_settings = AppSettingAPI()
+    app_settings.get_app_setting('app_name', 'setting_name', project_object)  # Etc..
+
 Pagination Template
 -------------------
 

@@ -58,6 +58,8 @@ Changed
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
     - Run tests in parallel where applicable
     - Upgrade minimum Django version to 1.11.25 (#346)
+- **Adminalerts**
+    - Use common pagination template
 - **Projectroles**
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
