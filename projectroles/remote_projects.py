@@ -696,11 +696,6 @@ class RemoteProjectAPI:
                 project_uuid=uuid, site__mode=SITE_MODE_PEER
             )
 
-            # DEBUG
-            if p_data['level'] == REMOTE_LEVEL_REVOKED:
-                print('DEBUG: local_peers={}'.format(local_peers))
-                print('DEBUG: remote_sites={}'.format(p_data['remote_sites']))
-
             if not local_peers:
                 return
 
