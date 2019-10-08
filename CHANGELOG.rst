@@ -83,6 +83,8 @@ Fixed
     - Remote sync of parent category roles could fail with multiple subprojects
     - ``RemoteProject`` modifications not saved during sync update
     - Timeline events not created in remote project sync (#370)
+    - DAL select modifying HTML body width (#365)
+    - Footer overflow breaking layout (#367)
 - **Timeline**
     - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 
