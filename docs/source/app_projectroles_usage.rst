@@ -224,6 +224,13 @@ Core based Django sites. Remote sites and access can be managed in the
 **Remote Site Access** site app, found in the user dropdown menu in the top
 navigation bar.
 
+Alternatively, remote sites can be created using the following management
+command:
+
+.. code-block:: console
+
+    $ ./manage.py addremotesite
+
 In the current implementation, your django site must either be in **source** or
 **target** mode. A source site can define one or multiple target sites where
 project data can be provided. A target site can define exactly one source site,
@@ -259,11 +266,14 @@ commonly used for internal test sites which only needs to be used by admins.
 
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
-two are currently implemented:
+three are currently implemented:
 
 - **No access**: No access on the remote site (default)
 - **Read roles**: This allows for the target site to read project metadata *and*
   user roles in order to synchronize project access remotely.
+- **Revoked access**: Previously available access which has been revoked. The
+  project will still remain in the target site, but only superusers, the project
+  owner or the project delegate(s) can acesss it.
 
 .. note::
 
@@ -295,13 +305,6 @@ As Target Site
 
 The source site should be set up as above using the *Set Source Site* link,
 using the provided secret string as the access token.
-
-Alternatively to creating the site in the UI, the following management command can be used
-with additional arguments to create a remote site:
-
-.. code-block:: console
-
-    $ ./manage.py addremotesite
 
 After creating the source site, remote project metadata and member roles (for
 which access has been granted) can be accessed using the *Synchronize* link.

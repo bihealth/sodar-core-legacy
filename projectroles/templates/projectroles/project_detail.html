@@ -46,7 +46,7 @@
             <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
           </div>
           <div class="card-body pb-2 mr-2">
-            <a class="btn btn-info mb-1"
+            <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-master"
                 href="{{ object.get_source_site.get_url }}{% url 'projectroles:detail' project=object.sodar_uuid %}"
                 role="button"
                 title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
@@ -56,13 +56,13 @@
             </a>
             {% get_visible_projects peer_projects can_view_hidden_projects as visible_peer_projects %}
             {% for peer_p in visible_peer_projects %}
-              <a class="btn btn-info mb-1"
+              <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-peer"
                   href="{{ peer_p.site.get_url }}{% url 'projectroles:detail' project=peer_p.sodar_uuid %}"
                   role="button"
                   title="{% if peer_p.site.description %}{{ peer_p.site.description }}{% endif %}"
                   data-toggle="tooltip"
                   target="_blank">
-                <i class="fa fa-globe"></i> {{ peer_p.site.name }} (Peer Project)
+                <i class="fa fa-globe"></i> {{ peer_p.site.name }}
               </a>
             {% endfor %}
           </div>

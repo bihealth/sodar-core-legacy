@@ -25,6 +25,7 @@ SODAR_CONSTANTS = {
     'SITE_MODE_PEER': 'PEER',
     # RemoteProject access types
     'REMOTE_LEVEL_NONE': 'NONE',
+    'REMOTE_LEVEL_REVOKED': 'REVOKED',
     'REMOTE_LEVEL_VIEW_AVAIL': 'VIEW_AVAIL',
     'REMOTE_LEVEL_READ_INFO': 'READ_INFO',
     'REMOTE_LEVEL_READ_ROLES': 'READ_ROLES',
@@ -33,6 +34,7 @@ SODAR_CONSTANTS = {
     # RemoteProject access type legend
     'REMOTE_ACCESS_LEVELS': {
         'NONE': 'No access',
+        'REVOKED': 'Revoked access',
         'VIEW_AVAIL': 'View availability',
         'READ_INFO': 'Read information',
         'READ_ROLES': 'Read members',

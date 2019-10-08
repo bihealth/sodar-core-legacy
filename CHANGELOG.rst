@@ -17,6 +17,7 @@ Added
     - Development env file example ``env.example`` (#297)
     - Postgres database development setup script (#302)
     - ``ENABLE_DEBUG_TOOLBAR`` setting for local development (#349)
+    - ``local_target2.py`` config for peer remote site development (#200)
 - **Adminalerts**
     - Activate/suspend button in alert list (#42)
 - **Bgjobs**
@@ -41,6 +42,9 @@ Added
     - ``get_setting_def()`` in app settings API
     - Timeline logging of app settings in project creation (#359)
     - "Project and user" scope for app settings (#266)
+    - ``REVOKED`` status for remote projects with revoked access (#327)
+    - ``Project.is_revoked()`` helper (#327)
+    - Disabling access for non-owner/delegate for revoked projects in ``ProjectPermissionMixin`` (#350)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -62,6 +66,7 @@ Changed
     - Refactor remote project display on details page (#196)
     - Refactor AppSettingAPI (#268)
     - Enable calling ``AppSettingAPI.get_setting_defs()`` with app name instead of plugin object
+    - Use ``ProjectPermissionMixin`` on project detail page (#350)
 - **Timeline**
     - Use common pagination template (#336)
 
@@ -75,6 +80,9 @@ Fixed
     - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
     - UI test helper ``build_selenium_url()`` refactored to work with Chrome v77 (#337)
     - Disallow empty values in ``RemoteSite.name``
+    - Remote sync of parent category roles could fail with multiple subprojects
+    - ``RemoteProject`` modifications not saved during sync update
+    - Timeline events not created in remote project sync (#370)
 - **Timeline**
     - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 

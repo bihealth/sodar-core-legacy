@@ -351,6 +351,10 @@ class TestProject(ProjectMixin, TestCase):
         """Test Project.is_remote() without remote projects"""
         self.assertEqual(self.project_sub.is_remote(), False)
 
+    def test_is_revoked(self):
+        """Test Project.is_revoked() without remote projects"""
+        self.assertEqual(self.project_sub.is_revoked(), False)
+
     def test_validate_parent(self):
         """Test parent ForeignKey validation: project can't be its own
         parent"""
@@ -1255,6 +1259,16 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.get_source_site(), self.site)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_is_revoked_target(self):
+        """Test Project.is_revoked() as target"""
+        self.site.mode = SITE_MODE_SOURCE
+        self.site.save()
+        self.assertEqual(self.project.is_revoked(), False)
+        self.remote_project.level = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+        self.remote_project.save()
+        self.assertEqual(self.project.is_revoked(), True)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)

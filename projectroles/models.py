@@ -297,6 +297,22 @@ class Project(models.Model):
 
         return False
 
+    def is_revoked(self):
+        """Return True if remote access has been revoked for the project"""
+        if self.is_remote():
+            remote_project = RemoteProject.objects.filter(
+                project=self, site=self.get_source_site()
+            ).first()
+
+            if (
+                remote_project
+                and remote_project.level
+                == SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+            ):
+                return True
+
+        return False
+
 
 # Role -------------------------------------------------------------------------
 
@@ -538,9 +554,7 @@ class AppSetting(models.Model):
 
     #: Type of the setting
     type = models.CharField(
-        max_length=64,
-        unique=False,
-        help_text='Type of the setting',
+        max_length=64, unique=False, help_text='Type of the setting'
     )
 
     #: Value of the setting

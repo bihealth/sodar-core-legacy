@@ -242,9 +242,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         return self.get_project()
 
     def has_permission(self):
-        """Disable project app access for categories"""
+        """Overrides for project permission access"""
         project = self.get_project()
 
+        # Disable project app access for categories
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
@@ -254,10 +255,22 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             ):
                 return False
 
+        # Disable access for non-owner/delegate if remote project is revoked
+        if project and project.is_revoked():
+            role_as = RoleAssignment.objects.filter(
+                project=project, user=self.request.user
+            ).first()
+
+            if role_as and role_as.role.name not in [
+                PROJECT_ROLE_OWNER,
+                PROJECT_ROLE_DELEGATE,
+            ]:
+                return False
+
         return super().has_permission()
 
     def get_queryset(self, *args, **kwargs):
-        """Override ``get_query_set()`` to filter down to the currently selected
+        """Override ``get_queryset()`` to filter down to the currently selected
         object."""
         qs = super().get_queryset(*args, **kwargs)
 
@@ -448,7 +461,11 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
 
 
 class ProjectDetailView(
-    LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin, DetailView
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectPermissionMixin,
+    ProjectContextMixin,
+    DetailView,
 ):
     """Project details view"""
 

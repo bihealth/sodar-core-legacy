@@ -47,11 +47,19 @@
   </div>
   {% if project.is_remote and request.user.is_superuser %}
     <div class="ml-auto">
-      <i class="fa fa-globe text-info fa-2x sodar-pr-remote-project-icon"
-         title="Remote {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
+      <i class="fa fa-globe fa-2x sodar-pr-remote-project-icon {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
+         title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %} {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
          data-toggle="tooltip" data-placement="left">
       </i>
     </div>
   {% endif %}
 
 </div>
+
+{% if project.is_revoked %}
+  <div class="alert alert-danger mt-3" id="sodar-pr-alert-remote-revoked">
+    <strong>Access revoked:</strong> The source site has revoked access to this
+    remotely synchronized project. Only a superuser, an owner or a delegate can
+    currently access the project.
+  </div>
+{% endif %}
