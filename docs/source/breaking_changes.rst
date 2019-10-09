@@ -10,8 +10,8 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
-v0.7.0 (TBD)
-============
+v0.7.0 (2019-10-09)
+===================
 
 System Prerequisites
 --------------------
@@ -30,8 +30,8 @@ associated to a backend plugin should now be included in app templates as
 needed. This is done using the newly introduced ``get_backend_include()``
 template tag in ``projectroles_common_tags``.
 
-Deprecated get_settings() Tag Removed
--------------------------------------
+Deprecated get_setting() Tag Removed
+------------------------------------
 
 The deprecated ``get_setting()`` template tag has been removed from
 ``projectroles_common_tags``. Please use ``get_django_setting()`` in your
