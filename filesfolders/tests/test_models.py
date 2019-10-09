@@ -329,7 +329,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(repr(self.file), expected)
 
     def test_file_access(self):
-        """Ensure file can be accessed in database after creation"""
+        """Test file can be accessed in database after creation"""
         file_data = FileData.objects.get(file_name=self.file.file.name)
 
         expected = {
@@ -343,7 +343,7 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
         self.assertEqual(model_to_dict(file_data), expected)
 
     def test_file_deletion(self):
-        """Ensure file is removed from database after deletion"""
+        """Test file is removed from database after deletion"""
 
         # Assert precondition
         self.assertEqual(FileData.objects.all().count(), 1)

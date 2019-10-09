@@ -155,11 +155,17 @@ before will be presented to the user.
 App Settings
 ------------
 
-Project and site apps may define project or user specific :term:`app settings`.
+Project and site apps may define :term:`app settings`, which can be either be
+set with the scope of *project*, *user* or *user within a project*.
+
 Widgets for project specific settings will show up in the project creation and
-updating form. User specific settings will be displayed in the :ref:`Userpforile
-app <app_userprofile>`. Project settings can only be modified by users with
-sufficient project access.
+updating form and can only be modified by users with sufficient project access.
+User specific settings will be displayed in the
+:ref:`Userpforile app <app_userprofile>`.
+
+Settings with the scope of user within a project do not currently have a
+separate UI of their own. Instead, project apps can produce their own user
+specific UIs for this functionality if manual user selection is needed.
 
 .. note::
 
@@ -224,6 +230,13 @@ Core based Django sites. Remote sites and access can be managed in the
 **Remote Site Access** site app, found in the user dropdown menu in the top
 navigation bar.
 
+Alternatively, remote sites can be created using the following management
+command:
+
+.. code-block:: console
+
+    $ ./manage.py addremotesite
+
 In the current implementation, your django site must either be in **source** or
 **target** mode. A source site can define one or multiple target sites where
 project data can be provided. A target site can define exactly one source site,
@@ -259,11 +272,14 @@ commonly used for internal test sites which only needs to be used by admins.
 
 Once created, you can access the list of projects on your site in regards to the
 created target site. For each project, you may select an access level, of which
-two are currently implemented:
+three are currently implemented:
 
 - **No access**: No access on the remote site (default)
 - **Read roles**: This allows for the target site to read project metadata *and*
   user roles in order to synchronize project access remotely.
+- **Revoked access**: Previously available access which has been revoked. The
+  project will still remain in the target site, but only superusers, the project
+  owner or the project delegate(s) can acesss it.
 
 .. note::
 

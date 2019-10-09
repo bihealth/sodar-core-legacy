@@ -1,5 +1,7 @@
 <div class="btn-group ml-auto" id="sodar-pr-btn-role-list">
-  <button class="btn btn-primary dropdown-toggle" id="sodar-pr-btn-perm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <button class="btn btn-primary dropdown-toggle" id="sodar-pr-btn-role-op" type="button"
+          data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"
+          {% if project.is_remote %}disabled="disabled"{% endif %}>
     Member Operations
   </button>
   <div class="dropdown-menu dropdown-menu-right">

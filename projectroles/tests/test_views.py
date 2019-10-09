@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
+from projectroles.app_settings import AppSettingAPI
 from .. import views
 from ..models import (
     Project,
@@ -26,12 +27,7 @@ from ..models import (
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
-from ..plugins import (
-    change_plugin_status,
-    get_backend_api,
-    get_active_plugins,
-    ProjectAppPluginPoint,
-)
+from ..plugins import change_plugin_status, get_backend_api, get_active_plugins
 from ..remote_projects import RemoteProjectAPI
 from ..utils import build_secret, get_display_name
 from .test_models import (
@@ -41,6 +37,7 @@ from .test_models import (
     ProjectUserTagMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    AppSettingMixin,
 )
 from projectroles.utils import get_user_display_name
 
@@ -57,6 +54,7 @@ SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
+APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 INVITE_EMAIL = 'test@example.com'
@@ -78,32 +76,10 @@ SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 SODAR_API_VERSION = '0.1'
 SODAR_API_VERSION_INVALID = '9.9'
 
+EXAMPLE_APP_NAME = 'example_project_app'
 
-# TODO: Refactor or remove this (API should be enough?)
-class ProjectSettingMixin:
-    """Helper mixin for Project settings"""
-
-    @classmethod
-    def _get_settings(cls):
-        """Get settings"""
-        ret = {}
-
-        app_plugins = sorted(
-            [
-                p
-                for p in ProjectAppPluginPoint.get_plugins()
-                if p.project_settings
-            ],
-            key=lambda x: x.name,
-        )
-
-        for p in app_plugins:
-            for s_key in p.project_settings:
-                ret[
-                    'settings.{}.{}'.format(p.name, s_key)
-                ] = p.project_settings[s_key]['default']
-
-        return ret
+# App settings API
+app_settings = AppSettingAPI()
 
 
 class KnoxAuthMixin:
@@ -342,9 +318,7 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['object'].pk, self.project.pk)
 
 
-class TestProjectCreateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
-):
+class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project creation view"""
 
     def test_render_top(self):
@@ -402,8 +376,7 @@ class TestProjectCreateView(
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub_project(self):
-        """Test rendering of Project creation form if creating a subproject
-        under a project (should fail with redirect)"""
+        """Test rendering of Project creation form if creating a subproject under a project (should fail with redirect)"""
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -441,7 +414,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), values)
@@ -494,9 +471,8 @@ class TestProjectCreateView(
             )
 
     def test_create_project(self):
-        """Test Project creation with taskflow"""
-        # create category (no assertions, cause that is covered by other testcase)
-
+        """Test Project creation"""
+        # Create category
         # Issue POST request
         values = {
             'title': 'TestCategory',
@@ -508,7 +484,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             self.client.post(reverse('projectroles:create'), values)
@@ -525,7 +505,11 @@ class TestProjectCreateView(
         }
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
 
         with self.login(self.user):
             self.client.post(
@@ -573,9 +557,7 @@ class TestProjectCreateView(
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
-class TestProjectUpdateView(
-    ProjectMixin, RoleAssignmentMixin, ProjectSettingMixin, TestViewsBase
-):
+class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project updating view"""
 
     def setUp(self):
@@ -621,7 +603,9 @@ class TestProjectUpdateView(
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_settings(project=self.project, post_safe=True)
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -666,15 +650,16 @@ class TestProjectUpdateView(
             )
 
     def test_update_project_owner(self):
-        """Light version of test_update_project. Only to test if a mail is send,
-         when updating the owner of a project and that the project owner is updated correctly"""
+        """Test email sending on project owner update"""
         new_owner = self.make_user('New Owner')
 
         values = model_to_dict(self.project)
         values['owner'] = new_owner.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(self._get_settings())
+        values.update(
+            app_settings.get_all_settings(project=self.project, post_safe=True)
+        )
 
         with self.login(self.user):
             self.client.post(
@@ -691,6 +676,179 @@ class TestProjectUpdateView(
             new_owner, self.project
         )
         self.assertEqual(new_owner_ra.role, self.role_owner)
+
+
+class TestProjectSettingsForm(
+    AppSettingMixin, TestViewsBase, ProjectMixin, RoleAssignmentMixin
+):
+    """Tests for project settings in the project create/update view"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Init string setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value='0',
+            project=self.project,
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            project=self.project,
+        )
+
+    def test_get(self):
+        """Test rendering the settings values"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
 
 
 class TestProjectRoleView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):

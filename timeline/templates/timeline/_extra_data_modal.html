@@ -2,6 +2,10 @@
 
 {% block css %}
   <style type="text/css">
+    .sodar-tl-modal-dialog {
+      max-width: 75% !important;
+    }
+
     .json-open-bracket, .json-close-bracket {
       color: #CC0011;
     }
@@ -18,6 +22,18 @@
       color: #222222;
     }
 
+    .sodar-tl-link-extra {
+      cursor: pointer;
+    }
+
+    .sodar-tl-modal-tabs {
+      flex: 1;
+      flex-direction: row;
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #dee2e6;
+    }
+
     .sodar-tl-copy-btn {
       position: absolute;
       top: 10px;
@@ -27,10 +43,10 @@
 {% endblock css %}
 
 <!-- Modal -->
-<div id="sodar-tl-modal-{{ event.pk }}" class="modal" tabindex="-1" role="dialog">
-  <div class="modal-dialog modal-dialog-centered" role="document">
+<div id="sodar-tl-modal-{{ event.pk }}" class="modal sodar-tl-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-dialog-centered sodar-tl-modal-dialog" role="document">
     <div class="modal-content">
-      <div style="flex: 1; flex-direction: row; display: flex; flex-wrap: wrap; border-bottom: 1px solid #dee2e6">
+      <div class="sodar-tl-modal-tabs">
         <ul class="nav nav-tabs border-bottom-0">
           {% for data in event|collect_extra_data %}
             <li class="nav-item">
@@ -40,8 +56,7 @@
             </li>
           {% endfor %}
         </ul>
-        <button type="button" class="close ml-auto" data-dismiss="modal" aria-label="Close"
-                style="width: 2rem; border-left: 1px solid #dee2e6">
+        <button type="button" class="close ml-auto mr-3" data-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>

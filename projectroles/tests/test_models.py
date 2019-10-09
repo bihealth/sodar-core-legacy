@@ -120,6 +120,7 @@ class AppSettingMixin:
         name,
         setting_type,
         value,
+        value_json={},
         user_modifiable=True,
         project=None,
         user=None,
@@ -131,7 +132,7 @@ class AppSettingMixin:
             'name': name,
             'type': setting_type,
             'value': value,
-            'value_json': {},  # TODO: Implement usage in v0.7
+            'value_json': value_json,
             'user_modifiable': user_modifiable,
             'user': user,
         }
@@ -349,6 +350,10 @@ class TestProject(ProjectMixin, TestCase):
     def test_is_remote(self):
         """Test Project.is_remote() without remote projects"""
         self.assertEqual(self.project_sub.is_remote(), False)
+
+    def test_is_revoked(self):
+        """Test Project.is_revoked() without remote projects"""
+        self.assertEqual(self.project_sub.is_revoked(), False)
 
     def test_validate_parent(self):
         """Test parent ForeignKey validation: project can't be its own
@@ -817,6 +822,16 @@ class TestProjectSetting(
             project=self.project,
         )
 
+        # Init JSON setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={'Testing': 'good'},
+            project=self.project,
+        )
+
     def test_initialization(self):
         """Test AppSetting initialization"""
         expected = {
@@ -849,6 +864,22 @@ class TestProjectSetting(
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
+    def test_initialization_json(self):
+        """Test initialization with JSON value"""
+        expected = {
+            'id': self.setting_json.pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'project': self.project.pk,
+            'name': 'json_setting',
+            'type': 'JSON',
+            'user': None,
+            'value': None,
+            'value_json': {'Testing': 'good'},
+            'user_modifiable': True,
+            'sodar_uuid': self.setting_json.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.setting_json), expected)
+
     def test__str__(self):
         """Test AppSetting __str__()"""
         expected = 'TestProject: {} / str_setting'.format(EXAMPLE_APP_NAME)
@@ -878,6 +909,11 @@ class TestProjectSetting(
         val = self.setting_bool.get_value()
         self.assertIsInstance(val, bool)
         self.assertEqual(val, True)
+
+    def test_get_value_json(self):
+        """Test get_value() with type JSON"""
+        val = self.setting_json.get_value()
+        self.assertEqual(val, {'Testing': 'good'})
 
 
 class TestUserSetting(
@@ -917,6 +953,16 @@ class TestUserSetting(
             user=self.user,
         )
 
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={'Testing': 'good'},
+            user=self.user,
+        )
+
     def test_initialization(self):
         """Test AppSetting initialization"""
         expected = {
@@ -949,6 +995,22 @@ class TestUserSetting(
         }
         self.assertEqual(model_to_dict(self.setting_int), expected)
 
+    def test_initialization_json(self):
+        """Test initialization with integer value"""
+        expected = {
+            'id': self.setting_json.pk,
+            'app_plugin': get_app_plugin(EXAMPLE_APP_NAME).get_model().pk,
+            'project': None,
+            'name': 'json_setting',
+            'type': 'JSON',
+            'user': self.user.pk,
+            'value': None,
+            'value_json': {'Testing': 'good'},
+            'user_modifiable': True,
+            'sodar_uuid': self.setting_json.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.setting_json), expected)
+
     def test__str__(self):
         """Test AppSetting __str__()"""
         expected = 'owner: {} / str_setting'.format(EXAMPLE_APP_NAME)
@@ -978,6 +1040,11 @@ class TestUserSetting(
         val = self.setting_bool.get_value()
         self.assertIsInstance(val, bool)
         self.assertEqual(val, True)
+
+    def test_get_value_json(self):
+        """Test get_value() with type BOOLEAN"""
+        val = self.setting_json.get_value()
+        self.assertEqual(val, {'Testing': 'good'})
 
 
 # TODO: Test manager
@@ -1192,6 +1259,16 @@ class TestRemoteProject(
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
         self.assertEqual(self.project.get_source_site(), self.site)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_is_revoked_target(self):
+        """Test Project.is_revoked() as target"""
+        self.site.mode = SITE_MODE_SOURCE
+        self.site.save()
+        self.assertEqual(self.project.is_revoked(), False)
+        self.remote_project.level = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+        self.remote_project.save()
+        self.assertEqual(self.project.is_revoked(), True)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)

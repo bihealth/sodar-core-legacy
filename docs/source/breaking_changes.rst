@@ -10,13 +10,16 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
-v0.7.0 (TBD)
-============
+v0.7.0 (2019-10-09)
+===================
 
 System Prerequisites
 --------------------
 
-The minimum version requirement for Django has been bumped to 1.11.24.
+The minimum supported versions have been upgraded for a number of Python
+packages in this release. It is highly recommended to also upgrade these for
+your SODAR Core based site. See the ``requirements`` directory for up-to date
+dependencies.
 
 Backend Javascript Include
 --------------------------
@@ -27,12 +30,35 @@ associated to a backend plugin should now be included in app templates as
 needed. This is done using the newly introduced ``get_backend_include()``
 template tag in ``projectroles_common_tags``.
 
-Deprecated get_settings() Tag Removed
--------------------------------------
+Deprecated get_setting() Tag Removed
+------------------------------------
 
 The deprecated ``get_setting()`` template tag has been removed from
 ``projectroles_common_tags``. Please use ``get_django_setting()`` in your
 templates instead.
+
+ProjectSettingMixin Removed
+---------------------------
+
+In ``projectroles.tests.test_views``, the deprecated ``ProjectSettingMixin``
+was removed. If you need to populate app settings in your tests, use the
+``AppSettingAPI`` instead.
+
+AppSettingAPI get_setting_defs() Signature Changed
+--------------------------------------------------
+
+The ``get_settings_defs()`` function in the app settings API now accepts either
+a project app plugin or simply the name of the plugin as string. Due to this
+change, the signature of the API function including argument order has changed.
+Please see the :ref:`API documentation<app_projectroles_api>` for more details
+and update your function calls accordingly.
+
+Default Footer Styling Changed
+------------------------------
+
+The styling of the page footer and the default ``_footer.html`` have changed.
+You no longer need an extra ``<div>`` element for the footer content, unless
+you need to do styling overrides yourself.
 
 
 v0.6.2 (2019-06-21)

@@ -76,7 +76,9 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'sodar_url': self.live_server_url,
         }  # HACK: Override callback URL
         values.update(
-            app_settings.get_all_defaults(APP_SETTING_SCOPE_PROJECT)
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
         )  # Add default settings
 
         post_kwargs = {'project': parent.sodar_uuid} if parent else {}
@@ -166,7 +168,9 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
             'description': 'description',
         }
         values.update(
-            app_settings.get_all_defaults(APP_SETTING_SCOPE_PROJECT)
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
         )  # Add default settings
 
         with self.login(self.user):
@@ -260,7 +264,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         values['readme'] = 'updated readme'
         values.update(
-            app_settings.get_all_settings(project=self.project)
+            app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
         values['sodar_url'] = self.live_server_url  # HACK
 
@@ -317,7 +321,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         values['owner'] = new_user.sodar_uuid
         values['readme'] = 'updated readme'
         values.update(
-            app_settings.get_all_settings(project=self.project)
+            app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
         values['sodar_url'] = self.live_server_url  # HACK
 

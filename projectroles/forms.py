@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 from django.conf import settings
 from django.contrib import auth
@@ -114,7 +116,7 @@ class ProjectForm(forms.ModelForm):
 
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -126,31 +128,61 @@ class ProjectForm(forms.ModelForm):
                     'help_text': s_val['description'],
                 }
 
-                if s_val['type'] == 'STRING':
+                if s_val['type'] == 'JSON':
                     self.fields[s_field] = forms.CharField(
-                        max_length=APP_SETTING_VAL_MAXLENGTH, **setting_kwargs
+                        widget=forms.Textarea(
+                            attrs={'class': 'sodar-json-input'}
+                        ),
+                        **setting_kwargs
                     )
+                    if self.instance.pk:
+                        self.initial[s_field] = json.dumps(
+                            self.app_settings.get_app_setting(
+                                app_name=plugin.name,
+                                setting_name=s_key,
+                                project=self.instance,
+                            )
+                        )
 
-                elif s_val['type'] == 'INTEGER':
-                    self.fields[s_field] = forms.IntegerField(**setting_kwargs)
-
-                elif s_val['type'] == 'BOOLEAN':
-                    self.fields[s_field] = forms.BooleanField(**setting_kwargs)
-
-                # Set initial value
-                if self.instance.pk:
-                    self.initial[s_field] = self.app_settings.get_app_setting(
-                        app_name=plugin.name,
-                        setting_name=s_key,
-                        project=self.instance,
-                    )
-
+                    else:
+                        self.initial[s_field] = json.dumps(
+                            self.app_settings.get_default_setting(
+                                app_name=plugin.name, setting_name=s_key
+                            )
+                        )
                 else:
-                    self.initial[
-                        s_field
-                    ] = self.app_settings.get_default_setting(
-                        app_name=plugin.name, setting_name=s_key
-                    )
+                    if s_val['type'] == 'STRING':
+                        self.fields[s_field] = forms.CharField(
+                            max_length=APP_SETTING_VAL_MAXLENGTH,
+                            **setting_kwargs
+                        )
+
+                    elif s_val['type'] == 'INTEGER':
+                        self.fields[s_field] = forms.IntegerField(
+                            **setting_kwargs
+                        )
+
+                    elif s_val['type'] == 'BOOLEAN':
+                        self.fields[s_field] = forms.BooleanField(
+                            **setting_kwargs
+                        )
+
+                    # Set initial value
+                    if self.instance.pk:
+                        self.initial[
+                            s_field
+                        ] = self.app_settings.get_app_setting(
+                            app_name=plugin.name,
+                            setting_name=s_key,
+                            project=self.instance,
+                        )
+
+                    else:
+                        self.initial[
+                            s_field
+                        ] = self.app_settings.get_default_setting(
+                            app_name=plugin.name, setting_name=s_key
+                        )
 
         # Access parent project if present
         parent_project = None
@@ -202,6 +234,8 @@ class ProjectForm(forms.ModelForm):
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
 
+            # Set owner value but hide the field (updating via member form)
+            self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
             self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
@@ -282,15 +316,33 @@ class ProjectForm(forms.ModelForm):
         # Verify settings fields
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
             )
 
-            for s_key in p_settings:
-                s = p_settings[s_key]
+            for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin.name, s_key)
 
+                if s_val['type'] == 'JSON':
+                    # for some reason, there is a distinct possiblity, that the
+                    # initial value has been discarded and we get '' as value.
+                    # Seems to only happen in automated tests. Will catch that
+                    # here.
+                    if not self.cleaned_data.get(s_field):
+                        self.cleaned_data[s_field] = '{}'
+
+                    try:
+                        self.cleaned_data[s_field] = json.loads(
+                            self.cleaned_data.get(s_field)
+                        )
+
+                    except json.JSONDecodeError as err:
+                        # TODO: Shouldn't we use add_error() instead?
+                        raise forms.ValidationError(
+                            'Couldn\'t encode JSON\n' + str(err)
+                        )
+
                 if not self.app_settings.validate_setting(
-                    setting_type=s['type'],
+                    setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
                 ):
                     self.add_error(s_field, 'Invalid value')

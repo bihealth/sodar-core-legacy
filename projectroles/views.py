@@ -242,9 +242,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         return self.get_project()
 
     def has_permission(self):
-        """Disable project app access for categories"""
+        """Overrides for project permission access"""
         project = self.get_project()
 
+        # Disable project app access for categories
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
@@ -254,10 +255,22 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
             ):
                 return False
 
+        # Disable access for non-owner/delegate if remote project is revoked
+        if project and project.is_revoked():
+            role_as = RoleAssignment.objects.filter(
+                project=project, user=self.request.user
+            ).first()
+
+            if role_as and role_as.role.name not in [
+                PROJECT_ROLE_OWNER,
+                PROJECT_ROLE_DELEGATE,
+            ]:
+                return False
+
         return super().has_permission()
 
     def get_queryset(self, *args, **kwargs):
-        """Override ``get_query_set()`` to filter down to the currently selected
+        """Override ``get_queryset()`` to filter down to the currently selected
         object."""
         qs = super().get_queryset(*args, **kwargs)
 
@@ -448,7 +461,11 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
 
 
 class ProjectDetailView(
-    LoginRequiredMixin, LoggedInPermissionMixin, ProjectContextMixin, DetailView
+    LoginRequiredMixin,
+    LoggedInPermissionMixin,
+    ProjectPermissionMixin,
+    ProjectContextMixin,
+    DetailView,
 ):
     """Project details view"""
 
@@ -626,9 +643,13 @@ class ProjectModifyMixin(ModelFormMixin):
 
         # Settings
         for k, v in project_settings.items():
-            old_v = app_settings.get_app_setting(
-                k.split('.')[1], k.split('.')[2], project
-            )
+            a_name = k.split('.')[1]
+            s_name = k.split('.')[2]
+            s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+            old_v = app_settings.get_app_setting(a_name, s_name, project)
+
+            if s_def['type'] == 'JSON':
+                v = json.loads(v)
 
             if old_v != v:
                 extra_data[k] = v
@@ -790,12 +811,19 @@ class ProjectModifyMixin(ModelFormMixin):
 
         for plugin in app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_PROJECT
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
             )
 
             for s_key, s_val in p_settings.items():
                 s_name = 'settings.{}.{}'.format(plugin.name, s_key)
-                project_settings[s_name] = form.cleaned_data.get(s_name)
+
+                if s_val['type'] == 'JSON':
+                    project_settings[s_name] = json.dumps(
+                        form.cleaned_data.get(s_name)
+                    )
+
+                else:
+                    project_settings[s_name] = form.cleaned_data.get(s_name)
 
         if timeline:
             if form_action == 'create':
@@ -808,6 +836,19 @@ class ProjectModifyMixin(ModelFormMixin):
                     'description': project.description,
                     'readme': project.readme.raw,
                 }
+
+                # Add settings to extra data
+                for k, v in project_settings.items():
+                    a_name = k.split('.')[1]
+                    s_name = k.split('.')[2]
+                    s_def = app_settings.get_setting_def(
+                        s_name, app_name=a_name
+                    )
+
+                    if s_def['type'] == 'JSON':
+                        v = json.loads(v)
+
+                    extra_data[k] = v
 
             else:  # Update
                 tl_desc = 'update ' + type_str.lower()
@@ -2652,9 +2693,15 @@ class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
         except Project.DoesNotExist as ex:
             return Response(str(ex), status=404)
 
+        project_settings = app_settings.get_all_settings(project)
+
+        for k, v in project_settings.items():
+            if isinstance(v, dict):
+                project_settings[k] = json.dumps(v)
+
         ret_data = {
             'project_uuid': project.sodar_uuid,
-            'settings': app_settings.get_all_settings(project),
+            'settings': project_settings,
         }
 
         return Response(ret_data, status=200)

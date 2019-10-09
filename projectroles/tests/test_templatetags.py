@@ -258,7 +258,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
 
     def test_get_info_link(self):
-        """Tet get_info_link()"""
+        """Test get_info_link()"""
         self.assertEqual(
             c_tags.get_info_link('content'),
             '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '

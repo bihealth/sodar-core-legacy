@@ -47,6 +47,7 @@ SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
 SOURCE_SITE_NAME = 'Test source site'
@@ -295,7 +296,6 @@ class TestGetTargetData(
             site=self.target_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
@@ -358,6 +358,64 @@ class TestGetTargetData(
 
         self.assertEqual(sync_data, expected)
 
+    def test_revoked(self):
+        """Test get data with project level of REVOKED"""
+        user_source_new = self.make_user('new_source_user')
+        self._make_assignment(self.project, user_source_new, self.role_guest)
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.target_site,
+            level=REMOTE_LEVEL_REVOKED,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            site=self.peer_site,
+            level=REMOTE_LEVEL_REVOKED,
+        )
+
+        sync_data = self.remote_api.get_target_data(self.target_site)
+
+        expected = {
+            'users': {
+                str(self.user_source.sodar_uuid): {
+                    'username': self.user_source.username,
+                    'name': self.user_source.name,
+                    'first_name': self.user_source.first_name,
+                    'last_name': self.user_source.last_name,
+                    'email': self.user_source.email,
+                    'groups': [SOURCE_USER_GROUP],
+                }
+            },
+            'projects': {
+                str(self.category.sodar_uuid): {
+                    'title': self.category.title,
+                    'type': PROJECT_TYPE_CATEGORY,
+                    'level': REMOTE_LEVEL_READ_INFO,
+                    'parent_uuid': None,
+                    'description': self.category.description,
+                    'readme': self.category.readme.raw,
+                },
+                str(self.project.sodar_uuid): {
+                    'title': self.project.title,
+                    'type': PROJECT_TYPE_PROJECT,
+                    'level': REMOTE_LEVEL_REVOKED,
+                    'description': self.project.description,
+                    'readme': self.project.readme.raw,
+                    'parent_uuid': str(self.category.sodar_uuid),
+                    'roles': {
+                        str(self.project_owner_as.sodar_uuid): {
+                            'user': self.project_owner_as.user.username,
+                            'role': self.project_owner_as.role.name,
+                        }  # NOTE: Another user should not be synced
+                    },
+                    'remote_sites': [],
+                },
+            },
+            'peer_sites': {},
+        }
+
+        self.assertEqual(sync_data, expected)
+
     def test_no_access(self):
         """Test get data with no project access set in the source site"""
         sync_data = self.remote_api.get_target_data(self.target_site)
@@ -367,6 +425,7 @@ class TestGetTargetData(
         self.assertEqual(sync_data, expected)
 
 
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestSyncSourceData(
     ProjectMixin,
     RoleAssignmentMixin,
@@ -458,7 +517,6 @@ class TestSyncSourceData(
             },
         }
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create(self):
         """Test sync with non-existing project data and READ_ROLE access"""
 
@@ -610,7 +668,6 @@ class TestSyncSourceData(
 
         self.assertEqual(remote_data, expected)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_multiple(self):
         """Test sync with non-existing project data and multiple projects"""
 
@@ -699,7 +756,6 @@ class TestSyncSourceData(
 
         self.assertEqual(remote_data, expected)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_local_owner(self):
         """Test sync with non-existing project data and a local owner"""
 
@@ -736,7 +792,6 @@ class TestSyncSourceData(
         project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         self.assertEqual(project_obj.get_owner().user, self.admin_user)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update(self):
         """Test sync with existing project data and READ_ROLE access"""
 
@@ -989,7 +1044,123 @@ class TestSyncSourceData(
 
         self.assertEqual(remote_data, expected)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_update_revoke(self):
+        """Test sync with existing project data and REVOKED access"""
+
+        # Set up target category and project
+        category_obj = self._make_project(
+            title='NewCategoryTitle',
+            type=PROJECT_TYPE_CATEGORY,
+            parent=None,
+            description='New description',
+            readme='New readme',
+            sodar_uuid=SOURCE_CATEGORY_UUID,
+        )
+        project_obj = self._make_project(
+            title='NewProjectTitle',
+            type=PROJECT_TYPE_PROJECT,
+            parent=category_obj,
+            description='New description',
+            readme='New readme',
+            sodar_uuid=SOURCE_PROJECT_UUID,
+        )
+
+        # Set up users and roles
+        target_user = self._make_sodar_user(
+            username=SOURCE_USER_USERNAME,
+            name='NewFirstName NewLastName',
+            first_name='NewFirstName',
+            last_name='NewLastName',
+            email='newemail@example.com',
+        )
+        new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
+        target_user2 = self._make_sodar_user(
+            username=new_user_username,
+            name='Some OtherName',
+            first_name='Some',
+            last_name='OtherName',
+            email='othername@example.com',
+        )
+        self._make_assignment(category_obj, target_user, self.role_owner)
+        self._make_assignment(project_obj, target_user, self.role_owner)
+        self._make_assignment(project_obj, target_user2, self.role_contributor)
+
+        # Set up RemoteProject objects
+        self._make_remote_project(
+            project_uuid=category_obj.sodar_uuid,
+            project=category_obj,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+
+        # Set up Peer Objects
+        peer_site = RemoteSite.objects.create(
+            **{
+                'name': PEER_SITE_NAME,
+                'url': PEER_SITE_URL,
+                'mode': SITE_MODE_PEER,
+                'description': PEER_SITE_DESC,
+                'secret': None,
+                'sodar_uuid': PEER_SITE_UUID,
+                'user_display': PEER_SITE_USER_DISPLAY,
+            }
+        )
+
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=peer_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+        remote_data = self.default_data
+
+        # Revoke access to project
+        remote_data['projects'][SOURCE_PROJECT_UUID][
+            'level'
+        ] = REMOTE_LEVEL_REVOKED
+        remote_data['projects'][SOURCE_PROJECT_UUID]['remote_sites'] = []
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 2)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+        new_user = User.objects.get(username=new_user_username)
+
+        # Assert removal of role assignment
+        with self.assertRaises(RoleAssignment.DoesNotExist):
+            RoleAssignment.objects.get(
+                project__sodar_uuid=SOURCE_PROJECT_UUID,
+                user=new_user,
+                role__name=PROJECT_ROLE_CONTRIBUTOR,
+            )
+
+        # Assert update_data changes
+        self.assertEqual(
+            remote_data['projects'][SOURCE_PROJECT_UUID]['level'],
+            REMOTE_LEVEL_REVOKED,
+        )
+        self.assertNotIn(str(new_user.sodar_uuid), remote_data['users'].keys())
+
     def test_delete_role(self):
         """Test sync with existing project data and a removed role"""
 
@@ -1098,7 +1269,6 @@ class TestSyncSourceData(
 
         self.assertEqual(remote_data, expected)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update_no_changes(self):
         """Test sync with existing project data and no changes"""
 
@@ -1300,7 +1470,6 @@ class TestSyncSourceData(
         # Assert no changes between update_data and remote_data
         self.assertEqual(original_data, remote_data)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_no_access(self):
         """Test sync with no READ_ROLE access set"""
 
@@ -1328,7 +1497,6 @@ class TestSyncSourceData(
         # Assert no changes between update_data and remote_data
         self.assertEqual(original_data, remote_data)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_local_user(self):
         """Test sync with a local non-owner user"""
 
@@ -1400,7 +1568,6 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_create_local_user_allow_unavailable(self):
         """Test sync with a non-existent local user with local users allowed"""
@@ -1435,7 +1602,6 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_create_local_owner_allow(self):
         """Test sync with a local owner with local users allowed"""
@@ -1479,7 +1645,6 @@ class TestSyncSourceData(
         new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         self.assertEqual(new_project.get_owner().user, new_user)
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_create_local_owner_allow_unavailable(self):
         """Test sync with an unavailable local owner"""

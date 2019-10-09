@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.7.0 (2019-10-09)
+===================
 
 Added
 -----
@@ -16,6 +16,8 @@ Added
 - **General**
     - Development env file example ``env.example`` (#297)
     - Postgres database development setup script (#302)
+    - ``ENABLE_DEBUG_TOOLBAR`` setting for local development (#349)
+    - ``local_target2.py`` config for peer remote site development (#200)
 - **Adminalerts**
     - Activate/suspend button in alert list (#42)
 - **Bgjobs**
@@ -35,6 +37,14 @@ Added
     - Link for copying remote site secret token in remote site list (#332)
     - Project ownership transfer from member list (#287)
     - UI notification for disabled member management on target sites (#301)
+    - Management command ``addremotesite`` for adding remote sites (#314)
+    - JSON support for app settings (#268)
+    - ``get_setting_def()`` in app settings API
+    - Timeline logging of app settings in project creation (#359)
+    - "Project and user" scope for app settings (#266)
+    - ``REVOKED`` status for remote projects with revoked access (#327)
+    - ``Project.is_revoked()`` helper (#327)
+    - Disabling access for non-owner/delegate for revoked projects in ``ProjectPermissionMixin`` (#350)
 - **Timeline**
     - Display event extra data as JSON (#6)
 - **Userprofile**
@@ -45,15 +55,21 @@ Changed
 
 - **General**
     - Upgrade Chromedriver to version 77.0.3865.40
-    - Upgrade minimum Django version to 1.11.24 (#324)
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
     - Run tests in parallel where applicable
+    - Upgrade minimum Django version to 1.11.25 (#346)
+    - General upgrade for Python package requirements (#282)
+- **Adminalerts**
+    - Use common pagination template
 - **Projectroles**
     - Improve user name placeholder in ``login.html`` (#294)
     - Backend app Javascript and CSS included on-demand instead of for all templates (#261)
     - Make sidebar hiding dynamic by content height (#316)
     - Replace ``login_and_redirect()`` in UI tests with a faster cookie based function (#323)
     - Refactor remote project display on details page (#196)
+    - Refactor AppSettingAPI (#268)
+    - Enable calling ``AppSettingAPI.get_setting_defs()`` with app name instead of plugin object
+    - Use ``ProjectPermissionMixin`` on project detail page (#350)
 - **Timeline**
     - Use common pagination template (#336)
 
@@ -67,6 +83,11 @@ Fixed
     - Crash in ``get_project_column_count()`` with no active project app plugins (#320)
     - UI test helper ``build_selenium_url()`` refactored to work with Chrome v77 (#337)
     - Disallow empty values in ``RemoteSite.name``
+    - Remote sync of parent category roles could fail with multiple subprojects
+    - ``RemoteProject`` modifications not saved during sync update
+    - Timeline events not created in remote project sync (#370)
+    - DAL select modifying HTML body width (#365)
+    - Footer overflow breaking layout (#367, #375)
 - **Timeline**
     - Crash from exception raised by ``get_object_link()`` in a plugin (#328)
 
@@ -77,6 +98,7 @@ Removed
     - Duplicate database indexes from ``RoleAssignment`` (#285)
     - Deprecated ``get_setting()`` tag from ``projectroles_common_tags`` (#283)
     - Project owner change from project updating form (#287)
+    - ``ProjectSettingMixin`` from ``projectoles.tests.test_views`` (#357)
 
 
 v0.6.2 (2019-06-21)

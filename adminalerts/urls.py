@@ -28,7 +28,7 @@ urlpatterns = [
     ),
     url(
         regex=r'^ajax/update-state',
-        view=views.AdminAlertActivationView.as_view(),
+        view=views.AdminAlertActivationAPIView.as_view(),
         name='ajax_alert_activation',
     ),
 ]

@@ -26,11 +26,12 @@ SODAR_CONSTANTS = get_sodar_constants()
 
 # Local constants
 PROJECT_TYPE_CHOICES = [('CATEGORY', 'Category'), ('PROJECT', 'Project')]
-APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING']
+APP_SETTING_TYPES = ['BOOLEAN', 'INTEGER', 'STRING', 'JSON']
 APP_SETTING_TYPE_CHOICES = [
     ('BOOLEAN', 'Boolean'),
     ('INTEGER', 'Integer'),
     ('STRING', 'String'),
+    ('JSON', 'Json'),
 ]
 APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
@@ -296,6 +297,22 @@ class Project(models.Model):
 
         return False
 
+    def is_revoked(self):
+        """Return True if remote access has been revoked for the project"""
+        if self.is_remote():
+            remote_project = RemoteProject.objects.filter(
+                project=self, site=self.get_source_site()
+            ).first()
+
+            if (
+                remote_project
+                and remote_project.level
+                == SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+            ):
+                return True
+
+        return False
+
 
 # Role -------------------------------------------------------------------------
 
@@ -469,7 +486,7 @@ class AppSettingManager(models.Manager):
         """
         Return value of setting_name for app_name in project or for user.
 
-        Note that either project or user must be None but not both.
+        Note that project and/or user must be set.
 
         :param app_name: App plugin name (string)
         :param setting_name: Name of setting (string)
@@ -478,8 +495,8 @@ class AppSettingManager(models.Manager):
         :return: Value (string)
         :raise: AppSetting.DoesNotExist if setting is not found
         """
-        if (project is None) == (user is None):
-            raise ValueError('Either project or user has to be None.')
+        if (project is None) and (user is None):
+            raise ValueError('Project and user unset.')
         setting = (
             super()
             .get_queryset()
@@ -537,10 +554,7 @@ class AppSetting(models.Model):
 
     #: Type of the setting
     type = models.CharField(
-        max_length=64,
-        unique=False,
-        choices=APP_SETTING_TYPE_CHOICES,
-        help_text='Type of the setting',
+        max_length=64, unique=False, help_text='Type of the setting'
     )
 
     #: Value of the setting
@@ -552,7 +566,6 @@ class AppSetting(models.Model):
         help_text='Value of the setting',
     )
 
-    # TODO: Implement the use of this in release v0.7 (see #268)
     #: Optional JSON value for the setting
     value_json = JSONField(
         default=dict, help_text='Optional JSON value for the setting'
@@ -610,6 +623,9 @@ class AppSetting(models.Model):
 
         elif self.type == 'BOOLEAN':
             return bool(int(self.value))
+
+        elif self.type == 'JSON':
+            return self.value_json
 
         return self.value
 

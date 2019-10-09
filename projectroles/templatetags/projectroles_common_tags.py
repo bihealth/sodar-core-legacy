@@ -264,10 +264,14 @@ def get_remote_icon(project, request):
                 project=project, site__mode=SITE_MODE_SOURCE
             )
             return (
-                '<i class="fa fa-globe text-info mx-1 '
-                'sodar-pr-remote-project-icon" title="Remote project from '
+                '<i class="fa fa-globe {} mx-1 '
+                'sodar-pr-remote-project-icon" title="{} project from '
                 '{}" data-toggle="tooltip" data-placement="top">'
-                '</i>'.format(remote_project.site.name)
+                '</i>'.format(
+                    'text-danger' if project.is_revoked() else 'text-info',
+                    'REVOKED remote' if project.is_revoked() else 'Remote',
+                    remote_project.site.name,
+                )
             )
 
         except RemoteProject.DoesNotExist:

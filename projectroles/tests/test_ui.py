@@ -511,10 +511,10 @@ class TestProjectList(TestUIBase):
 class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
     """Tests for the project detail page UI functionalities"""
 
-    def setup_remote_project(
+    def _setup_remote_project(
         self, site_mode=SITE_MODE_TARGET, user_visibility=True
     ):
-        """Creates a remote site and project with given user_visibility setting"""
+        """Create a remote site and project with given user_visibility setting"""
         self.remote_site = self._make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
@@ -532,8 +532,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             project=self.project,
         )
 
-    def add_remote_association(self):
-        """Fills and submits add source/target site form"""
+    def _add_remote_association(self):
+        """Fill an submits add source/target site form"""
         # Instead we could also set up a real RemoteProject, but this makes
         # the test run faster
         url = reverse('projectroles:remote_site_create')
@@ -666,8 +666,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
 
     def test_remote_project_visible(self):
-        """Checks project card for enabled visbility for all users"""
-        self.setup_remote_project(user_visibility=True)
+        """Test project card for enabled visbility for all users"""
+        self._setup_remote_project(user_visibility=True)
         users = [
             self.superuser,
             self.user_owner,
@@ -691,8 +691,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
     def test_remote_project_invisible(self):
-        """Checks project card for disabled visibility for different users"""
-        self.setup_remote_project(user_visibility=False)
+        """Test project card for disabled visibility for different users"""
+        self._setup_remote_project(user_visibility=False)
         users = [self.user_delegate, self.user_contributor, self.user_guest]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -716,8 +716,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
     def test_peer_project_source_invisible(self):
-        """Checks visibility of peer projects on SOURCE site"""
-        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+        """Test visibility of peer projects on SOURCE site"""
+        self._setup_remote_project(site_mode=SITE_MODE_PEER)
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -738,10 +738,9 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_visible(self):
-        """Checks visibility of peer projects on TARGET site (user_display=False)"""
+        """Test visibility of peer projects on TARGET site (user_display=False)"""
         # There needs to be a source mode remote project as master project
         # otherwise peer project logic wont be reached
-        # TODO: Clean up when implementing #196 (refactoring project_detail.html logic)
         source_site = self._make_site(
             name='Second Remote Site',
             url='second_remote.site',
@@ -750,15 +749,13 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             secret=build_secret(),
             user_display=True,
         )
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
             project=self.project,
         )
-
-        self.setup_remote_project(site_mode=SITE_MODE_PEER)
+        self._setup_remote_project(site_mode=SITE_MODE_PEER)
 
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
@@ -773,26 +770,24 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in users:
             self.login_and_redirect(user, url)
-
-            projects_on_other_sites = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            remote_links = self.selenium.find_elements_by_class_name(
+                'sodar-pr-link-remote'
             )
-
-            details = projects_on_other_sites.find_elements_by_css_selector('a')
-            self.assertEqual(len(details), 2)
-            self.assertEqual(
-                details[0].text, source_site.name + ' (Master Project)'
+            self.assertEqual(len(remote_links), 2)
+            self.assertIn(
+                'sodar-pr-link-remote-master',
+                remote_links[0].get_attribute('class'),
             )
-            self.assertEqual(
-                details[1].text, self.remote_site.name + ' (Peer Project)'
+            self.assertIn(
+                'sodar-pr-link-remote-peer',
+                remote_links[1].get_attribute('class'),
             )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_invisible(self):
-        """Checks invisibility of peer projects on TARGET site for different users (user_display=False)"""
+        """Test invisibility of peer projects on TARGET site for users (user_display=False)"""
         # There needs to be a source mode remote project as master project
         # otherwise peer project logic wont be reached
-        # TODO: Clean up when implementing #196 (refactoring project_detail.html logic)
         source_site = self._make_site(
             name='Second Remote Site',
             url='second_remote.site',
@@ -809,7 +804,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             project=self.project,
         )
 
-        self.setup_remote_project(
+        self._setup_remote_project(
             site_mode=SITE_MODE_PEER, user_visibility=False
         )
 
@@ -825,29 +820,28 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in expected_true:
             self.login_and_redirect(user, url)
-
-            projects_on_other_sites = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            remote_links = self.selenium.find_elements_by_class_name(
+                'sodar-pr-link-remote'
             )
-            details = projects_on_other_sites.find_elements_by_css_selector('a')
-            self.assertEqual(len(details), 2)
-            self.assertEqual(
-                details[0].text, source_site.name + ' (Master Project)'
+            self.assertEqual(len(remote_links), 2)
+            self.assertIn(
+                'sodar-pr-link-remote-master',
+                remote_links[0].get_attribute('class'),
             )
-            self.assertEqual(
-                details[1].text, self.remote_site.name + ' (Peer Project)'
+            self.assertIn(
+                'sodar-pr-link-remote-peer',
+                remote_links[1].get_attribute('class'),
             )
 
         for user in expected_false:
             self.login_and_redirect(user, url)
-
-            projects_on_other_sites = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            remote_links = self.selenium.find_elements_by_class_name(
+                'sodar-pr-link-remote'
             )
-            details = projects_on_other_sites.find_elements_by_css_selector('a')
-            self.assertEqual(len(details), 1)
-            self.assertEqual(
-                details[0].text, source_site.name + ' (Master Project)'
+            self.assertEqual(len(remote_links), 1)
+            self.assertIn(
+                'sodar-pr-link-remote-master',
+                remote_links[0].get_attribute('class'),
             )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -861,7 +855,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.selenium.find_element_by_id('id_user_display').is_displayed()
         )
 
-        self.add_remote_association()
+        self._add_remote_association()
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element_by_id(
             'sodar-pr-remote-site-table'
@@ -884,7 +878,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         element = self.selenium.find_element_by_id('div_id_user_display')
         self.assertIsNotNone(element)
 
-        self.add_remote_association()
+        self._add_remote_association()
         # Check Visible to User column visibility
         remote_site_table = self.selenium.find_element_by_id(
             'sodar-pr-remote-site-table'
@@ -915,24 +909,17 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     def test_list_buttons(self):
         """Test visibility of role list button group according to user
         permissions"""
-        users_with_perm = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-        ]
-
-        users_without_perm = [self.as_contributor.user, self.as_guest.user]
-
+        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        bad_users = [self.as_contributor.user, self.as_guest.user]
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
         self.assert_element_exists(
-            users_with_perm, url, 'sodar-pr-btn-perm', True
+            good_users, url, 'sodar-pr-btn-role-op', True
         )
-
         self.assert_element_exists(
-            users_without_perm, url, 'sodar-pr-btn-no-perm', True
+            bad_users, url, 'sodar-pr-btn-role-op', False
         )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -942,8 +929,7 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
-        users = [
-            self.superuser,
+        non_superusers = [
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
@@ -953,7 +939,13 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
 
-        self.assert_element_exists(users, url, 'sodar-pr-btn-remote', True)
+        self.login_and_redirect(self.superuser, url)
+        btn = self.selenium.find_element_by_id('sodar-pr-btn-role-op')
+        self.assertEqual(btn.is_enabled(), False)
+
+        self.assert_element_exists(
+            non_superusers, url, 'sodar-pr-btn-role-op', False
+        )
 
     def test_role_list_invite_button(self):
         """Test visibility of role invite button according to user

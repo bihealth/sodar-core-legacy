@@ -24,6 +24,10 @@ HELP_HIGHLIGHT_DAYS = (
     else 7
 )
 
+# SODAR Constants
+REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
+REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
+
 # Local constants
 INDENT_PX = 25
 
@@ -381,7 +385,20 @@ def get_target_project_select(site, project):
 
     for level in ACTIVE_LEVEL_TYPES:
         selected = False
-        legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
+
+        if (
+            level == REMOTE_LEVEL_NONE
+            and current_level
+            and current_level != REMOTE_LEVEL_NONE
+        ):
+            legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][
+                REMOTE_LEVEL_REVOKED
+            ]
+            level_val = REMOTE_LEVEL_REVOKED
+
+        else:
+            legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
+            level_val = level
 
         if level == current_level or (
             level == SODAR_CONSTANTS['REMOTE_LEVEL_NONE'] and not current_level
@@ -389,7 +406,7 @@ def get_target_project_select(site, project):
             selected = True
 
         ret += '<option value="{}" {}>{}</option>\n'.format(
-            level, 'selected' if selected else '', legend
+            level_val, 'selected' if selected else '', legend
         )
 
     ret += '</select>\n'

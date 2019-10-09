@@ -105,25 +105,6 @@ class AdminAlertUpdateView(
     slug_field = 'sodar_uuid'
 
 
-class AdminAlertActivationView(LoggedInPermissionMixin, HTTPRefererMixin, View):
-
-    permission_required = 'adminalerts.update_alert'
-    http_method_names = ['post']
-
-    def post(self, request: HttpRequest):
-        uuid = request.POST.get('uuid', None)
-
-        alert = None
-        try:
-            alert = AdminAlert.objects.get(sodar_uuid__exact=uuid)
-        except AdminAlert.DoesNotExist:
-            return HttpResponseBadRequest()
-
-        alert.active = not alert.active
-        alert.save()
-        return JsonResponse({'is_active': alert.active})
-
-
 class AdminAlertDeleteView(
     LoggedInPermissionMixin, HTTPRefererMixin, DeleteView
 ):
@@ -138,3 +119,28 @@ class AdminAlertDeleteView(
         """Override for redirecting alert list view with message"""
         messages.success(self.request, 'Alert deleted.')
         return reverse('adminalerts:list')
+
+
+# API views --------------------------------------------------------------------
+
+
+class AdminAlertActivationAPIView(
+    LoggedInPermissionMixin, HTTPRefererMixin, View
+):
+    """AdminAlert activation/deactivation API view"""
+
+    permission_required = 'adminalerts.update_alert'
+    http_method_names = ['post']
+
+    def post(self, request: HttpRequest):
+        uuid = request.POST.get('uuid', None)
+
+        try:
+            alert = AdminAlert.objects.get(sodar_uuid__exact=uuid)
+
+        except AdminAlert.DoesNotExist:
+            return HttpResponseBadRequest()
+
+        alert.active = not alert.active
+        alert.save()
+        return JsonResponse({'is_active': alert.active})

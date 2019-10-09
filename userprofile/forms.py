@@ -1,3 +1,5 @@
+import json
+
 from django import forms
 
 from projectroles.app_settings import AppSettingAPI
@@ -32,7 +34,7 @@ class UserSettingsForm(forms.Form):
 
         for plugin in self.app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
+                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
@@ -61,21 +63,47 @@ class UserSettingsForm(forms.Form):
                 elif s_val['type'] == 'BOOLEAN':
                     self.fields[s_field] = forms.BooleanField(**field_kwarg)
 
+                elif s_val['type'] == 'JSON':
+                    widget_attrs.update({'class': 'sodar-json-input'})
+                    self.fields[s_field] = forms.CharField(
+                        widget=forms.Textarea(attrs=widget_attrs), **field_kwarg
+                    )
+
                 # Set initial value
-                self.initial[s_field] = app_settings.get_app_setting(
-                    app_name=plugin.name, setting_name=s_key, user=self.user
-                )
+                if s_val['type'] != 'JSON':
+                    self.initial[s_field] = app_settings.get_app_setting(
+                        app_name=plugin.name, setting_name=s_key, user=self.user
+                    )
+
+                else:
+                    self.initial[s_field] = json.dumps(
+                        app_settings.get_app_setting(
+                            app_name=plugin.name,
+                            setting_name=s_key,
+                            user=self.user,
+                        )
+                    )
 
     def clean(self):
         """Function for custom form validation and cleanup"""
 
         for plugin in self.app_plugins:
             p_settings = app_settings.get_setting_defs(
-                plugin, APP_SETTING_SCOPE_USER, user_modifiable=True
+                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
             )
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                if s_val['type'] == 'JSON':
+                    try:
+                        self.cleaned_data[s_field] = json.loads(
+                            self.cleaned_data.get(s_field)
+                        )
+                    except json.JSONDecodeError as err:
+                        # TODO: Shouldn't we use add_error() instead?
+                        raise forms.ValidationError(
+                            'Couldn\'t encode JSON\n' + str(err)
+                        )
 
                 if not app_settings.validate_setting(
                     setting_type=s_val['type'],

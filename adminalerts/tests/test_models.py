@@ -40,7 +40,6 @@ class TestAdminAlert(AdminAlertMixin, TestCase):
     """Tests for AdminAlert model"""
 
     def setUp(self):
-
         # Create superuser
         self.superuser = self.make_user('superuser')
         self.superuser.is_superuser = True

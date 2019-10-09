@@ -140,7 +140,7 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             extra_data={},
         )
 
-    def test_extra_data_badge_visibility(self):
+    def test_extra_data_badge(self):
         """Test visibility of extra data badges to open a model in the timeline event list"""
         expected = [
             (self.superuser, 1),
@@ -162,7 +162,7 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             path='//table[@id="sodar-tl-table"]/tbody/tr/td/',
         )
 
-    def test_status_extra_data_only_badge_visibility(self):
+    def test_status_extra_data_only_badge(self):
         """Test visibility when event only has extra data in one of its states."""
         self.event_with_status = self.timeline.add_event(
             project=self.project,
@@ -195,7 +195,7 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             path='//table/tbody/tr/td/',
         )
 
-    def test_object_event_extra_data_badge_visibility(self):
+    def test_object_event_extra_data(self):
         """Test visibility of object related events events in the timeline event list"""
 
         # Add user as an object reference
@@ -228,14 +228,14 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             path='//table[@id="sodar-tl-table"]/tbody/tr/td/',
         )
 
-    def test_event_extra_data_badge_visibility_details(self):
+    def test_event_extra_data_details(self):
         """Test visibility of events on the project details page"""
         expected = [
-            (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.superuser, 0),
+            (self.as_owner.user, 0),
+            (self.as_delegate.user, 0),
+            (self.as_contributor.user, 0),
+            (self.as_guest.user, 0),
         ]
 
         url = reverse(

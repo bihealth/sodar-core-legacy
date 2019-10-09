@@ -5,50 +5,48 @@
 {% load static %}
 
 {% block title %}
-    Transfer ownership of {{ project.title }}
+  Transfer ownership of {{ project.title }}
 {% endblock title %}
 
 {% block projectroles_extend %}
 
-    <div class="row sodar-subtitle-container bg-white sticky-top">
-        <h3>Transfer Project Ownership from User {{ current_owner.username }}</h3>
+<div class="row sodar-subtitle-container bg-white sticky-top">
+  <h3>Transfer Project Ownership from User {{ current_owner.username }}</h3>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  <form method="post">
+    {% csrf_token %}
+    {{ form | crispy }}
+
+    <div class="row">
+      <div class="btn-group ml-auto">
+        <a role="button" class="btn btn-secondary"
+           href="{{ request.session.real_referer }}">
+          <i class="fa fa-arrow-circle-left"></i> Cancel
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa fa-exchange"></i> Transfer
+        </button>
+      </div>
     </div>
+  </form>
+</div>
 
-    <div class="container-fluid sodar-page-container">
-        <form method="post">
-            {% csrf_token %}
-            {{ form | crispy }}
-
-
-            <div class="row">
-                <div class="btn-group ml-auto">
-                    <a role="button" class="btn btn-secondary"
-                       href="{{ request.session.real_referer }}">
-                        <i class="fa fa-arrow-circle-left"></i> Cancel
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fa fa-exchange"></i>
-                        Transfer
-                    </button>
-                </div>
-            </div>
-        </form>
-    </div>
-
-    <span class="sodar-popup-overlay" id="sodar-pr-email-preview-popup"></span>
+<span class="sodar-popup-overlay" id="sodar-pr-email-preview-popup"></span>
 
 {% endblock projectroles_extend %}
 
 {% block javascript %}
-    {{ block.super }}
+  {{ block.super }}
 
-    <!-- DAL for autocomplete widgets -->
-    <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
-    {{ form.media }}
+  <!-- DAL for autocomplete widgets -->
+  <script type="text/javascript" src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+  {{ form.media }}
 {% endblock javascript %}
 
 {% block css %}
-    {{ block.super }}
-    <!-- Select2 theme -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
+  {{ block.super }}
+  <!-- Select2 theme -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
 {% endblock css %}

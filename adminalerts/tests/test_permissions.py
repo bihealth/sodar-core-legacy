@@ -32,6 +32,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         )
 
     def test_alert_create(self):
+        """Test permissions for AdminAlert creation"""
         url = reverse('adminalerts:create')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
@@ -39,6 +40,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_alert_update(self):
+        """Test permissions for AdminAlert updating"""
         url = reverse(
             'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
         )
@@ -48,6 +50,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_alert_delete(self):
+        """Test permissions for AdminAlert deletion"""
         url = reverse(
             'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
         )
@@ -57,6 +60,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_alert_list(self):
+        """Test permissions for AdminAlert list"""
         url = reverse('adminalerts:list')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
@@ -64,6 +68,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_alert_detail(self):
+        """Test permissions for AdminAlert details"""
         url = reverse(
             'adminalerts:detail', kwargs={'uuid': self.alert.sodar_uuid}
         )
@@ -73,6 +78,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_redirect(url, bad_users)
 
     def test_alert_activation(self):
+        """Test permissions for AdminAlert activation API view"""
         url = reverse('adminalerts:ajax_alert_activation')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
