@@ -16,7 +16,10 @@ v0.7.0 (TBD)
 System Prerequisites
 --------------------
 
-The minimum version requirement for Django has been bumped to 1.11.25.
+The minimum supported versions have been upgraded for a number of Python
+packages in this release. It is highly recommended to also upgrade these for
+your SODAR Core based site. See the ``requirements`` directory for up-to date
+dependencies.
 
 Backend Javascript Include
 --------------------------

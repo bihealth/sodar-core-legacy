@@ -58,6 +58,7 @@ Changed
     - Use ``CurrentUserFormMixin`` instead of repeated code (#12)
     - Run tests in parallel where applicable
     - Upgrade minimum Django version to 1.11.25 (#346)
+    - General upgrade for Python package requirements (#282)
 - **Adminalerts**
     - Use common pagination template
 - **Projectroles**
