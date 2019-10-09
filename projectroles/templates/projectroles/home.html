@@ -76,7 +76,7 @@
         {% elif request.user.is_superuser %}
            <tr>
              <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
-               No {% get_display_name 'PROJECT' title=False plural=True %} created yet!
+               No {% get_display_name 'PROJECT' title=False plural=True %} created
               </td>
            </tr>
         {% else %}
