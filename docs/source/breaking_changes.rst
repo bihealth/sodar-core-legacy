@@ -53,6 +53,13 @@ change, the signature of the API function including argument order has changed.
 Please see the :ref:`API documentation<app_projectroles_api>` for more details
 and update your function calls accordingly.
 
+Default Footer Styling Changed
+------------------------------
+
+The styling of the page footer and the default ``_footer.html`` have changed.
+You no longer need an extra ``<div>`` element for the footer content, unless
+you need to do styling overrides yourself.
+
 
 v0.6.2 (2019-06-21)
 ===================
