@@ -18,9 +18,9 @@
     {% autoescape off %}
       {% get_event_description event request %}
     {% endautoescape %}
-    {% if event|has_extra_data %}
-      <a class="pull-right" tabindex="0" data-toggle="modal"
-         data-trigger="focus" data-target="#sodar-tl-modal-{{ event.pk }}" style="cursor: pointer;">
+    {% if not details_card_mode and event|has_extra_data %}
+      <a class="sodar-tl-link-extra pull-right" tabindex="0" data-toggle="modal"
+         data-trigger="focus" data-target="#sodar-tl-modal-{{ event.pk }}">
         <i class="fa fa-fw fa-file-text" title="Extra Data"
            data-toggle="tooltip" data-placement="left">
         </i>

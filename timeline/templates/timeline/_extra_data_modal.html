@@ -22,6 +22,18 @@
       color: #222222;
     }
 
+    .sodar-tl-link-extra {
+      cursor: pointer;
+    }
+
+    .sodar-tl-modal-tabs {
+      flex: 1;
+      flex-direction: row;
+      display: flex;
+      flex-wrap: wrap;
+      border-bottom: 1px solid #dee2e6;
+    }
+
     .sodar-tl-copy-btn {
       position: absolute;
       top: 10px;
@@ -34,7 +46,7 @@
 <div id="sodar-tl-modal-{{ event.pk }}" class="modal sodar-tl-modal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered sodar-tl-modal-dialog" role="document">
     <div class="modal-content">
-      <div style="flex: 1; flex-direction: row; display: flex; flex-wrap: wrap; border-bottom: 1px solid #dee2e6">
+      <div class="sodar-tl-modal-tabs">
         <ul class="nav nav-tabs border-bottom-0">
           {% for data in event|collect_extra_data %}
             <li class="nav-item">
