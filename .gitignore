@@ -89,3 +89,6 @@ flamegraph.pl
 
 # Celery
 celerybeat-schedule
+
+# Vscode
+.vscode/*
