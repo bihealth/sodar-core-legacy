@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - Dismissing login error alert in ``login.html`` not working (#377)
+
+
 v0.7.0 (2019-10-09)
 ===================
 

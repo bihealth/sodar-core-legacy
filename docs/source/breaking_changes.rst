@@ -10,6 +10,17 @@ version. For a complete list of changes in the current release, see the
 ``CHANGELOG.rst`` file.
 
 
+v0.7.1 (WIP)
+============
+
+Login Template Modified
+-----------------------
+
+The default login template ``login.html`` has been modified. If your site
+overrides it with an altered version, please review the difference and update
+your template as appropriate.
+
+
 v0.7.0 (2019-10-09)
 ===================
 
