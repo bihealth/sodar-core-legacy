@@ -16,6 +16,12 @@ Added
 - **General**
     - Include CHANGELOG in documentation (#379)
 
+Changed
+-------
+
+- **General**
+    - Change "Breaking Changes" doc into "Major Changes" (#201)
+
 Fixed
 -----
 

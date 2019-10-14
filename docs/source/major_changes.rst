@@ -1,17 +1,26 @@
-.. _breaking_changes:
+.. _major_changes:
 
 
-Breaking Changes
-^^^^^^^^^^^^^^^^
+Major Changes
+^^^^^^^^^^^^^
 
-This document details breaking changes from previous SODAR Core releases. It is
-recommended to review these notes whenever upgrading from an older SODAR Core
-version. For a complete list of changes in the current release, see the
-:ref:`full changelog<changelog>`.
+This document details highlighted updates and breaking changes in SODAR Core
+releases. It is recommended to review these notes whenever upgrading from an
+older SODAR Core version. For a complete list of changes in current and previous
+releases, see the :ref:`full changelog<changelog>`.
 
 
 v0.7.1 (WIP)
-============
+************
+
+Release Highlights
+==================
+
+TBA
+
+
+Breaking Changes
+================
 
 Login Template Modified
 -----------------------
@@ -22,7 +31,21 @@ your template as appropriate.
 
 
 v0.7.0 (2019-10-09)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Sync peer project information for remote target sites
+- Enable revoking access to remote projects
+- Allow defining app settings in site apps
+- "User in project" scope added into app settings
+- Support JSON in app settings
+- Project owner management moved to project member views
+
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
@@ -73,7 +96,17 @@ you need to do styling overrides yourself.
 
 
 v0.6.2 (2019-06-21)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Allow hiding app settings from UI forms
+- Add template tag for retrieving app settings
+
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
@@ -90,7 +123,17 @@ update any references to this tag in your templates.
 
 
 v0.6.1 (2019-06-05)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add custom project list columns definable in ProjectAppPlugin
+- Add example project list column implementation in the filesfolders app
+
+
+Breaking Changes
+================
 
 App Settings Deprecation Protection Removed
 -------------------------------------------
@@ -101,7 +144,18 @@ introduced in v0.6.0.
 
 
 v0.6.0 (2019-05-10)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add user specific settings
+- Refactor project settings into project/user specific app settings
+- Add siteinfo app
+
+
+Breaking Changes
+================
 
 App Settings (Formerly Project Settings)
 ----------------------------------------
@@ -148,7 +202,18 @@ Example of settings:
 
 
 v0.5.1 (2019-04-16)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Sodarcache refactoring and improvements for API, models, management and app
+  config
+- New default error templates
+
+
+Breaking Changes
+================
 
 Site App Templates
 ------------------
@@ -191,7 +256,19 @@ The ``PROJECTROLES_ADMIN_OWNER`` setting no longer works. Use
 
 
 v0.5.0 (2019-04-03)
-===================
+*******************
+
+Release Highlights
+==================
+
+- New sodarcache app for caching and aggregating data from external services
+- Local user mode for site UI and remote sync
+- Improved display and logging of remote project sync
+- Upgrade to Bootstrap 4.3.1
+
+
+Breaking Changes
+================
 
 Default Admin Setting Renamed
 -----------------------------
@@ -223,7 +300,17 @@ review the difference and update your templates as appropriate.
 
 
 v0.4.5 (2019-03-06)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add user autocomplete in forms
+- Allow multiple delegates per project
+
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
@@ -295,7 +382,16 @@ Alternatively, you can create a common override in your project-wide CSS file.
 
 
 v0.4.4 (2019-02-19)
-===================
+*******************
+
+Release Highlights
+==================
+
+N/A (maintenance/bugfix release)
+
+
+Breaking Changes
+================
 
 Textarea Height in Forms
 ------------------------
@@ -314,7 +410,17 @@ form as follows:
 
 
 v0.4.3 (2019-01-31)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add display name configuration for projects and categories
+- Hide immutable fields in projectroles forms
+
+
+Breaking Changes
+================
 
 SODAR Constants
 ---------------
@@ -325,7 +431,16 @@ applicable form structure can be imported from ``projectroles.forms``.
 
 
 v0.4.2 (2019-01-25)
-===================
+*******************
+
+Release Highlights
+==================
+
+N/A (maintenance/bugfix release)
+
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
@@ -375,7 +490,17 @@ the function in question should only be called during Taskflow testing.
 
 
 v0.4.1 (2019-01-11)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Configuration updates for API and Projectroles
+- Travis-CI setup
+
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
@@ -408,7 +533,21 @@ not requiring user authorization will not be visible on the login page. Example:
 
 
 v0.4.0 (2018-12-19)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add filesfolders app from SODAR v0.4.0
+- Add bgjobs app from Varfish-Web
+- Secure SODAR Taskflow API views
+- Separate test server configuration for SODAR Taskflow
+- Extra data variable rendering for timeline
+- Additional site settings
+
+
+Breaking Changes
+================
 
 List Button Classes in Templates
 --------------------------------
@@ -443,7 +582,19 @@ similarly named setting in your SODAR Taskflow instance!
 
 
 v0.3.0 (2018-10-26)
-===================
+*******************
+
+Release Highlights
+==================
+
+- Add remote project metadata and member synchronization between multiple SODAR
+  sites
+- Add adminalerts app
+- Add taskflowbackend app
+
+
+Breaking Changes
+================
 
 Remote Site Setup
 -----------------

@@ -60,7 +60,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    app_taskflow
    app_timeline
    development
-   breaking_changes
+   major_changes
    Full Changelog <changelog>
 
 
