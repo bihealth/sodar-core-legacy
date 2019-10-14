@@ -61,6 +61,7 @@ dependencies, including ones in ``requirements/local.txt`` for this to work. See
    app_timeline
    development
    breaking_changes
+   Full Changelog <changelog>
 
 
 Indices and tables

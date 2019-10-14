@@ -7,7 +7,7 @@ Breaking Changes
 This document details breaking changes from previous SODAR Core releases. It is
 recommended to review these notes whenever upgrading from an older SODAR Core
 version. For a complete list of changes in the current release, see the
-``CHANGELOG.rst`` file.
+:ref:`full changelog<changelog>`.
 
 
 v0.7.1 (WIP)
