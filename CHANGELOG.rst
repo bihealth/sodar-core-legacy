@@ -21,12 +21,14 @@ Changed
 
 - **General**
     - Change "Breaking Changes" doc into "Major Changes" (#201)
+    - Refactor and rename ownership transfer classes and template
 
 Fixed
 -----
 
 - **Projectroles**
     - Dismissing login error alert in ``login.html`` not working (#377)
+    - Current owner queries incorrectly filtered in ``RoleAssignmentOwnerTransferView`` (#393)
 
 
 v0.7.0 (2019-10-09)

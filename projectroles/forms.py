@@ -469,10 +469,12 @@ class RoleAssignmentForm(forms.ModelForm):
         return self.cleaned_data
 
 
-# Owner change form ------------------------------------------------------------
+# Owner transfer form ----------------------------------------------------------
 
 
-class RoleAssignmentChangeOwnerForm(forms.Form):
+class RoleAssignmentOwnerTransferForm(forms.Form):
+    """Form for transferring owner role assignment between users"""
+
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)

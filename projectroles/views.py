@@ -66,7 +66,7 @@ from .forms import (
     RoleAssignmentForm,
     ProjectInviteForm,
     RemoteSiteForm,
-    RoleAssignmentChangeOwnerForm,
+    RoleAssignmentOwnerTransferForm,
 )
 from .models import (
     Project,
@@ -1287,7 +1287,7 @@ class RoleAssignmentDeleteView(
         )
 
 
-class RoleAssignmentTransferOwnership(
+class RoleAssignmentOwnerTransferView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     CurrentUserFormMixin,
@@ -1295,25 +1295,24 @@ class RoleAssignmentTransferOwnership(
     FormView,
 ):
     permission_required = 'projectroles.update_project_owner'
-    template_name = 'projectroles/project_roles_transfer_owner.html'
-    form_class = RoleAssignmentChangeOwnerForm
+    template_name = 'projectroles/roleassignment_owner_transfer.html'
+    form_class = RoleAssignmentOwnerTransferForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
-        kwargs.update(
-            {
-                'project': self.get_project(self.request),
-                'current_owner': owner.user,
-            }
-        )
+        project = self.get_project()
+        owner_as = RoleAssignment.objects.filter(
+            project=project, role__name=PROJECT_ROLE_OWNER
+        )[0]
+        kwargs.update({'project': project, 'current_owner': owner_as.user})
         return kwargs
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
-        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
-        context.update({'current_owner': owner.user})
+        owner_as = RoleAssignment.objects.filter(
+            project=self.get_project(), role__name=PROJECT_ROLE_OWNER
+        )[0]
+        context.update({'current_owner': owner_as.user})
         return context
 
     def form_valid(self, form):
