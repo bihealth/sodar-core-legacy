@@ -7,8 +7,7 @@ from django.core.mail import send_mail as _send_mail
 from django.urls import reverse
 from django.utils.timezone import localtime
 
-from .models import SODAR_CONSTANTS
-from .utils import build_invite_url, get_display_name
+from projectroles.utils import build_invite_url, get_display_name
 
 
 # Access Django user model
@@ -21,8 +20,6 @@ DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 ADMIN_RECIPIENT = settings.ADMINS[0]
 
-# Local constants
-PROJECT_LABEL = get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'])
 
 logger = logging.getLogger(__name__)
 
@@ -51,9 +48,9 @@ contact {admin_name} ({admin_email}).
 # Role Change Template ---------------------------------------------------------
 
 
-SUBJECT_ROLE_CREATE = 'Membership granted for ' + PROJECT_LABEL + ' "{}"'
-SUBJECT_ROLE_UPDATE = 'Membership changed in ' + PROJECT_LABEL + ' "{}"'
-SUBJECT_ROLE_DELETE = 'Membership removed from ' + PROJECT_LABEL + ' "{}"'
+SUBJECT_ROLE_CREATE = 'Membership granted for {project_label} "{project}"'
+SUBJECT_ROLE_UPDATE = 'Membership changed in {project_label} "{project}"'
+SUBJECT_ROLE_DELETE = 'Membership removed from {project_label} "{project}"'
 
 MESSAGE_ROLE_CREATE = r'''
 {issuer_name} ({issuer_email}) has granted you the membership
@@ -82,7 +79,7 @@ from {project_label} "{project}".
 # Invite Template --------------------------------------------------------------
 
 
-SUBJECT_INVITE = 'Invitation for ' + PROJECT_LABEL + ' "{}"'
+SUBJECT_INVITE = 'Invitation for {project_label} "{project}"'
 
 MESSAGE_INVITE_BODY = r'''
 You have been invited by {issuer_name} ({issuer_email})
@@ -108,7 +105,7 @@ Message from the sender of this invitation:
 
 
 SUBJECT_ACCEPT = (
-    'Invitation accepted by {user_name} for ' + PROJECT_LABEL + ' "{project}"'
+    'Invitation accepted by {user_name} for {project_label} "{project}"'
 )
 
 MESSAGE_ACCEPT_BODY = r'''
@@ -158,7 +155,7 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
         invite_url=invite_url,
         date_expire=date_expire_str,
         site_title=SITE_TITLE,
-        project_label=PROJECT_LABEL,
+        project_label=get_display_name(project.type),
     )
 
     return body
@@ -194,7 +191,13 @@ def get_invite_subject(project):
     :param project: Project object
     :return: string
     """
-    return SUBJECT_PREFIX + ' ' + SUBJECT_INVITE.format(project.title)
+    return (
+        SUBJECT_PREFIX
+        + ' '
+        + SUBJECT_INVITE.format(
+            project=project.title, project_label=get_display_name(project.type)
+        )
+    )
 
 
 def get_role_change_subject(change_type, project):
@@ -205,15 +208,19 @@ def get_role_change_subject(change_type, project):
     :return: String
     """
     subject = SUBJECT_PREFIX + ' '
+    subject_kwargs = {
+        'project': project.title,
+        'project_label': get_display_name(project.type),
+    }
 
     if change_type == 'create':
-        subject += SUBJECT_ROLE_CREATE.format(project.title)
+        subject += SUBJECT_ROLE_CREATE.format(**subject_kwargs)
 
     elif change_type == 'update':
-        subject += SUBJECT_ROLE_UPDATE.format(project.title)
+        subject += SUBJECT_ROLE_UPDATE.format(**subject_kwargs)
 
     elif change_type == 'delete':
-        subject += SUBJECT_ROLE_DELETE.format(project.title)
+        subject += SUBJECT_ROLE_DELETE.format(**subject_kwargs)
 
     return subject
 
@@ -241,7 +248,7 @@ def get_role_change_body(
             project=project.title,
             project_url=project_url,
             site_title=SITE_TITLE,
-            project_label=PROJECT_LABEL,
+            project_label=get_display_name(project.type),
         )
 
     elif change_type == 'update':
@@ -252,7 +259,7 @@ def get_role_change_body(
             project=project.title,
             project_url=project_url,
             site_title=SITE_TITLE,
-            project_label=PROJECT_LABEL,
+            project_label=get_display_name(project.type),
         )
 
     elif change_type == 'delete':
@@ -260,7 +267,7 @@ def get_role_change_body(
             issuer_name=issuer.get_full_name(),
             issuer_email=issuer.email,
             project=project.title,
-            project_label=PROJECT_LABEL,
+            project_label=get_display_name(project.type),
         )
 
     body += get_email_footer()
@@ -370,7 +377,9 @@ def send_accept_note(invite, request):
         SUBJECT_PREFIX
         + ' '
         + SUBJECT_ACCEPT.format(
-            user_name=request.user.get_full_name(), project=invite.project.title
+            user_name=request.user.get_full_name(),
+            project_label=get_display_name(invite.project.type),
+            project=invite.project.title,
         )
     )
 
@@ -383,7 +392,7 @@ def send_accept_note(invite, request):
         user_name=request.user.get_full_name(),
         user_email=request.user.email,
         site_title=SITE_TITLE,
-        project_label=PROJECT_LABEL,
+        project_label=get_display_name(invite.project.type),
     )
     message += get_email_footer()
 
@@ -416,7 +425,7 @@ def send_expiry_note(invite, request):
         user_email=request.user.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
         site_title=SITE_TITLE,
-        project_label=PROJECT_LABEL,
+        project_label=get_display_name(invite.project.type),
     )
     message += get_email_footer()
 
