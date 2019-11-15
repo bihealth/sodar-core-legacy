@@ -15,6 +15,7 @@ Added
 
 - **General**
     - Include CHANGELOG in documentation (#379)
+    - Use RTD theme in Sphinx docs (#384)
 
 Changed
 -------
