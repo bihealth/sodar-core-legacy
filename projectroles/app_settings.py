@@ -63,6 +63,17 @@ class AppSettingAPI:
             raise ValueError('Invalid scope "{}"'.format(scope))
 
     @classmethod
+    def _check_type(cls, setting_type):
+        """
+        Ensure the validity of app setting type.
+
+        :param setting_type: String
+        :raise: ValueError if type is not recognized
+        """
+        if setting_type not in APP_SETTING_TYPES:
+            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+
+    @classmethod
     def _get_json_value(cls, value):
         """
         Return JSON value as dict regardless of input type
@@ -329,10 +340,9 @@ class AppSettingAPI:
         :param setting_value: Setting value
         :raise: ValueError if setting_type or setting_value is invalid
         """
-        if setting_type not in APP_SETTING_TYPES:
-            raise ValueError('Invalid setting type "{}"'.format(setting_type))
+        cls._check_type(setting_type)
 
-        elif setting_type == 'BOOLEAN':
+        if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
                 raise ValueError(
                     'Please enter a valid boolean value ({})'.format(
@@ -350,6 +360,7 @@ class AppSettingAPI:
                         setting_value
                     )
                 )
+
         elif setting_type == 'JSON':
             try:
                 json.dumps(setting_value)
@@ -357,6 +368,7 @@ class AppSettingAPI:
                 raise ValueError(
                     'Please enter valid JSON ({})'.format(setting_value)
                 )
+
         return True
 
     @classmethod
@@ -390,7 +402,10 @@ class AppSettingAPI:
                 )
             )
 
-        return plugin.app_settings[name]
+        setting_def = plugin.app_settings[name]
+        cls._check_type(setting_def['type'])
+
+        return setting_def
 
     @classmethod
     def get_setting_defs(
@@ -420,7 +435,7 @@ class AppSettingAPI:
                 )
 
         cls._check_scope(scope)
-        return {
+        setting_defs = {
             k: v
             for k, v in plugin.app_settings.items()
             if (
@@ -435,3 +450,9 @@ class AppSettingAPI:
                 )
             )
         }
+
+        # Ensure type validity
+        for k, v in setting_defs.items():
+            cls._check_type(v['type'])
+
+        return setting_defs

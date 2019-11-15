@@ -34,6 +34,7 @@ Fixed
     - Dismissing login error alert in ``login.html`` not working (#377)
     - Current owner queries incorrectly filtered in ``RoleAssignmentOwnerTransferView`` (#393)
     - Hardcoded project type display name in sent emails (#398)
+    - Silent failing of invalid app setting type in plugin definition (#390)
 
 
 v0.7.0 (2019-10-09)

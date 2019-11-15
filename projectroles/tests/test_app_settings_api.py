@@ -492,7 +492,7 @@ class TestAppSettingAPI(
         )
         self.assertEqual(len(defs), 4)
 
-    def test_get_setting_defs_invalid(self):
+    def test_get_setting_defs_invalid_scope(self):
         """Test get_setting_defs() with an invalid scope"""
         with self.assertRaises(ValueError):
             app_settings.get_setting_defs(
