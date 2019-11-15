@@ -240,7 +240,7 @@ class TestAdminAlertActivationView(TestViewsBase):
             self.assertTrue(self.alert.active)
 
             response: JsonResponse = self.client.post(
-                reverse('adminalerts:ajax_alert_activation'),
+                reverse('adminalerts:api_alert_activation'),
                 data={'uuid': self.alert.sodar_uuid},
             )
             self.assertEquals(response.status_code, 200)
@@ -257,7 +257,7 @@ class TestAdminAlertActivationView(TestViewsBase):
             self.alert.save()
 
             response: JsonResponse = self.client.post(
-                reverse('adminalerts:ajax_alert_activation'),
+                reverse('adminalerts:api_alert_activation'),
                 data={'uuid': self.alert.sodar_uuid},
             )
             self.assertEquals(response.status_code, 200)

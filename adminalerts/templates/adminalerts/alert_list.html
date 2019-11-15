@@ -57,7 +57,7 @@
                 button.classList.remove("btn-warning");
                 button.innerText = 'ACTIVE';
             } else {
-                button.innerText = 'SUSPENDED';
+                button.innerText = 'INACTIVE';
                 button.classList.remove("btn-success");
                 button.classList.add("btn-warning");
             }
@@ -72,7 +72,7 @@
 
             $.ajax({
                 type: 'POST',
-                url: '{% url 'adminalerts:ajax_alert_activation' %}',
+                url: '{% url 'adminalerts:api_alert_activation' %}',
                 data: {
                     'uuid': event.target.dataset.uuid,
                 },
@@ -136,7 +136,7 @@
                     {% elif a.active %}
                       ACTIVE
                     {% else %}
-                      SUSPENDED
+                      INACTIVE
                     {% endif %}
                   </button>
                 </td>

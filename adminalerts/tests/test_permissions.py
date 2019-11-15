@@ -79,7 +79,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
 
     def test_alert_activation(self):
         """Test permissions for AdminAlert activation API view"""
-        url = reverse('adminalerts:ajax_alert_activation')
+        url = reverse('adminalerts:api_alert_activation')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
         self.assert_response(

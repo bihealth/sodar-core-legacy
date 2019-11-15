@@ -22,6 +22,9 @@ Changed
 - **General**
     - Change "Breaking Changes" doc into "Major Changes" (#201)
     - Refactor and rename ownership transfer classes and template
+- **Adminalerts**
+    - Rename ``INACTIVE`` alert state in UI (#396)
+    - Rename URL name and pattern for activation API view (#378)
 
 Fixed
 -----
