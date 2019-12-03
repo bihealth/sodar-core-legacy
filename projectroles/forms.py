@@ -121,6 +121,7 @@ class ProjectForm(forms.ModelForm):
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_widget_attrs = s_val.get('widget_attrs') or {}
                 setting_kwargs = {
                     'required': False,
                     'label': s_val.get('label')
@@ -129,10 +130,15 @@ class ProjectForm(forms.ModelForm):
                 }
 
                 if s_val['type'] == 'JSON':
+                    # NOTE: Attrs MUST be supplied here (#404)
+                    if 'class' in s_widget_attrs:
+                        s_widget_attrs['class'] += ' sodar-json-input'
+
+                    else:
+                        s_widget_attrs['class'] = 'sodar-json-input'
+
                     self.fields[s_field] = forms.CharField(
-                        widget=forms.Textarea(
-                            attrs={'class': 'sodar-json-input'}
-                        ),
+                        widget=forms.Textarea(attrs=s_widget_attrs),
                         **setting_kwargs
                     )
                     if self.instance.pk:
@@ -166,6 +172,10 @@ class ProjectForm(forms.ModelForm):
                         self.fields[s_field] = forms.BooleanField(
                             **setting_kwargs
                         )
+
+                    # Add optional attributes from plugin (#404)
+                    # NOTE: Experimental! Use at your own risk!
+                    self.fields[s_field].widget.attrs.update(s_widget_attrs)
 
                     # Set initial value
                     if self.instance.pk:

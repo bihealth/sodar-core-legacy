@@ -356,6 +356,7 @@ class TestAppSettingAPI(
                 'default': 0,
                 'description': 'Example integer project setting',
                 'user_modifiable': True,
+                'widget_attrs': {'class': 'text-success'},
             },
             'project_bool_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -376,6 +377,7 @@ class TestAppSettingAPI(
                 },
                 'description': 'Example JSON project setting',
                 'user_modifiable': True,
+                'widget_attrs': {'class': 'text-danger'},
             },
             'project_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
@@ -408,6 +410,7 @@ class TestAppSettingAPI(
                 'default': 0,
                 'description': 'Example integer user setting',
                 'user_modifiable': True,
+                'widget_attrs': {'class': 'text-success'},
             },
             'user_bool_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
@@ -426,8 +429,9 @@ class TestAppSettingAPI(
                     'list': [1, 2, 3, 4, 5],
                     'level_6': False,
                 },
-                'description': 'Example JSON project setting',
+                'description': 'Example JSON user setting',
                 'user_modifiable': True,
+                'widget_attrs': {'class': 'text-danger'},
             },
             'user_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
