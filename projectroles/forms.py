@@ -244,9 +244,12 @@ class ProjectForm(forms.ModelForm):
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
 
-            # Set owner value but hide the field (updating via member form)
+            # Set owner value
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
-            self.fields['owner'].widget = forms.HiddenInput()
+
+            # Hide owner widget if a project (changed in member modification UI)
+            if self.initial['type'] == PROJECT_TYPE_PROJECT:
+                self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
             if parent_project:
