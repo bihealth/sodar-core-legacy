@@ -2,11 +2,22 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}Site Info for {{ site_title }} {% if site_subtitle %}({{ site_subtitle }}){% endif %}{% endblock %}
+{% block title %}Site Info{% endblock %}
 
 {% block projectroles %}
 <div class="row sodar-subtitle-container">
-  <h2><i class="fa fa-bar-chart"></i> Site Info</h2>
+  <h2>
+    <i class="fa fa-bar-chart"></i>
+    Site Info:
+    {% if site_instance_title %}
+      {{ site_instance_title }}
+    {% else %}
+      {{ site_title }}
+    {% endif %}
+    {% if site_subtitle %}
+      ({{ site_subtitle }})
+    {% endif %}
+  </h2>
 </div>
 
 <div class="container-fluid sodar-page-container">

@@ -31,6 +31,8 @@ Changed
     - Rename URL name and pattern for activation API view (#378)
 - **Projectroles**
     - Improve unsupported browser warning (#405)
+- **Siteinfo**
+    - Improve page title and heading (#402)
 - **Sodarcache**
     - Clarify management command logging (#403)
 
