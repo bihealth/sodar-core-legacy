@@ -36,6 +36,8 @@ Changed
     - Improve page title and heading (#402)
 - **Sodarcache**
     - Clarify management command logging (#403)
+- **Timeline**
+    - Improve extra data status tab legend (#380)
 
 Fixed
 -----
