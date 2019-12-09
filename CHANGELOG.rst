@@ -43,6 +43,7 @@ Fixed
     - Hardcoded project type display name in sent emails (#398)
     - Silent failing of invalid app setting type in plugin definition (#390)
     - Exception raised by hidden sidebar in sidebar height calculation (#407)
+    - Crash in ``get_default_setting()`` if default JSON value was not set (#389)
 
 
 v0.7.0 (2019-10-09)

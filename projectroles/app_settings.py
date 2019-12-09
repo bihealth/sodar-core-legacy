@@ -131,13 +131,14 @@ class AppSettingAPI:
         app_plugin = get_app_plugin(app_name)
 
         if setting_name in app_plugin.app_settings:
-            if (
-                post_safe
-                and app_plugin.app_settings[setting_name]['type'] == 'JSON'
-            ):
-                return json.dumps(
-                    app_plugin.app_settings[setting_name]['default']
-                )
+            if app_plugin.app_settings[setting_name]['type'] == 'JSON':
+                if not app_plugin.app_settings[setting_name].get('default'):
+                    return {}
+
+                if post_safe:
+                    return json.dumps(
+                        app_plugin.app_settings[setting_name]['default']
+                    )
 
             return app_plugin.app_settings[setting_name]['default']
 
