@@ -38,6 +38,7 @@ Fixed
     - Current owner queries incorrectly filtered in ``RoleAssignmentOwnerTransferView`` (#393)
     - Hardcoded project type display name in sent emails (#398)
     - Silent failing of invalid app setting type in plugin definition (#390)
+    - Exception raised by hidden sidebar in sidebar height calculation (#407)
 
 
 v0.7.0 (2019-10-09)

@@ -419,8 +419,10 @@ $(document).ready(function () {
     window.sidebar = $('#sodar-pr-sidebar');
     window.sidebar_alt_btn = $('#sodar-pr-sidebar-alt-btn');
     let sidebarContent = $('#sodar-pr-sidebar-navbar').get(0);
-    window.sidebarMinWindowHeight = sidebarContent.scrollHeight + sidebarContent.getBoundingClientRect().top;
+    if (sidebarContent)
+        window.sidebarMinWindowHeight = sidebarContent.scrollHeight + sidebarContent.getBoundingClientRect().top;
     toggleSidebar();
+
 });
 
 $(window).on('resize', function () {
