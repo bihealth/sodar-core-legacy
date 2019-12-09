@@ -18,6 +18,7 @@ Added
 - **Projectroles**
     - ``widget_attrs`` parameter for project and user settings (#404)
     - Allow disabling login requirement for views (#406)
+    - Remote project member management link for target projects (#382)
 
 Changed
 -------

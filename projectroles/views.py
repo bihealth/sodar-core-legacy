@@ -1028,10 +1028,19 @@ class ProjectRoleView(
     model = Project
 
     def get_context_data(self, *args, **kwargs):
+        project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
-        context['owner'] = context['project'].get_owner()
-        context['delegates'] = context['project'].get_delegates()
-        context['members'] = context['project'].get_members()
+        context['owner'] = project.get_owner()
+        context['delegates'] = project.get_delegates()
+        context['members'] = project.get_members()
+
+        if project.is_remote():
+            context[
+                'remote_roles_url'
+            ] = project.get_source_site().url + reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
+
         return context
 
 
