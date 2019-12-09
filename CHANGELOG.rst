@@ -29,6 +29,8 @@ Changed
 - **Adminalerts**
     - Rename ``INACTIVE`` alert state in UI (#396)
     - Rename URL name and pattern for activation API view (#378)
+- **Projectroles**
+    - Improve unsupported browser warning (#405)
 
 Fixed
 -----

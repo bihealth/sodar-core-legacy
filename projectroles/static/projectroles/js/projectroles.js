@@ -367,34 +367,52 @@ $(document).ready(function() {
 });
 
 
-/* Display Internet Explorer warning ---------------------------------------- */
+/* Display unsupported browser warning -------------------------------------- */
 
 
 $(document).ready(function () {
-    if (window.sodarBrowserWarning === 1 && (
-        navigator.appName === 'Microsoft Internet Explorer' ||
-        !!(navigator.userAgent.match(/Trident/) ||
-            navigator.userAgent.match(/rv:11/)) || (
-        typeof $.browser !== "undefined" && $.browser.msie === 1))) {
-        let parentElem = $('div.sodar-app-container');
+    if (window.sodarBrowserWarning === 1) {
+        // Based on https://stackoverflow.com/a/38080051
+        navigator.browserSpecs = (function(){
+            var ua = navigator.userAgent, tem,
+                M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if(/trident/i.test(M[1])) {
+                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return {name: 'IE', version: (tem[1] || '')};
+            }
+            if(M[1] === 'Chrome'){
+                tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+                if (tem != null) return {name: tem[1].replace(
+                    'OPR', 'Opera'), version: tem[2]};
+            }
+            M = M[2] ? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null)
+                M.splice(1, 1, tem[1]);
+            return {name: M[0], version: M[1]};
+        })();
 
-        if (!parentElem.length) {
-            parentElem = $('div.sodar-content-container').find(
-                'div.container-fluid').first();
+        if (!['Chrome', 'Firefox', 'Edge'].includes(navigator.browserSpecs.name)) {
+            let parentElem = $('div.sodar-app-container');
+
+            if (!parentElem.length) {
+                parentElem = $('div.sodar-content-container').find(
+                    'div.container-fluid').first();
+            }
+
+            if (!$('div.sodar-alert-container').length) {
+                parentElem.prepend(
+                    '<div class="container-fluid sodar-alert-container"></div>');
+            }
+
+            $('div.sodar-alert-container').prepend(
+                '<div class="alert alert-danger sodar-alert-top">' +
+                '<i class="fa fa-exclamation-triangle"></i> ' +
+                'You are using an unsupported browser. We recommend using ' +
+                'a recent version of ' +
+                '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +
+                '<a href="https://www.google.com/chrome" target="_blank">Google Chrome</a>.' +
+                '</div>');
         }
-
-        if (!$('div.sodar-alert-container').length) {
-            parentElem.prepend(
-                '<div class="container-fluid sodar-alert-container"></div>');
-        }
-
-        $('div.sodar-alert-container').prepend(
-            '<div class="alert alert-danger sodar-alert-top">' +
-            '<i class="fa fa-exclamation-triangle"></i> ' +
-            'This site does not support Microsoft Internet Explorer. We recommend using ' +
-            '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +
-            '<a href="https://www.google.com/chrome" target="_blank">Google Chrome</a>.' +
-            '</div>');
     }
 });
 
