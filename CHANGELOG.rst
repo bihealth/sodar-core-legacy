@@ -17,6 +17,7 @@ Added
     - Include CHANGELOG in documentation (#379)
 - **Projectroles**
     - ``widget_attrs`` parameter for project and user settings (#404)
+    - Allow disabling login requirement for views (#406)
 
 Changed
 -------

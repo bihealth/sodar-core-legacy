@@ -12,7 +12,7 @@ from django.core.urlresolvers import resolve
 from django.core.validators import EmailValidator
 from django.contrib import auth
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import AccessMixin
 from django.db.models import Q
 from django.http import (
     HttpResponseRedirect,
@@ -441,6 +441,22 @@ class CurrentUserFormMixin:
         kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
+
+
+class LoginRequiredMixin(AccessMixin):
+    """Customized variant of the one from ``django.contrib.auth.mixins``.
+
+    Allows disabling by overriding function ``is_login_required``.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.is_login_required() and not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def is_login_required(self):
+        return True
 
 
 # Base Project Views -----------------------------------------------------------
