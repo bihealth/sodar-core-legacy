@@ -9,16 +9,20 @@
 
 {% block projectroles %}
 
-<div class="container-fluid sodar-subtitle-container">
+<div class="row sodar-subtitle-container">
   <h2><i class="fa fa-exclamation-triangle"></i> Admin Alert</h2>
+  <a role="button" class="btn btn-secondary ml-auto pull-right"
+       href="{{ request.session.real_referer }}">
+      <i class="fa fa-arrow-circle-left"></i> Back
+    </a>
 </div>
 
 <div class="container-fluid sodar-page-container">
   <div class="card" id="sodar-aa-alert-list">
-    <div class="card-body">
-      <dl class="row">
+    <div class="card-body px-0">
+      <dl class="row pb-0">
         <dt class="col-md-2">Message</dt>
-        <dd class="col-md-10">{{ object.message }}</dd>
+        <dd class="col-md-10"><strong>{{ object.message }}</strong></dd>
         <dt class="col-md-2">Created</dt>
         <dd class="col-md-10">{{ object.date_created|date:'Y-m-d H:i' }}</dd>
         <dt class="col-md-2">Expires</dt>
@@ -30,8 +34,10 @@
           {% endautoescape %}
         </dd>
         {% if object.description.raw %}
-          <dt class="col-md-2">Description</dt>
-          <dd class="col-md-10">
+          <dd class="col-md-12 px-0 mx-0">
+            <hr />
+          </dd>
+          <dd class="col-md-12 my-0">
             {% autoescape off %}
               {% render_markdown object.description.raw %}
             {% endautoescape %}
@@ -40,14 +46,6 @@
       </dl>
     </div>
   </div>
-
-  <div class="row">
-    <a role="button" class="btn btn-secondary ml-auto"
-       href="{{ request.session.real_referer }}">
-      <i class="fa fa-arrow-circle-left"></i> Back
-    </a>
-  </div>
-
 </div>
 
 {% endblock projectroles %}
