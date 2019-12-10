@@ -52,6 +52,7 @@ Fixed
     - Exception raised by hidden sidebar in sidebar height calculation (#407)
     - Crash in ``get_default_setting()`` if default JSON value was not set (#389)
     - Owner widget hidden in category update view (#394)
+    - Project list extra column header alignment not set (#412)
 
 
 v0.7.0 (2019-10-09)
