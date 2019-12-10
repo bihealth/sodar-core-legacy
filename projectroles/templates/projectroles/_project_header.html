@@ -43,7 +43,13 @@
 
   {# Secondary title #}
   <div class="sodar-pr-content-title-secondary text-muted">
-    {% if project.description %}{{ project.description }}{% endif %}
+    {% get_user_html project.get_owner.user as owner_html %}
+    {% if project.description %}
+      {{ project.description }}
+      {% if project.type == 'CATEGORY' %}(Owner: {{ owner_html | safe }}){% endif %}
+    {% elif project.type == 'CATEGORY' %}
+      Owner: {{ owner_html | safe }}
+    {% endif %}
   </div>
   {% if project.is_remote and request.user.is_superuser %}
     <div class="ml-auto">
