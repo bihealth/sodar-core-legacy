@@ -19,6 +19,7 @@ Added
     - ``widget_attrs`` parameter for project and user settings (#404)
     - Allow disabling login requirement for views (#406)
     - Remote project member management link for target projects (#382)
+    - Current user in ``get_project_list_value()`` arguments (#413)
 
 Changed
 -------

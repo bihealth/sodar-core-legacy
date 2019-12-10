@@ -213,8 +213,8 @@ def get_not_found_alert(project_results, app_search_data, search_type):
 
 
 @register.simple_tag
-def get_project_list_value(app_plugin, column_id, project):
-    ret = app_plugin.get_project_list_value(column_id, project)
+def get_project_list_value(app_plugin, column_id, project, user):
+    ret = app_plugin.get_project_list_value(column_id, project, user)
     return ret if ret is not None else ''
 
 

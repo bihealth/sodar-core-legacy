@@ -201,14 +201,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             },
         }
 
-    def get_project_list_value(self, column_id, project):
+    def get_project_list_value(self, column_id, project, user):
         """
         Return a value for the optional additional project list column specific
         to a project.
 
         :param column_id: ID of the column (string)
         :param project: Project object
-        :return: String (may contain HTML) or None
+        :param user: User object (current user)
+        :return: String (may contain HTML), integer or None
         """
         if column_id == 'files':
             count = File.objects.filter(project=project).count()

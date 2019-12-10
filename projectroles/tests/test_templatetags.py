@@ -483,7 +483,10 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         # TODO: Refactor column system so that function returns link URL as
         # TODO: second return value instead of HTML
         self.assertEqual(
-            tags.get_project_list_value(app_plugin, 'files', self.project), 0
+            tags.get_project_list_value(
+                app_plugin, 'files', self.project, self.user
+            ),
+            0,
         )
 
     def test_get_project_column_count(self):

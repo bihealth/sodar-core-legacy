@@ -204,14 +204,15 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return {}
 
-    def get_project_list_value(self, column_id, project):
+    def get_project_list_value(self, column_id, project, user):
         """
         Return a value for the optional additional project list column specific
         to a project.
 
         :param column_id: ID of the column (string)
         :param project: Project object
-        :return: String (may contain HTML) or None
+        :param user: User object (current user)
+        :return: String (may contain HTML), integer or None
         """
         # TODO: Implement this in your app plugin (optional)
         return None

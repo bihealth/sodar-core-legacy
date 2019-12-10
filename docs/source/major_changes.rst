@@ -16,7 +16,9 @@ v0.7.1 (WIP)
 Release Highlights
 ==================
 
-TBA
+- Project list layout and extra column handling improved
+- Allow customizing widgets in app settings
+- Critical bug fixes for category and project owner management
 
 
 Breaking Changes
@@ -28,6 +30,16 @@ Login Template Modified
 The default login template ``login.html`` has been modified. If your site
 overrides it with an altered version, please review the difference and update
 your template as appropriate.
+
+User Added to get_project_list_value()
+--------------------------------------
+
+The signature of the ``get_project_list_value()`` method implemented by project
+app plugins to return data for extra project list columns has changed. The
+``user`` argument which provides the current user has been added. If using this
+feature, please make sure to update your implementation(s) of the method.
+
+See :ref:`app_projectroles_api` to review the API changes.
 
 
 v0.7.0 (2019-10-09)
