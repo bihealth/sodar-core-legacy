@@ -33,6 +33,7 @@ Changed
     - Improve alert detail page layout (#385)
 - **Projectroles**
     - Improve unsupported browser warning (#405)
+    - Move project list description into tooltip (#388)
 - **Siteinfo**
     - Improve page title and heading (#402)
 - **Sodarcache**

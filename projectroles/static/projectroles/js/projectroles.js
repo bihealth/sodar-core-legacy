@@ -164,7 +164,7 @@ $(document).ready(function () {
 
     // Filter input
     $('#sodar-pr-project-list-filter').keyup(function () {
-        v = $(this).val().toLowerCase();
+        var v = $(this).val().toLowerCase();
         var valFound = false;
         $('.sodar-pr-home-display-nostars').hide();
 
@@ -175,27 +175,20 @@ $(document).ready(function () {
 
             $('.sodar-pr-home-display-filtered').each(function () {
                 var titleTxt = $(this).find('td:first-child').attr('orig-txt');
-                var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
+                var titleLink = $(this).find('td:first-child div a');
 
-                if ($(this).find('td:first-child div a').text().toLowerCase().indexOf(v) !== -1 ||
-                    $(this).find('td:nth-last-child(2)').text().toLowerCase().indexOf(v) !== -1) {
+                if (titleLink.text().toLowerCase().indexOf(v) !== -1 ||
+                    titleLink.attr('data-original-title').toLowerCase().indexOf(v) !== -1) {
                     // Reset content for updating the highlight
-                    $(this).find('td:first-child div a').html(titleTxt);
-                    $(this).find('td:nth-last-child(2)').html(descTxt);
+                    titleLink.html(titleTxt);
 
                     // Highlight
                     var pattern = new RegExp("(" + v + ")", "gi");
                     var titlePos = titleTxt.toLowerCase().indexOf(v);
-                    var descPos = descTxt.toLowerCase().indexOf(v);
 
                     if (titlePos !== -1) {
                         var titleVal = titleTxt.substring(titlePos, titlePos + v.length);
-                        $(this).find('td:first-child div a').html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
-                    }
-
-                    if (descPos !== -1) {
-                        var descVal = descTxt.substring(descPos, descPos + v.length);
-                        $(this).find('td:nth-last-child(2)').html(descTxt.replace(pattern, '<span class="sodar-search-highlight">' + descVal + '</span>'));
+                        titleLink.html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
                     }
 
                     $(this).show();
@@ -230,9 +223,7 @@ $(document).ready(function () {
         $('.sodar-pr-home-display-filtered').each(function () {
             // Reset filter highlights and value
             var titleTxt = $(this).find('td:first-child').attr('orig-txt');
-            var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
             $(this).find('td:first-child a').html(titleTxt);
-            $(this).find('td:nth-last-child(2)').html(descTxt);
             $(this).hide();
             $('#sodar-pr-project-list-filter').val('');
         });

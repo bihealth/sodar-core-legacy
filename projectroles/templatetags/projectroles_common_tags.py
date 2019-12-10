@@ -153,10 +153,16 @@ def get_project_link(project, full_title=False, request=None):
     if request:
         remote_icon = get_remote_icon(project, request)
 
-    return '<a href="{}">{}</a>{}'.format(
-        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
-        project.get_full_title() if full_title else project.title,
-        ' ' + remote_icon if remote_icon else '',
+    return (
+        '<a href="{}" title="{}" data-toggle="tooltip" '
+        'data-placement="top">{}</a>{}'.format(
+            reverse(
+                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+            ),
+            project.description if project.description else '',
+            project.get_full_title() if full_title else project.title,
+            ' ' + remote_icon if remote_icon else '',
+        )
     )
 
 

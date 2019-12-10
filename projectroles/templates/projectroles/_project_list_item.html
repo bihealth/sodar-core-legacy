@@ -48,11 +48,6 @@
        {% endif %}
      {% endfor %}
   {% endfor %}
-  {% if p.description %}
-    <td>{{ p.description }}</td>
-  {% else %}
-    <td class="text-muted">N/A</td>
-  {% endif %}
   <td>
     {% autoescape off %}
       {% get_user_role_html p request.user %}
