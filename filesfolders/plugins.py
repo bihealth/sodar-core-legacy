@@ -217,11 +217,11 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             count = HyperLink.objects.filter(project=project).count()
 
         if count > 0:
-            return '<a href="{}">{}'.format(
+            return '<a href="{}">{}</a>'.format(
                 reverse(
                     'filesfolders:list', kwargs={'project': project.sodar_uuid}
                 ),
                 count,
             )
 
-        return count
+        return 0

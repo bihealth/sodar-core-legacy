@@ -44,6 +44,8 @@ Changed
 Fixed
 -----
 
+- **Filesfolders**
+    - Invalid HTML in project list extra columns
 - **Projectroles**
     - Dismissing login error alert in ``login.html`` not working (#377)
     - Current owner queries incorrectly filtered in ``RoleAssignmentOwnerTransferView`` (#393)
@@ -53,6 +55,7 @@ Fixed
     - Crash in ``get_default_setting()`` if default JSON value was not set (#389)
     - Owner widget hidden in category update view (#394)
     - Project list extra column header alignment not set (#412)
+    - ``get_project_list_value()`` template tag displaying "None" on null value (#411)
 
 
 v0.7.0 (2019-10-09)
