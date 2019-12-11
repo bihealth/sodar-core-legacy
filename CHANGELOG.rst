@@ -29,6 +29,7 @@ Changed
     - Change "Breaking Changes" doc into "Major Changes" (#201)
     - Refactor and rename ownership transfer classes and template
     - Use RTD theme in documentation (#384)
+    - Upgrade to Chromedriver v79
 - **Adminalerts**
     - Rename ``INACTIVE`` alert state in UI (#396)
     - Rename URL name and pattern for activation API view (#378)
