@@ -7,9 +7,6 @@ Test settings
 from .base import *  # noqa
 
 
-env = environ.Env()
-
-
 # DEBUG
 # ------------------------------------------------------------------------------
 # Turn debug off so tests run faster
