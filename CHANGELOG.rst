@@ -21,6 +21,7 @@ Added
     - Remote project member management link for target projects (#382)
     - Current user in ``get_project_list_value()`` arguments (#413)
     - Display category owner in page header (#414)
+    - Configuring UI test settings via Django settings or ``TestUIBase`` vars (#417)
 
 Changed
 -------

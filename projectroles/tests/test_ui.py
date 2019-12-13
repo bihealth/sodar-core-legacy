@@ -94,19 +94,38 @@ class TestUIBase(
 ):
     """Base class for UI tests"""
 
+    #: Selenium Chrome options from settings
+    chrome_options = getattr(
+        settings,
+        'PROJECTROLES_TEST_UI_CHROME_OPTIONS',
+        [
+            'headless',
+            'no-sandbox',  # For Gitlab-CI compatibility
+            'disable-dev-shm-usage',  # For testing stability
+        ],
+    )
+
+    #: Selenium window size from settings
+    window_size = getattr(
+        settings, 'PROJECTROLES_TEST_UI_WINDOW_SIZE', (1400, 1000)
+    )
+
+    #: UI test wait time from settings
+    wait_time = getattr(settings, 'PROJECTROLES_TEST_UI_WAIT_TIME', 30)
+
     def setUp(self):
         socket.setdefaulttimeout(60)  # To get around Selenium hangups
-        self.wait_time = 30
 
-        # Init headless Chrome
+        # Init Chrome
         options = webdriver.ChromeOptions()
-        options.add_argument('headless')
-        options.add_argument('no-sandbox')  # For Gitlab-CI compatibility
-        options.add_argument('disable-dev-shm-usage')  # For testing stability
+
+        for arg in self.chrome_options:
+            options.add_argument(arg)
+
         self.selenium = webdriver.Chrome(chrome_options=options)
 
         # Prevent ElementNotVisibleException
-        self.selenium.set_window_size(1400, 1000)
+        self.selenium.set_window_size(self.window_size[0], self.window_size[1])
 
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
