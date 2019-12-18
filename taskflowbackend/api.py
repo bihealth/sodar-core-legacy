@@ -18,16 +18,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 HEADERS = {'Content-Type': 'application/json'}
-TARGETS = (
-    settings.TASKFLOW_TARGETS
-    if hasattr(settings, 'TASKFLOW_TARGETS')
-    else ['sodar']
-)
-TASKFLOW_TEST_MODE = (
-    True
-    if (hasattr(settings, 'TASKFLOW_TEST_MODE') and settings.TASKFLOW_TEST_MODE)
-    else False
-)
+TARGETS = getattr(settings, 'TASKFLOW_TARGETS', ['sodar'])
+TASKFLOW_TEST_MODE = getattr(settings, 'TASKFLOW_TEST_MODE', False)
 
 
 class TaskflowAPI:
@@ -79,7 +71,7 @@ class TaskflowAPI:
 
         # Format UUIDs in flow_data
         for k, v in flow_data.items():
-            if type(v) == UUID:
+            if isinstance(v, UUID):
                 flow_data[k] = str(v)
 
         data = {

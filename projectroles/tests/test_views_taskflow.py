@@ -55,11 +55,7 @@ TASKFLOW_ENABLED = (
     True if 'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
 )
 TASKFLOW_SKIP_MSG = 'Taskflow not enabled in settings'
-TASKFLOW_TEST_MODE = (
-    True
-    if (hasattr(settings, 'TASKFLOW_TEST_MODE') and settings.TASKFLOW_TEST_MODE)
-    else False
-)
+TASKFLOW_TEST_MODE = getattr(settings, 'TASKFLOW_TEST_MODE', False)
 
 
 @tag('Taskflow')

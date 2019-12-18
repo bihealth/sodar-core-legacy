@@ -26,10 +26,7 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        if (
-            hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
-            and settings.PROJECTROLES_DISABLE_CATEGORIES
-        ):
+        if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             logger.info(
                 'Project categories and nesting disabled, '
                 'remote sync disabled'
@@ -47,10 +44,7 @@ class Command(BaseCommand):
             logger.error('No source site defined, unable to sync')
             return
 
-        if (
-            hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
-            and settings.PROJECTROLES_ALLOW_LOCAL_USERS
-        ):
+        if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             logger.info(
                 'PROJECTROLES_ALLOW_LOCAL_USERS=True, will sync '
                 'roles for existing local users'

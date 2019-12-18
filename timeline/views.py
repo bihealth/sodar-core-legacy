@@ -35,11 +35,7 @@ class ProjectTimelineView(
     permission_required = 'timeline.view_timeline'
     template_name = 'timeline/timeline.html'
     model = ProjectEvent
-    paginate_by = (
-        settings.TIMELINE_PAGINATION
-        if hasattr(settings, 'TIMELINE_PAGINATION')
-        else DEFAULT_PAGINATION
-    )
+    paginate_by = getattr(settings, 'TIMELINE_PAGINATION', DEFAULT_PAGINATION)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)

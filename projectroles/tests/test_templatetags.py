@@ -130,6 +130,12 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             c_tags.get_django_setting('NON_EXISTING_SETTING'), None
         )
+        self.assertEqual(
+            c_tags.get_django_setting(
+                'NON_EXISTING_SETTING', default='default'
+            ),
+            'default',
+        )
 
     def test_get_app_setting(self):
         """Test get_app_setting()"""

@@ -113,20 +113,14 @@ ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-SODAR_API_MEDIA_TYPE = (
-    settings.SODAR_API_MEDIA_TYPE
-    if hasattr(settings, 'SODAR_API_MEDIA_TYPE')
-    else SODAR_API_DEFAULT_MEDIA_TYPE
+SODAR_API_MEDIA_TYPE = getattr(
+    settings, 'SODAR_API_MEDIA_TYPE', SODAR_API_DEFAULT_MEDIA_TYPE
 )
-SODAR_API_DEFAULT_VERSION = (
-    settings.SODAR_API_DEFAULT_VERSION
-    if hasattr(settings, 'SODAR_API_DEFAULT_VERSION')
-    else '0.1'
+SODAR_API_DEFAULT_VERSION = getattr(
+    settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
 )
-SODAR_API_ALLOWED_VERSIONS = (
-    settings.SODAR_API_ALLOWED_VERSIONS
-    if hasattr(settings, 'SODAR_API_ALLOWED_VERSIONS')
-    else [SODAR_API_DEFAULT_VERSION]
+SODAR_API_ALLOWED_VERSIONS = getattr(
+    settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
 
 
@@ -338,10 +332,6 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
             )
 
             if obj.role.name == PROJECT_ROLE_OWNER:
-                """return self.request.user.has_perm(
-                    'projectroles.update_project_owner',
-                    self.get_permission_object(),
-                )"""
                 return False
 
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
@@ -607,10 +597,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        if (
-            hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH')
-            and not settings.PROJECTROLES_ENABLE_SEARCH
-        ):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
             messages.error(request, 'Search not enabled')
             return redirect('home')
 
@@ -1887,10 +1874,7 @@ class RemoteSiteListView(
 
     # TODO: Remove this once implementing #76
     def get(self, request, *args, **kwargs):
-        if (
-            hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
-            and settings.PROJECTROLES_DISABLE_CATEGORIES
-        ):
+        if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             messages.warning(
                 request,
                 '{} {} and nesting disabled, '
@@ -2439,11 +2423,7 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
             qs = User.objects.all()
 
         # Exclude the users in the system group unless local users are allowed
-        allow_local = (
-            settings.PROJECTROLES_ALLOW_LOCAL_USERS
-            if hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
-            else False
-        )
+        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)

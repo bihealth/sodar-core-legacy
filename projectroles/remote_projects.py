@@ -304,12 +304,7 @@ class RemoteProjectAPI:
         """Create or update project roles"""
         # TODO: Refactor this
         uuid = str(project.sodar_uuid)
-
-        allow_local = (
-            settings.PROJECTROLES_ALLOW_LOCAL_USERS
-            if hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
-            else False
-        )
+        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         for r_uuid, r in {k: v for k, v in p_data['roles'].items()}.items():
             # Ensure the Role exists

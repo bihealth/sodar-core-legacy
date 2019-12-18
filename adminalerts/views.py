@@ -40,10 +40,8 @@ class AdminAlertListView(LoggedInPermissionMixin, ListView):
     permission_required = 'adminalerts.create_alert'
     template_name = 'adminalerts/alert_list.html'
     model = AdminAlert
-    paginate_by = (
-        settings.ADMINALERTS_PAGINATION
-        if hasattr(settings, 'ADMINALERTS_PAGINATION')
-        else DEFAULT_PAGINATION
+    paginate_by = getattr(
+        settings, 'ADMINALERTS_PAGINATION', DEFAULT_PAGINATION
     )
     slug_url_kwarg = 'uuid'
     slug_field = 'sodar_uuid'

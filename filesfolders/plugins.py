@@ -13,11 +13,7 @@ from .urls import urlpatterns
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
-SHOW_LIST_COLUMNS = (
-    settings.FILESFOLDERS_SHOW_LIST_COLUMNS
-    if hasattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS')
-    else False
-)
+SHOW_LIST_COLUMNS = getattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):

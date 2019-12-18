@@ -446,7 +446,7 @@ def send_generic_mail(subject_body, message_body, recipient_list, request):
     ret = 0
 
     for recipient in recipient_list:
-        if type(recipient) == User:
+        if isinstance(recipient, User):
             recp_name = recipient.get_full_name()
             recp_email = recipient.email
 

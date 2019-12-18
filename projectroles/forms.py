@@ -46,11 +46,8 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-DELEGATE_LIMIT = (
-    settings.PROJECTROLES_DELEGATE_LIMIT
-    if hasattr(settings, 'PROJECTROLES_DELEGATE_LIMIT')
-    else 1
-)
+DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+
 
 User = auth.get_user_model()
 
@@ -275,10 +272,7 @@ class ProjectForm(forms.ModelForm):
             # Creating a top level project
             else:
                 # Force project type
-                if (
-                    hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
-                    and settings.PROJECTROLES_DISABLE_CATEGORIES
-                ):
+                if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
                     self.initial['type'] = PROJECT_TYPE_PROJECT
 
                 else:
