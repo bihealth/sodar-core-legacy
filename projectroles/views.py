@@ -110,6 +110,7 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
+KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 SODAR_API_MEDIA_TYPE = (
@@ -213,6 +214,9 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
     def has_permission(self):
         """Override has_permission() for this mixin also to work with admin
         users without a permission object"""
+        if KIOSK_MODE:
+            return True
+
         try:
             return super().has_permission()
 
@@ -404,7 +408,7 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
             )
 
         # Project tagging/starring
-        if 'project' in context:
+        if 'project' in context and not KIOSK_MODE:
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
@@ -445,7 +449,6 @@ class CurrentUserFormMixin:
 
 class LoginRequiredMixin(AccessMixin):
     """Customized variant of the one from ``django.contrib.auth.mixins``.
-
     Allows disabling by overriding function ``is_login_required``.
     """
 
@@ -456,7 +459,7 @@ class LoginRequiredMixin(AccessMixin):
         return super().dispatch(request, *args, **kwargs)
 
     def is_login_required(self):
-        return True
+        return False if KIOSK_MODE else True
 
 
 # Base Project Views -----------------------------------------------------------

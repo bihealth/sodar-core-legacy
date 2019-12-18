@@ -229,6 +229,10 @@ The following projectroles settings are **optional**:
   can be synchronized from a source during remote project sync if they exist on
   the target site. Similarly, local users will be selectable in member dropdowns
   when selecting users (bool)
+* ``PROJECTROLES_KIOSK_MODE``: If true, allow accessing certain project views
+  *without* user authentication in order to e.g. demonstrate features in a
+  kiosk-style deployment. Also hides and/or disables views not intended to be
+  used in this mode (bool)
 
 Example:
 
@@ -244,6 +248,7 @@ Example:
     PROJECTROLES_DELEGATE_LIMIT = 1
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
+    PROJECTROLES_KIOSK_MODE = False
 
 .. warning::
 
@@ -260,6 +265,11 @@ Example:
     authorized for these roles. Furthermore, only roles for **existing** local
     users will be synchronized. New local users will have to be added manually
     through the Django admin or shell on the target site.
+
+.. warning::
+
+    The ``PROJECTROLES_KIOSK_MODE`` setting is under development and considered
+    experimental. More implementation, testing and documentation is forthcoming.
 
 
 Backend App Settings

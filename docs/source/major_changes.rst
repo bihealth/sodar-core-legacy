@@ -18,6 +18,7 @@ Release Highlights
 
 - Project list layout and extra column handling improved
 - Allow customizing widgets in app settings
+- Initial support for deploying site in kiosk mode
 - Critical bug fixes for category and project owner management
 
 

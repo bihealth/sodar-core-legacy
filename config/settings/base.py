@@ -482,6 +482,9 @@ PROJECTROLES_ENABLE_SEARCH = True
 # PROJECTROLES_SECRET_LENGTH = 32
 # PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 # PROJECTROLES_SEARCH_PAGINATION = 5
+# Support for viewing the site in "kiosk mode" (under work, experimental)
+# PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
+
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)

@@ -10,11 +10,14 @@
 
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 {% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
+{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
 <div class="row sodar-pr-content-title">
 
   {# Project menu dropdown, only visible if browser width < X and sidebar is hidden #}
-  {% include 'projectroles/_project_menu_btn.html' %}
+  {% if not kiosk_mode %}
+    {% include 'projectroles/_project_menu_btn.html' %}
+  {% endif %}
 
   <h2 class="sodar-pr-content-title">{{ project.title }}</h2>
 
@@ -43,12 +46,16 @@
 
   {# Secondary title #}
   <div class="sodar-pr-content-title-secondary text-muted">
-    {% get_user_html project.get_owner.user as owner_html %}
     {% if project.description %}
       {{ project.description }}
-      {% if project.type == 'CATEGORY' %}(Owner: {{ owner_html | safe }}){% endif %}
-    {% elif project.type == 'CATEGORY' %}
-      Owner: {{ owner_html | safe }}
+    {% endif %}
+    {% if project.type == 'CATEGORY' and not kiosk_mode %}
+      {% get_user_html project.get_owner.user as owner_html %}
+      {% if project.description %}
+        (Owner: {{ owner_html | safe }})
+      {% else %}
+        Owner: {{ owner_html | safe }}
+      {% endif %}
     {% endif %}
   </div>
   {% if project.is_remote and request.user.is_superuser %}
