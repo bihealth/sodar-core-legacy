@@ -16,7 +16,7 @@ before_install:
 addons:
   apt:
     sources:
-      - sourceline: "ppa:jonathonf/python-3.6"
+      - sourceline: "ppa:deadsnakes/ppa"
     packages:
       - python3.6
       - python3.6-dev

@@ -48,6 +48,8 @@ Changed
 Fixed
 -----
 
+- **General**
+    - PPA used for Python 3.6 installs no longer available (#416)
 - **Filesfolders**
     - Invalid HTML in project list extra columns
 - **Projectroles**
