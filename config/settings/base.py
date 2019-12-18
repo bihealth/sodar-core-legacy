@@ -493,6 +493,19 @@ PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 # Warn about unsupported browsers (IE)
 PROJECTROLES_BROWSER_WARNING = True
 
+# Disable default CDN JS/CSS includes to replace with your local files
+PROJECTROLES_DISABLE_CDN_INCLUDES = env.bool(
+    'PROJECTROLES_DISABLE_CDN_INCLUDES', False
+)
+
+# Paths/URLs to optional global includes to supplement/replace default ones
+PROJECTROLES_CUSTOM_JS_INCLUDES = env.list(
+    'PROJECTROLES_CUSTOM_JS_INCLUDES', None, []
+)
+PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
+    'PROJECTROLES_CUSTOM_CSS_INCLUDES', None, []
+)
+
 
 # Bgjobs app settings
 BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)

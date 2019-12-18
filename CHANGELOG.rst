@@ -22,6 +22,8 @@ Added
     - Display category owner in page header (#414)
     - Configuring UI test settings via Django settings or ``TestUIBase`` vars (#417)
     - Initial support for deploying site in kiosk mode (#406)
+    - Optional disabling of default CDN Javascript and CSS includes (#418)
+    - Defining custom global JS/CSS includes in Django settings (#418)
 
 Changed
 -------

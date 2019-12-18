@@ -18,6 +18,7 @@ Release Highlights
 
 - Project list layout and extra column handling improved
 - Allow customizing widgets in app settings
+- Enable managing global JS/CSS includes in Django settings
 - Initial support for deploying site in kiosk mode
 - Critical bug fixes for category and project owner management
 
@@ -25,12 +26,12 @@ Release Highlights
 Breaking Changes
 ================
 
-Login Template Modified
------------------------
+Default Templates Modified
+--------------------------
 
-The default login template ``login.html`` has been modified. If your site
-overrides it with an altered version, please review the difference and update
-your template as appropriate.
+The default templates ``base_site.html`` and ``login.html`` have been modified
+in this version. If you override them with your own altered versions, please
+review the difference and update your templates as appropriate.
 
 User Added to get_project_list_value()
 --------------------------------------
