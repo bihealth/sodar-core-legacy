@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.7.1 (2019-12-18)
+===================
 
 Added
 -----
