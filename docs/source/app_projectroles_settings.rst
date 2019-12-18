@@ -229,6 +229,10 @@ The following projectroles settings are **optional**:
   can be synchronized from a source during remote project sync if they exist on
   the target site. Similarly, local users will be selectable in member dropdowns
   when selecting users (bool)
+* ``PROJECTROLES_KIOSK_MODE``: If true, allow accessing certain project views
+  *without* user authentication in order to e.g. demonstrate features in a
+  kiosk-style deployment. Also hides and/or disables views not intended to be
+  used in this mode (bool)
 
 Example:
 
@@ -244,6 +248,7 @@ Example:
     PROJECTROLES_DELEGATE_LIMIT = 1
     PROJECTROLES_BROWSER_WARNING = True
     PROJECTROLES_ALLOW_LOCAL_USERS = True
+    PROJECTROLES_KIOSK_MODE = False
 
 .. warning::
 
@@ -260,6 +265,11 @@ Example:
     authorized for these roles. Furthermore, only roles for **existing** local
     users will be synchronized. New local users will have to be added manually
     through the Django admin or shell on the target site.
+
+.. warning::
+
+    The ``PROJECTROLES_KIOSK_MODE`` setting is under development and considered
+    experimental. More implementation, testing and documentation is forthcoming.
 
 
 Backend App Settings
@@ -385,6 +395,44 @@ This part of the setup is **optional**.
                     AUTHENTICATION_BACKENDS,
                 )
             )
+
+
+Global JS/CSS Include Modifications (Optional)
+==============================================
+
+It is possible to supplement (or replace, see below) global Javascript and CSS
+includes of your SODAR Core site without altering the base template. You can
+place a list of custom includes into the list variables
+``PROJECTROLES_CUSTOM_JS_INCLUDES`` and ``PROJECTROLES_CUSTOM_CSS_INCLUDES``.
+These can either be local static file paths or web URLs to e.g. CDN served
+files.
+
+If using the default CDN imports for JQuery, Bootstrap4 etc. are not an optimal
+solution in your use case due to e.g. network issues, you can disable these
+includes by setting ``PROJECTROLES_DISABLE_CDN_INCLUDES`` to ``True``.
+
+.. warning::
+
+    If disabling the default CDN includes, you **must** provide replacements for
+    **all** disabled files in your custom includes. Otherwise your SODAR Core
+    based site will not function correctly!
+
+Example:
+
+.. code-block:: python
+
+    PROJECTROLES_DISABLE_CDN_INCLUDES = True
+    PROJECTROLES_CUSTOM_JS_INCLUDES = [
+        STATIC_ROOT + '/your/path/jquery-3.3.1.min.js',
+        STATIC_ROOT + '/your/path/popper.min.js',
+        'https://some-cdn.com/bootstrap.min.js',
+        # ...
+    ]
+    PROJECTROLES_CUSTOM_CSS_INCLUDES = [
+        STATIC_ROOT + '/your/path/bootstrap.min.css',
+        STATIC_ROOT + '/your/path/font-awesome.min.css',
+        # ...
+    ]
 
 
 Modifying SODAR_CONSTANTS (Optional)

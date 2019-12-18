@@ -13,11 +13,7 @@ from .urls import urlpatterns
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
-SHOW_LIST_COLUMNS = (
-    settings.FILESFOLDERS_SHOW_LIST_COLUMNS
-    if hasattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS')
-    else False
-)
+SHOW_LIST_COLUMNS = getattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False)
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -201,14 +197,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             },
         }
 
-    def get_project_list_value(self, column_id, project):
+    def get_project_list_value(self, column_id, project, user):
         """
         Return a value for the optional additional project list column specific
         to a project.
 
         :param column_id: ID of the column (string)
         :param project: Project object
-        :return: String (may contain HTML) or None
+        :param user: User object (current user)
+        :return: String (may contain HTML), integer or None
         """
         if column_id == 'files':
             count = File.objects.filter(project=project).count()
@@ -217,11 +214,11 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             count = HyperLink.objects.filter(project=project).count()
 
         if count > 0:
-            return '<a href="{}">{}'.format(
+            return '<a href="{}">{}</a>'.format(
                 reverse(
                     'filesfolders:list', kwargs={'project': project.sodar_uuid}
                 ),
                 count,
             )
 
-        return count
+        return 0

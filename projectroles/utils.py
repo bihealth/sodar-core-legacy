@@ -10,11 +10,7 @@ from .constants import get_sodar_constants
 
 
 # Settings
-SECRET_LENGTH = (
-    settings.PROJECTROLES_SECRET_LENGTH
-    if hasattr(settings, 'PROJECTROLES_SECRET_LENGTH')
-    else 32
-)
+SECRET_LENGTH = getattr(settings, 'PROJECTROLES_SECRET_LENGTH', 32)
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 
 # SODAR constants

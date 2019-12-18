@@ -63,6 +63,7 @@ class Command(BaseCommand):
             logger.info('Synchronizing cache for all projects')
 
         plugins = get_active_plugins(plugin_type='project_app')
+        errors = False
 
         for plugin in plugins:
             try:
@@ -74,5 +75,10 @@ class Command(BaseCommand):
                         plugin.name, ex
                     )
                 )
+                errors = True
 
-        logger.info('Cache synchronization OK')
+        logger.info(
+            'Cache synchronization {}'.format(
+                'finished with errors (see logs)' if errors else 'OK'
+            )
+        )

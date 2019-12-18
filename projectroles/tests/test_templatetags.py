@@ -130,6 +130,12 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             c_tags.get_django_setting('NON_EXISTING_SETTING'), None
         )
+        self.assertEqual(
+            c_tags.get_django_setting(
+                'NON_EXISTING_SETTING', default='default'
+            ),
+            'default',
+        )
 
     def test_get_app_setting(self):
         """Test get_app_setting()"""
@@ -210,14 +216,20 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         """Test get_project_link()"""
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=False),
-            '<a href="/project/{}">{}</a>'.format(
-                self.project.sodar_uuid, self.project.title
+            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
+            'data-placement="top">{}</a>'.format(
+                self.project.sodar_uuid,
+                self.project.description,
+                self.project.title,
             ),
         )
         self.assertEqual(
             c_tags.get_project_link(self.project, full_title=True),
-            '<a href="/project/{}">{}</a>'.format(
-                self.project.sodar_uuid, self.project.get_full_title()
+            '<a href="/project/{}" title="{}" data-toggle="tooltip" '
+            'data-placement="top">{}</a>'.format(
+                self.project.sodar_uuid,
+                self.project.description,
+                self.project.get_full_title(),
             ),
         )
         # TODO: Also test remote project link display (with icon)
@@ -477,15 +489,18 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         # TODO: Refactor column system so that function returns link URL as
         # TODO: second return value instead of HTML
         self.assertEqual(
-            tags.get_project_list_value(app_plugin, 'files', self.project), 0
+            tags.get_project_list_value(
+                app_plugin, 'files', self.project, self.user
+            ),
+            0,
         )
 
     def test_get_project_column_count(self):
         """Test get_project_column_count()"""
         app_plugins = get_active_plugins()
 
-        self.assertEqual(tags.get_project_column_count(app_plugins), 5)
-        self.assertEqual(tags.get_project_column_count([]), 3)
+        self.assertEqual(tags.get_project_column_count(app_plugins), 4)
+        self.assertEqual(tags.get_project_column_count([]), 2)
 
     def test_get_user_role_html(self):
         """Test get_user_role_html()"""

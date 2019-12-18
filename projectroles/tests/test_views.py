@@ -562,6 +562,12 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def setUp(self):
         super().setUp()
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user, self.role_owner
+        )
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -569,12 +575,8 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             self.project, self.user, self.role_owner
         )
 
-    def test_render(self):
-        """Test rendering of Project updating form"""
-
-        # Create another user to enable checking for owner selection
-        self.user_new = self.make_user('newuser')
-
+    def test_render_project(self):
+        """Test rendering of Project updating form with an existing project"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -590,12 +592,13 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
 
     def test_update_project(self):
         """Test Project updating"""
 
         # Assert precondition
-        self.assertEqual(Project.objects.all().count(), 1)
+        self.assertEqual(Project.objects.all().count(), 2)
 
         values = model_to_dict(self.project)
         values['title'] = 'updated title'
@@ -617,23 +620,23 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             )
 
         # Assert Project state after update
-        self.assertEqual(Project.objects.all().count(), 1)
-        project = Project.objects.all()[0]
-        self.assertIsNotNone(project)
-        # no mail should be send, cause the owner has not changed
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.project.refresh_from_db()
+        self.assertIsNotNone(self.project)
+        # No mail should be send, cause the owner has not changed
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
-            'id': project.pk,
+            'id': self.project.pk,
             'title': 'updated title',
             'type': PROJECT_TYPE_PROJECT,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
-            'sodar_uuid': project.sodar_uuid,
+            'sodar_uuid': self.project.sodar_uuid,
         }
 
-        model_dict = model_to_dict(project)
+        model_dict = model_to_dict(self.project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
@@ -645,16 +648,16 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 response,
                 reverse(
                     'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid},
+                    kwargs={'project': self.project.sodar_uuid},
                 ),
             )
 
     def test_update_project_owner(self):
         """Test email sending on project owner update"""
-        new_owner = self.make_user('New Owner')
+        user_new = self.make_user('newuser')
 
         values = model_to_dict(self.project)
-        values['owner'] = new_owner.sodar_uuid  # NOTE: Must add owner
+        values['owner'] = user_new.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
         values.update(
@@ -670,12 +673,92 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 values,
             )
 
-        # mail should be send, cause the owner has changed
+        # Mail should be send, cause the owner has changed
         self.assertEqual(len(mail.outbox), 1)
-        new_owner_ra = RoleAssignment.objects.get_assignment(
-            new_owner, self.project
+        new_owner_as = self.project.get_owner()
+        self.assertEqual(new_owner_as.user, user_new)
+
+    def test_render_category(self):
+        """Test rendering of Project updating form with an existing category"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.category.sodar_uuid},
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertNotIsInstance(form.fields['owner'].widget, HiddenInput)
+
+    def test_update_category(self):
+        """Test category updating"""
+        user_new = self.make_user('newuser')
+
+        # Assert precondition
+        self.assertEqual(Project.objects.all().count(), 2)
+
+        values = model_to_dict(self.category)
+        values['title'] = 'updated title'
+        values['description'] = 'updated description'
+        values['owner'] = user_new.sodar_uuid
+
+        # Add settings values
+        values.update(
+            app_settings.get_all_settings(project=self.category, post_safe=True)
         )
-        self.assertEqual(new_owner_ra.role, self.role_owner)
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert category state after update
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.category.refresh_from_db()
+        self.assertIsNotNone(self.category)
+        # Ensure email is sent
+        self.assertEqual(len(mail.outbox), 1)
+
+        expected = {
+            'id': self.category.pk,
+            'title': 'updated title',
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': None,
+            'submit_status': SUBMIT_STATUS_OK,
+            'description': 'updated description',
+            'sodar_uuid': self.category.sodar_uuid,
+        }
+
+        model_dict = model_to_dict(self.category)
+        model_dict.pop('readme', None)
+        self.assertEqual(model_dict, expected)
+
+        # Assert ownership change
+        owner_as = self.category.get_owner()
+        self.assertEqual(owner_as.user, user_new)
+
+        # TODO: Assert settings
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
 
 
 class TestProjectSettingsForm(

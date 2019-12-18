@@ -80,3 +80,13 @@ ENABLED_BACKEND_PLUGINS = [
 PROJECTROLES_SITE_MODE = 'SOURCE'
 PROJECTROLES_SEND_EMAIL = True
 PROJECTROLES_SEARCH_PAGINATION = 10
+
+
+# UI test settings
+PROJECTROLES_TEST_UI_CHROME_OPTIONS = [
+    'headless',
+    'no-sandbox',  # For Gitlab-CI compatibility
+    'disable-dev-shm-usage',  # For testing stability
+]
+PROJECTROLES_TEST_UI_WINDOW_SIZE = (1400, 1000)
+PROJECTROLES_TEST_UI_WAIT_TIME = 30

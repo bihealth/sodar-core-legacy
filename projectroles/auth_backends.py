@@ -2,20 +2,10 @@ from django_auth_ldap.backend import LDAPBackend, _LDAPUser
 from django.conf import settings
 
 # Username domains for primary and secondary LDAP backends
-
 # Optional
-LDAP_DOMAIN = (
-    settings.AUTH_LDAP_USERNAME_DOMAIN
-    if hasattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN')
-    else None
-)
-
+LDAP_DOMAIN = getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', None)
 # Required for LDAP2
-LDAP2_DOMAIN = (
-    settings.AUTH_LDAP2_USERNAME_DOMAIN
-    if hasattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN')
-    else None
-)
+LDAP2_DOMAIN = getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', None)
 
 
 # Primary LDAP backend

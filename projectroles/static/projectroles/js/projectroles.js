@@ -164,7 +164,7 @@ $(document).ready(function () {
 
     // Filter input
     $('#sodar-pr-project-list-filter').keyup(function () {
-        v = $(this).val().toLowerCase();
+        var v = $(this).val().toLowerCase();
         var valFound = false;
         $('.sodar-pr-home-display-nostars').hide();
 
@@ -175,27 +175,20 @@ $(document).ready(function () {
 
             $('.sodar-pr-home-display-filtered').each(function () {
                 var titleTxt = $(this).find('td:first-child').attr('orig-txt');
-                var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
+                var titleLink = $(this).find('td:first-child div a');
 
-                if ($(this).find('td:first-child div a').text().toLowerCase().indexOf(v) !== -1 ||
-                    $(this).find('td:nth-last-child(2)').text().toLowerCase().indexOf(v) !== -1) {
+                if (titleLink.text().toLowerCase().indexOf(v) !== -1 ||
+                    titleLink.attr('data-original-title').toLowerCase().indexOf(v) !== -1) {
                     // Reset content for updating the highlight
-                    $(this).find('td:first-child div a').html(titleTxt);
-                    $(this).find('td:nth-last-child(2)').html(descTxt);
+                    titleLink.html(titleTxt);
 
                     // Highlight
                     var pattern = new RegExp("(" + v + ")", "gi");
                     var titlePos = titleTxt.toLowerCase().indexOf(v);
-                    var descPos = descTxt.toLowerCase().indexOf(v);
 
                     if (titlePos !== -1) {
                         var titleVal = titleTxt.substring(titlePos, titlePos + v.length);
-                        $(this).find('td:first-child div a').html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
-                    }
-
-                    if (descPos !== -1) {
-                        var descVal = descTxt.substring(descPos, descPos + v.length);
-                        $(this).find('td:nth-last-child(2)').html(descTxt.replace(pattern, '<span class="sodar-search-highlight">' + descVal + '</span>'));
+                        titleLink.html(titleTxt.replace(pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
                     }
 
                     $(this).show();
@@ -230,9 +223,7 @@ $(document).ready(function () {
         $('.sodar-pr-home-display-filtered').each(function () {
             // Reset filter highlights and value
             var titleTxt = $(this).find('td:first-child').attr('orig-txt');
-            var descTxt = $(this).find('td:nth-last-child(2)').attr('orig-txt');
             $(this).find('td:first-child a').html(titleTxt);
-            $(this).find('td:nth-last-child(2)').html(descTxt);
             $(this).hide();
             $('#sodar-pr-project-list-filter').val('');
         });
@@ -367,34 +358,52 @@ $(document).ready(function() {
 });
 
 
-/* Display Internet Explorer warning ---------------------------------------- */
+/* Display unsupported browser warning -------------------------------------- */
 
 
 $(document).ready(function () {
-    if (window.sodarBrowserWarning === 1 && (
-        navigator.appName === 'Microsoft Internet Explorer' ||
-        !!(navigator.userAgent.match(/Trident/) ||
-            navigator.userAgent.match(/rv:11/)) || (
-        typeof $.browser !== "undefined" && $.browser.msie === 1))) {
-        let parentElem = $('div.sodar-app-container');
+    if (window.sodarBrowserWarning === 1) {
+        // Based on https://stackoverflow.com/a/38080051
+        navigator.browserSpecs = (function(){
+            var ua = navigator.userAgent, tem,
+                M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
+            if(/trident/i.test(M[1])) {
+                tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+                return {name: 'IE', version: (tem[1] || '')};
+            }
+            if(M[1] === 'Chrome'){
+                tem = ua.match(/\b(OPR|Edge)\/(\d+)/);
+                if (tem != null) return {name: tem[1].replace(
+                    'OPR', 'Opera'), version: tem[2]};
+            }
+            M = M[2] ? [M[1], M[2]]: [navigator.appName, navigator.appVersion, '-?'];
+            if ((tem = ua.match(/version\/(\d+)/i)) != null)
+                M.splice(1, 1, tem[1]);
+            return {name: M[0], version: M[1]};
+        })();
 
-        if (!parentElem.length) {
-            parentElem = $('div.sodar-content-container').find(
-                'div.container-fluid').first();
+        if (!['Chrome', 'Firefox', 'Edge'].includes(navigator.browserSpecs.name)) {
+            let parentElem = $('div.sodar-app-container');
+
+            if (!parentElem.length) {
+                parentElem = $('div.sodar-content-container').find(
+                    'div.container-fluid').first();
+            }
+
+            if (!$('div.sodar-alert-container').length) {
+                parentElem.prepend(
+                    '<div class="container-fluid sodar-alert-container"></div>');
+            }
+
+            $('div.sodar-alert-container').prepend(
+                '<div class="alert alert-danger sodar-alert-top">' +
+                '<i class="fa fa-exclamation-triangle"></i> ' +
+                'You are using an unsupported browser. We recommend using ' +
+                'a recent version of ' +
+                '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +
+                '<a href="https://www.google.com/chrome" target="_blank">Google Chrome</a>.' +
+                '</div>');
         }
-
-        if (!$('div.sodar-alert-container').length) {
-            parentElem.prepend(
-                '<div class="container-fluid sodar-alert-container"></div>');
-        }
-
-        $('div.sodar-alert-container').prepend(
-            '<div class="alert alert-danger sodar-alert-top">' +
-            '<i class="fa fa-exclamation-triangle"></i> ' +
-            'This site does not support Microsoft Internet Explorer. We recommend using ' +
-            '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +
-            '<a href="https://www.google.com/chrome" target="_blank">Google Chrome</a>.' +
-            '</div>');
     }
 });
 
@@ -419,8 +428,10 @@ $(document).ready(function () {
     window.sidebar = $('#sodar-pr-sidebar');
     window.sidebar_alt_btn = $('#sodar-pr-sidebar-alt-btn');
     let sidebarContent = $('#sodar-pr-sidebar-navbar').get(0);
-    window.sidebarMinWindowHeight = sidebarContent.scrollHeight + sidebarContent.getBoundingClientRect().top;
+    if (sidebarContent)
+        window.sidebarMinWindowHeight = sidebarContent.scrollHeight + sidebarContent.getBoundingClientRect().top;
     toggleSidebar();
+
 });
 
 $(window).on('resize', function () {

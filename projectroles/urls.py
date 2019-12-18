@@ -50,7 +50,7 @@ urlpatterns = [
     ),
     url(
         regex=r'^members/transferowner/(?P<project>[0-9a-f-]+)$',
-        view=views.RoleAssignmentTransferOwnership.as_view(),
+        view=views.RoleAssignmentOwnerTransferView.as_view(),
         name='role_transfer_owner',
     ),
     # Project invite views

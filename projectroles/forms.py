@@ -46,11 +46,8 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-DELEGATE_LIMIT = (
-    settings.PROJECTROLES_DELEGATE_LIMIT
-    if hasattr(settings, 'PROJECTROLES_DELEGATE_LIMIT')
-    else 1
-)
+DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+
 
 User = auth.get_user_model()
 
@@ -121,6 +118,7 @@ class ProjectForm(forms.ModelForm):
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_widget_attrs = s_val.get('widget_attrs') or {}
                 setting_kwargs = {
                     'required': False,
                     'label': s_val.get('label')
@@ -129,10 +127,15 @@ class ProjectForm(forms.ModelForm):
                 }
 
                 if s_val['type'] == 'JSON':
+                    # NOTE: Attrs MUST be supplied here (#404)
+                    if 'class' in s_widget_attrs:
+                        s_widget_attrs['class'] += ' sodar-json-input'
+
+                    else:
+                        s_widget_attrs['class'] = 'sodar-json-input'
+
                     self.fields[s_field] = forms.CharField(
-                        widget=forms.Textarea(
-                            attrs={'class': 'sodar-json-input'}
-                        ),
+                        widget=forms.Textarea(attrs=s_widget_attrs),
                         **setting_kwargs
                     )
                     if self.instance.pk:
@@ -166,6 +169,10 @@ class ProjectForm(forms.ModelForm):
                         self.fields[s_field] = forms.BooleanField(
                             **setting_kwargs
                         )
+
+                    # Add optional attributes from plugin (#404)
+                    # NOTE: Experimental! Use at your own risk!
+                    self.fields[s_field].widget.attrs.update(s_widget_attrs)
 
                     # Set initial value
                     if self.instance.pk:
@@ -234,9 +241,12 @@ class ProjectForm(forms.ModelForm):
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
 
-            # Set owner value but hide the field (updating via member form)
+            # Set owner value
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
-            self.fields['owner'].widget = forms.HiddenInput()
+
+            # Hide owner widget if a project (changed in member modification UI)
+            if self.initial['type'] == PROJECT_TYPE_PROJECT:
+                self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
             if parent_project:
@@ -262,10 +272,7 @@ class ProjectForm(forms.ModelForm):
             # Creating a top level project
             else:
                 # Force project type
-                if (
-                    hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
-                    and settings.PROJECTROLES_DISABLE_CATEGORIES
-                ):
+                if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
                     self.initial['type'] = PROJECT_TYPE_PROJECT
 
                 else:
@@ -469,10 +476,12 @@ class RoleAssignmentForm(forms.ModelForm):
         return self.cleaned_data
 
 
-# Owner change form ------------------------------------------------------------
+# Owner transfer form ----------------------------------------------------------
 
 
-class RoleAssignmentChangeOwnerForm(forms.Form):
+class RoleAssignmentOwnerTransferForm(forms.Form):
+    """Form for transferring owner role assignment between users"""
+
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)

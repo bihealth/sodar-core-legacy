@@ -194,10 +194,7 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         )
 
         # TODO: Repetition, put this in a mixin?
-        if type(self.object) == Folder and self.object.folder:
-            re_kwargs = {'folder': self.object.folder.sodar_uuid}
-
-        elif type(self.object) != Folder and self.object.folder:
+        if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
 
         else:
@@ -242,10 +239,7 @@ class DeleteSuccessMixin(DeletionMixin):
         )
 
         # TODO: Repetition, put this in a mixin?
-        if type(self.object) == Folder and self.object.folder:
-            re_kwargs = {'folder': self.object.folder.sodar_uuid}
-
-        elif type(self.object) != Folder and self.object.folder:
+        if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
 
         else:
@@ -864,7 +858,7 @@ class BatchEditView(
         if self.batch_action == 'move':
             # Exclude folders to be moved
             exclude_list = [
-                x.sodar_uuid for x in self.items if type(x) == Folder
+                x.sodar_uuid for x in self.items if isinstance(x, Folder)
             ]
 
             # Exclude folders under folders to be moved
@@ -1018,7 +1012,7 @@ class BatchEditView(
             elif self.batch_action == 'delete':
 
                 # Can't delete a non-empty folder
-                if type(item) == Folder and not item.is_empty():
+                if isinstance(item, Folder) and not item.is_empty():
                     self.failed.append(item)
 
             ##############

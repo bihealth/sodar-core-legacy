@@ -12,7 +12,7 @@ from django.core.urlresolvers import resolve
 from django.core.validators import EmailValidator
 from django.contrib import auth
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import AccessMixin
 from django.db.models import Q
 from django.http import (
     HttpResponseRedirect,
@@ -66,7 +66,7 @@ from .forms import (
     RoleAssignmentForm,
     ProjectInviteForm,
     RemoteSiteForm,
-    RoleAssignmentChangeOwnerForm,
+    RoleAssignmentOwnerTransferForm,
 )
 from .models import (
     Project,
@@ -110,22 +110,17 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
+KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-SODAR_API_MEDIA_TYPE = (
-    settings.SODAR_API_MEDIA_TYPE
-    if hasattr(settings, 'SODAR_API_MEDIA_TYPE')
-    else SODAR_API_DEFAULT_MEDIA_TYPE
+SODAR_API_MEDIA_TYPE = getattr(
+    settings, 'SODAR_API_MEDIA_TYPE', SODAR_API_DEFAULT_MEDIA_TYPE
 )
-SODAR_API_DEFAULT_VERSION = (
-    settings.SODAR_API_DEFAULT_VERSION
-    if hasattr(settings, 'SODAR_API_DEFAULT_VERSION')
-    else '0.1'
+SODAR_API_DEFAULT_VERSION = getattr(
+    settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
 )
-SODAR_API_ALLOWED_VERSIONS = (
-    settings.SODAR_API_ALLOWED_VERSIONS
-    if hasattr(settings, 'SODAR_API_ALLOWED_VERSIONS')
-    else [SODAR_API_DEFAULT_VERSION]
+SODAR_API_ALLOWED_VERSIONS = getattr(
+    settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
 
 
@@ -213,6 +208,9 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
     def has_permission(self):
         """Override has_permission() for this mixin also to work with admin
         users without a permission object"""
+        if KIOSK_MODE:
+            return True
+
         try:
             return super().has_permission()
 
@@ -334,10 +332,6 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
             )
 
             if obj.role.name == PROJECT_ROLE_OWNER:
-                """return self.request.user.has_perm(
-                    'projectroles.update_project_owner',
-                    self.get_permission_object(),
-                )"""
                 return False
 
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
@@ -404,7 +398,7 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
             )
 
         # Project tagging/starring
-        if 'project' in context:
+        if 'project' in context and not KIOSK_MODE:
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
@@ -441,6 +435,21 @@ class CurrentUserFormMixin:
         kwargs = super().get_form_kwargs()
         kwargs.update({'current_user': self.request.user})
         return kwargs
+
+
+class LoginRequiredMixin(AccessMixin):
+    """Customized variant of the one from ``django.contrib.auth.mixins``.
+    Allows disabling by overriding function ``is_login_required``.
+    """
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.is_login_required() and not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def is_login_required(self):
+        return False if KIOSK_MODE else True
 
 
 # Base Project Views -----------------------------------------------------------
@@ -588,10 +597,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         return context
 
     def get(self, request, *args, **kwargs):
-        if (
-            hasattr(settings, 'PROJECTROLES_ENABLE_SEARCH')
-            and not settings.PROJECTROLES_ENABLE_SEARCH
-        ):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
             messages.error(request, 'Search not enabled')
             return redirect('home')
 
@@ -1012,10 +1018,19 @@ class ProjectRoleView(
     model = Project
 
     def get_context_data(self, *args, **kwargs):
+        project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
-        context['owner'] = context['project'].get_owner()
-        context['delegates'] = context['project'].get_delegates()
-        context['members'] = context['project'].get_members()
+        context['owner'] = project.get_owner()
+        context['delegates'] = project.get_delegates()
+        context['members'] = project.get_members()
+
+        if project.is_remote():
+            context[
+                'remote_roles_url'
+            ] = project.get_source_site().url + reverse(
+                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+            )
+
         return context
 
 
@@ -1287,7 +1302,7 @@ class RoleAssignmentDeleteView(
         )
 
 
-class RoleAssignmentTransferOwnership(
+class RoleAssignmentOwnerTransferView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     CurrentUserFormMixin,
@@ -1295,25 +1310,24 @@ class RoleAssignmentTransferOwnership(
     FormView,
 ):
     permission_required = 'projectroles.update_project_owner'
-    template_name = 'projectroles/project_roles_transfer_owner.html'
-    form_class = RoleAssignmentChangeOwnerForm
+    template_name = 'projectroles/roleassignment_owner_transfer.html'
+    form_class = RoleAssignmentOwnerTransferForm
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
-        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
-        kwargs.update(
-            {
-                'project': self.get_project(self.request),
-                'current_owner': owner.user,
-            }
-        )
+        project = self.get_project()
+        owner_as = RoleAssignment.objects.filter(
+            project=project, role__name=PROJECT_ROLE_OWNER
+        )[0]
+        kwargs.update({'project': project, 'current_owner': owner_as.user})
         return kwargs
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
-        owner = RoleAssignment.objects.filter(role__name=PROJECT_ROLE_OWNER)[0]
-        context.update({'current_owner': owner.user})
+        owner_as = RoleAssignment.objects.filter(
+            project=self.get_project(), role__name=PROJECT_ROLE_OWNER
+        )[0]
+        context.update({'current_owner': owner_as.user})
         return context
 
     def form_valid(self, form):
@@ -1860,10 +1874,7 @@ class RemoteSiteListView(
 
     # TODO: Remove this once implementing #76
     def get(self, request, *args, **kwargs):
-        if (
-            hasattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES')
-            and settings.PROJECTROLES_DISABLE_CATEGORIES
-        ):
+        if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
             messages.warning(
                 request,
                 '{} {} and nesting disabled, '
@@ -2412,11 +2423,7 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
             qs = User.objects.all()
 
         # Exclude the users in the system group unless local users are allowed
-        allow_local = (
-            settings.PROJECTROLES_ALLOW_LOCAL_USERS
-            if hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
-            else False
-        )
+        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)

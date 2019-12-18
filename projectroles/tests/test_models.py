@@ -188,7 +188,7 @@ class RemoteProjectMixin:
         cls, project_uuid, site, level, date_access=None, project=None
     ):
         """Make and save a RemoteProject"""
-        if type(project_uuid) == str:
+        if isinstance(project_uuid, str):
             project_uuid = uuid.UUID(project_uuid)
 
         values = {

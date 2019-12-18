@@ -7,6 +7,65 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.7.1 (2019-12-18)
+===================
+
+Added
+-----
+
+- **General**
+    - Include CHANGELOG in documentation (#379)
+- **Projectroles**
+    - ``widget_attrs`` parameter for project and user settings (#404)
+    - Remote project member management link for target projects (#382)
+    - Current user in ``get_project_list_value()`` arguments (#413)
+    - Display category owner in page header (#414)
+    - Configuring UI test settings via Django settings or ``TestUIBase`` vars (#417)
+    - Initial support for deploying site in kiosk mode (#406)
+    - Optional disabling of default CDN Javascript and CSS includes (#418)
+    - Defining custom global JS/CSS includes in Django settings (#418)
+
+Changed
+-------
+
+- **General**
+    - Change "Breaking Changes" doc into "Major Changes" (#201)
+    - Refactor and rename ownership transfer classes and template
+    - Use RTD theme in documentation (#384)
+    - Upgrade to Chromedriver v79
+- **Adminalerts**
+    - Rename ``INACTIVE`` alert state in UI (#396)
+    - Rename URL name and pattern for activation API view (#378)
+    - Improve alert detail page layout (#385)
+- **Projectroles**
+    - Improve unsupported browser warning (#405)
+    - Move project list description into tooltip (#388)
+- **Siteinfo**
+    - Improve page title and heading (#402)
+- **Sodarcache**
+    - Clarify management command logging (#403)
+- **Timeline**
+    - Improve extra data status tab legend (#380)
+
+Fixed
+-----
+
+- **General**
+    - PPA used for Python 3.6 installs no longer available (#416)
+- **Filesfolders**
+    - Invalid HTML in project list extra columns
+- **Projectroles**
+    - Dismissing login error alert in ``login.html`` not working (#377)
+    - Current owner queries incorrectly filtered in ``RoleAssignmentOwnerTransferView`` (#393)
+    - Hardcoded project type display name in sent emails (#398)
+    - Silent failing of invalid app setting type in plugin definition (#390)
+    - Exception raised by hidden sidebar in sidebar height calculation (#407)
+    - Crash in ``get_default_setting()`` if default JSON value was not set (#389)
+    - Owner widget hidden in category update view (#394)
+    - Project list extra column header alignment not set (#412)
+    - ``get_project_list_value()`` template tag displaying "None" on null value (#411)
+
+
 v0.7.0 (2019-10-09)
 ===================
 

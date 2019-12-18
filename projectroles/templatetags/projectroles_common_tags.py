@@ -79,14 +79,13 @@ def get_user_by_username(username):
 
 
 @register.simple_tag
-def get_django_setting(name, js=False):
+def get_django_setting(name, default=None, js=False):
     """
-    Return value of Django setting by name or None if it is not found.
-    Return a Javascript-safe value if js=True.
+    Return value of Django setting by name or the default value if the setting
+    is not found. Return a Javascript-safe value if js=True.
     """
-    val = getattr(settings, name) if hasattr(settings, name) else None
+    val = getattr(settings, name, default)
 
-    # If for javascript, modify
     if js and isinstance(val, bool):
         val = int(val)
 
@@ -153,10 +152,16 @@ def get_project_link(project, full_title=False, request=None):
     if request:
         remote_icon = get_remote_icon(project, request)
 
-    return '<a href="{}">{}</a>{}'.format(
-        reverse('projectroles:detail', kwargs={'project': project.sodar_uuid}),
-        project.get_full_title() if full_title else project.title,
-        ' ' + remote_icon if remote_icon else '',
+    return (
+        '<a href="{}" title="{}" data-toggle="tooltip" '
+        'data-placement="top">{}</a>{}'.format(
+            reverse(
+                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+            ),
+            project.description if project.description else '',
+            project.get_full_title() if full_title else project.title,
+            ' ' + remote_icon if remote_icon else '',
+        )
     )
 
 

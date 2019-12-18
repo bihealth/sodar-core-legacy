@@ -18,11 +18,7 @@ from ..project_tags import get_tag_state
 
 
 # Settings
-HELP_HIGHLIGHT_DAYS = (
-    settings.PROJECTROLES_HELP_HIGHLIGHT_DAYS
-    if hasattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS')
-    else 7
-)
+HELP_HIGHLIGHT_DAYS = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
 
 # SODAR Constants
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
@@ -213,8 +209,9 @@ def get_not_found_alert(project_results, app_search_data, search_type):
 
 
 @register.simple_tag
-def get_project_list_value(app_plugin, column_id, project):
-    return app_plugin.get_project_list_value(column_id, project)
+def get_project_list_value(app_plugin, column_id, project, user):
+    ret = app_plugin.get_project_list_value(column_id, project, user)
+    return ret if ret is not None else ''
 
 
 @register.simple_tag
@@ -230,7 +227,7 @@ def get_project_column_count(app_plugins):
             ]
         )
 
-    return 3 + max(
+    return 2 + max(
         [get_active_list_columns(app_plugin) for app_plugin in app_plugins],
         default=0,
     )
@@ -324,12 +321,11 @@ def get_login_info():
     """Return HTML info for the login page"""
     ret = '<p>Please log in'
 
-    if hasattr(settings, 'ENABLE_LDAP') and settings.ENABLE_LDAP:
+    if getattr(settings, 'ENABLE_LDAP', False):
         ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
 
         if (
-            hasattr(settings, 'ENABLE_LDAP_SECONDARY')
-            and settings.ENABLE_LDAP_SECONDARY
+            getattr(settings, 'ENABLE_LDAP_SECONDARY', False)
             and settings.AUTH_LDAP2_DOMAIN_PRINTABLE
         ):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
@@ -347,10 +343,7 @@ def get_login_info():
                 settings.AUTH_LDAP2_USERNAME_DOMAIN
             )
 
-        if (
-            hasattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS')
-            and settings.PROJECTROLES_ALLOW_LOCAL_USERS
-        ):
+        if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             ret += (
                 '. To access the site with local account enter your user '
                 'name as <code>username</code>'

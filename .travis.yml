@@ -6,7 +6,7 @@ python:
   - "3.6"
 
 env:
-  - CHROME_DRIVER_VERSION="77.0.3865.40"
+  - CHROME_DRIVER_VERSION="79.0.3945.36"
 
 before_install:
   - sudo apt-get update -qq
@@ -16,7 +16,7 @@ before_install:
 addons:
   apt:
     sources:
-      - sourceline: "ppa:jonathonf/python-3.6"
+      - sourceline: "ppa:deadsnakes/ppa"
     packages:
       - python3.6
       - python3.6-dev

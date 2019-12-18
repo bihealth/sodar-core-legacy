@@ -314,24 +314,15 @@ table.sodar-pr-project-list-table {
   table-layout: fixed;
 }
 
-tr.sodar-pr-project-list-header th:nth-child(1) {
-  width: 40%;
-}
-
 tr.sodar-pr-project-list-header th:last-child {
   width: 120px;
 }
 
-tr.sodar-pr-project-list-item td:nth-child(1) {
+tr.sodar-pr-project-list-item td:first-child {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
 
-tr.sodar-pr-project-list-item td:nth-last-child(2) {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
 
 
 /* Popups ------------------------------------------------------------------- */
@@ -718,27 +709,16 @@ pre {
   }
 }
 
-/* Sidebar
-@media screen and (max-width: 1000px) {
-  .sodar-content-left {
-    display: none !important;
-  }
-
-  .sodar-sidebar-alt-btn {
-    display: inherit !important;
-  }
-}*/
-
 /* Project list */
 
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1000px) {
   .table.sodar-pr-project-list-table tr th:last-child,
   .table.sodar-pr-project-list-table tr td:last-child {
     display: none;
   }
 }
 
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 700px) {
   .table.sodar-pr-project-list-table tr th:nth-child(n+2),
   .table.sodar-pr-project-list-table tr td:nth-child(n+2) {
     display: none;

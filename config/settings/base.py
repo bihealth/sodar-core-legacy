@@ -482,6 +482,9 @@ PROJECTROLES_ENABLE_SEARCH = True
 # PROJECTROLES_SECRET_LENGTH = 32
 # PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
 # PROJECTROLES_SEARCH_PAGINATION = 5
+# Support for viewing the site in "kiosk mode" (under work, experimental)
+# PROJECTROLES_KIOSK_MODE = env.bool('PROJECTROLES_KIOSK_MODE', False)
+
 PROJECTROLES_HIDE_APP_LINKS = env.list('PROJECTROLES_HIDE_APP_LINKS', None, [])
 
 # Set limit for delegate roles per project (if 0, no limit is applied)
@@ -489,6 +492,19 @@ PROJECTROLES_DELEGATE_LIMIT = env.int('PROJECTROLES_DELEGATE_LIMIT', 1)
 
 # Warn about unsupported browsers (IE)
 PROJECTROLES_BROWSER_WARNING = True
+
+# Disable default CDN JS/CSS includes to replace with your local files
+PROJECTROLES_DISABLE_CDN_INCLUDES = env.bool(
+    'PROJECTROLES_DISABLE_CDN_INCLUDES', False
+)
+
+# Paths/URLs to optional global includes to supplement/replace default ones
+PROJECTROLES_CUSTOM_JS_INCLUDES = env.list(
+    'PROJECTROLES_CUSTOM_JS_INCLUDES', None, []
+)
+PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
+    'PROJECTROLES_CUSTOM_CSS_INCLUDES', None, []
+)
 
 
 # Bgjobs app settings

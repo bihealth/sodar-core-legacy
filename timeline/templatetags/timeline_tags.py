@@ -202,11 +202,16 @@ def html_print_array(array, str_list, indent):
 @register.filter
 def collect_extra_data(event: ProjectEvent):
     ls = []
+
     if event.extra_data is not None and len(event.extra_data) > 0:
         ls.append(('extra-data', 'Extra Data', event))
+
     for status in event.get_status_changes():
         if status.extra_data is not None and len(status.extra_data) > 0:
-            ls.append(('status-extra-data', status.status_type, status))
+            ls.append(
+                ('status-extra-data', 'Status: ' + status.status_type, status)
+            )
+
     return ls
 
 
@@ -214,7 +219,9 @@ def collect_extra_data(event: ProjectEvent):
 def has_extra_data(event: ProjectEvent):
     if event.extra_data is not None and len(event.extra_data) > 0:
         return True
+
     for status in event.get_status_changes():
         if status.extra_data is not None and len(status.extra_data) > 0:
             return True
+
     return False

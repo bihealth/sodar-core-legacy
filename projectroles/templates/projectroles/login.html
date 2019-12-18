@@ -17,9 +17,9 @@
 
   {# Display error if login was unsuccessful. #}
   {% if request.POST %}
-  <div class="alert alert-danger sodar-alert-top">
-     Login failed. Please make sure the user name, domain and password are correct.
-     <a href="#" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+  <div class="alert alert-danger alert-dismissable fade show sodar-alert-top">
+    Login failed. Please make sure the user name, domain and password are correct.
+    <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
   </div>
   {% endif %}
 
@@ -32,7 +32,7 @@
 
     <form class="form-signin" method="post" id="sodar-form-login">
       {% csrf_token %}
-      {% get_django_setting 'ENABLE_LDAP' as enable_ldap %}      
+      {% get_django_setting 'ENABLE_LDAP' as enable_ldap %}
       <input type="text" name="username" id="sodar-login-username" class="form-control"
              placeholder="{% if enable_ldap %}username@DOMAIN{% else %}username{% endif %}"
              required autofocus>

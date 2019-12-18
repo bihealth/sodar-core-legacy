@@ -39,38 +39,45 @@ class UserSettingsForm(forms.Form):
 
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(plugin.name, s_key)
-                field_kwarg = {
+                s_widget_attrs = s_val.get('widget_attrs') or {}
+                s_widget_attrs['placeholder'] = s_val.get('placeholder')
+                setting_kwargs = {
                     'required': False,
                     'label': s_val.get('label')
                     or '{}.{}'.format(plugin.name, s_key),
                     'help_text': s_val.get('description'),
                 }
-                widget_attrs = {'placeholder': s_val.get('placeholder') or None}
 
                 if s_val['type'] == 'STRING':
                     self.fields[s_field] = forms.CharField(
-                        max_length=APP_SETTING_VAL_MAXLENGTH,
-                        widget=forms.TextInput(attrs=widget_attrs),
-                        **field_kwarg,
+                        max_length=APP_SETTING_VAL_MAXLENGTH, **setting_kwargs
                     )
 
                 elif s_val['type'] == 'INTEGER':
-                    self.fields[s_field] = forms.IntegerField(
-                        widget=forms.TextInput(attrs=widget_attrs),
-                        **field_kwarg,
-                    )
+                    self.fields[s_field] = forms.IntegerField(**setting_kwargs)
 
                 elif s_val['type'] == 'BOOLEAN':
-                    self.fields[s_field] = forms.BooleanField(**field_kwarg)
+                    self.fields[s_field] = forms.BooleanField(**setting_kwargs)
 
                 elif s_val['type'] == 'JSON':
-                    widget_attrs.update({'class': 'sodar-json-input'})
+                    # NOTE: Attrs MUST be supplied here (#404)
+                    if 'class' in s_widget_attrs:
+                        s_widget_attrs['class'] += ' sodar-json-input'
+
+                    else:
+                        s_widget_attrs['class'] = 'sodar-json-input'
+
                     self.fields[s_field] = forms.CharField(
-                        widget=forms.Textarea(attrs=widget_attrs), **field_kwarg
+                        widget=forms.Textarea(attrs=s_widget_attrs),
+                        **setting_kwargs,
                     )
 
-                # Set initial value
+                # Modify initial value and attributes
                 if s_val['type'] != 'JSON':
+                    # Add optional attributes from plugin (#404)
+                    # NOTE: Experimental! Use at your own risk!
+                    self.fields[s_field].widget.attrs.update(s_widget_attrs)
+
                     self.initial[s_field] = app_settings.get_app_setting(
                         app_name=plugin.name, setting_name=s_key, user=self.user
                     )

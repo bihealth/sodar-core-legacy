@@ -31,11 +31,7 @@ class ProjectBackgroundJobView(
     template_name = 'bgjobs/project_backgroundjobs.html'
     permission_required = 'bgjobs.view_jobs_own'
     model = BackgroundJob
-    paginate_by = (
-        settings.BGJOBS_PAGINATION
-        if hasattr(settings, 'BGJOBS_PAGINATION')
-        else DEFAULT_PAGINATION
-    )
+    paginate_by = getattr(settings, 'BGJOBS_PAGINATION', DEFAULT_PAGINATION)
 
     def get_queryset(self):
         # TODO: filter to user's job if can only see their own

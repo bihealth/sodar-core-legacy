@@ -13,6 +13,9 @@ def get_tag_state(project, user, name=PROJECT_TAG_STARRED):
     :param name: Tag name (string)
     :return: Boolean
     """
+    if not user.is_authenticated:
+        return False
+
     try:
         ProjectUserTag.objects.get(project=project, user=user, name=name)
         return True
