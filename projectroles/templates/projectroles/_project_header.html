@@ -49,7 +49,7 @@
     {% if project.description %}
       {{ project.description }}
     {% endif %}
-    {% if project.type == 'CATEGORY' and not kiosk_mode %}
+    {% if project.type == 'CATEGORY' and project.get_owner and not kiosk_mode %}
       {% get_user_html project.get_owner.user as owner_html %}
       {% if project.description %}
         (Owner: {{ owner_html | safe }})

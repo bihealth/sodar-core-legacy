@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - Potential crash in ``_project_header.html`` with ownerless kiosk mode category (#422)
+
+
 v0.7.1 (2019-12-18)
 ===================
 
