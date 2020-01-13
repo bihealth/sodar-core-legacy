@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.27
+
 Fixed
 -----
 
