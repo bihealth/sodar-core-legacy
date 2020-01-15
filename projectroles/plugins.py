@@ -311,11 +311,12 @@ class SiteAppPluginPoint(PluginPoint):
 # Plugin API -------------------------------------------------------------------
 
 
-def get_active_plugins(plugin_type='project_app'):
+def get_active_plugins(plugin_type='project_app', custom_order=False):
     """
     Return active plugins of a specific type.
 
     :param plugin_type: "project_app", "site_app" or "backend" (string)
+    :param custom_order: Order by plugin_ordering for project apps (boolean)
     :return: List or None
     :raise: ValueError if plugin_type is not recognized
     """
@@ -341,7 +342,9 @@ def get_active_plugins(plugin_type='project_app'):
                     )
                 )
             ],
-            key=lambda x: x.name,
+            key=lambda x: x.plugin_ordering
+            if custom_order and plugin_type == 'project_app'
+            else x.name,
         )
 
     return None

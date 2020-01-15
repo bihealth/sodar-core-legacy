@@ -79,7 +79,7 @@ from .models import (
     PROJECT_TAG_STARRED,
     SODARUser,
 )
-from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
+from .plugins import get_active_plugins, get_backend_api
 from .project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from .utils import get_expiry_date, get_display_name
@@ -371,7 +371,20 @@ class HTTPRefererMixin:
         return super().get(request, *args, **kwargs)
 
 
-class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
+class PluginContextMixin(ContextMixin):
+    """Mixin for adding plugin list to context data"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['app_plugins'] = get_active_plugins(
+            plugin_type='project_app', custom_order=True
+        )
+        return context
+
+
+class ProjectContextMixin(
+    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
+):
     """Mixin for adding context data to Project base view and other views
     extending it. Includes HTTPRefererMixin for correct referer URL"""
 
@@ -388,34 +401,11 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
         else:
             context['project'] = self.get_project()
 
-        # Plugins stuff
-        plugins = ProjectAppPluginPoint.get_plugins()
-
-        if plugins:
-            context['app_plugins'] = sorted(
-                [p for p in plugins if p.is_active()],
-                key=lambda x: x.plugin_ordering,
-            )
-
         # Project tagging/starring
         if 'project' in context and not KIOSK_MODE:
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
-
-        return context
-
-
-class PluginContextMixin(ContextMixin):
-    """Mixin for adding plugin list to context data"""
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-
-        app_plugins = get_active_plugins(plugin_type='project_app')
-
-        if app_plugins:
-            context['app_plugins'] = app_plugins
 
         return context
 

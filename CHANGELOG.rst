@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - ``custom_order`` argument in ``get_active_plugins()`` (#431)
+
 Changed
 -------
 
@@ -17,6 +23,7 @@ Changed
     - Upgrade minimum Django version to 1.11.27
 - **Projectroles**
     - Accept null value for ``AppSetting.value_json`` (#426)
+    - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)
 
 Fixed
 -----
@@ -24,6 +31,7 @@ Fixed
 - **Projectroles**
     - Potential crash in ``_project_header.html`` with ownerless kiosk mode category (#422)
     - Form crash when saving a JSON app setting with ``user_modifiable=False`` (#426)
+    - Inconsistent plugin ordering in custom project list columns (#428)
 
 
 v0.7.1 (2019-12-18)
