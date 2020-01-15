@@ -15,12 +15,15 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to 1.11.27
+- **Projectroles**
+    - Accept null value for ``AppSetting.value_json`` (#426)
 
 Fixed
 -----
 
 - **Projectroles**
     - Potential crash in ``_project_header.html`` with ownerless kiosk mode category (#422)
+    - Form crash when saving a JSON app setting with ``user_modifiable=False`` (#426)
 
 
 v0.7.1 (2019-12-18)

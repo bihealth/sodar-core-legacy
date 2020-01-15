@@ -70,6 +70,12 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'description': 'Example hidden project setting',
             'user_modifiable': False,
         },
+        'project_hidden_json_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'JSON',
+            'description': 'Example hidden JSON project setting',
+            'user_modifiable': False,
+        },
         'user_str_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'STRING',
