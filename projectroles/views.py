@@ -450,14 +450,6 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
 
     template_name = 'projectroles/home.html'
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-
-        context['app_plugins'] = get_active_plugins(plugin_type='project_app')
-        context['backend_plugins'] = get_active_plugins(plugin_type='backend')
-
-        return context
-
 
 class ProjectDetailView(
     LoginRequiredMixin,

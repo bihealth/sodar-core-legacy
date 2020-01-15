@@ -32,7 +32,13 @@ Fixed
     - Potential crash in ``_project_header.html`` with ownerless kiosk mode category (#422)
     - Form crash when saving a JSON app setting with ``user_modifiable=False`` (#426)
     - Inconsistent plugin ordering in custom project list columns (#428)
+    - Project app plugins included twice in ``HomeView`` (#432)
 
+Removed
+-------
+
+- **Projectroles**
+    - Unused backend plugins queried for context data in ``HomeView`` (#433)
 
 v0.7.1 (2019-12-18)
 ===================
