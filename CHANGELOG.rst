@@ -6,6 +6,13 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
+HEAD (unreleased)
+=================
+
+Fixed
+
+- **Projectroles**
+    - Fixing issue with support for ``Model.get_project_filter_key``.
 
 v0.6.2 (2019-06-21)
 ===================
