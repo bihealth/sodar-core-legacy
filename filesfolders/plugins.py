@@ -82,6 +82,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'width': 75,
             'description': 'Small files stored for the project',
             'active': SHOW_LIST_COLUMNS,
+            'ordering': 35,
             'align': 'right',
         },
         'links': {
@@ -89,6 +90,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'width': 75,
             'description': 'Hyperlinks defined in the small files app',
             'active': SHOW_LIST_COLUMNS,
+            'ordering': 25,
             'align': 'right',
         },
     }

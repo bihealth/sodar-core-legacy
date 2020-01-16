@@ -16,7 +16,8 @@ v0.7.2 (WIP)
 Release Highlights
 ==================
 
-TODO
+- Enable sorting custom project list columns in plugin definition
+- Bug fixes for project list columns
 
 
 Breaking Changes

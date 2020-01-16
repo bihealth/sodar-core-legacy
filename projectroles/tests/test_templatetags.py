@@ -495,6 +495,8 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             0,
         )
 
+    # TODO: Test get_project_list_columns()
+
     def test_get_project_column_count(self):
         """Test get_project_column_count()"""
         app_plugins = get_active_plugins()

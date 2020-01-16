@@ -131,6 +131,7 @@
 
     {% get_project_list user=request.user parent=object as subproject_list %}
     {% if subproject_list|length > 0 or object.type == 'CATEGORY' %}
+      {% get_project_list_columns as custom_cols %}
       <div class="card">
         <div class="card-header">
           <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>

@@ -87,7 +87,7 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Implement this in your app plugin (must be an integer)
     plugin_ordering = 50
 
-    #: Optional project list column definition
+    #: Optional custom project list column definition
     #:
     #: Example ::
     #:
@@ -97,6 +97,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'width': 100,  # Desired width of column in pixels
     #:             'description': 'Description',  # Optional description string
     #:             'active': True,  # Boolean for whether the column is active
+    #:             'ordering': 50,  # Integer for ordering the columns
     #:             'align': 'left'  # Alignment of content
     #:         }
     #:     }

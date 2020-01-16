@@ -15,6 +15,7 @@ Added
 
 - **Projectroles**
     - ``custom_order`` argument in ``get_active_plugins()`` (#431)
+    - Enable ordering custom project list columns in project app plugin (#427)
 
 Changed
 -------
@@ -39,6 +40,7 @@ Removed
 
 - **Projectroles**
     - Unused backend plugins queried for context data in ``HomeView`` (#433)
+
 
 v0.7.1 (2019-12-18)
 ===================
