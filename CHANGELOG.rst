@@ -34,6 +34,7 @@ Fixed
     - Form crash when saving a JSON app setting with ``user_modifiable=False`` (#426)
     - Inconsistent plugin ordering in custom project list columns (#428)
     - Project app plugins included twice in ``HomeView`` (#432)
+    - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
 
 Removed
 -------

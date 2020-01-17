@@ -275,13 +275,13 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         if qs.model == ProjectAccessMixin.project_class:
             return qs
 
-        elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
-            return qs.filter(project=self.get_project())
-
         elif hasattr(qs.model, 'get_project_filter_key'):
             return qs.filter(
                 **{qs.model.get_project_filter_key(): self.get_project()}
             )
+
+        elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
+            return qs.filter(project=self.get_project())
 
         else:
             raise AttributeError(
