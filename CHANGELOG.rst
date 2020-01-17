@@ -35,6 +35,7 @@ Fixed
     - Inconsistent plugin ordering in custom project list columns (#428)
     - Project app plugins included twice in ``HomeView`` (#432)
     - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
+    - Search disabled with unchanged input value on search page load (#436)
 
 Removed
 -------
