@@ -16,6 +16,7 @@ v0.7.2 (WIP)
 Release Highlights
 ==================
 
+- Enforce API versions in remote project sync
 - Separate base API views for SODAR Core API and external SODAR site APIs
 - Enable sorting custom project list columns in plugin definition
 - Bug fixes for project list columns
@@ -23,6 +24,15 @@ Release Highlights
 
 Breaking Changes
 ================
+
+Remote Project Sync API Version Enforcing
+-----------------------------------------
+
+The remote project sync view initiated from a ``TARGET`` site now sends the
+version number, making the ``SOURCE`` site enforce allowed API versions in its
+request. Hence, when a major breaking change is made on the source site and
+version requirements updated, requests from the target site will no longer work
+without upgrading to the latest SODAR Core version.
 
 System Prerequisites
 --------------------

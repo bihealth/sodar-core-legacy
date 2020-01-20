@@ -2200,7 +2200,14 @@ class RemoteProjectsSyncView(
         )
 
         try:
-            response = urllib.request.urlopen(api_url)
+            api_req = urllib.request.Request(api_url)
+            api_req.add_header(
+                'accept',
+                '{}; version={}'.format(
+                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+                ),
+            )
+            response = urllib.request.urlopen(api_req)
             remote_data = json.loads(response.read().decode('utf-8'))
 
         except Exception as ex:
