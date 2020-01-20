@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.views import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
@@ -61,7 +62,14 @@ class Command(BaseCommand):
         )
 
         try:
-            response = urllib.request.urlopen(api_url)
+            api_req = urllib.request.Request(api_url)
+            api_req.add_header(
+                'accept',
+                '{}; version={}'.format(
+                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+                ),
+            )
+            response = urllib.request.urlopen(api_req)
             remote_data = json.loads(response.read())
 
         except Exception as ex:

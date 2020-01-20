@@ -17,7 +17,7 @@ Added
     - ``custom_order`` argument in ``get_active_plugins()`` (#431)
     - Enable ordering custom project list columns in project app plugin (#427)
     - ``SODARCoreAPIBaseView`` base API view class for internal SODAR Core apps (#442)
-    - API version enforcing in ``RemoteProjectsSyncView`` (#444)
+    - API version enforcing in ``RemoteProjectsSyncView`` and ``syncremote.py`` (#444)
 
 Changed
 -------
