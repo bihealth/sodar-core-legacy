@@ -127,7 +127,9 @@ SODAR_API_ALLOWED_VERSIONS = getattr(
 
 # API constants for internal SODAR Core apps
 CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(r'^([0-9.]+)\+[\S]+$', core_version)[1]
+CORE_API_DEFAULT_VERSION = re.match(
+    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
+)[1]
 CORE_API_ALLOWED_VERSIONS = ['0.7.1', '0.7.2']
 
 
