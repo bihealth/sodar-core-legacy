@@ -84,7 +84,26 @@ EXAMPLE_APP_NAME = 'example_project_app'
 app_settings = AppSettingAPI()
 
 
-class KnoxAuthMixin:
+class SODARAPIViewMixin:
+    """Helper mixin for SODAR and SODAR Core API views with accept headers"""
+
+    @classmethod
+    def get_accept_header(
+        cls,
+        media_type=views.CORE_API_MEDIA_TYPE,
+        version=views.CORE_API_DEFAULT_VERSION,
+    ):
+        """
+        Return version accept header based on the media type and version string.
+
+        :param media_type: String (default = SODAR Core default media type)
+        :param version: String (default = SODAR Core default version)
+        :return: String
+        """
+        return '{}; version={}'.format(media_type, version)
+
+
+class KnoxAuthMixin(SODARAPIViewMixin):
     """Helper mixin for API views with Knox token authorization"""
 
     # Copied from Knox tests
@@ -100,28 +119,17 @@ class KnoxAuthMixin:
     @classmethod
     def get_token_header(cls, token):
         """
-        Return auth header based on token
+        Return auth header based on token.
+
         :param token: Token string
         :return: Dict
         """
         return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
 
-    @classmethod
-    def get_accept_header(cls, version=views.CORE_API_DEFAULT_VERSION):
-        """
-        Return version accept header based on version string
-        :param version: String
-        :return: Dict
-        """
-        return {
-            'HTTP_ACCEPT': '{}; version={}'.format(
-                views.CORE_API_MEDIA_TYPE, version
-            )
-        }
-
     def knox_login(self, user, password):
         """
-        Login with Knox
+        Login with Knox.
+
         :param user: User object
         :param password: Password (string)
         :return: Token returned by Knox on successful login
@@ -136,17 +144,25 @@ class KnoxAuthMixin:
         self.assertEqual(response.status_code, 200)
         return response.data['token']
 
-    def knox_get(self, url, token, version=views.CORE_API_DEFAULT_VERSION):
+    def knox_get(
+        self,
+        url,
+        token,
+        media_type=views.CORE_API_MEDIA_TYPE,
+        version=views.CORE_API_DEFAULT_VERSION,
+    ):
         """
-        Perform a HTTP GET request with Knox token auth
+        Perform a HTTP GET request with Knox token auth.
+
         :param url: URL for getting
-        :param token: String
-        :param version: String
+        :param token: Token string
+        :param media_type: String (default = SODAR Core default media type)
+        :param version: String (default = SODAR Core default version)
         :return: Response object
         """
         return self.client.get(
             url,
-            **self.get_accept_header(version),
+            **{'HTTP_ACCEPT': self.get_accept_header(media_type, version)},
             **self.get_token_header(token)
         )
 
@@ -2716,6 +2732,7 @@ class TestRemoteProjectGetAPIView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    SODARAPIViewMixin,
     TestViewsBase,
 ):
     """Tests for remote project getting API view"""
@@ -2793,9 +2810,7 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                views.CORE_API_MEDIA_TYPE, views.CORE_API_DEFAULT_VERSION
-            ),
+            HTTP_ACCEPT=self.get_accept_header(),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -2809,8 +2824,8 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                views.CORE_API_MEDIA_TYPE, CORE_API_VERSION_INVALID
+            HTTP_ACCEPT=self.get_accept_header(
+                version=CORE_API_VERSION_INVALID
             ),
         )
 
@@ -2825,8 +2840,8 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                CORE_API_MEDIA_TYPE_INVALID, views.CORE_API_DEFAULT_VERSION
+            HTTP_ACCEPT=self.get_accept_header(
+                media_type=CORE_API_MEDIA_TYPE_INVALID
             ),
         )
 

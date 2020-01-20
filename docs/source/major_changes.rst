@@ -44,7 +44,10 @@ KnoxAuthMixin in Tests
 
 Default API configuration for methods in ``KnoxAuthMixin`` are now set to
 internal SODAR Core API values. If you use the mixin in the tests of your site,
-please update the arguments in your method calls accordingly.
+please update the arguments in your method calls accordingly. You can also now
+supply the `media_type` argument for relevant functions. The
+``get_accept_header()`` method has been moved to a separate
+``SODARAPIViewMixin`` helper mixin.
 
 
 v0.7.1 (2019-12-18)

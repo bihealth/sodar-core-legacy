@@ -28,6 +28,7 @@ Changed
 - **Projectroles**
     - Accept null value for ``AppSetting.value_json`` (#426)
     - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)
+    - Move ``get_accept_header()`` to ``SODARAPIViewMixin`` (#445)
 
 Fixed
 -----
