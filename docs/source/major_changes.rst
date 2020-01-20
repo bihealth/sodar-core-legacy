@@ -16,6 +16,7 @@ v0.7.2 (WIP)
 Release Highlights
 ==================
 
+- Separate base API views for SODAR Core API and external SODAR site APIs
 - Enable sorting custom project list columns in plugin definition
 - Bug fixes for project list columns
 
@@ -27,6 +28,13 @@ System Prerequisites
 --------------------
 
 The minimum version requirement for Django has been bumped to 1.11.27.
+
+KnoxAuthMixin in Tests
+----------------------
+
+Default API configuration for methods in ``KnoxAuthMixin`` are now set to
+internal SODAR Core API values. If you use the mixin in the tests of your site,
+please update the arguments in your method calls accordingly.
 
 
 v0.7.1 (2019-12-18)

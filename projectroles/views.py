@@ -47,9 +47,9 @@ from rest_framework.views import APIView
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from timeline.models import ProjectEvent
-from .app_settings import AppSettingAPI
-from .email import (
+from projectroles import __version__ as core_version
+from projectroles.app_settings import AppSettingAPI
+from projectroles.email import (
     send_role_change_mail,
     send_invite_mail,
     send_accept_note,
@@ -61,14 +61,14 @@ from .email import (
     get_role_change_body,
     get_role_change_subject,
 )
-from .forms import (
+from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
     ProjectInviteForm,
     RemoteSiteForm,
     RoleAssignmentOwnerTransferForm,
 )
-from .models import (
+from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
@@ -79,10 +79,11 @@ from .models import (
     PROJECT_TAG_STARRED,
     SODARUser,
 )
-from .plugins import get_active_plugins, get_backend_api
-from .project_tags import get_tag_state, set_tag_state, remove_tag
+from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
-from .utils import get_expiry_date, get_display_name
+from projectroles.utils import get_expiry_date, get_display_name
+from timeline.models import ProjectEvent
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -112,9 +113,10 @@ SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
-SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+
+# API constants for external SODAR Core sites
 SODAR_API_MEDIA_TYPE = getattr(
-    settings, 'SODAR_API_MEDIA_TYPE', SODAR_API_DEFAULT_MEDIA_TYPE
+    settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
 )
 SODAR_API_DEFAULT_VERSION = getattr(
     settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
@@ -122,6 +124,11 @@ SODAR_API_DEFAULT_VERSION = getattr(
 SODAR_API_ALLOWED_VERSIONS = getattr(
     settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
+
+# API constants for internal SODAR Core apps
+CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+CORE_API_DEFAULT_VERSION = re.match(r'^([0-9.]+)\+[\S]+$', core_version)[1]
+CORE_API_ALLOWED_VERSIONS = ['0.7.1', '0.7.2']
 
 
 # Access Django user model
@@ -2301,16 +2308,31 @@ class SODARAPIObjectInProjectPermissions(
 
 
 class SODARAPIBaseView(APIView):
-    """Base SODAR API View with accept header versioning"""
+    """Base SODAR API View to be used by external SODAR Core based sites"""
 
     versioning_class = SODARAPIVersioning
     renderer_classes = [SODARAPIRenderer]
 
 
+class SODARCoreAPIBaseView(APIView):
+    """Base SODAR API View to be used by internal SODAR Core apps"""
+
+    class CoreAPIVersioning(AcceptHeaderVersioning):
+        default_version = CORE_API_DEFAULT_VERSION
+        allowed_versions = CORE_API_ALLOWED_VERSIONS
+        version_param = 'version'
+
+    class CoreAPIRenderer(JSONRenderer):
+        media_type = CORE_API_MEDIA_TYPE
+
+    versioning_class = CoreAPIVersioning
+    renderer_classes = [CoreAPIRenderer]
+
+
 # SODAR API Views --------------------------------------------------------------
 
 
-class RemoteProjectGetAPIView(SODARAPIBaseView):
+class RemoteProjectGetAPIView(SODARCoreAPIBaseView):
     """API view for retrieving remote projects from a source site"""
 
     # TODO: Create custom permission class for general API

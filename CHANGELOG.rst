@@ -16,12 +16,14 @@ Added
 - **Projectroles**
     - ``custom_order`` argument in ``get_active_plugins()`` (#431)
     - Enable ordering custom project list columns in project app plugin (#427)
+    - ``SODARCoreAPIBaseView`` base API view class for internal SODAR Core apps (#442)
 
 Changed
 -------
 
 - **General**
     - Upgrade minimum Django version to 1.11.27
+    - Base ``RemoteProjectGetAPIView`` on ``SODARCoreAPIBaseView`` (#442)
 - **Projectroles**
     - Accept null value for ``AppSetting.value_json`` (#426)
     - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)

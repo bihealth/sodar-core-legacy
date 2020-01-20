@@ -15,8 +15,8 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from .. import views
-from ..models import (
+from projectroles import views
+from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
@@ -27,10 +27,14 @@ from ..models import (
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
-from ..plugins import change_plugin_status, get_backend_api, get_active_plugins
-from ..remote_projects import RemoteProjectAPI
-from ..utils import build_secret, get_display_name
-from .test_models import (
+from projectroles.plugins import (
+    change_plugin_status,
+    get_backend_api,
+    get_active_plugins,
+)
+from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.utils import build_secret, get_display_name
+from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
@@ -71,10 +75,8 @@ REMOTE_SITE_NEW_URL = 'https://new.url'
 REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 
-SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
-SODAR_API_VERSION = '0.1'
-SODAR_API_VERSION_INVALID = '9.9'
+CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
+CORE_API_VERSION_INVALID = '9.9.9'
 
 EXAMPLE_APP_NAME = 'example_project_app'
 
@@ -105,7 +107,7 @@ class KnoxAuthMixin:
         return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
 
     @classmethod
-    def get_accept_header(cls, version=settings.SODAR_API_DEFAULT_VERSION):
+    def get_accept_header(cls, version=views.CORE_API_DEFAULT_VERSION):
         """
         Return version accept header based on version string
         :param version: String
@@ -113,7 +115,7 @@ class KnoxAuthMixin:
         """
         return {
             'HTTP_ACCEPT': '{}; version={}'.format(
-                settings.SODAR_API_MEDIA_TYPE, version
+                views.CORE_API_MEDIA_TYPE, version
             )
         }
 
@@ -134,7 +136,7 @@ class KnoxAuthMixin:
         self.assertEqual(response.status_code, 200)
         return response.data['token']
 
-    def knox_get(self, url, token, version=settings.SODAR_API_DEFAULT_VERSION):
+    def knox_get(self, url, token, version=views.CORE_API_DEFAULT_VERSION):
         """
         Perform a HTTP GET request with Knox token auth
         :param url: URL for getting
@@ -2792,7 +2794,7 @@ class TestRemoteProjectGetAPIView(
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION
+                views.CORE_API_MEDIA_TYPE, views.CORE_API_DEFAULT_VERSION
             ),
         )
 
@@ -2808,7 +2810,7 @@ class TestRemoteProjectGetAPIView(
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID
+                views.CORE_API_MEDIA_TYPE, CORE_API_VERSION_INVALID
             ),
         )
 
@@ -2824,7 +2826,7 @@ class TestRemoteProjectGetAPIView(
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
             HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION
+                CORE_API_MEDIA_TYPE_INVALID, views.CORE_API_DEFAULT_VERSION
             ),
         )
 
