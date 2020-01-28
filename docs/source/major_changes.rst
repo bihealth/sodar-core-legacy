@@ -18,6 +18,8 @@ Release Highlights
 
 - Enforce API versions in remote project sync
 - Separate base API views for SODAR Core API and external SODAR site APIs
+- Allow providing custom keyword arguments for backend plugin ``get_api()``
+  through ``get_backend_api()``
 - Enable sorting custom project list columns in plugin definition
 - Bug fixes for project list columns
 

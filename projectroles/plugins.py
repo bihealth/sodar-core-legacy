@@ -399,18 +399,19 @@ def get_app_plugin(plugin_name):
             pass  # TODO refactor
 
 
-def get_backend_api(plugin_name, force=False):
+def get_backend_api(plugin_name, force=False, **kwargs):
     """
     Return backend API object.
 
     :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
+    :param kwargs: Optional kwargs for API
     :return: Plugin object or None if not found
     """
     if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
         try:
             plugin = BackendPluginPoint.get_plugin(plugin_name)
-            return plugin.get_api() if plugin.is_active() else None
+            return plugin.get_api(**kwargs) if plugin.is_active() else None
 
         except Exception:
             pass
