@@ -36,6 +36,14 @@ request. Hence, when a major breaking change is made on the source site and
 version requirements updated, requests from the target site will no longer work
 without upgrading to the latest SODAR Core version.
 
+Exceptions Raised by get_backend_api()
+--------------------------------------
+
+The ``get_backend_api()`` method for retrieving backend plugin API objects
+no longer suppresses potential exceptions raised by API object initialization.
+If it is possible for your API object to raise an exception on initialization,
+you will need to handle it when calling this method.
+
 System Prerequisites
 --------------------
 

@@ -402,6 +402,7 @@ def get_app_plugin(plugin_name):
 def get_backend_api(plugin_name, force=False, **kwargs):
     """
     Return backend API object.
+    NOTE: May raise an exception from plugin.get_api().
 
     :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
@@ -411,12 +412,11 @@ def get_backend_api(plugin_name, force=False, **kwargs):
     if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
         try:
             plugin = BackendPluginPoint.get_plugin(plugin_name)
-            return plugin.get_api(**kwargs) if plugin.is_active() else None
 
-        except Exception:
-            pass
+        except BackendPluginPoint.DoesNotExist:
+            return None
 
-    return None
+        return plugin.get_api(**kwargs) if plugin.is_active() else None
 
 
 # Plugins within projectroles --------------------------------------------------

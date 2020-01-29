@@ -31,6 +31,7 @@ Changed
     - Accept null value for ``AppSetting.value_json`` (#426)
     - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)
     - Move ``get_accept_header()`` to ``SODARAPIViewMixin`` (#445)
+    - Allow exceptions to be raised by ``get_backend_plugin()`` (#451)
 
 Fixed
 -----
@@ -42,6 +43,8 @@ Fixed
     - Project app plugins included twice in ``HomeView`` (#432)
     - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
     - Search disabled with unchanged input value on search page load (#436)
+- **Taskflowbackend**
+    - Potential crash in ``TaskflowAPI`` initialization
 
 Removed
 -------
