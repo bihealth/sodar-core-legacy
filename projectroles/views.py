@@ -1329,19 +1329,19 @@ class RoleAssignmentOwnerTransferView(
         )
 
         new_owner = form.cleaned_data['new_owner']
-        owners_new_role = form.cleaned_data['owners_new_role']
+        ex_owner_role = form.cleaned_data['ex_owner_role']
 
         timeline_event = self.create_timeline_event(
             prev_owner, new_owner, project
         )
 
         if self.transfer_ownership(
-            timeline_event, project, prev_owner_ra, new_owner, owners_new_role
+            timeline_event, project, prev_owner_ra, new_owner, ex_owner_role
         ):
 
             if SEND_EMAIL:
                 send_role_change_mail(
-                    'update', project, prev_owner, owners_new_role, self.request
+                    'update', project, prev_owner, ex_owner_role, self.request
                 )
                 send_role_change_mail(
                     'update',

@@ -497,13 +497,6 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
         self.selectable_roles = get_role_choices(
             self.project, self.current_user
         )
-        self.fields['owners_new_role'] = forms.ChoiceField(
-            label='New role for {}'.format(self.current_owner.username),
-            help_text='New role for the current owner. Select "Remove" in the '
-            'member list to remove the user\'s membership.',
-            choices=self.selectable_roles,
-            initial=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).pk,
-        )
         self.fields['new_owner'] = forms.ModelChoiceField(
             label='New owner',
             help_text='Select a member of the project to become owner.',
@@ -513,13 +506,21 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
                 url='projectroles:autocomplete_user', forward=['project']
             ),
         )
+        self.fields['ex_owner_role'] = forms.ChoiceField(
+            label='New role for {}'.format(self.current_owner.username),
+            help_text='New role for the current owner. Select "Remove" in the '
+            'member list to remove the user\'s membership.',
+            choices=self.selectable_roles,
+            initial=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).pk,
+        )
         self.fields['project'] = forms.Field(
             widget=forms.HiddenInput(), initial=self.project.sodar_uuid
         )
 
-    def clean_owners_new_role(self):
+    def clean_ex_owner_role(self):
         try:
-            role = int(self.cleaned_data['owners_new_role'])
+            role = int(self.cleaned_data['ex_owner_role'])
+
         except ValueError:
             raise forms.ValidationError(
                 'Selection couldn\'t be converted to an integer'
@@ -535,6 +536,7 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
 
         try:
             role = Role.objects.get(name=role[1])
+
         except Role.DoesNotExist:
             raise forms.ValidationError('Selected role does not exist')
 
@@ -557,19 +559,23 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
                         'The limit ({}) of delegates for this project has '
                         'already been reached.'.format(DELEGATE_LIMIT)
                     )
+
         return role
 
     def clean_new_owner(self):
         user = self.cleaned_data['new_owner']
+
         if user == self.current_owner:
             raise forms.ValidationError(
                 'The new owner shouldn\'t be the current owner'
             )
         ra = RoleAssignment.objects.get_assignment(user, self.project)
+
         if ra.project != self.project:
             raise forms.ValidationError(
                 'The new owner should be from this project'
             )
+
         return user
 
 

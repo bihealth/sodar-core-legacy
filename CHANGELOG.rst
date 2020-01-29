@@ -35,6 +35,7 @@ Changed
     - Move ``get_accept_header()`` to ``SODARAPIViewMixin`` (#445)
     - Allow exceptions to be raised by ``get_backend_plugin()`` (#451)
     - Improve tour help CSS (#438)
+    - Field order in ``RoleAssignmentOwnerTransferView`` (#441)
 
 Fixed
 -----

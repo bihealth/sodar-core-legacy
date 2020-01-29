@@ -1403,7 +1403,7 @@ class TestRoleAssignmentTransferOwnershipView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
-                    'owners_new_role': self.role_guest.pk,
+                    'ex_owner_role': self.role_guest.pk,
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )
