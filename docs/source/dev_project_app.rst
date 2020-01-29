@@ -767,6 +767,91 @@ views. Example with generic ``APIView``:
         # ...
 
 
+Removing a Project App
+======================
+
+Removing a project app from your Django site can be slightly more complicated
+than removing a normal non-SODAR-supporting Django application. Following the
+procedure detailed here you are able to cleanly remove a project app which has
+been in use on your site.
+
+The instructions apply to project apps you have created yourself as well as
+project apps included in the django-sodar-core package, with the exception of
+``projectroles`` which can not be removed from a SODAR based site.
+
+.. warning::
+
+    Make sure to perform these steps **in the order they are presented here**.
+    Otherwise you may risk serious problems with your site functionality or your
+    database!
+
+.. note::
+
+    Just in case, it is recommended to make a backup of your Django database
+    before proceeding.
+
+First you should delete all Timeline references to objects in your app. This is
+not done automatically as, by design, the references are kept even after the
+original objects are deleted. Go to the Django shell via management command
+using ``shell`` or ``shell_plus`` and enter the following. Replace ``app_name``
+with the name of your application as specified in its ``ProjectAppPlugin``.
+
+.. code-block:: python
+
+    from timeline.models import ProjectEvent
+    ProjectEvent.objects.filter(app='app_name').delete()
+
+Next you should delete existing database objects defined by the models in your
+app. This is also most easily done via the Django shell. Example:
+
+.. code-block:: python
+
+    from yourapp.models import YourModel
+    YourModel.objects.all().delete()
+
+After the objects have been deleted, reset the database migrations of your
+application.
+
+.. code-block:: console
+
+    $ ./manage.py migrate yourapp zero
+
+Once this has been executed successfully, you should delete the plugin object
+for your application. Returning to the Django shell, type the following:
+
+.. code-block:: python
+
+    from djangoplugins.models import Plugin
+    Plugin.objects.get(name='app_name').delete()
+
+Finally, you should remove the references to the removed app in the Django
+configuration.
+
+App dependency in ``config/settings/base.py``:
+
+.. code-block:: python
+
+    LOCAL_APPS = [
+    # The app you are removing
+    'yourapp.apps.YourAppConfig',
+    # ...
+    ]
+
+App URL patterns in ``config/urls.py``:
+
+.. code-block:: python
+
+    urlpatterns = [
+        # Your app's URLs
+        url(r'^yourapp/', include('yourapp.urls')),
+        # ...
+    ]
+
+Once you have performed the aforementioned database operations and deployed a
+version of your Django site with the application dependency and URL patterns
+removed, the project app should be cleanly removed from your site.
+
+
 TODO
 ====
 
