@@ -20,6 +20,8 @@ Added
     - API version enforcing in ``RemoteProjectsSyncView`` and ``syncremote.py`` (#444)
     - Allow extra keyword arguments in ``get_backend_api()`` (#397)
     - Example usage of ``get_backend_api()`` extra kwargs in ``example_backend_app`` (#397)
+- **Sodarcache**
+    - Allow limiting ``deletecache`` to a specific project (#448)
 
 Changed
 -------

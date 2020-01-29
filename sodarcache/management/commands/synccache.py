@@ -39,7 +39,7 @@ class Command(BaseCommand):
 
         update_kwargs = {}
 
-        if 'project' in options and options['project']:
+        if options.get('project'):
             try:
                 project = Project.objects.get(sodar_uuid=options['project'])
                 update_kwargs['project'] = project
