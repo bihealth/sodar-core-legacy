@@ -129,34 +129,36 @@
 
     {# Subprojects #}
 
-    {% get_project_list user=request.user parent=object as subproject_list %}
-    {% if subproject_list|length > 0 or object.type == 'CATEGORY' %}
-      {% get_project_list_columns as custom_cols %}
-      <div class="card">
-        <div class="card-header">
-          <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
+    {% if object.type == 'CATEGORY' %}
+      {% get_project_list user=request.user parent=object as subproject_list %}
+      {% if subproject_list|length > 0 %}
+        {% get_project_list_columns as custom_cols %}
+        <div class="card">
+          <div class="card-header">
+            <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
+          </div>
+          <div class="card-body p-0">
+            <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
+             <thead>
+               {% include 'projectroles/_project_list_header.html' %}
+             </thead>
+             <tbody>
+               {% if subproject_list|length > 0 %}
+                 {% for p in subproject_list %}
+                   {% include 'projectroles/_project_list_item.html' with list_parent=object %}
+                 {% endfor %}
+               {% else %}
+                 <tr>
+                   <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+                     No {% get_display_name 'CATEGORY' title=False count=2 %}
+                     or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
+                 </tr>
+               {% endif %}
+             </tbody>
+           </table>
+          </div>
         </div>
-        <div class="card-body p-0">
-          <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
-           <thead>
-             {% include 'projectroles/_project_list_header.html' %}
-           </thead>
-           <tbody>
-             {% if subproject_list|length > 0 %}
-               {% for p in subproject_list %}
-                 {% include 'projectroles/_project_list_item.html' with list_parent=object %}
-               {% endfor %}
-             {% else %}
-               <tr>
-                 <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
-                   No {% get_display_name 'CATEGORY' title=False count=2 %}
-                   or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
-               </tr>
-             {% endif %}
-           </tbody>
-         </table>
-        </div>
-      </div>
+      {% endif %}
     {% endif %}
 
   </div>

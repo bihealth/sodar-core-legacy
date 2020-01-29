@@ -45,6 +45,7 @@ Fixed
     - Project app plugins included twice in ``HomeView`` (#432)
     - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
     - Search disabled with unchanged input value on search page load (#436)
+    - Subprojects queried for non-categories in ``project_detail.html`` (#434)
 - **Taskflowbackend**
     - Potential crash in ``TaskflowAPI`` initialization
 
