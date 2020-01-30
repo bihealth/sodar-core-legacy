@@ -34,8 +34,10 @@ def specialize_job(bg_job):
     if not klass:
         return bg_job
     else:
-        print(bg_job.pk, bg_job.job_type)
-        return klass.objects.get(bg_job=bg_job)
+        try:
+            return klass.objects.get(bg_job=bg_job)
+        except klass.DoesNotExist:
+            return bg_job
 
 
 # Originally from dict.py in varfish-web (see issue #97)
