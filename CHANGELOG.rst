@@ -20,6 +20,7 @@ Added
     - API version enforcing in ``RemoteProjectsSyncView`` and ``syncremote.py`` (#444)
     - Allow extra keyword arguments in ``get_backend_api()`` (#397)
     - Example usage of ``get_backend_api()`` extra kwargs in ``example_backend_app`` (#397)
+    - ``SODARUserChoiceField`` and ``get_user_widget()`` for user selection in forms (#455)
 - **Sodarcache**
     - Allow limiting ``deletecache`` to a specific project (#448)
 
@@ -36,6 +37,8 @@ Changed
     - Allow exceptions to be raised by ``get_backend_plugin()`` (#451)
     - Improve tour help CSS (#438)
     - Field order in ``RoleAssignmentOwnerTransferView`` (#441)
+    - Redesign user autocomplete handling in forms (#455)
+    - Rename ``SODARUserAutocompleteWidget`` and ``SODARUserRedirectWidget`` (#455)
 
 Fixed
 -----
@@ -48,6 +51,7 @@ Fixed
     - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
     - Search disabled with unchanged input value on search page load (#436)
     - Subprojects queried for non-categories in ``project_detail.html`` (#434)
+    - Current owner selectable in ownership transfer form (#440)
 - **Taskflowbackend**
     - Potential crash in ``TaskflowAPI`` initialization
 
@@ -56,6 +60,7 @@ Removed
 
 - **Projectroles**
     - Unused backend plugins queried for context data in ``HomeView`` (#433)
+    - Unneeded ``UserAutocompleteExcludeMembersAPIView`` (#455)
 
 
 v0.7.1 (2019-12-18)

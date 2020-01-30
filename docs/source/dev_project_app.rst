@@ -453,67 +453,63 @@ Forms
 
 This section contains guidelines for implementing forms.
 
-Custom User Selection Widget
-----------------------------
+SODAR User Selection Field
+--------------------------
 
-A widget for autocomplete user selection in forms is available and can be build
-into any form.
+Projectroles offers a custom field, widget and accompanying Ajax API views
+for autocomplete-enabled selection of SODAR users in Django forms. The field
+will handle providing appropriate choices according to the view context and user
+permissions, also allowing for customization.
 
-First, the ``UserAutocompleteWidget`` needs to be imported from
-``projectroles/forms.py``.
+The recommended way to use the built-in user form field is by using the
+``SODARUserChoiceField`` class found in ``projectroles.forms``. The field
+extends Django's ``ModelChoiceField`` and takes most of the same keyword
+arguments in its init function, with the exception of ``queryset``,
+``to_field_name``, ``limit_choices_to`` and ``widget`` which will be overridden.
+
+The init function also takes new arguments which are specified below:
+
+- ``scope``: Scope of users to include (string)
+    * ``all``: All users on the site
+    * ``project``: Limit search to users in given project
+    * ``project_exclude`` Exclude existing users of given project
+- ``project``: Project object or project UUID string (optional)
+- ``exclude``: List of User objects or User UUIDs to exclude (optional)
+- ``forward``: Parameters to forward to autocomplete view (optional)
+- ``url``: Autocomplete ajax class override (optional)
+- ``widget_class``: Widget class override (optional)
+
+Below is an example of the classes usage. Note that you can also define the
+field as a form class member, but the ``project`` or ``exclude`` values are
+not definable at that point. The following example assumes you are setting up
+your project app form with an extra ``project`` argument.
 
 .. code-block:: python
 
-    from projectroles.forms import UserAutocompleteWidget
-
-In your form's ``Meta`` class, assign the ``UserAutocompleteWidget`` as the
-widget of the user field:
-
-.. code-block:: python
+    from projectroles.forms import SODARUserChoiceField
 
     class YourForm(forms.ModelForm):
-
         class Meta:
-            model = YourModel
-            fields ['user'] # ...
-            widgets = {
-                'user': UserAutocompleteWidget(
-                url='projectroles:autocomplete_user',
-                forward=['project'],
+            # ...
+        def __init__(self, project, *args, **kwargs):
+            # ...
+            self.fields['user'] = SODARUserChoiceField(
+                label='User',
+                help_text='Select user for your thing here',
+                required=True,
+                scope='project',
+                project=project,
+                exclude=[unwanted_user]
             )
-        }
 
-Some parameters have to be specified:
+For more examples of usage of this field and its widget, see
+``projectroles.forms``. If the field class does not suit your needs, you can also
+retrieve the related widget to your own field with
+``projectroles.forms.get_user_widget()``.
 
-- ``url``: The URL of the ``UserAutocompleteAPIView`` (or another custom API
-  view)
-- ``forward``: Optional list with fields whose values will be forwarded to the
-  view
-
-If you wish to only display users who are members of a certain project, you need
-to include a field with the project's UUID in the form. This form can be hidden.
-This field's value needs to be forwarded to the autocomplete view (like in the
-code example above).
-
-The alternative ``UserAutocompleteExcludeMembersAPIView`` view provides the
-opposite functionality: only users that are *not* project members are shown.
-That can be useful, for example, in a form to invite new members. To have the
-widget exclude project members, just change the URL parameter to the
-``UserAutocompleteExcludeMembersAPIView``'s URL
-(``projectroles:autocomplete_user_exclude``).
-In that same way, you can provide your custom view's URL to the widget to
-change its behaviour.
-
-Also, as is required by SODAR, the user and the project fields need to point to
-SODAR UUIDs:
-
-.. code-block:: python
-
-    self.fields['project'].to_field_name = 'sodar_uuid'
-    self.fields['user'].to_field_name = 'sodar_uuid'
-
-The following ``django-autocomplete-light`` and ``select2`` stylesheets and
-javascript files have to be added to the html template that includes the form.
+The following ``django-autocomplete-light`` and ``select2`` CSS and Javascript
+links have to be added to the HTML template that includes the form with your
+user selection field:
 
 .. code-block:: django
 
@@ -532,13 +528,10 @@ javascript files have to be added to the html template that includes the form.
       <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
     {% endblock css %}
 
-When using the ``RedirectWidget`` or any other widget with custom javascript,
-include the corresponding js file instead of ``autocomplete_light/select2.js``.
-
-If you create your own custom user selection widget on the basis of the
-``UserAutocompleteWidget`` take a look at the ``RedirectWidget`` as an example,
-or check out the ``django-autocomplete-light`` documentation for more
-information on how to customize your autocomplete-widget.
+If using a customized widget with its own Javascript, include the corresponding
+JS file instead of ``autocomplete_light/select2.js``. See the
+``django-autocomplete-light`` documentation for more information on how to
+customize your autocomplete-widget.
 
 
 Specific Views and Templates

@@ -18,6 +18,7 @@ Release Highlights
 
 - Enforce API versions in remote project sync
 - Separate base API views for SODAR Core API and external SODAR site APIs
+- Redesign user autocomplete field
 - Allow providing custom keyword arguments for backend plugin ``get_api()``
   through ``get_backend_api()``
 - Enable sorting custom project list columns in plugin definition
@@ -26,6 +27,13 @@ Release Highlights
 
 Breaking Changes
 ================
+
+User Autocomplete Field Redesigned
+----------------------------------
+
+User autocomplete field for forms with its related widget(s) have been
+redesigned with breaking API changes. Please review the :ref:`dev_project_app`
+documentation and modify your implementation accordingly.
 
 Remote Project Sync API Version Enforcing
 -----------------------------------------

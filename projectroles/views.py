@@ -2406,41 +2406,63 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
     """ User autocompletion widget view"""
 
     def get_queryset(self):
-        """Offer the appropriate user choices and allow autocompletion"""
+        """
+        Get a User queryset for SODARUserAutocompleteWidget.
+
+        Optional values in self.forwarded:
+        - "project": project UUID
+        - "scope": string for expected scope (all/project/project_exclude)
+        - "exclude": list of explicit User.sodar_uuid to exclude from queryset
+
+        """
         if not self.request.user.is_authenticated():
-            return self.get_no_results()
+            return User.objects.none()
 
         current_user = self.request.user
         project_uuid = self.forwarded.get('project', None)
+        exclude_uuids = self.forwarded.get('exclude', None)
+        scope = self.forwarded.get('scope', 'all')
 
         # If project UUID is given, only show users that are in the project
-        if project_uuid not in ['', None]:
+        if scope in ['project', 'project_exclude'] and project_uuid not in [
+            '',
+            None,
+        ]:
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
 
             # If user has no permission for the project, return None
             if not self.request.user.has_perm(
                 'projectroles.view_project', project
             ):
-                return self.get_no_results()
+                return User.objects.none()
 
             project_users = (
                 RoleAssignment.objects.filter(project=project)
                 .values_list('user')
                 .distinct()
             )
-            # Limit selectable choices
-            qs = self.get_selectable_users(project_users)
 
-        # If no project UUID is given all users are selectable
+            if scope == 'project':  # Limit choices to current project users
+                qs = User.objects.filter(pk__in=project_users)
+
+            elif scope == 'project_exclude':  # Exclude project users
+                qs = User.objects.exclude(pk__in=project_users)
+
+        # Else include all users
         else:
             qs = User.objects.all()
 
-        # Exclude the users in the system group unless local users are allowed
+        # Exclude users in the system group unless local users are allowed
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
 
+        # Exclude UUIDs explicitly given
+        if exclude_uuids:
+            qs = qs.exclude(sodar_uuid__in=exclude_uuids)
+
+        # Finally, filter by query
         if self.q:
             qs = qs.filter(
                 Q(username__icontains=self.q)
@@ -2450,11 +2472,7 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
                 | Q(email__icontains=self.q)
             )
 
-        return qs.order_by('name')  # Fix issue #165
-
-    def get_selectable_users(self, project_users):
-        """Return a queryset only containing users that are project members"""
-        return User.objects.filter(pk__in=project_users)
+        return qs.order_by('name')
 
     def get_result_label(self, user):
         """Display options with name, username and email address"""
@@ -2466,33 +2484,23 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
         return display
 
     def get_result_value(self, user):
-        """Use the UUID instead of the pk"""
+        """Use sodar_uuid in the User model instead of pk"""
         return str(user.sodar_uuid)
 
-    def get_no_results(self):
-        """Return no search results"""
-        return User.objects.none().order_by('name')  # Fix issue #165
 
-
-class UserAutocompleteExcludeMembersAPIView(UserAutocompleteAPIView):
-    """User autocomplete widget excluding project members view"""
-
-    def get_selectable_users(self, project_users):
-        """Limit user choices to users without roles in current project"""
-        return User.objects.exclude(pk__in=project_users)
-
-
-class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
-    """ RedirectWidget view (user autocompletion) redirecting to the 'create
-     invites' page"""
+class UserAutocompleteRedirectAPIView(UserAutocompleteAPIView):
+    """ SODARUserRedirectWidget view (user autocompletion) redirecting to
+    the 'create invite' page"""
 
     def get_create_option(self, context, q):
         """Form the correct email invite option to append to results."""
         create_option = []
         validator = EmailValidator()
         display_create_option = False
+
         if self.create_field and q:
             page_obj = context.get('page_obj', None)
+
             if page_obj is None or page_obj.number == 1:
 
                 # Don't offer to send an invite if the entered text is not an
@@ -2500,6 +2508,7 @@ class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
                 try:
                     validator(q)
                     display_create_option = True
+
                 except ValidationError:
                     display_create_option = False
 
@@ -2509,6 +2518,7 @@ class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
                     self.get_result_label(result).lower()
                     for result in context['object_list']
                 )
+
                 if q.lower() in existing_options:
                     display_create_option = False
 

@@ -1133,7 +1133,7 @@ class TestRoleAssignmentCreateView(
             )
 
     def test_redirect_to_invite(self):
-        """Test RedirectWidget redirects to the ProjectInvite creation view"""
+        """Test SODARUserRedirectWidget redirects to the ProjectInvite creation view"""
         # Issue POST request
         values = {
             'project': self.project.sodar_uuid,
@@ -1161,7 +1161,7 @@ class TestRoleAssignmentCreateView(
             )
 
     def test_create_option(self):
-        """Test if new options are being displayedby the RedirectWidget"""
+        """Test if new options are being displayedby the SODARUserRedirectWidget"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,
@@ -1184,7 +1184,7 @@ class TestRoleAssignmentCreateView(
         self.assertIn(new_option, data['results'])
 
     def test_dont_create_option(self):
-        """Test if new options are not being displayed by the RedirectWidget if
+        """Test if new options are not being displayed by the SODARUserRedirectWidget if
         they are nor valid email addresses """
         values = {
             'project': self.project.sodar_uuid,
