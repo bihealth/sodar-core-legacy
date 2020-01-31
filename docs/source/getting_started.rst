@@ -18,7 +18,7 @@ forthcoming.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.7.1#egg=django-sodar-core
+    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.7.2#egg=django-sodar-core
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a

@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.7.2 (WIP)
-************
+v0.7.2 (2020-01-31)
+*******************
 
 Release Highlights
 ==================
@@ -25,7 +25,6 @@ Release Highlights
   through ``get_backend_api()``
 - Enable sorting custom project list columns in plugin definition
 - Bug fixes for project list columns
-
 
 Breaking Changes
 ================
@@ -82,7 +81,6 @@ Release Highlights
 - Initial support for deploying site in kiosk mode
 - Critical bug fixes for category and project owner management
 
-
 Breaking Changes
 ================
 
@@ -116,7 +114,6 @@ Release Highlights
 - "User in project" scope added into app settings
 - Support JSON in app settings
 - Project owner management moved to project member views
-
 
 Breaking Changes
 ================
@@ -178,7 +175,6 @@ Release Highlights
 - Allow hiding app settings from UI forms
 - Add template tag for retrieving app settings
 
-
 Breaking Changes
 ================
 
@@ -205,7 +201,6 @@ Release Highlights
 - Add custom project list columns definable in ProjectAppPlugin
 - Add example project list column implementation in the filesfolders app
 
-
 Breaking Changes
 ================
 
@@ -226,7 +221,6 @@ Release Highlights
 - Add user specific settings
 - Refactor project settings into project/user specific app settings
 - Add siteinfo app
-
 
 Breaking Changes
 ================
@@ -285,7 +279,6 @@ Release Highlights
   config
 - New default error templates
 
-
 Breaking Changes
 ================
 
@@ -340,7 +333,6 @@ Release Highlights
 - Improved display and logging of remote project sync
 - Upgrade to Bootstrap 4.3.1
 
-
 Breaking Changes
 ================
 
@@ -381,7 +373,6 @@ Release Highlights
 
 - Add user autocomplete in forms
 - Allow multiple delegates per project
-
 
 Breaking Changes
 ================
@@ -463,7 +454,6 @@ Release Highlights
 
 N/A (maintenance/bugfix release)
 
-
 Breaking Changes
 ================
 
@@ -492,7 +482,6 @@ Release Highlights
 - Add display name configuration for projects and categories
 - Hide immutable fields in projectroles forms
 
-
 Breaking Changes
 ================
 
@@ -511,7 +500,6 @@ Release Highlights
 ==================
 
 N/A (maintenance/bugfix release)
-
 
 Breaking Changes
 ================
@@ -572,7 +560,6 @@ Release Highlights
 - Configuration updates for API and Projectroles
 - Travis-CI setup
 
-
 Breaking Changes
 ================
 
@@ -619,7 +606,6 @@ Release Highlights
 - Extra data variable rendering for timeline
 - Additional site settings
 
-
 Breaking Changes
 ================
 
@@ -665,7 +651,6 @@ Release Highlights
   sites
 - Add adminalerts app
 - Add taskflowbackend app
-
 
 Breaking Changes
 ================
