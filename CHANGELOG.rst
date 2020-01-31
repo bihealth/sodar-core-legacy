@@ -42,6 +42,7 @@ Changed
     - Field order in ``RoleAssignmentOwnerTransferView`` (#441)
     - Redesign user autocomplete handling in forms (#455)
     - Rename ``SODARUserAutocompleteWidget`` and ``SODARUserRedirectWidget`` (#455)
+    - Disable ownership transfer link if owner is the only project user (#454)
 
 Fixed
 -----
