@@ -183,6 +183,9 @@ Projectroles Settings
 * ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
   (int)
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
+* ``PROJECTROLES_EMAIL_SENDER_REPLY``: Whether replies are expected to the
+  sender address (bool). If set ``False`` and nothing is set in the ``reply-to``
+  header, a "do not reply" note is added to the email body.
 * ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
   your site (boolean)
 * ``PROJECTROLES_DEFAULT_ADMIN``: User name of the default superuser account
@@ -198,6 +201,7 @@ Example:
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
+    PROJECTROLES_EMAIL_SENDER_REPLY = env.bool('PROJECTROLES_EMAIL_SENDER_REPLY', False)
     PROJECTROLES_ENABLE_SEARCH = True
     PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 

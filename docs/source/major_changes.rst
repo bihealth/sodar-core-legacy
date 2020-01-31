@@ -19,6 +19,7 @@ Release Highlights
 - Enforce API versions in remote project sync
 - Separate base API views for SODAR Core API and external SODAR site APIs
 - Redesign user autocomplete field
+- Set issuing user email to ``reply-to`` header for role and invite emails
 - Allow providing custom keyword arguments for backend plugin ``get_api()``
   through ``get_backend_api()``
 - Enable sorting custom project list columns in plugin definition

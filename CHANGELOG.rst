@@ -21,6 +21,8 @@ Added
     - Allow extra keyword arguments in ``get_backend_api()`` (#397)
     - Example usage of ``get_backend_api()`` extra kwargs in ``example_backend_app`` (#397)
     - ``SODARUserChoiceField`` and ``get_user_widget()`` for user selection in forms (#455)
+    - Setting ``reply-to`` headers for role change and invite emails (#446)
+    - No reply note and related ``PROJECTROLES_EMAIL_SENDER_REPLY`` setting (#446)
 - **Sodarcache**
     - Allow limiting ``deletecache`` to a specific project (#448)
 
