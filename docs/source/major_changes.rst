@@ -20,6 +20,7 @@ Release Highlights
 - Separate base API views for SODAR Core API and external SODAR site APIs
 - Redesign user autocomplete field
 - Set issuing user email to ``reply-to`` header for role and invite emails
+- Display hidden project app settings to superusers in project update form
 - Allow providing custom keyword arguments for backend plugin ``get_api()``
   through ``get_backend_api()``
 - Enable sorting custom project list columns in plugin definition

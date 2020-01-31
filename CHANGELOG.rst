@@ -23,6 +23,7 @@ Added
     - ``SODARUserChoiceField`` and ``get_user_widget()`` for user selection in forms (#455)
     - Setting ``reply-to`` headers for role change and invite emails (#446)
     - No reply note and related ``PROJECTROLES_EMAIL_SENDER_REPLY`` setting (#446)
+    - Display hidden project app settings to superusers (#424)
 - **Sodarcache**
     - Allow limiting ``deletecache`` to a specific project (#448)
 

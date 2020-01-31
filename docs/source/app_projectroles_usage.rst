@@ -163,6 +163,13 @@ updating form and can only be modified by users with sufficient project access.
 User specific settings will be displayed in the
 :ref:`Userpforile app <app_userprofile>`.
 
+By defining the attribute ``user_modifiable=False``, project or user app
+settings will not be shown in the respective project/user update views. This is
+used e.g. in cases where a project app provides its own UI or updates some
+"hidden" setting due to user actions. Superusers will still see these hidden
+settings in the Update Project view.
+
+
 Settings with the scope of user within a project do not currently have a
 separate UI of their own. Instead, project apps can produce their own user
 specific UIs for this functionality if manual user selection is needed.

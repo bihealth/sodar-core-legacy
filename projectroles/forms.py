@@ -183,13 +183,23 @@ class ProjectForm(forms.ModelForm):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
 
+        # Get current user for checking permissions for form items
+        if current_user:
+            self.current_user = current_user
+
+        # Set up setting query kwargs
+        self.p_kwargs = (
+            {'user_modifiable': True} if not current_user.is_superuser else {}
+        )
+
         # Add settings fields
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
         for plugin in self.app_plugins:
+            # Show non-modifiable settings to superusers
             p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
             )
 
             for s_key, s_val in p_settings.items():
@@ -267,15 +277,16 @@ class ProjectForm(forms.ModelForm):
                             app_name=plugin.name, setting_name=s_key
                         )
 
+                # Add hidden note
+                if s_val.get('user_modifiable') is False:
+                    self.fields[s_field].label += ' [HIDDEN]'
+                    self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
+
         # Access parent project if present
         parent_project = None
 
         if project:
             parent_project = Project.objects.filter(sodar_uuid=project).first()
-
-        # Get current user for checking permissions for form items
-        if current_user:
-            self.current_user = current_user
 
         # Do not allow transfer under another parent
         self.fields['parent'].disabled = True
@@ -399,7 +410,7 @@ class ProjectForm(forms.ModelForm):
         # Verify settings fields
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
             )
 
             for s_key, s_val in p_settings.items():

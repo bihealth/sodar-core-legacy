@@ -202,8 +202,9 @@ The following variables and functions are **mandatory**:
 
 Implementing the following is **optional**:
 
-- ``app_settings``: Implement if project, user or project_user (Settings specific to a project and user) specific settings for the app
-  are needed. See the plugin point definition for an example.
+- ``app_settings``: Implement if project, user or project_user (Settings
+  specific to a project and user) specific settings for the app are needed. See
+  the plugin point definition for an example.
 - ``search_types``: Implement if searching the data of the app is enabled
 - ``search_template``: Implement if searching the data of the app is enabled
 - ``project_list_columns``: Optional custom columns do be shown in the project
