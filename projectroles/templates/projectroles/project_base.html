@@ -14,8 +14,6 @@
 
 {% has_perm 'projectroles.view_project' request.user project as can_view_project %}
 
-{% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
-
 {% if can_view_project %}
   {% include 'projectroles/_project_header.html' %}
 

@@ -495,7 +495,11 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             0,
         )
 
-    # TODO: Test get_project_list_columns()
+    def test_get_project_list_column(self):
+        """Test get_project_list_columns()"""
+        cols = tags.get_project_list_columns()
+        self.assertEqual(len(cols), 2)
+        self.assertEqual(cols[0]['key'], 'links')  # Assert ordering
 
     def test_get_project_column_count(self):
         """Test get_project_column_count()"""

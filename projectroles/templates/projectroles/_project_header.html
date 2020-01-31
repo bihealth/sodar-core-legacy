@@ -4,11 +4,6 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
-{% has_perm 'projectroles.view_project' request.user project as can_view_project %}
-{% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
-{% has_perm 'projectroles.update_project' request.user project as can_update_project %}
-
-{% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 {% get_app_setting 'userprofile' 'enable_project_uuid_copy' user=request.user as enable_uuid_copy %}
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 

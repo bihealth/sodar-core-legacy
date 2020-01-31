@@ -131,7 +131,7 @@ EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='')
 
 # MANAGER CONFIGURATION
 # ------------------------------------------------------------------------------
-ADMINS = [("""Mikko Nieminen""", 'mikko.nieminen@bihealth.de')]
+ADMINS = [("""Admin User""", 'admin.user@example.com')]
 
 # See: https://docs.djangoproject.com/en/1.11/ref/settings/#managers
 MANAGERS = ADMINS

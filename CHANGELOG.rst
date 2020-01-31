@@ -33,6 +33,8 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.27
     - Base ``RemoteProjectGetAPIView`` on ``SODARCoreAPIBaseView`` (#442)
+- **Bgjobs**
+    - Make ``specialize_job()`` more robust (#456)
 - **Projectroles**
     - Accept null value for ``AppSetting.value_json`` (#426)
     - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)
