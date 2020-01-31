@@ -565,7 +565,7 @@ class AppSetting(models.Model):
 
     #: Optional JSON value for the setting
     value_json = JSONField(
-        default=dict, help_text='Optional JSON value for the setting'
+        null=True, default=dict, help_text='Optional JSON value for the setting'
     )
 
     #: Setting visibility in forms

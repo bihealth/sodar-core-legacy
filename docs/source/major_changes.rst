@@ -10,6 +10,65 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.7.2 (2020-01-31)
+*******************
+
+Release Highlights
+==================
+
+- Enforce API versions in remote project sync
+- Separate base API views for SODAR Core API and external SODAR site APIs
+- Redesign user autocomplete field
+- Set issuing user email to ``reply-to`` header for role and invite emails
+- Display hidden project app settings to superusers in project update form
+- Allow providing custom keyword arguments for backend plugin ``get_api()``
+  through ``get_backend_api()``
+- Enable sorting custom project list columns in plugin definition
+- Bug fixes for project list columns
+
+Breaking Changes
+================
+
+User Autocomplete Field Redesigned
+----------------------------------
+
+User autocomplete field for forms with its related widget(s) have been
+redesigned with breaking API changes. Please review the :ref:`dev_project_app`
+documentation and modify your implementation accordingly.
+
+Remote Project Sync API Version Enforcing
+-----------------------------------------
+
+The remote project sync view initiated from a ``TARGET`` site now sends the
+version number, making the ``SOURCE`` site enforce allowed API versions in its
+request. Hence, when a major breaking change is made on the source site and
+version requirements updated, requests from the target site will no longer work
+without upgrading to the latest SODAR Core version.
+
+Exceptions Raised by get_backend_api()
+--------------------------------------
+
+The ``get_backend_api()`` method for retrieving backend plugin API objects
+no longer suppresses potential exceptions raised by API object initialization.
+If it is possible for your API object to raise an exception on initialization,
+you will need to handle it when calling this method.
+
+System Prerequisites
+--------------------
+
+The minimum version requirement for Django has been bumped to 1.11.27.
+
+KnoxAuthMixin in Tests
+----------------------
+
+Default API configuration for methods in ``KnoxAuthMixin`` are now set to
+internal SODAR Core API values. If you use the mixin in the tests of your site,
+please update the arguments in your method calls accordingly. You can also now
+supply the `media_type` argument for relevant functions. The
+``get_accept_header()`` method has been moved to a separate
+``SODARAPIViewMixin`` helper mixin.
+
+
 v0.7.1 (2019-12-18)
 *******************
 
@@ -21,7 +80,6 @@ Release Highlights
 - Enable managing global JS/CSS includes in Django settings
 - Initial support for deploying site in kiosk mode
 - Critical bug fixes for category and project owner management
-
 
 Breaking Changes
 ================
@@ -56,7 +114,6 @@ Release Highlights
 - "User in project" scope added into app settings
 - Support JSON in app settings
 - Project owner management moved to project member views
-
 
 Breaking Changes
 ================
@@ -118,7 +175,6 @@ Release Highlights
 - Allow hiding app settings from UI forms
 - Add template tag for retrieving app settings
 
-
 Breaking Changes
 ================
 
@@ -145,7 +201,6 @@ Release Highlights
 - Add custom project list columns definable in ProjectAppPlugin
 - Add example project list column implementation in the filesfolders app
 
-
 Breaking Changes
 ================
 
@@ -166,7 +221,6 @@ Release Highlights
 - Add user specific settings
 - Refactor project settings into project/user specific app settings
 - Add siteinfo app
-
 
 Breaking Changes
 ================
@@ -225,7 +279,6 @@ Release Highlights
   config
 - New default error templates
 
-
 Breaking Changes
 ================
 
@@ -280,7 +333,6 @@ Release Highlights
 - Improved display and logging of remote project sync
 - Upgrade to Bootstrap 4.3.1
 
-
 Breaking Changes
 ================
 
@@ -321,7 +373,6 @@ Release Highlights
 
 - Add user autocomplete in forms
 - Allow multiple delegates per project
-
 
 Breaking Changes
 ================
@@ -403,7 +454,6 @@ Release Highlights
 
 N/A (maintenance/bugfix release)
 
-
 Breaking Changes
 ================
 
@@ -432,7 +482,6 @@ Release Highlights
 - Add display name configuration for projects and categories
 - Hide immutable fields in projectroles forms
 
-
 Breaking Changes
 ================
 
@@ -451,7 +500,6 @@ Release Highlights
 ==================
 
 N/A (maintenance/bugfix release)
-
 
 Breaking Changes
 ================
@@ -512,7 +560,6 @@ Release Highlights
 - Configuration updates for API and Projectroles
 - Travis-CI setup
 
-
 Breaking Changes
 ================
 
@@ -559,7 +606,6 @@ Release Highlights
 - Extra data variable rendering for timeline
 - Additional site settings
 
-
 Breaking Changes
 ================
 
@@ -605,7 +651,6 @@ Release Highlights
   sites
 - Add adminalerts app
 - Add taskflowbackend app
-
 
 Breaking Changes
 ================

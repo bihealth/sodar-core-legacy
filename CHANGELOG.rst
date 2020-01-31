@@ -7,6 +7,68 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.7.2 (2020-01-31)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - ``custom_order`` argument in ``get_active_plugins()`` (#431)
+    - Enable ordering custom project list columns in project app plugin (#427)
+    - ``SODARCoreAPIBaseView`` base API view class for internal SODAR Core apps (#442)
+    - API version enforcing in ``RemoteProjectsSyncView`` and ``syncremote.py`` (#444)
+    - Allow extra keyword arguments in ``get_backend_api()`` (#397)
+    - Example usage of ``get_backend_api()`` extra kwargs in ``example_backend_app`` (#397)
+    - ``SODARUserChoiceField`` and ``get_user_widget()`` for user selection in forms (#455)
+    - Setting ``reply-to`` headers for role change and invite emails (#446)
+    - No reply note and related ``PROJECTROLES_EMAIL_SENDER_REPLY`` setting (#446)
+    - Display hidden project app settings to superusers (#424)
+- **Sodarcache**
+    - Allow limiting ``deletecache`` to a specific project (#448)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to 1.11.27
+    - Base ``RemoteProjectGetAPIView`` on ``SODARCoreAPIBaseView`` (#442)
+- **Bgjobs**
+    - Make ``specialize_job()`` more robust (#456)
+- **Projectroles**
+    - Accept null value for ``AppSetting.value_json`` (#426)
+    - Use ``PluginContextMixin`` in ``ProjectContextMixin`` (#430)
+    - Move ``get_accept_header()`` to ``SODARAPIViewMixin`` (#445)
+    - Allow exceptions to be raised by ``get_backend_plugin()`` (#451)
+    - Improve tour help CSS (#438)
+    - Field order in ``RoleAssignmentOwnerTransferView`` (#441)
+    - Redesign user autocomplete handling in forms (#455)
+    - Rename ``SODARUserAutocompleteWidget`` and ``SODARUserRedirectWidget`` (#455)
+    - Disable ownership transfer link if owner is the only project user (#454)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Potential crash in ``_project_header.html`` with ownerless kiosk mode category (#422)
+    - Form crash when saving a JSON app setting with ``user_modifiable=False`` (#426)
+    - Inconsistent plugin ordering in custom project list columns (#428)
+    - Project app plugins included twice in ``HomeView`` (#432)
+    - ``ProjectPermissionMixin`` query set override with ``get_project_filter_key()``
+    - Search disabled with unchanged input value on search page load (#436)
+    - Subprojects queried for non-categories in ``project_detail.html`` (#434)
+    - Current owner selectable in ownership transfer form (#440)
+- **Taskflowbackend**
+    - Potential crash in ``TaskflowAPI`` initialization
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused backend plugins queried for context data in ``HomeView`` (#433)
+    - Unneeded ``UserAutocompleteExcludeMembersAPIView`` (#455)
+
+
 v0.7.1 (2019-12-18)
 ===================
 

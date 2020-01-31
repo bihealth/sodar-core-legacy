@@ -386,6 +386,12 @@ class TestAppSettingAPI(
                 'description': 'Example hidden project setting',
                 'user_modifiable': False,
             },
+            'project_hidden_json_setting': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'JSON',
+                'description': 'Example hidden JSON project setting',
+                'user_modifiable': False,
+            },
         }
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
@@ -488,7 +494,7 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 5)
+        self.assertEqual(len(defs), 6)
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,

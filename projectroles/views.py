@@ -47,9 +47,9 @@ from rest_framework.views import APIView
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from timeline.models import ProjectEvent
-from .app_settings import AppSettingAPI
-from .email import (
+from projectroles import __version__ as core_version
+from projectroles.app_settings import AppSettingAPI
+from projectroles.email import (
     send_role_change_mail,
     send_invite_mail,
     send_accept_note,
@@ -61,14 +61,14 @@ from .email import (
     get_role_change_body,
     get_role_change_subject,
 )
-from .forms import (
+from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
     ProjectInviteForm,
     RemoteSiteForm,
     RoleAssignmentOwnerTransferForm,
 )
-from .models import (
+from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
@@ -79,10 +79,11 @@ from .models import (
     PROJECT_TAG_STARRED,
     SODARUser,
 )
-from .plugins import ProjectAppPluginPoint, get_active_plugins, get_backend_api
-from .project_tags import get_tag_state, set_tag_state, remove_tag
+from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.project_tags import get_tag_state, set_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
-from .utils import get_expiry_date, get_display_name
+from projectroles.utils import get_expiry_date, get_display_name
+from timeline.models import ProjectEvent
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -112,9 +113,10 @@ SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
 ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
-SODAR_API_DEFAULT_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+
+# API constants for external SODAR Core sites
 SODAR_API_MEDIA_TYPE = getattr(
-    settings, 'SODAR_API_MEDIA_TYPE', SODAR_API_DEFAULT_MEDIA_TYPE
+    settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
 )
 SODAR_API_DEFAULT_VERSION = getattr(
     settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
@@ -122,6 +124,13 @@ SODAR_API_DEFAULT_VERSION = getattr(
 SODAR_API_ALLOWED_VERSIONS = getattr(
     settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
 )
+
+# API constants for internal SODAR Core apps
+CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
+CORE_API_DEFAULT_VERSION = re.match(
+    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
+)[1]
+CORE_API_ALLOWED_VERSIONS = ['0.7.1', '0.7.2']
 
 
 # Access Django user model
@@ -275,13 +284,13 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         if qs.model == ProjectAccessMixin.project_class:
             return qs
 
-        elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
-            return qs.filter(project=self.get_project())
-
         elif hasattr(qs.model, 'get_project_filter_key'):
             return qs.filter(
                 **{qs.model.get_project_filter_key(): self.get_project()}
             )
+
+        elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
+            return qs.filter(project=self.get_project())
 
         else:
             raise AttributeError(
@@ -371,7 +380,20 @@ class HTTPRefererMixin:
         return super().get(request, *args, **kwargs)
 
 
-class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
+class PluginContextMixin(ContextMixin):
+    """Mixin for adding plugin list to context data"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['app_plugins'] = get_active_plugins(
+            plugin_type='project_app', custom_order=True
+        )
+        return context
+
+
+class ProjectContextMixin(
+    HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
+):
     """Mixin for adding context data to Project base view and other views
     extending it. Includes HTTPRefererMixin for correct referer URL"""
 
@@ -388,34 +410,11 @@ class ProjectContextMixin(HTTPRefererMixin, ContextMixin, ProjectAccessMixin):
         else:
             context['project'] = self.get_project()
 
-        # Plugins stuff
-        plugins = ProjectAppPluginPoint.get_plugins()
-
-        if plugins:
-            context['app_plugins'] = sorted(
-                [p for p in plugins if p.is_active()],
-                key=lambda x: x.plugin_ordering,
-            )
-
         # Project tagging/starring
         if 'project' in context and not KIOSK_MODE:
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
-
-        return context
-
-
-class PluginContextMixin(ContextMixin):
-    """Mixin for adding plugin list to context data"""
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-
-        app_plugins = get_active_plugins(plugin_type='project_app')
-
-        if app_plugins:
-            context['app_plugins'] = app_plugins
 
         return context
 
@@ -459,14 +458,6 @@ class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
     """Home view"""
 
     template_name = 'projectroles/home.html'
-
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-
-        context['app_plugins'] = get_active_plugins(plugin_type='project_app')
-        context['backend_plugins'] = get_active_plugins(plugin_type='backend')
-
-        return context
 
 
 class ProjectDetailView(
@@ -1338,19 +1329,19 @@ class RoleAssignmentOwnerTransferView(
         )
 
         new_owner = form.cleaned_data['new_owner']
-        owners_new_role = form.cleaned_data['owners_new_role']
+        ex_owner_role = form.cleaned_data['ex_owner_role']
 
         timeline_event = self.create_timeline_event(
             prev_owner, new_owner, project
         )
 
         if self.transfer_ownership(
-            timeline_event, project, prev_owner_ra, new_owner, owners_new_role
+            timeline_event, project, prev_owner_ra, new_owner, ex_owner_role
         ):
 
             if SEND_EMAIL:
                 send_role_change_mail(
-                    'update', project, prev_owner, owners_new_role, self.request
+                    'update', project, prev_owner, ex_owner_role, self.request
                 )
                 send_role_change_mail(
                     'update',
@@ -2211,7 +2202,14 @@ class RemoteProjectsSyncView(
         )
 
         try:
-            response = urllib.request.urlopen(api_url)
+            api_req = urllib.request.Request(api_url)
+            api_req.add_header(
+                'accept',
+                '{}; version={}'.format(
+                    CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+                ),
+            )
+            response = urllib.request.urlopen(api_req)
             remote_data = json.loads(response.read().decode('utf-8'))
 
         except Exception as ex:
@@ -2319,16 +2317,31 @@ class SODARAPIObjectInProjectPermissions(
 
 
 class SODARAPIBaseView(APIView):
-    """Base SODAR API View with accept header versioning"""
+    """Base SODAR API View to be used by external SODAR Core based sites"""
 
     versioning_class = SODARAPIVersioning
     renderer_classes = [SODARAPIRenderer]
 
 
+class SODARCoreAPIBaseView(APIView):
+    """Base SODAR API View to be used by internal SODAR Core apps"""
+
+    class CoreAPIVersioning(AcceptHeaderVersioning):
+        default_version = CORE_API_DEFAULT_VERSION
+        allowed_versions = CORE_API_ALLOWED_VERSIONS
+        version_param = 'version'
+
+    class CoreAPIRenderer(JSONRenderer):
+        media_type = CORE_API_MEDIA_TYPE
+
+    versioning_class = CoreAPIVersioning
+    renderer_classes = [CoreAPIRenderer]
+
+
 # SODAR API Views --------------------------------------------------------------
 
 
-class RemoteProjectGetAPIView(SODARAPIBaseView):
+class RemoteProjectGetAPIView(SODARCoreAPIBaseView):
     """API view for retrieving remote projects from a source site"""
 
     # TODO: Create custom permission class for general API
@@ -2393,41 +2406,63 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
     """ User autocompletion widget view"""
 
     def get_queryset(self):
-        """Offer the appropriate user choices and allow autocompletion"""
+        """
+        Get a User queryset for SODARUserAutocompleteWidget.
+
+        Optional values in self.forwarded:
+        - "project": project UUID
+        - "scope": string for expected scope (all/project/project_exclude)
+        - "exclude": list of explicit User.sodar_uuid to exclude from queryset
+
+        """
         if not self.request.user.is_authenticated():
-            return self.get_no_results()
+            return User.objects.none()
 
         current_user = self.request.user
         project_uuid = self.forwarded.get('project', None)
+        exclude_uuids = self.forwarded.get('exclude', None)
+        scope = self.forwarded.get('scope', 'all')
 
         # If project UUID is given, only show users that are in the project
-        if project_uuid not in ['', None]:
+        if scope in ['project', 'project_exclude'] and project_uuid not in [
+            '',
+            None,
+        ]:
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
 
             # If user has no permission for the project, return None
             if not self.request.user.has_perm(
                 'projectroles.view_project', project
             ):
-                return self.get_no_results()
+                return User.objects.none()
 
             project_users = (
                 RoleAssignment.objects.filter(project=project)
                 .values_list('user')
                 .distinct()
             )
-            # Limit selectable choices
-            qs = self.get_selectable_users(project_users)
 
-        # If no project UUID is given all users are selectable
+            if scope == 'project':  # Limit choices to current project users
+                qs = User.objects.filter(pk__in=project_users)
+
+            elif scope == 'project_exclude':  # Exclude project users
+                qs = User.objects.exclude(pk__in=project_users)
+
+        # Else include all users
         else:
             qs = User.objects.all()
 
-        # Exclude the users in the system group unless local users are allowed
+        # Exclude users in the system group unless local users are allowed
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
             qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
 
+        # Exclude UUIDs explicitly given
+        if exclude_uuids:
+            qs = qs.exclude(sodar_uuid__in=exclude_uuids)
+
+        # Finally, filter by query
         if self.q:
             qs = qs.filter(
                 Q(username__icontains=self.q)
@@ -2437,11 +2472,7 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
                 | Q(email__icontains=self.q)
             )
 
-        return qs.order_by('name')  # Fix issue #165
-
-    def get_selectable_users(self, project_users):
-        """Return a queryset only containing users that are project members"""
-        return User.objects.filter(pk__in=project_users)
+        return qs.order_by('name')
 
     def get_result_label(self, user):
         """Display options with name, username and email address"""
@@ -2453,33 +2484,23 @@ class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
         return display
 
     def get_result_value(self, user):
-        """Use the UUID instead of the pk"""
+        """Use sodar_uuid in the User model instead of pk"""
         return str(user.sodar_uuid)
 
-    def get_no_results(self):
-        """Return no search results"""
-        return User.objects.none().order_by('name')  # Fix issue #165
 
-
-class UserAutocompleteExcludeMembersAPIView(UserAutocompleteAPIView):
-    """User autocomplete widget excluding project members view"""
-
-    def get_selectable_users(self, project_users):
-        """Limit user choices to users without roles in current project"""
-        return User.objects.exclude(pk__in=project_users)
-
-
-class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
-    """ RedirectWidget view (user autocompletion) redirecting to the 'create
-     invites' page"""
+class UserAutocompleteRedirectAPIView(UserAutocompleteAPIView):
+    """ SODARUserRedirectWidget view (user autocompletion) redirecting to
+    the 'create invite' page"""
 
     def get_create_option(self, context, q):
         """Form the correct email invite option to append to results."""
         create_option = []
         validator = EmailValidator()
         display_create_option = False
+
         if self.create_field and q:
             page_obj = context.get('page_obj', None)
+
             if page_obj is None or page_obj.number == 1:
 
                 # Don't offer to send an invite if the entered text is not an
@@ -2487,6 +2508,7 @@ class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
                 try:
                     validator(q)
                     display_create_option = True
+
                 except ValidationError:
                     display_create_option = False
 
@@ -2496,6 +2518,7 @@ class UserAutocompleteRedirectAPIView(UserAutocompleteExcludeMembersAPIView):
                     self.get_result_label(result).lower()
                     for result in context['object_list']
                 )
+
                 if q.lower() in existing_options:
                     display_create_option = False
 

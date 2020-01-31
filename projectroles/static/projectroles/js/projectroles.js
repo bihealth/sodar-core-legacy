@@ -104,7 +104,11 @@ function modifySearch() {
 }
 
 $(document).ready(function () {
-    $('#sodar-nav-search-submit').attr('disabled', 'disabled');
+    if ($('#sodar-nav-search-input').val().length === 0) {
+      $('#sodar-nav-search-submit').attr('disabled', true);
+    } else {
+      $('#sodar-nav-search-submit').attr('disabled', false);
+    }
     $('#sodar-nav-search-input').keyup(function () {
         modifySearch();
     }).on('input', function () {

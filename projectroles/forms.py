@@ -3,10 +3,11 @@ import json
 from django import forms
 from django.conf import settings
 from django.contrib import auth
+from django.urls import reverse
 from django.utils import timezone
 
 from pagedown.widgets import PagedownWidget
-from dal import autocomplete
+from dal import autocomplete, forward as dal_forward
 
 from .models import (
     Project,
@@ -52,14 +53,14 @@ DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 User = auth.get_user_model()
 
 
-# General widgets --------------------------------------------------------------
+# User autocompletion ----------------------------------------------------------
 
 
-class UserAutocompleteWidget(autocomplete.ModelSelect2):
-    """Custom Select widget for user field autocompletion that uses the UUID
-    instead of the pk."""
+class SODARUserAutocompleteWidget(autocomplete.ModelSelect2):
+    """Custom Select widget for user field autocompletion which uses the SODAR
+    User class sodar_uuid instead of pk"""
 
-    # override function to use sodar_uuid instead of pk
+    # Override function to use sodar_uuid instead of pk
     def filter_choices_to_render(self, selected_choices):
         """Filter out un-selected choices if choices is a QuerySet."""
         self.choices.queryset = self.choices.queryset.filter(
@@ -67,10 +68,102 @@ class UserAutocompleteWidget(autocomplete.ModelSelect2):
         )
 
 
-class RedirectWidget(UserAutocompleteWidget):
-    """Custom Select widget for QuerySet choices and Select2."""
+class SODARUserRedirectWidget(SODARUserAutocompleteWidget):
+    """Version of SODARUserAutocompleteWidget to allow redirect on selection"""
 
     autocomplete_function = 'autocomplete_redirect'
+
+
+# TODO: Refactor into widget?
+def get_user_widget(
+    scope='all',
+    project=None,
+    exclude=None,
+    forward=None,
+    url=None,
+    widget_class=None,
+):
+    """
+    Get an user autocomplete widget for your form.
+
+    :param scope: Scope of users to include: "all"/"project"/"project_exclude"
+    :param project: Project object or project UUID string (optional)
+    :param exclude: List of User objects or User UUIDs to exclude
+    :param forward: Parameters to forward to autocomplete view (optional)
+    :param url: Autocomplete ajax class override (optional)
+    :param widget_class: Widget class override (optional)
+    :return: SODARUserAutocompleteWidget or an overridden widget class
+    """
+    url = url or 'projectroles:autocomplete_user'
+    wg = {'url': url, 'forward': [dal_forward.Const(scope, 'scope')]}
+
+    if project:
+        p_uuid = (
+            str(project.sodar_uuid)
+            if isinstance(project, Project)
+            else str(project)
+        )
+        wg['forward'].append(dal_forward.Const(p_uuid, 'project'))
+
+    if forward and isinstance(forward, list):
+        wg['forward'] += forward
+
+    if exclude:
+        wg['forward'].append(
+            dal_forward.Const(
+                [
+                    str(u.sodar_uuid) if isinstance(u, User) else u
+                    for u in exclude
+                ],
+                'exclude',
+            )
+        )
+
+    if widget_class:
+        return widget_class(**wg)
+
+    return SODARUserAutocompleteWidget(**wg)
+
+
+class SODARUserChoiceField(forms.ModelChoiceField):
+    """User choice field to be used with SODAR User objects and autocomplete"""
+
+    def __init__(
+        self,
+        scope='all',
+        project=None,
+        exclude=None,
+        forward=None,
+        url=None,
+        widget_class=None,
+        *args,
+        **kwargs
+    ):
+        """
+        Override of ModelChoiceField initialization.
+
+        Most arguments given to ModelChoiceField can be set, with the exception
+        of queryset, to_field_name, limit_choices_to and widget.
+
+        :param scope: Scope of users to include:
+                      "all"/"project"/"project_exclude"
+        :param project: Project object or project UUID string (optional)
+        :param exclude: List of User objects or User UUIDs to exclude
+        :param forward: Parameters to forward to autocomplete view (optional)
+        :param url: Autocomplete ajax class override (optional)
+        :param widget_class: Widget class override (optional)
+        """
+        widget = get_user_widget(
+            scope, project, exclude, forward, url, widget_class
+        )
+        super().__init__(
+            User.objects.all(),
+            to_field_name='sodar_uuid',
+            limit_choices_to=None,
+            widget=widget,
+            *args,
+            **kwargs
+        )
 
 
 # Project form -----------------------------------------------------------------
@@ -79,25 +172,8 @@ class RedirectWidget(UserAutocompleteWidget):
 class ProjectForm(forms.ModelForm):
     """Form for Project creation/updating"""
 
-    owner = forms.ModelChoiceField(
-        User.objects.all(),
-        required=True,
-        to_field_name='sodar_uuid',
-        label='Owner',
-        help_text='Owner',
-        widget=UserAutocompleteWidget(
-            url='projectroles:autocomplete_user_exclude', forward=['project']
-        ),
-    )
-
-    # Hidden project field for user autocomplete
-    project = forms.ModelChoiceField(
-        Project.objects.all(),
-        required=False,
-        to_field_name='sodar_uuid',
-        initial=None,
-        widget=forms.HiddenInput(),
-    )
+    # Set up owner field
+    owner = SODARUserChoiceField(label='Owner', help_text='Owner')
 
     class Meta:
         model = Project
@@ -107,13 +183,23 @@ class ProjectForm(forms.ModelForm):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
 
+        # Get current user for checking permissions for form items
+        if current_user:
+            self.current_user = current_user
+
+        # Set up setting query kwargs
+        self.p_kwargs = (
+            {'user_modifiable': True} if not current_user.is_superuser else {}
+        )
+
         # Add settings fields
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
         for plugin in self.app_plugins:
+            # Show non-modifiable settings to superusers
             p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
             )
 
             for s_key, s_val in p_settings.items():
@@ -191,15 +277,16 @@ class ProjectForm(forms.ModelForm):
                             app_name=plugin.name, setting_name=s_key
                         )
 
+                # Add hidden note
+                if s_val.get('user_modifiable') is False:
+                    self.fields[s_field].label += ' [HIDDEN]'
+                    self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
+
         # Access parent project if present
         parent_project = None
 
         if project:
             parent_project = Project.objects.filter(sodar_uuid=project).first()
-
-        # Get current user for checking permissions for form items
-        if current_user:
-            self.current_user = current_user
 
         # Do not allow transfer under another parent
         self.fields['parent'].disabled = True
@@ -323,7 +410,7 @@ class ProjectForm(forms.ModelForm):
         # Verify settings fields
         for plugin in self.app_plugins:
             p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, user_modifiable=True
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
             )
 
             for s_key, s_val in p_settings.items():
@@ -366,12 +453,6 @@ class RoleAssignmentForm(forms.ModelForm):
     class Meta:
         model = RoleAssignment
         fields = ['project', 'user', 'role']
-        widgets = {
-            'user': RedirectWidget(
-                url='projectroles:autocomplete_user_redirect',
-                forward=['project', 'role'],
-            )
-        }
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -394,9 +475,17 @@ class RoleAssignmentForm(forms.ModelForm):
         # Form modifications
         ####################
 
-        # Modify ModelChoiceFields to use sodar_uuid
+        # Modify project field to use sodar_uuid
         self.fields['project'].to_field_name = 'sodar_uuid'
-        self.fields['user'].to_field_name = 'sodar_uuid'
+
+        # Set up user field
+        self.fields['user'] = SODARUserChoiceField(
+            scope='project_exclude',
+            project=self.project,
+            forward=['role'],
+            url=reverse('projectroles:autocomplete_user_redirect'),
+            widget_class=SODARUserRedirectWidget,
+        )
 
         # Limit role choices
         self.fields['role'].choices = get_role_choices(
@@ -493,33 +582,32 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
         self.project = project
         self.current_owner = current_owner
 
-        # ------------------------------
+        self.fields['new_owner'] = SODARUserChoiceField(
+            label='New owner',
+            help_text='Select a member of the project to become owner.',
+            scope='project',
+            project=self.project,
+            exclude=[self.current_owner],
+        )
+
         self.selectable_roles = get_role_choices(
             self.project, self.current_user
         )
-        self.fields['owners_new_role'] = forms.ChoiceField(
+        self.fields['ex_owner_role'] = forms.ChoiceField(
             label='New role for {}'.format(self.current_owner.username),
             help_text='New role for the current owner. Select "Remove" in the '
             'member list to remove the user\'s membership.',
             choices=self.selectable_roles,
             initial=Role.objects.get(name=PROJECT_ROLE_CONTRIBUTOR).pk,
         )
-        self.fields['new_owner'] = forms.ModelChoiceField(
-            label='New owner',
-            help_text='Select a member of the project to become owner.',
-            queryset=User.objects.all(),
-            to_field_name='sodar_uuid',
-            widget=UserAutocompleteWidget(
-                url='projectroles:autocomplete_user', forward=['project']
-            ),
-        )
         self.fields['project'] = forms.Field(
             widget=forms.HiddenInput(), initial=self.project.sodar_uuid
         )
 
-    def clean_owners_new_role(self):
+    def clean_ex_owner_role(self):
         try:
-            role = int(self.cleaned_data['owners_new_role'])
+            role = int(self.cleaned_data['ex_owner_role'])
+
         except ValueError:
             raise forms.ValidationError(
                 'Selection couldn\'t be converted to an integer'
@@ -535,6 +623,7 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
 
         try:
             role = Role.objects.get(name=role[1])
+
         except Role.DoesNotExist:
             raise forms.ValidationError('Selected role does not exist')
 
@@ -557,19 +646,23 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
                         'The limit ({}) of delegates for this project has '
                         'already been reached.'.format(DELEGATE_LIMIT)
                     )
+
         return role
 
     def clean_new_owner(self):
         user = self.cleaned_data['new_owner']
+
         if user == self.current_owner:
             raise forms.ValidationError(
                 'The new owner shouldn\'t be the current owner'
             )
         ra = RoleAssignment.objects.get_assignment(user, self.project)
+
         if ra.project != self.project:
             raise forms.ValidationError(
                 'The new owner should be from this project'
             )
+
         return user
 
 

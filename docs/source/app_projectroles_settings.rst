@@ -183,6 +183,9 @@ Projectroles Settings
 * ``PROJECTROLES_INVITE_EXPIRY_DAYS``: Days until project email invites expire
   (int)
 * ``PROJECTROLES_SEND_EMAIL``: Enable/disable email sending (bool)
+* ``PROJECTROLES_EMAIL_SENDER_REPLY``: Whether replies are expected to the
+  sender address (bool). If set ``False`` and nothing is set in the ``reply-to``
+  header, a "do not reply" note is added to the email body.
 * ``PROJECTROLES_ENABLE_SEARCH``: Whether you want to enable SODAR search on
   your site (boolean)
 * ``PROJECTROLES_DEFAULT_ADMIN``: User name of the default superuser account
@@ -198,6 +201,7 @@ Example:
     PROJECTROLES_TARGET_CREATE = env.bool('PROJECTROLES_TARGET_CREATE', True)
     PROJECTROLES_INVITE_EXPIRY_DAYS = env.int('PROJECTROLES_INVITE_EXPIRY_DAYS', 14)
     PROJECTROLES_SEND_EMAIL = env.bool('PROJECTROLES_SEND_EMAIL', False)
+    PROJECTROLES_EMAIL_SENDER_REPLY = env.bool('PROJECTROLES_EMAIL_SENDER_REPLY', False)
     PROJECTROLES_ENABLE_SEARCH = True
     PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 
@@ -284,17 +288,19 @@ information see :ref:`dev_backend_app`.
     ENABLED_BACKEND_PLUGINS = env.list('ENABLED_BACKEND_PLUGINS', None, [])
 
 
-SODAR API Settings (Optional)
-=============================
+API View Settings (Optional)
+============================
 
-There are also settings for providing and extending the general SODAR API,
-which is currently in development.
+If you want to build an API to your site using SODAR Core functionality, it is
+recommended to base your API views on ``projectroles.views.SODARAPIBaseView``.
+Using this base class also allows you to define your API media type, version
+number and allowed versions via Django settings.
 
-The API uses accept header versioning. The ``SODAR_API_MEDIA_TYPE`` setting is
-by default set to the SODAR Core API media type, but should preferably be
-changed to your organization and API identification if API views are modified or
-introduced. The ``SODAR_API_DEFAULT_HOST`` setting should post to the externally
-visible host of your server and be configured in your environment settings.
+The recommended API setup uses accept header versioning. The
+``SODAR_API_MEDIA_TYPE`` setting should be changed to your organization and API
+identification if API views are introduced. The ``SODAR_API_DEFAULT_HOST``
+setting should post to the externally visible host of your server and be
+configured in your environment settings.
 
 These settings are **optional**. Default values will be used if they are unset.
 
@@ -304,7 +310,7 @@ Example:
 
     SODAR_API_DEFAULT_VERSION = '0.1'
     SODAR_API_ACCEPTED_VERSIONS = [SODAR_API_DEFAULT_VERSION]
-    SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'  # Change this
+    SODAR_API_MEDIA_TYPE = 'application/your.application+json'  # Change this
     SODAR_API_DEFAULT_HOST = SODAR_API_DEFAULT_HOST = env.url('SODAR_API_DEFAULT_HOST', 'http://0.0.0.0:8000')
 
 

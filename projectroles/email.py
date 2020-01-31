@@ -3,7 +3,7 @@ import logging
 
 from django.conf import settings
 from django.contrib import auth, messages
-from django.core.mail import send_mail as _send_mail
+from django.core.mail import EmailMessage
 from django.urls import reverse
 from django.utils.timezone import localtime
 
@@ -37,6 +37,10 @@ This email has been automatically sent to you by {site_title}.
 MESSAGE_HEADER_NO_RECIPIENT = r'''
 This email has been automatically sent to you by {site_title}.
 '''.lstrip()
+
+NO_REPLY_NOTE = r'''
+Please do not reply to this email.
+'''
 
 MESSAGE_FOOTER = r'''
 
@@ -158,6 +162,9 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
         project_label=get_display_name(project.type),
     )
 
+    if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+        body += NO_REPLY_NOTE
+
     return body
 
 
@@ -270,27 +277,32 @@ def get_role_change_body(
             project_label=get_display_name(project.type),
         )
 
+    if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+        body += NO_REPLY_NOTE
+
     body += get_email_footer()
     return body
 
 
-def send_mail(subject, message, recipient_list, request):
+def send_mail(subject, message, recipient_list, request, reply_to=None):
     """
     Wrapper for send_mail() with logging and error messaging
     :param subject: Message subject (string)
     :param message: Message body (string)
     :param recipient_list: Recipients of email (list)
     :param request: Request object
+    :param reply_to: List of emails for the "reply-to" header (optional)
     :return: Amount of sent email (int)
     """
     try:
-        ret = _send_mail(
+        e = EmailMessage(
             subject=subject,
-            message=message,
+            body=message,
             from_email=EMAIL_SENDER,
-            recipient_list=recipient_list,
-            fail_silently=False,
+            to=recipient_list,
+            reply_to=reply_to if isinstance(reply_to, list) else [],
         )
+        ret = e.send(fail_silently=False)
         logger.debug(
             '{} email{} sent to {}'.format(
                 ret, 's' if ret != 1 else '', ', '.join(recipient_list)
@@ -336,7 +348,8 @@ def send_role_change_mail(change_type, project, user, role, request):
         project_url=project_url,
     )
 
-    return send_mail(subject, message, [user.email], request)
+    reply_to = [request.user.email] if request.user.email else None
+    return send_mail(subject, message, [user.email], request, reply_to)
 
 
 def send_invite_mail(invite, request):
@@ -362,7 +375,8 @@ def send_invite_mail(invite, request):
 
     subject = get_invite_subject(invite.project)
 
-    return send_mail(subject, message, [invite.email], request)
+    reply_to = [invite.issuer.email] if invite.issuer.email else None
+    return send_mail(subject, message, [invite.email], request, reply_to)
 
 
 def send_accept_note(invite, request):
@@ -394,6 +408,10 @@ def send_accept_note(invite, request):
         site_title=SITE_TITLE,
         project_label=get_display_name(invite.project.type),
     )
+
+    if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+        message += NO_REPLY_NOTE
+
     message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
@@ -427,18 +445,25 @@ def send_expiry_note(invite, request):
         site_title=SITE_TITLE,
         project_label=get_display_name(invite.project.type),
     )
+
+    if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+        message += NO_REPLY_NOTE
+
     message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
 
 
-def send_generic_mail(subject_body, message_body, recipient_list, request):
+def send_generic_mail(
+    subject_body, message_body, recipient_list, request, reply_to=None
+):
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
     :param subject_body: Subject body without prefix (string)
     :param message_body: Message body before header or footer (string)
     :param recipient_list: Recipients (list of User objects or email strings)
+    :param reply_to: List of emails for the "reply-to" header (optional)
     :param request: HTTP request
     :return: Amount of mail sent (int)
     """
@@ -458,8 +483,12 @@ def send_generic_mail(subject_body, message_body, recipient_list, request):
             recipient=recp_name, site_title=SITE_TITLE
         )
         message += message_body
+
+        if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
+            message += NO_REPLY_NOTE
+
         message += get_email_footer()
 
-        ret += send_mail(subject, message, [recp_email], request)
+        ret += send_mail(subject, message, [recp_email], request, reply_to)
 
     return ret

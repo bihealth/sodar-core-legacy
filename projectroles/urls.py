@@ -133,11 +133,6 @@ urlpatterns = [
         name='autocomplete_user',
     ),
     url(
-        r'^autocomplete/user/exclude$',
-        view=views.UserAutocompleteExcludeMembersAPIView.as_view(),
-        name='autocomplete_user_exclude',
-    ),
-    url(
         r'^autocomplete/user/redirect$',
         view=views.UserAutocompleteRedirectAPIView.as_view(create_field='user'),
         name='autocomplete_user_redirect',

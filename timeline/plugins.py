@@ -78,6 +78,6 @@ class BackendPlugin(BackendPluginPoint):
     #: Description string
     description = 'Timeline backend for modifying events'
 
-    def get_api(self):
+    def get_api(self, **kwargs):
         """Return API entry point object."""
         return TimelineAPI()

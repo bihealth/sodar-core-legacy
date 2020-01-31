@@ -37,7 +37,8 @@ class TaskflowAPI:
 
     def __init__(self):
         self.taskflow_url = '{}:{}'.format(
-            settings.TASKFLOW_BACKEND_HOST, settings.TASKFLOW_BACKEND_PORT
+            getattr(settings, 'TASKFLOW_BACKEND_HOST', ''),
+            getattr(settings, 'TASKFLOW_BACKEND_PORT', ''),
         )
 
     def submit(

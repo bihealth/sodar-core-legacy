@@ -87,7 +87,7 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Implement this in your app plugin (must be an integer)
     plugin_ordering = 50
 
-    #: Optional project list column definition
+    #: Optional custom project list column definition
     #:
     #: Example ::
     #:
@@ -97,6 +97,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'width': 100,  # Desired width of column in pixels
     #:             'description': 'Description',  # Optional description string
     #:             'active': True,  # Boolean for whether the column is active
+    #:             'ordering': 50,  # Integer for ordering the columns
     #:             'align': 'left'  # Alignment of content
     #:         }
     #:     }
@@ -311,11 +312,12 @@ class SiteAppPluginPoint(PluginPoint):
 # Plugin API -------------------------------------------------------------------
 
 
-def get_active_plugins(plugin_type='project_app'):
+def get_active_plugins(plugin_type='project_app', custom_order=False):
     """
     Return active plugins of a specific type.
 
     :param plugin_type: "project_app", "site_app" or "backend" (string)
+    :param custom_order: Order by plugin_ordering for project apps (boolean)
     :return: List or None
     :raise: ValueError if plugin_type is not recognized
     """
@@ -341,7 +343,9 @@ def get_active_plugins(plugin_type='project_app'):
                     )
                 )
             ],
-            key=lambda x: x.name,
+            key=lambda x: x.plugin_ordering
+            if custom_order and plugin_type == 'project_app'
+            else x.name,
         )
 
     return None
@@ -395,23 +399,24 @@ def get_app_plugin(plugin_name):
             pass  # TODO refactor
 
 
-def get_backend_api(plugin_name, force=False):
+def get_backend_api(plugin_name, force=False, **kwargs):
     """
     Return backend API object.
+    NOTE: May raise an exception from plugin.get_api().
 
     :param plugin_name: Plugin name (string)
     :param force: Return plugin regardless of status in ENABLED_BACKEND_PLUGINS
+    :param kwargs: Optional kwargs for API
     :return: Plugin object or None if not found
     """
     if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
         try:
             plugin = BackendPluginPoint.get_plugin(plugin_name)
-            return plugin.get_api() if plugin.is_active() else None
 
-        except Exception:
-            pass
+        except BackendPluginPoint.DoesNotExist:
+            return None
 
-    return None
+        return plugin.get_api(**kwargs) if plugin.is_active() else None
 
 
 # Plugins within projectroles --------------------------------------------------

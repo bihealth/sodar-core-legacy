@@ -41,6 +41,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
 
         # Init users
         self.user_owner = self.make_user('owner')
+        self.user_owner.email = 'owner_user@example.com'
+        self.user_owner.save()
 
         # Init projects
         self.category = self._make_project(
@@ -70,6 +72,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
     def test_role_update_mail(self):
         """Test role updating mail sending"""
@@ -85,6 +88,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
     def test_role_delete_mail(self):
         """Test role deletion mail sending"""
@@ -100,6 +104,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
     def test_generic_mail_user(self):
         """Test send_generic_mail() with a User recipient"""
@@ -111,9 +116,11 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 message_body=MESSAGE_BODY,
                 recipient_list=[self.user_owner],
                 request=request,
+                reply_to=[self.user_owner.email],
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
     def test_generic_mail_str(self):
         """Test send_generic_mail() with an email string recipient"""
@@ -125,9 +132,11 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
                 message_body=MESSAGE_BODY,
                 recipient_list=[self.user_owner.email],
                 request=request,
+                reply_to=[self.user_owner.email],
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
 
     def test_generic_mail_multiple(self):
         """Test send_generic_mail() with multiple recipients"""

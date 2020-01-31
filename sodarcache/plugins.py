@@ -24,6 +24,6 @@ class BackendPlugin(BackendPluginPoint):
         'external databases'
     )
 
-    def get_api(self):
+    def get_api(self, **kwargs):
         """Return API entry point object."""
         return SodarCacheAPI()

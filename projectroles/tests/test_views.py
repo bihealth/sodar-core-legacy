@@ -15,8 +15,8 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
-from .. import views
-from ..models import (
+from projectroles import views
+from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
@@ -27,10 +27,14 @@ from ..models import (
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
-from ..plugins import change_plugin_status, get_backend_api, get_active_plugins
-from ..remote_projects import RemoteProjectAPI
-from ..utils import build_secret, get_display_name
-from .test_models import (
+from projectroles.plugins import (
+    change_plugin_status,
+    get_backend_api,
+    get_active_plugins,
+)
+from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.utils import build_secret, get_display_name
+from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
@@ -71,10 +75,8 @@ REMOTE_SITE_NEW_URL = 'https://new.url'
 REMOTE_SITE_NEW_DESC = 'New description'
 REMOTE_SITE_NEW_SECRET = build_secret()
 
-SODAR_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-SODAR_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
-SODAR_API_VERSION = '0.1'
-SODAR_API_VERSION_INVALID = '9.9'
+CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
+CORE_API_VERSION_INVALID = '9.9.9'
 
 EXAMPLE_APP_NAME = 'example_project_app'
 
@@ -82,7 +84,26 @@ EXAMPLE_APP_NAME = 'example_project_app'
 app_settings = AppSettingAPI()
 
 
-class KnoxAuthMixin:
+class SODARAPIViewMixin:
+    """Helper mixin for SODAR and SODAR Core API views with accept headers"""
+
+    @classmethod
+    def get_accept_header(
+        cls,
+        media_type=views.CORE_API_MEDIA_TYPE,
+        version=views.CORE_API_DEFAULT_VERSION,
+    ):
+        """
+        Return version accept header based on the media type and version string.
+
+        :param media_type: String (default = SODAR Core default media type)
+        :param version: String (default = SODAR Core default version)
+        :return: String
+        """
+        return '{}; version={}'.format(media_type, version)
+
+
+class KnoxAuthMixin(SODARAPIViewMixin):
     """Helper mixin for API views with Knox token authorization"""
 
     # Copied from Knox tests
@@ -98,28 +119,17 @@ class KnoxAuthMixin:
     @classmethod
     def get_token_header(cls, token):
         """
-        Return auth header based on token
+        Return auth header based on token.
+
         :param token: Token string
         :return: Dict
         """
         return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
 
-    @classmethod
-    def get_accept_header(cls, version=settings.SODAR_API_DEFAULT_VERSION):
-        """
-        Return version accept header based on version string
-        :param version: String
-        :return: Dict
-        """
-        return {
-            'HTTP_ACCEPT': '{}; version={}'.format(
-                settings.SODAR_API_MEDIA_TYPE, version
-            )
-        }
-
     def knox_login(self, user, password):
         """
-        Login with Knox
+        Login with Knox.
+
         :param user: User object
         :param password: Password (string)
         :return: Token returned by Knox on successful login
@@ -134,17 +144,25 @@ class KnoxAuthMixin:
         self.assertEqual(response.status_code, 200)
         return response.data['token']
 
-    def knox_get(self, url, token, version=settings.SODAR_API_DEFAULT_VERSION):
+    def knox_get(
+        self,
+        url,
+        token,
+        media_type=views.CORE_API_MEDIA_TYPE,
+        version=views.CORE_API_DEFAULT_VERSION,
+    ):
         """
-        Perform a HTTP GET request with Knox token auth
+        Perform a HTTP GET request with Knox token auth.
+
         :param url: URL for getting
-        :param token: String
-        :param version: String
+        :param token: Token string
+        :param media_type: String (default = SODAR Core default media type)
+        :param version: String (default = SODAR Core default version)
         :return: Response object
         """
         return self.client.get(
             url,
-            **self.get_accept_header(version),
+            **{'HTTP_ACCEPT': self.get_accept_header(media_type, version)},
             **self.get_token_header(token)
         )
 
@@ -1115,7 +1133,7 @@ class TestRoleAssignmentCreateView(
             )
 
     def test_redirect_to_invite(self):
-        """Test RedirectWidget redirects to the ProjectInvite creation view"""
+        """Test SODARUserRedirectWidget redirects to the ProjectInvite creation view"""
         # Issue POST request
         values = {
             'project': self.project.sodar_uuid,
@@ -1143,7 +1161,7 @@ class TestRoleAssignmentCreateView(
             )
 
     def test_create_option(self):
-        """Test if new options are being displayedby the RedirectWidget"""
+        """Test if new options are being displayedby the SODARUserRedirectWidget"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,
@@ -1166,7 +1184,7 @@ class TestRoleAssignmentCreateView(
         self.assertIn(new_option, data['results'])
 
     def test_dont_create_option(self):
-        """Test if new options are not being displayed by the RedirectWidget if
+        """Test if new options are not being displayed by the SODARUserRedirectWidget if
         they are nor valid email addresses """
         values = {
             'project': self.project.sodar_uuid,
@@ -1385,7 +1403,7 @@ class TestRoleAssignmentTransferOwnershipView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
-                    'owners_new_role': self.role_guest.pk,
+                    'ex_owner_role': self.role_guest.pk,
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )
@@ -2714,6 +2732,7 @@ class TestRemoteProjectGetAPIView(
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    SODARAPIViewMixin,
     TestViewsBase,
 ):
     """Tests for remote project getting API view"""
@@ -2791,9 +2810,7 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION
-            ),
+            HTTP_ACCEPT=self.get_accept_header(),
         )
 
         self.assertEqual(response.status_code, 200)
@@ -2807,8 +2824,8 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE, SODAR_API_VERSION_INVALID
+            HTTP_ACCEPT=self.get_accept_header(
+                version=CORE_API_VERSION_INVALID
             ),
         )
 
@@ -2823,8 +2840,8 @@ class TestRemoteProjectGetAPIView(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             ),
-            HTTP_ACCEPT='{};version={}'.format(
-                SODAR_API_MEDIA_TYPE_INVALID, SODAR_API_VERSION
+            HTTP_ACCEPT=self.get_accept_header(
+                media_type=CORE_API_MEDIA_TYPE_INVALID
             ),
         )
 

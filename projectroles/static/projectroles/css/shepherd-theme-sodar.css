@@ -23,8 +23,10 @@
     background: #FFFFE0;
     color: #444;
     padding: 1em;
-    // font-size: 1.1em;
-    line-height: 1.5em; }
+    /* font-size: 1.1em; */
+    line-height: 1.5em;
+    box-shadow: 2px 2px 7px #585858 !important;
+  }
     .shepherd-element.shepherd-theme-default .shepherd-content:before {
       content: "";
       display: block;

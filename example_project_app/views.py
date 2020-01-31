@@ -28,7 +28,9 @@ class ExampleView(
         context = super().get_context_data(*args, **kwargs)
 
         # Get API and data from backend into context
-        example_api = get_backend_api('example_backend_app')
+        example_api = get_backend_api(
+            'example_backend_app', **{'hello': 'world'}
+        )
         print('example_api={}'.format(example_api))
         context['backend_data'] = example_api.hello() if example_api else ''
 
