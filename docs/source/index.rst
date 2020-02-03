@@ -1,4 +1,4 @@
-.. _manual-main:
+.. _manual_main:
 
 Welcome to the SODAR Core documentation!
 ========================================
@@ -13,12 +13,12 @@ How to read this manual?
 
 There is two ways:
 
-front to back
+Front to Back
   If you have the time and patience, reading the whole manual will teach
   you everything.
 
-jump around (recommended)
-  Start with :ref:`for-the-impatient`, skim over the summary of each app, and
+Jump Around (recommended)
+  Start with :ref:`for_the_impatient`, skim over the summary of each app, and
   explore what interests you most.
 
 What's inside SODAR Core?
@@ -43,7 +43,7 @@ Overview & Getting Started
   This part aims at getting you an birds-eye view of SODAR Core and its usage.
 
 SODAR Core Apps
-  This part documents each (so-called) Django app that ships with SODAR. As
+  This part documents each Django app that ships with SODAR. As
   a reminder, in Django development, *apps* are re-useable modules with code
   for supporting a certain use case.
 
@@ -72,7 +72,7 @@ HTML / Javascript / CSS / Bootstrap 4
 
   We're using the Bootstrap 4 CSS framework and you can learn about it in many
   places including `the official documentation
-  <https://getbootstrap.com/docs/4.4/getting-started/introduction/>`_
+  <https://getbootstrap.com/docs/4.3/getting-started/introduction/>`_
 
 .. note::
 
@@ -83,7 +83,7 @@ HTML / Javascript / CSS / Bootstrap 4
 
 .. toctree::
     :caption: Overview & Getting started
-    :name: overview-getting-started
+    :name: overview_getting_started
     :hidden:
     :titlesonly:
 
@@ -94,7 +94,7 @@ HTML / Javascript / CSS / Bootstrap 4
 .. toctree::
     :maxdepth: 2
     :caption: SODAR Core Apps
-    :name: sodar-core-apps
+    :name: sodar_core_apps
     :hidden:
     :titlesonly:
 
@@ -111,7 +111,7 @@ HTML / Javascript / CSS / Bootstrap 4
 .. toctree::
     :maxdepth: 2
     :caption: Project Info
-    :name: project-info
+    :name: project_info
     :hidden:
     :titlesonly:
 

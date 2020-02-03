@@ -1,4 +1,4 @@
-.. _for-the-impatient:
+.. _for_the_impatient:
 
 For the Impatient
 ^^^^^^^^^^^^^^^^^
@@ -10,15 +10,15 @@ Prerequisites
 =============
 
 Linux / Mac
-  We use bash syntax on a Unix system and assume that you can adjust this to your system when needed.
+    We use bash syntax on a Unix system and assume that you can adjust this to your system when needed.
 
 PostgreSQL
-  Please install version 9.6 or above.
-  We assume that you have access to the ``postgres`` user or some other administrative user.
+    Please install version 9.6 or above.
+    We assume that you have access to the ``postgres`` user or some other administrative user.
 
 Development Essentials
-  We assume that you have ``git``, Python 3.6+, and other essential tools installed.
-  If you are using a mainstream Unix-like distribution (Mac qualifies) then you should be good to go.
+    We assume that you have ``git``, Python 3.6, and other essential tools installed.
+    If you are using a mainstream Unix-like distribution (Mac qualifies) then you should be good to go.
 
 Isolate Python Environment
 ==========================
@@ -213,7 +213,7 @@ Going on From Here
 - Continue reading :ref:`getting_started` for a more comprehensive documentation and walk-through of SODAR Core and its apps.
 - Have a look at the following web apps developed by us that are using SODAR Core:
 
-  `VarFish <https://github.com/bihealth/varfish-server>`
+  `VarFish <https://github.com/bihealth/varfish-server>`_
     VarFish - Collaborative and Comprehensive Variant Analysis for Diagnosis and Research (`doi <https://doi.org/10.1101/2020.01.27.921965>`__).
 
   `DigestiFlow <https://github.com/bihealth/digestiflow-server>`_
