@@ -20,8 +20,18 @@ SODAR Core
 .. image:: https://zenodo.org/badge/165220058.svg
     :target: https://zenodo.org/badge/latestdoi/165220058
 
-SODAR (System for Omics Data Access and Retrieval) is a specialized system for
-managing data in omics research projects.
+SODAR Core is a framework for Django web application development. It was
+conceived to facilitate the creation of scientific data management and
+analysis web applications (but can be useful in other contexts as well).
+
+
+Quickstart
+==========
+
+SODAR Core can only be used from within Django projects.  The easiest way to
+start out is following the `For the Impatient
+<https://sodar-core.readthedocs.io/en/latest/for_the_impatient.html>`__
+section in our documentation.
 
 
 Introduction
