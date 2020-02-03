@@ -115,6 +115,8 @@ HTML / Javascript / CSS / Bootstrap 4
     :hidden:
     :titlesonly:
 
+    contributing
+    code_of_conduct
     glossary
     development
     major_changes
