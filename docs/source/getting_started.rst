@@ -57,10 +57,10 @@ your Django site are listed below. For a complete requirement list, see the
 - Ubuntu (16.04 Xenial recommended and supported) / CentOS 7
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
-- Python 3.6 (**NOTE:** Python 3.5 no longer supported)
+- Python >=3.6 (**NOTE:** Python 3.5 no longer supported)
 - Django 1.11 (**NOTE:** 2.x not currently supported)
-- PostgreSQL 9.6+ and psycopg2-binary
-- Bootstrap 4
+- PostgreSQL >=9.6 and psycopg2-binary
+- Bootstrap 4.x
 - JQuery 3.3.x
 - Shepherd and Tether
 - Clipboard.js

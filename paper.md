@@ -37,7 +37,10 @@ Further, the heterogeneity of projects makes "one size fits all" data analysis s
 
 The authors are actively developing applications for the FAIR (findable, accessible, interoperable, and reuseable, cf. @Wilkinson:2016 data management of omics data and their analysis.
 In order to prevent duplication of work, we have extracted the commonly useful components into *SODAR Core*, a Python framework on top of Django.
-It is used in our actively developed applications Digestiflow [@Holtgrewe:2019], VarFish [@Holtgrewe:2019a], and SODAR [@Nieminen:2020] and also proved useful in internal web app prototypes.
+It is used in our actively developed applications and also proved useful in internal web app prototypes.
+
+Examples for using SODAR Core in the development of scientific data management web apps is Digestiflow [@Holtgrewe:2019] and the Filesfolders module shipping with SODAR Core.
+An example for using SODAR Core in the development of scientific data analysis web apps is VarFish [@Holtgrewe:2020]. 
 
 # Features
 

@@ -1,27 +1,32 @@
-.. SODAR Core documentation master file, created by
-   sphinx-quickstart on Thu Sep  6 14:50:08 2018.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-.. _manual-main:
+.. _manual_main:
 
 Welcome to the SODAR Core documentation!
 ========================================
 
-This documentation provides instructions for SODAR Core usage, integration and
-development. SODAR Core is framework for project access control and project
-application management, also including multiple optional applications for
-aiding project work. SODAR Core is built on the
-`Django <https://www.djangoproject.com/>`_ web framework.
+SODAR Core is a framework for `Django <https://www.djangoproject.com/>`_ web
+application development. It was conceived to facilitate the creation of
+**scientific data management** and analysis web applications (but can be
+useful in other contexts as well).
 
-**SODAR** (System for Omics Data Access and Retrieval) is a specialized system
-for managing data in omics research projects, which was the origin of the
-components in this package.
+How to read this manual?
+------------------------
 
-The **SODAR Core** package contains the core functionality for the SODAR system
-along with reusable and non-domain-specific web apps. The package and its apps
-can be used in any Django-based web site which wants to make use of one or more
-of the following features:
+There is two ways:
+
+Front to Back
+  If you have the time and patience, reading the whole manual will teach
+  you everything.
+
+Jump Around (recommended)
+  Start with :ref:`for_the_impatient`, skim over the summary of each app, and
+  explore what interests you most.
+
+What's inside SODAR Core?
+-------------------------
+
+The full list of apps are shown in the table of contents (on the left if you
+are reading the HTML version of this documentation) and here are some
+highlights:
 
 - Project-based user access control
 - Dynamic app content management
@@ -31,42 +36,93 @@ of the following features:
 - Caching and aggregation of data from external services
 - Tracking site information and statistics
 
-Basics of Django site setup and instructions for third party packages used are
-considered out of scope for this documentation. Basic knowledge of the Django
-framework is assumed. For this, please refer to the
-`official Django documentation <https://docs.djangoproject.com/en/1.11/>`_
-and/or docs of related third party packages.
+What's inside this documentation?
+---------------------------------
 
-**NOTE:** To view this document in the rendered form during development, run
-``make html`` in the ``docs`` directory of the repository. You can find the
-rendered HTML in ``docs/build``. You will have to install system and Python
-dependencies, including ones in ``requirements/local.txt`` for this to work. See
-:ref:`dev_sodar_core`.
+Overview & Getting Started
+  This part aims at getting you an birds-eye view of SODAR Core and its usage.
+
+SODAR Core Apps
+  This part documents each Django app that ships with SODAR. As
+  a reminder, in Django development, *apps* are re-useable modules with code
+  for supporting a certain use case.
+
+Project Info
+  This part of the documentation provides meta information about the project
+  and the full changelog.
+
+What's not inside this documentation?
+-------------------------------------
+
+You should know the following before this documentation is useful to you:
+
+Python Programming
+  There's tons of documentation on the internet but the `official Python
+  documentation <https://docs.python.org/3/>`_ is a good starting point as
+  any.
+
+Django Development
+  For learning about Django, head over to the `excellent documentation of the
+  Django Project <https://docs.djangoproject.com/en/1.11/>`_.
+
+HTML / Javascript / CSS / Bootstrap 4
+  Together with Django, SODAR Core provides a framework to plug in your own
+  HTML and related front-end code. We assume that you have web development
+  experience and in particular know your way around Bootstrap 4.
+
+  We're using the Bootstrap 4 CSS framework and you can learn about it in many
+  places including `the official documentation
+  <https://getbootstrap.com/docs/4.3/getting-started/introduction/>`_
+
+.. note::
+
+   You can find the official version of this documentation at
+   `readthedocs.io <https://sodar-core.readthedocs.io/en/latest/>`_.
+   If you view these files on GitHub, beware that their renderer does not
+   render the ReStructuredText files correctly and content may be missing.
 
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :caption: Overview & Getting started
+    :name: overview_getting_started
+    :hidden:
+    :titlesonly:
 
-   Overview <overview>
-   glossary
-   getting_started
-   app_projectroles
-   app_adminalerts
-   app_bgjobs
-   app_filesfolders
-   app_userprofile
-   app_siteinfo
-   app_sodarcache
-   app_taskflow
-   app_timeline
-   development
-   major_changes
-   Full Changelog <changelog>
+    Overview <overview>
+    getting_started
+    for_the_impatient
 
+.. toctree::
+    :maxdepth: 2
+    :caption: SODAR Core Apps
+    :name: sodar_core_apps
+    :hidden:
+    :titlesonly:
+
+    app_projectroles
+    app_adminalerts
+    app_bgjobs
+    app_filesfolders
+    app_userprofile
+    app_siteinfo
+    app_sodarcache
+    app_taskflow
+    app_timeline
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Project Info
+    :name: project_info
+    :hidden:
+    :titlesonly:
+
+    glossary
+    development
+    major_changes
+    Full Changelog <changelog>
 
 Indices and tables
 ==================
 
-* :ref:`genindex`
 * :ref:`modindex`
+* :ref:`genindex`
 * :ref:`search`

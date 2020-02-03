@@ -7,6 +7,9 @@ SODAR Core Overview and Example Use Case
 This document presents an overview of the SODAR Core package along with an
 example use case.
 
+SODAR Core is a relatively complex system and we have created a :ref:`glossary`
+to help you with keeping track of the terminology.
+
 
 SODAR Core Overview
 ===================
