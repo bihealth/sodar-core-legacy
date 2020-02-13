@@ -107,6 +107,7 @@ HTML / Javascript / CSS / Bootstrap 4
     app_sodarcache
     app_taskflow
     app_timeline
+    app_tokens
 
 .. toctree::
     :maxdepth: 2

@@ -48,6 +48,7 @@ application which wants to make use of the following features:
 - Managing server-side background jobs
 - Caching and aggregation of data from external services
 - Tracking site information and statistics
+- API token management
 
 This repository provides the following installable Django apps:
 
@@ -64,6 +65,7 @@ This repository provides the following installable Django apps:
 - **taskflowbackend**: Backend app providing an API for the optional
   ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
+- **tokens**: Token management for API access.
 - **userprofile**: Site app for viewing user profiles.
 
 Also included are resources and examples for developing SODAR compatible apps.

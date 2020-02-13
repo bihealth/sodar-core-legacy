@@ -41,6 +41,8 @@ urlpatterns = [
     url(r'^alerts/', include('adminalerts.urls')),
     # Site Info URLs
     url(r'^siteinfo/', include('siteinfo.urls')),
+    # API Tokens URLs
+    url(r'^tokens/', include('tokens.urls')),
     # Background Jobs URLs
     url(r'^bgjobs/', include('bgjobs.urls')),
     # Data Cache app

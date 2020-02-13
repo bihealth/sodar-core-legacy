@@ -1,0 +1,40 @@
+{% extends 'projectroles/base.html' %}
+
+{% block title %}
+  API Token created for {{ project.title }}
+{% endblock title %}
+
+{% block projectroles %}
+  <div class="container-fluid sodar-subtitle-container">
+    <h2>API Token Created</h2>
+  </div>
+
+  <div class="container-fluid sodar-page-container">
+    <div class="alert alert-success">
+      The token has been created successfully. Note that you can only see it once.
+    </div>
+
+    <div class="input-group mb-3">
+      <input type="text"
+             class="form-control" value="{{ token }}" />
+      <span class="input-group-append">
+        <button class="btn btn-secondary sodar-copy-btn"
+                data-clipboard-text="{{ token }}" type="button"
+                title="Copy to Clipboard"
+                data-toggle="tooltip" data-placement="top">
+          <i class="fa fa-clipboard"></i> Copy to Clipboard
+        </button>
+      </span>
+    </div>
+
+    <div class="text-right mb-3">
+      <div class="btn-group" role="group">
+        <a role="button" class="btn btn-primary"
+           href="{% url 'tokens:list' %}">
+          <i class="fa fa-arrow-circle-left"></i> Back to List
+        </a>
+      </div>
+    </div>
+  </div>
+
+{% endblock projectroles %}

@@ -10,6 +10,20 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.0 (WIP)
+************
+
+Release Highlights
+==================
+
+- Import the ``tokens`` API token management app from VarFish
+
+Breaking Changes
+================
+
+**TODO**
+
+
 v0.7.2 (2020-01-31)
 *******************
 

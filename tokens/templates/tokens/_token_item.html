@@ -1,0 +1,7 @@
+<tr>
+  <td class="text-right text-muted">{{ forloop.counter }}</td>
+  <td class="text-nowrap">{{ item.created|date:'Y-m-d H:i' }}</td>
+  <td class="text-nowrap">{{ token.expires|default:'Never' }}</td>
+  <td class="text-nowrap"><code>{{ item.token_key }}</code></td>
+  <td>{% include "tokens/_token_item_buttons.html" %}</td>
+</tr>

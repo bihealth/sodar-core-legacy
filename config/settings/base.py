@@ -80,6 +80,8 @@ LOCAL_APPS = [
     'adminalerts.apps.AdminalertsConfig',
     # Site Info site app
     'siteinfo.apps.SiteinfoConfig',
+    # API Tokens site app
+    'tokens.apps.TokensConfig',
     # SODAR Taskflow backend app
     'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app

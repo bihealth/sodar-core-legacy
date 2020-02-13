@@ -1,0 +1,36 @@
+{% extends 'projectroles/base.html' %}
+
+{% block title %}
+  Confirm Deletion of API Token {{ object.token_key }}
+{% endblock title %}
+
+{% block projectroles %}
+
+<div class="container-fluid sodar-subtitle-container">
+  <h2>
+    Confirm Deletion of API Token &quot;{{ object.token_key }}&quot;
+  </h2>
+</div>
+
+<div class="container-fluid sodar-page-container">
+
+  <div class="alert alert-danger">
+    Are sure you want to delete the token "{{ object.token_key }}"?
+    This will remove access to all clients using this API token!
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="btn-group pull-right">
+      <a role="button" class="btn btn-secondary"
+          href="{% url 'tokens:list' %}">
+        <i class="fa fa-arrow-circle-left" aria-hidden="true"></i> Cancel
+      </a>
+      <button type="submit" class="btn btn-danger">
+        <i class="fa fa-times" aria-hidden="true"></i> Delete
+      </button>
+    </div>
+  </form>
+</div>
+
+{% endblock projectroles %}

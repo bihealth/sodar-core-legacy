@@ -15,6 +15,8 @@ Added
 
 - **General**
     - "For the Impatient" section in docs
+- **Tokens**
+    - Add app from varfish-web (#452)
 
 
 v0.7.2 (2020-01-31)
