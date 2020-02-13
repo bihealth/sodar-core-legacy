@@ -4,14 +4,14 @@
 Tokens App
 ^^^^^^^^^^
 
-The ``tokens`` site app enables system administrators to issue and manage
-access tokens for REST API views used on your SODAR Core based Django site.
+The ``tokens`` site app enables users to issue and manage access tokens for REST
+API views used on your SODAR Core based Django site.
 
 
 Basics
 ======
 
-Superusers can use this app to create and delete access tokens. These can be
+Users can use this app to create and delete access tokens. These can be
 set to expire or work until deleted.
 
 
@@ -70,10 +70,8 @@ You should see the following output:
 Usage
 =====
 
-When logged in as a superuser, you can find the "API Tokens" link in your user
+When logged in to SODAR, you can find the "API Tokens" link in your user
 dropdown menu in the top right corner of the site.
-
-This application is not available for users with a non-superuser status.
 
 Select "Create Token" from the "Token Operations" dropdown to create a new
 token. You will only see the token once, so make sure to copy it to clipboard at
