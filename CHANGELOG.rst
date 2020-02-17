@@ -18,6 +18,12 @@ Added
 - **Tokens**
     - Add app from varfish-web (#452)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Swapping owner and delegate roles not allowed if at delegate limit (#477)
+
 
 v0.7.2 (2020-01-31)
 ===================
