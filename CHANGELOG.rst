@@ -21,6 +21,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to 1.11.28
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)
 
