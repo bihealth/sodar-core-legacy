@@ -679,11 +679,12 @@ class RemoteProjectAPI:
                 project_uuid=uuid, site__mode=SITE_MODE_PEER
             ).delete()
 
-        logger.debug(
-            'Removed peer project(s) for the following sites: {}'.format(
-                ', '.join(removed_sites)
+        if len(removed_sites) > 0:
+            logger.debug(
+                'Removed peer project(s) for the following sites: {}'.format(
+                    ', '.join(removed_sites)
+                )
             )
-        )
 
     # API functions ------------------------------------------------------------
 

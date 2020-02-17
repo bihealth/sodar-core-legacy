@@ -18,6 +18,12 @@ Added
 - **Tokens**
     - Add app from varfish-web (#452)
 
+Changed
+-------
+
+- **Projectroles**
+    - Suppress peer site removal logging if nothing was removed (#478)
+
 Fixed
 -----
 
