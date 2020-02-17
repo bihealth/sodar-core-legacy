@@ -23,6 +23,7 @@ Fixed
 
 - **Projectroles**
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
+    - Remote sync for owner role failing with specific user order in data (#439)
 
 
 v0.7.2 (2020-01-31)
