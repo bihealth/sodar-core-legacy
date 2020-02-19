@@ -15,7 +15,7 @@ Added
 
 - **General**
     - "For the Impatient" section in docs
-- **Samplesheets**
+- **Projectroles**
     - Import new REST API view base classes from SODAR v0.7.1-WIP (#461)
 - **Tokens**
     - Add app from varfish-web (#452)
