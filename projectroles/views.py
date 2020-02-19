@@ -1,24 +1,17 @@
+"""UI views for the samplesheets app"""
+
 import json
 import re
 import requests
 import urllib.request
 
-from dal import autocomplete
-
 from django.apps import apps
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.urlresolvers import resolve
-from django.core.validators import EmailValidator
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.db.models import Q
-from django.http import (
-    HttpResponseRedirect,
-    HttpResponseForbidden,
-    JsonResponse,
-)
+from django.http import HttpResponseRedirect, HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -33,21 +26,8 @@ from django.views.generic import (
 from django.views.generic.edit import ModelFormMixin, FormView
 from django.views.generic.detail import ContextMixin
 
-from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import (
-    AllowAny,
-    BasePermission,
-    DjangoModelPermissions,
-)
-from rest_framework.renderers import JSONRenderer
-from rest_framework.response import Response
-from rest_framework.versioning import AcceptHeaderVersioning
-from rest_framework.views import APIView
-
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from projectroles import __version__ as core_version
 from projectroles.app_settings import AppSettingAPI
 from projectroles.email import (
     send_role_change_mail,
@@ -80,7 +60,7 @@ from projectroles.models import (
     SODARUser,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.project_tags import get_tag_state, set_tag_state, remove_tag
+from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 from timeline.models import ProjectEvent
@@ -110,27 +90,11 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants
 APP_NAME = 'projectroles'
 SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
-ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
+ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'ajax_star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 
-# API constants for external SODAR Core sites
-SODAR_API_MEDIA_TYPE = getattr(
-    settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
-)
-SODAR_API_DEFAULT_VERSION = getattr(
-    settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
-)
-SODAR_API_ALLOWED_VERSIONS = getattr(
-    settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
-)
-
 # API constants for internal SODAR Core apps
-CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(
-    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
-)[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.1', '0.7.2']
 
 
 # Access Django user model
@@ -2185,6 +2149,11 @@ class RemoteProjectsSyncView(
 
     def get(self, request, *args, **kwargs):
         """Override get() for a confirmation view"""
+        from projectroles.views_api import (
+            CORE_API_MEDIA_TYPE,
+            CORE_API_DEFAULT_VERSION,
+        )
+
         remote_api = RemoteProjectAPI()
         redirect_url = reverse('projectroles:remote_sites')
 
@@ -2261,497 +2230,3 @@ class RemoteProjectsSyncView(
             ),
         )
         return super().render_to_response(context)
-
-
-# Base SODAR API Views ---------------------------------------------------------
-
-
-class SODARAPIVersioning(AcceptHeaderVersioning):
-    default_version = SODAR_API_DEFAULT_VERSION
-    allowed_versions = SODAR_API_ALLOWED_VERSIONS
-    version_param = 'version'
-
-
-class SODARAPIRenderer(JSONRenderer):
-    media_type = SODAR_API_MEDIA_TYPE
-
-
-class SODARAPIObjectInProjectPermissions(
-    ProjectAccessMixin, DjangoModelPermissions
-):
-    """
-    DRF ``Permissions`` implementation for objects in SODAR
-    ``projectroles.models.Project``s.
-
-    Permissions can only be checked on models having a ``project`` attribute or
-    a get_project() function. Access control is based on the convention action
-    names (``${app_label}.${action}_${model_name}``) but based on roles on the
-    containing ``Project``.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """Override to patch ``self.perms_map`` to set required permissions on
-        ``GET`` et al."""
-        super().__init__(*args, **kwargs)
-        patch = {
-            'GET': ['%(app_label)s.view_%(model_name)s'],
-            'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
-            'HEAD': ['%(app_label)s.view_%(model_name)s'],
-        }
-        self.perms_map = {**self.perms_map, **patch}
-
-    def has_permission(self, request, view):
-        """Override to base permission check on project only"""
-        if getattr(view, '_ignore_model_permissions', False):
-            return True
-
-        if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only
-        ):
-            return False
-
-        queryset = self._queryset(view)
-        perms = self.get_required_permissions(request.method, queryset.model)
-
-        return request.user.has_perms(perms, self.get_project())
-
-
-class SODARAPIBaseView(APIView):
-    """Base SODAR API View to be used by external SODAR Core based sites"""
-
-    versioning_class = SODARAPIVersioning
-    renderer_classes = [SODARAPIRenderer]
-
-
-class SODARCoreAPIBaseView(APIView):
-    """Base SODAR API View to be used by internal SODAR Core apps"""
-
-    class CoreAPIVersioning(AcceptHeaderVersioning):
-        default_version = CORE_API_DEFAULT_VERSION
-        allowed_versions = CORE_API_ALLOWED_VERSIONS
-        version_param = 'version'
-
-    class CoreAPIRenderer(JSONRenderer):
-        media_type = CORE_API_MEDIA_TYPE
-
-    versioning_class = CoreAPIVersioning
-    renderer_classes = [CoreAPIRenderer]
-
-
-# SODAR API Views --------------------------------------------------------------
-
-
-class RemoteProjectGetAPIView(SODARCoreAPIBaseView):
-    """API view for retrieving remote projects from a source site"""
-
-    # TODO: Create custom permission class for general API
-    permission_classes = (AllowAny,)  # We check the secret in get()/post()
-
-    def get(self, request, *args, **kwargs):
-        remote_api = RemoteProjectAPI()
-        secret = kwargs['secret']
-
-        try:
-            target_site = RemoteSite.objects.get(
-                mode=SITE_MODE_TARGET, secret=secret
-            )
-
-        except RemoteSite.DoesNotExist:
-            return Response('Remote site not found, unauthorized', status=401)
-
-        sync_data = remote_api.get_target_data(target_site)
-
-        # Update access date for target site remote projects
-        target_site.projects.all().update(date_access=timezone.now())
-
-        return Response(sync_data, status=200)
-
-
-# Ajax API Views ---------------------------------------------------------------
-
-
-class ProjectStarringAPIView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
-    """View to handle starring and unstarring a project via AJAX"""
-
-    permission_required = 'projectroles.view_project'
-
-    def post(self, request, *args, **kwargs):
-        project = self.get_permission_object()
-        user = request.user
-        timeline = get_backend_api('timeline_backend')
-
-        tag_state = get_tag_state(project, user)
-        action_str = '{}star'.format('un' if tag_state else '')
-
-        set_tag_state(project, user, PROJECT_TAG_STARRED)
-
-        # Add event in Timeline
-        if timeline:
-            timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=user,
-                event_name='project_{}'.format(action_str),
-                description='{} project'.format(action_str),
-                classified=True,
-                status_type='INFO',
-            )
-
-        return Response(0 if tag_state else 1, status=200)
-
-
-class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
-    """ User autocompletion widget view"""
-
-    def get_queryset(self):
-        """
-        Get a User queryset for SODARUserAutocompleteWidget.
-
-        Optional values in self.forwarded:
-        - "project": project UUID
-        - "scope": string for expected scope (all/project/project_exclude)
-        - "exclude": list of explicit User.sodar_uuid to exclude from queryset
-
-        """
-        if not self.request.user.is_authenticated():
-            return User.objects.none()
-
-        current_user = self.request.user
-        project_uuid = self.forwarded.get('project', None)
-        exclude_uuids = self.forwarded.get('exclude', None)
-        scope = self.forwarded.get('scope', 'all')
-
-        # If project UUID is given, only show users that are in the project
-        if scope in ['project', 'project_exclude'] and project_uuid not in [
-            '',
-            None,
-        ]:
-            project = Project.objects.filter(sodar_uuid=project_uuid).first()
-
-            # If user has no permission for the project, return None
-            if not self.request.user.has_perm(
-                'projectroles.view_project', project
-            ):
-                return User.objects.none()
-
-            project_users = (
-                RoleAssignment.objects.filter(project=project)
-                .values_list('user')
-                .distinct()
-            )
-
-            if scope == 'project':  # Limit choices to current project users
-                qs = User.objects.filter(pk__in=project_users)
-
-            elif scope == 'project_exclude':  # Exclude project users
-                qs = User.objects.exclude(pk__in=project_users)
-
-        # Else include all users
-        else:
-            qs = User.objects.all()
-
-        # Exclude users in the system group unless local users are allowed
-        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
-
-        if not allow_local and not current_user.is_superuser:
-            qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
-
-        # Exclude UUIDs explicitly given
-        if exclude_uuids:
-            qs = qs.exclude(sodar_uuid__in=exclude_uuids)
-
-        # Finally, filter by query
-        if self.q:
-            qs = qs.filter(
-                Q(username__icontains=self.q)
-                | Q(first_name__icontains=self.q)
-                | Q(last_name__icontains=self.q)
-                | Q(name__icontains=self.q)
-                | Q(email__icontains=self.q)
-            )
-
-        return qs.order_by('name')
-
-    def get_result_label(self, user):
-        """Display options with name, username and email address"""
-        display = '{}{}{}'.format(
-            user.name if user.name else '',
-            ' ({})'.format(user.username) if user.name else user.username,
-            ' <{}>'.format(user.email) if user.email else '',
-        )
-        return display
-
-    def get_result_value(self, user):
-        """Use sodar_uuid in the User model instead of pk"""
-        return str(user.sodar_uuid)
-
-
-class UserAutocompleteRedirectAPIView(UserAutocompleteAPIView):
-    """ SODARUserRedirectWidget view (user autocompletion) redirecting to
-    the 'create invite' page"""
-
-    def get_create_option(self, context, q):
-        """Form the correct email invite option to append to results."""
-        create_option = []
-        validator = EmailValidator()
-        display_create_option = False
-
-        if self.create_field and q:
-            page_obj = context.get('page_obj', None)
-
-            if page_obj is None or page_obj.number == 1:
-
-                # Don't offer to send an invite if the entered text is not an
-                # email address
-                try:
-                    validator(q)
-                    display_create_option = True
-
-                except ValidationError:
-                    display_create_option = False
-
-                # Don't offer to send an invite if a
-                # case-insensitive) identical one already exists
-                existing_options = (
-                    self.get_result_label(result).lower()
-                    for result in context['object_list']
-                )
-
-                if q.lower() in existing_options:
-                    display_create_option = False
-
-        if display_create_option and self.has_add_permission(self.request):
-            create_option = [
-                {
-                    'id': q,
-                    'text': ('Send an invite to "%(new_value)s"')
-                    % {'new_value': q},
-                    'create_id': True,
-                }
-            ]
-        return create_option
-
-    def post(self, request):
-        """Send the invite form url to which the forwarded values will be
-        send"""
-        project_uuid = self.request.POST.get('project', None)
-        project = Project.objects.filter(sodar_uuid=project_uuid).first()
-        # create JSON with address to redirect to
-        redirect_url = reverse(
-            'projectroles:invite_create', kwargs={'project': project.sodar_uuid}
-        )
-        return JsonResponse({'success': True, 'redirect_url': redirect_url})
-
-
-# Taskflow API Views -----------------------------------------------------------
-
-
-# TODO: Integrate Taskflow API functionality with general SODAR API (see #47)
-
-
-class TaskflowAPIAuthentication(BaseAuthentication):
-    """Taskflow API authentication handling"""
-
-    def authenticate(self, request):
-        taskflow_secret = None
-
-        if request.method == 'POST' and 'sodar_secret' in request.POST:
-            taskflow_secret = request.POST['sodar_secret']
-
-        elif request.method == 'GET':
-            taskflow_secret = request.GET.get('sodar_secret', None)
-
-        if (
-            not hasattr(settings, 'TASKFLOW_SODAR_SECRET')
-            or taskflow_secret != settings.TASKFLOW_SODAR_SECRET
-        ):
-            raise PermissionDenied('Not authorized')
-
-
-class TaskflowAPIPermission(BasePermission):
-    """Taskflow API permission handling"""
-
-    def has_permission(self, request, view):
-        # Only allow accessing Taskflow API views if Taskflow is used
-        return True if 'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
-
-
-class BaseTaskflowAPIView(APIView):
-    """Base Taskflow API view"""
-
-    authentication_classes = [TaskflowAPIAuthentication]
-    permission_classes = [TaskflowAPIPermission]
-
-
-class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting a project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'],
-                submit_status=SUBMIT_STATUS_OK,
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        ret_data = {
-            'project_uuid': str(project.sodar_uuid),
-            'title': project.title,
-            'description': project.description,
-        }
-
-        return Response(ret_data, status=200)
-
-
-class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for updating a project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            project.title = request.data['title']
-            project.description = (
-                request.data['description']
-                if 'description' in request.data
-                else ''
-            )
-            project.readme.raw = request.data['readme']
-            project.save()
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        return Response('ok', status=200)
-
-
-class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting a role assignment for user and project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-
-        except (Project.DoesNotExist, User.DoesNotExist) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            ret_data = {
-                'assignment_uuid': str(role_as.sodar_uuid),
-                'project_uuid': str(role_as.project.sodar_uuid),
-                'user_uuid': str(role_as.user.sodar_uuid),
-                'role_pk': role_as.role.pk,
-                'role_name': role_as.role.name,
-            }
-            return Response(ret_data, status=200)
-
-        except RoleAssignment.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-
-class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for creating or updating a role assignment"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-            role = Role.objects.get(pk=request.data['role_pk'])
-
-        except (
-            Project.DoesNotExist,
-            User.DoesNotExist,
-            Role.DoesNotExist,
-        ) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            role_as.role = role
-            role_as.save()
-
-        except RoleAssignment.DoesNotExist:
-            role_as = RoleAssignment(project=project, user=user, role=role)
-            role_as.save()
-
-        return Response('ok', status=200)
-
-
-class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for deleting a role assignment"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-
-        except (Project.DoesNotExist, User.DoesNotExist) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            role_as.delete()
-
-        except RoleAssignment.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        return Response('ok', status=200)
-
-
-class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting project settings"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        project_settings = app_settings.get_all_settings(project)
-
-        for k, v in project_settings.items():
-            if isinstance(v, dict):
-                project_settings[k] = json.dumps(v)
-
-        ret_data = {
-            'project_uuid': project.sodar_uuid,
-            'settings': project_settings,
-        }
-
-        return Response(ret_data, status=200)
-
-
-class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for updating project settings"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        for k, v in json.loads(request.data['settings']).items():
-            app_settings.set_app_setting(
-                k.split('.')[1], k.split('.')[2], v, project
-            )
-
-        return Response('ok', status=200)

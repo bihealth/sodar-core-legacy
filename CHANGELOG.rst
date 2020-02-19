@@ -15,6 +15,8 @@ Added
 
 - **General**
     - "For the Impatient" section in docs
+- **Samplesheets**
+    - Import new REST API view base classes from SODAR v0.7.1-WIP (#461)
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -23,8 +25,10 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to 1.11.28
+    - Reorganize view classes and URL patterns (#480)
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)
+    - Refactor ``SODARCoreAPIBaseView`` into ``SODARCoreAPIBaseMixin`` (#461)
 
 Fixed
 -----
@@ -32,6 +36,12 @@ Fixed
 - **Projectroles**
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``SODARAPIBaseView`` base class, replaced by API view mixins (#461)
 
 
 v0.7.2 (2020-01-31)

@@ -725,10 +725,11 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_render200_ok(url, good_users)
         self.assert_redirect(url, bad_users)
 
-    def test_starring_api(self):
-        """Test access to project starring API view"""
+    def test_starring_ajax(self):
+        """Test access to project starring Ajax view"""
         url = reverse(
-            'projectroles:star', kwargs={'project': self.project.sodar_uuid}
+            'projectroles:ajax_star',
+            kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
             self.superuser,
@@ -741,10 +742,11 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
 
-    def test_starring_api_category(self):
-        """Test access to project starring API view under category"""
+    def test_starring_ajax_category(self):
+        """Test access to project starring Ajax view under category"""
         url = reverse(
-            'projectroles:star', kwargs={'project': self.category.sodar_uuid}
+            'projectroles:ajax_star',
+            kwargs={'project': self.category.sodar_uuid},
         )
         good_users = [
             self.superuser,
@@ -758,8 +760,8 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, bad_users, 403, method='POST')
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_user_autocomplete_api(self):
-        """Test UserAutocompleteAPIView access"""
+    def test_user_autocomplete_ajax(self):
+        """Test UserAutocompleteAjaxView access"""
         good_users = [
             self.superuser,
             self.as_owner.user,
@@ -774,7 +776,7 @@ class TestProjectViews(TestProjectPermissionBase):
         for user in good_users:
             with self.login(user):
                 response = self.client.get(
-                    reverse('projectroles:autocomplete_user'), values
+                    reverse('projectroles:ajax_autocomplete_user'), values
                 )
                 self.assertEqual(response.status_code, 200)
                 data = json.loads(response.content)
@@ -782,7 +784,7 @@ class TestProjectViews(TestProjectPermissionBase):
 
         for user in bad_users:
             response = self.client.get(
-                reverse('projectroles:autocomplete_user'), values
+                reverse('projectroles:ajax_autocomplete_user'), values
             )
             self.assertEqual(response.status_code, 200)
             data = json.loads(response.content)

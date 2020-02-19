@@ -94,7 +94,7 @@ def get_user_widget(
     :param widget_class: Widget class override (optional)
     :return: SODARUserAutocompleteWidget or an overridden widget class
     """
-    url = url or 'projectroles:autocomplete_user'
+    url = url or 'projectroles:ajax_autocomplete_user'
     wg = {'url': url, 'forward': [dal_forward.Const(scope, 'scope')]}
 
     if project:
@@ -483,7 +483,7 @@ class RoleAssignmentForm(forms.ModelForm):
             scope='project_exclude',
             project=self.project,
             forward=['role'],
-            url=reverse('projectroles:autocomplete_user_redirect'),
+            url=reverse('projectroles:ajax_autocomplete_user_redirect'),
             widget_class=SODARUserRedirectWidget,
         )
 

@@ -17,11 +17,51 @@ Release Highlights
 ==================
 
 - Import the ``tokens`` API token management app from VarFish
+- Reorganization of ``projectroles`` views
 
 Breaking Changes
 ================
 
-**TODO**
+Projectroles Views Reorganized
+------------------------------
+
+Views, base views related mixins for the ``projectroles`` app have been
+reorganized in this version. Please review your projectroles imports.
+
+The revised structure is as follows:
+
+- UI views and related mixins **remain** in ``projectroles.views``
+- Ajax API view classes were **moved** into ``projectroles.views_ajax``
+- REST API view classes **moved** into ``projectroles.views_api``
+- Taskflow API view classes **moved** into ``projectroles.views_taskflow``
+
+The same applies to classes and mxins in view tests. See
+``projectroles.tests.test_views*`` to update imports in your tests.
+
+Renamed Projectroles View Classes
+---------------------------------
+
+In addition to reorganizing classes into different views, certain view classes
+intended to be usable by other apps have been renamed. They are listed below.
+
+- ``UserAutocompleteAPIView`` -> ``UserAutocompleteAjaxView``
+- ``UserAutocompleteRedirectAPIView`` -> ``UserAutocompleteRedirectAjaxView``
+
+API View Class Changes
+----------------------
+
+Changes have been made to the base API view classes and mixins.
+
+``SODARAPIBaseView`` has been removed. Please use one of the mixins found in
+``projectroles.views_api`` instead.
+
+
+Remote Project Sync Minimum API Version Updated
+-----------------------------------------------
+
+Sites using django-sodar-core v0.7.x will no longer be compatible for remote
+project sync. The minimum supported version is ``0.8.0``.
+
 
 
 v0.7.2 (2020-01-31)

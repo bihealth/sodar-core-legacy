@@ -13,8 +13,8 @@ from projectroles.views import (
     LoggedInPermissionMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,
-    BaseTaskflowAPIView,
 )
+from projectroles.views_taskflow import BaseTaskflowAPIView
 
 from .models import ProjectEvent
 

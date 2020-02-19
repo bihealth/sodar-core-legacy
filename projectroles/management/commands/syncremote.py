@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
-from projectroles.views import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
