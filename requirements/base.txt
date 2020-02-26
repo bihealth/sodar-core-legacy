@@ -49,6 +49,9 @@ rules>=2.1, <2.2
 # REST framework
 djangorestframework>=3.10.3, <3.11
 
+# Keyed list addon for DRF
+drf-keyed-list==0.0.2
+
 # Token authentication
 django-rest-knox>=4.1.0, <4.2
 

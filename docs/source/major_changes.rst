@@ -52,9 +52,21 @@ API View Class Changes
 
 Changes have been made to the base API view classes and mixins.
 
-``SODARAPIBaseView`` has been removed. Please use one of the mixins found in
-``projectroles.views_api`` instead.
+- ``SODARAPIBaseView`` has been removed. Please use one of the mixins found in
+  ``projectroles.views_api`` instead.
 
+Base Test Class and Mixin Changes
+---------------------------------
+
+Base test classes and helper mixins in ``projectroles`` have been changed as
+detailed below.
+
+- ``SODARAPIViewMixin`` has been moved into ``projectroles.test_views_api`` and
+  renamed into ``SODARAPIViewTestMixin``.
+- ``KnoxAuthMixin`` has been combined into ``SODARAPIViewTestMixin``.
+- ``get_accept_header()`` returns the header as dict instead of a string.
+- ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
+  ``TestPermissionBase``. Please use ``assert_response()`` instead.
 
 Remote Project Sync Minimum API Version Updated
 -----------------------------------------------

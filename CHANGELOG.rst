@@ -16,7 +16,12 @@ Added
 - **General**
     - "For the Impatient" section in docs
 - **Projectroles**
-    - Import new REST API view base classes from SODAR v0.7.1-WIP (#461)
+    - Import new REST API view base classes from SODAR (#48, #461)
+    - Import base serializers from SODAR (#462)
+    - API views for project and user retrieval (#48, #450)
+    - ``projectroles.tests.test_views_api.TestAPIViewsBase`` for API view testing (#48)
+    - ``SODARAPIPermissionTestMixin`` for API view permission tests
+    - New helper methods in ``SODARAPIViewTestMixin``
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -29,6 +34,10 @@ Changed
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)
     - Refactor ``SODARCoreAPIBaseView`` into ``SODARCoreAPIBaseMixin`` (#461)
+    - Allow providing single user to ``assert_response()`` in permission tests (#474)
+    - Move ``SODARAPIViewTestMixin`` into ``test_views_api`` and rename (#471)
+    - Move ``KnoxAuthMixin`` functionality into ``SODARAPIViewTestMixin``
+    - ``get_accept_header()`` in API tests returns header as dict
 
 Fixed
 -----
@@ -42,6 +51,9 @@ Removed
 
 - **Projectroles**
     - ``SODARAPIBaseView`` base class, replaced by API view mixins (#461)
+    - ``KnoxAuthMixin`` from view tests
+    - ``get_selectable_users()`` from ``forms``
+    - Redundant render/redirect helpers from ``TestPermissionBase``: use ``assert_response()`` instead (#484)
 
 
 v0.7.2 (2020-01-31)

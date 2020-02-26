@@ -6,8 +6,8 @@ from django.urls import reverse
 from projectroles.tests.test_permissions import TestPermissionBase
 
 
-class TestAdminAlertPermissions(TestPermissionBase):
-    """Tests for AdminAlert views"""
+class TestUserProfilePermissions(TestPermissionBase):
+    """Tests for userprofile view permissions"""
 
     def setUp(self):
         # Create users
@@ -15,9 +15,7 @@ class TestAdminAlertPermissions(TestPermissionBase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         self.regular_user = self.make_user('regular_user')
-
         # No user
         self.anonymous = None
 
@@ -26,13 +24,13 @@ class TestAdminAlertPermissions(TestPermissionBase):
         url = reverse('userprofile:detail')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_settings_update(self):
         """Test permissions for the user settings updating view"""
         url = reverse('userprofile:settings_update')
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)

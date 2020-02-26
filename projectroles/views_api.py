@@ -3,13 +3,16 @@
 import re
 
 from django.conf import settings
+from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import (
     BasePermission,
     DjangoModelPermissions,
     AllowAny,
+    IsAuthenticated,
 )
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -17,9 +20,20 @@ from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
 from projectroles import __version__ as core_version
-from projectroles.models import RemoteSite
+from projectroles.models import (
+    Project,
+    RoleAssignment,
+    RemoteSite,
+    SODAR_CONSTANTS,
+)
 from projectroles.remote_projects import RemoteProjectAPI
+from projectroles.serializers import ProjectSerializer, SODARUserSerializer
 from projectroles.views import ProjectAccessMixin, SITE_MODE_TARGET
+
+
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 
 
 # API constants for external SODAR Core sites
@@ -37,6 +51,10 @@ CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
 CORE_API_ALLOWED_VERSIONS = ['0.8.0']
+
+
+# Access Django user model
+User = auth.get_user_model()
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -129,8 +147,8 @@ class SODARAPIObjectInProjectPermissions(
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
-    default_version = SODAR_API_DEFAULT_VERSION
     allowed_versions = SODAR_API_ALLOWED_VERSIONS
+    default_version = SODAR_API_DEFAULT_VERSION
     version_param = 'version'
 
 
@@ -141,6 +159,7 @@ class SODARAPIRenderer(JSONRenderer):
 # Base API Mixins and Views ----------------------------------------------------
 
 
+# TODO: Combine with SODARAPIBaseProjectMixin? Is this needed on its own?
 class SODARAPIBaseMixin:
     """Base SODAR API mixin to be used by external SODAR Core based sites"""
 
@@ -157,7 +176,6 @@ class SODARAPIBaseProjectMixin(SODARAPIBaseMixin):
     permission_classes = [SODARAPIProjectPermission]
 
 
-# TODO: Combine with SODARAPIBaseProjectMixin? Is this needed on its own?
 class SODARAPIGenericViewProjectMixin(
     ProjectAccessMixin, SODARAPIBaseProjectMixin
 ):
@@ -189,24 +207,6 @@ class SODARAPIGenericViewProjectMixin(
         )
 
 
-class SODARCoreAPIBaseMixin:
-    """
-    SODAR Core API view mixin, which overrides versioning and renderer classes
-    with ones intended for use with internal SODAR Core API views.
-    """
-
-    class CoreAPIVersioning(AcceptHeaderVersioning):
-        default_version = CORE_API_DEFAULT_VERSION
-        allowed_versions = CORE_API_ALLOWED_VERSIONS
-        version_param = 'version'
-
-    class CoreAPIRenderer(JSONRenderer):
-        media_type = CORE_API_MEDIA_TYPE
-
-    versioning_class = CoreAPIVersioning
-    renderer_classes = [CoreAPIRenderer]
-
-
 class SheetSubmitBaseAPIView(SODARAPIBaseProjectMixin, APIView):
     """
     Base API view for initiating sample sheet operations via SODAR Taskflow.
@@ -217,13 +217,117 @@ class SheetSubmitBaseAPIView(SODARAPIBaseProjectMixin, APIView):
     http_method_names = ['post']
 
 
+class ProjectQuerysetMixin:
+    """
+    Mixin for overriding the default queryset with one which allows us to lookup
+    a Project object directly.
+    """
+
+    def get_queryset(self):
+        return Project.objects.all()
+
+
+# SODAR Core Base Views and Mixins ---------------------------------------------
+
+
+class SODARCoreAPIVersioning(AcceptHeaderVersioning):
+    allowed_versions = CORE_API_ALLOWED_VERSIONS
+    default_version = CORE_API_DEFAULT_VERSION
+    version_param = 'version'
+
+
+class SODARCoreAPIRenderer(JSONRenderer):
+    media_type = CORE_API_MEDIA_TYPE
+
+
+class SODARCoreAPIBaseMixin:
+    """
+    SODAR Core API view mixin, which overrides versioning and renderer classes
+    with ones intended for use with internal SODAR Core API views.
+    """
+
+    permission_classes = [SODARAPIProjectPermission]
+    renderer_classes = [SODARCoreAPIRenderer]
+    versioning_class = SODARCoreAPIVersioning
+
+
+class SODARCoreGenericViewProjectMixin(SODARAPIGenericViewProjectMixin):
+    """Generic API view mixin for internal SODAR Core API views"""
+
+    renderer_classes = [SODARCoreAPIRenderer]
+    versioning_class = SODARCoreAPIVersioning
+
+
 # API Views --------------------------------------------------------------------
 
 
+class ProjectListAPIView(ListAPIView):
+    """
+    API view for listing projects for which the user has access.
+
+    NOTE: Not using base mixins as there is no project context
+    """
+
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [SODARCoreAPIRenderer]
+    serializer_class = ProjectSerializer
+    versioning_class = SODARCoreAPIVersioning
+
+    def get_queryset(self):
+        """
+        Override get_queryset() to return projects of type PROJECT for which the
+        requesting user has access.
+        """
+        qs = Project.objects.filter(submit_status='OK').order_by('pk')
+
+        if self.request.user.is_superuser:
+            return qs
+
+        return qs.filter(
+            roles__in=RoleAssignment.objects.filter(user=self.request.user)
+        )
+
+
+class ProjectRetrieveAPIView(
+    ProjectQuerysetMixin, SODARCoreGenericViewProjectMixin, RetrieveAPIView
+):
+    """API view for retrieving a project by UUID."""
+
+    lookup_field = 'sodar_uuid'
+    lookup_url_kwarg = 'project'
+    permission_required = 'projectroles.view_project'
+    serializer_class = ProjectSerializer
+
+
+class UserListAPIView(ListAPIView):
+    """
+    API view for listing users in the system.
+
+    NOTE: Not using base mixins as there is no project context
+    """
+
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [SODARCoreAPIRenderer]
+    serializer_class = SODARUserSerializer
+    versioning_class = SODARCoreAPIVersioning
+
+    def get_queryset(self):
+        """
+        Override get_queryset() to return users according to requesting user
+        access.
+        """
+        qs = User.objects.all().order_by('pk')
+
+        if self.request.user.is_superuser:
+            return qs
+
+        return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
+
+
+# TODO: Update this for new API base classes
 class RemoteProjectGetAPIView(SODARCoreAPIBaseMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 
-    # TODO: Create custom permission class for general API
     permission_classes = (AllowAny,)  # We check the secret in get()/post()
 
     def get(self, request, *args, **kwargs):

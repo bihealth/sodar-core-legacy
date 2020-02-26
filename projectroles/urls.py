@@ -144,10 +144,25 @@ urls_ajax = [
 # REST API views
 urls_api = [
     url(
+        regex=r'^api/list$',
+        view=views_api.ProjectListAPIView.as_view(),
+        name='api_project_list',
+    ),
+    url(
+        regex=r'^api/retrieve/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectRetrieveAPIView.as_view(),
+        name='api_project_retrieve',
+    ),
+    url(
+        regex=r'^api/users/list$',
+        view=views_api.UserListAPIView.as_view(),
+        name='api_user_list',
+    ),
+    url(
         regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',
         view=views_api.RemoteProjectGetAPIView.as_view(),
         name='api_remote_get',
-    )
+    ),
 ]
 
 # Taskflow API views

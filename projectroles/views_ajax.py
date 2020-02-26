@@ -12,7 +12,12 @@ from dal import autocomplete
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from projectroles.models import PROJECT_TAG_STARRED, Project, RoleAssignment
+from projectroles.models import (
+    Project,
+    RoleAssignment,
+    PROJECT_TAG_STARRED,
+    SODAR_CONSTANTS,
+)
 from projectroles.plugins import get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.views import (
@@ -110,7 +115,9 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
         if not allow_local and not current_user.is_superuser:
-            qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
+            qs = qs.exclude(
+                groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+            ).exclude(groups__isnull=True)
 
         # Exclude UUIDs explicitly given
         if exclude_uuids:

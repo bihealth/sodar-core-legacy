@@ -1,6 +1,5 @@
 """UI view tests for the projectroles app"""
 
-import base64
 import json
 from urllib.parse import urlencode
 
@@ -13,7 +12,6 @@ from django.utils import timezone
 
 from test_plus.test import TestCase
 
-from projectroles import views_api
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -74,89 +72,6 @@ EXAMPLE_APP_NAME = 'example_project_app'
 
 # App settings API
 app_settings = AppSettingAPI()
-
-
-class SODARAPIViewMixin:
-    """Helper mixin for SODAR and SODAR Core API views with accept headers"""
-
-    @classmethod
-    def get_accept_header(
-        cls,
-        media_type=views_api.CORE_API_MEDIA_TYPE,
-        version=views_api.CORE_API_DEFAULT_VERSION,
-    ):
-        """
-        Return version accept header based on the media type and version string.
-
-        :param media_type: String (default = SODAR Core default media type)
-        :param version: String (default = SODAR Core default version)
-        :return: String
-        """
-        return '{}; version={}'.format(media_type, version)
-
-
-class KnoxAuthMixin(SODARAPIViewMixin):
-    """Helper mixin for API views with Knox token authorization"""
-
-    # Copied from Knox tests
-    @classmethod
-    def _get_basic_auth_header(cls, username, password):
-        return (
-            'Basic %s'
-            % base64.b64encode(
-                ('%s:%s' % (username, password)).encode('ascii')
-            ).decode()
-        )
-
-    @classmethod
-    def get_token_header(cls, token):
-        """
-        Return auth header based on token.
-
-        :param token: Token string
-        :return: Dict
-        """
-        return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
-
-    def knox_login(self, user, password):
-        """
-        Login with Knox.
-
-        :param user: User object
-        :param password: Password (string)
-        :return: Token returned by Knox on successful login
-        """
-        response = self.client.post(
-            reverse('knox_login'),
-            HTTP_AUTHORIZATION=self._get_basic_auth_header(
-                user.username, password
-            ),
-            format='json',
-        )
-        self.assertEqual(response.status_code, 200)
-        return response.data['token']
-
-    def knox_get(
-        self,
-        url,
-        token,
-        media_type=views_api.CORE_API_MEDIA_TYPE,
-        version=views_api.CORE_API_DEFAULT_VERSION,
-    ):
-        """
-        Perform a HTTP GET request with Knox token auth.
-
-        :param url: URL for getting
-        :param token: Token string
-        :param media_type: String (default = SODAR Core default media type)
-        :param version: String (default = SODAR Core default version)
-        :return: Response object
-        """
-        return self.client.get(
-            url,
-            **{'HTTP_ACCEPT': self.get_accept_header(media_type, version)},
-            **self.get_token_header(token)
-        )
 
 
 class TestViewsBase(TestCase):

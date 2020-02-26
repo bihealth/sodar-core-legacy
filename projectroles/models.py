@@ -49,6 +49,7 @@ class ProjectManager(models.Manager):
         Return projects with a partial match in full title or, including titles
         of parent Project objects, or the description of the current object.
         Restrict to project type if project_type is set.
+
         :param search_term: Search term (string)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
@@ -943,11 +944,11 @@ class RemoteProject(models.Model):
 # Abstract User Model ----------------------------------------------------------
 
 
-# TODO: Use/extend this in your projectroles-based project
-
-
 class SODARUser(AbstractUser):
-    """SODAR compatible abstract user model"""
+    """
+    SODAR compatible abstract user model. Use this on your SODAR Core based
+    site.
+    """
 
     # First Name and Last Name do not cover name patterns
     # around the globe.

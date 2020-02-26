@@ -36,8 +36,8 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         url = reverse('adminalerts:create')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_alert_update(self):
         """Test permissions for AdminAlert updating"""
@@ -46,8 +46,8 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_alert_delete(self):
         """Test permissions for AdminAlert deletion"""
@@ -56,16 +56,16 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         )
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_alert_list(self):
         """Test permissions for AdminAlert list"""
         url = reverse('adminalerts:list')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_alert_detail(self):
         """Test permissions for AdminAlert details"""
@@ -74,8 +74,8 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         )
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_alert_activation(self):
         """Test permissions for AdminAlert activation API view"""
@@ -85,4 +85,4 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         self.assert_response(
             url, good_users, HttpResponseBadRequest.status_code, method='POST'
         )
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, bad_users, 302)

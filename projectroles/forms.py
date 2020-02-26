@@ -875,17 +875,3 @@ def get_role_choices(
         (role.pk, role.name)
         for role in Role.objects.exclude(name__in=role_excludes)
     ]
-
-
-# TODO: TBD: Needed by other apps than projectroles? Move e.g. to utils?
-def get_selectable_users(current_user):
-    """
-    Return selectable users according to current user level: only show
-    non-system users for non-superusers
-    :param current_user: User object
-    :return: QuerySet
-    """
-    if not current_user.is_superuser:
-        return User.objects.exclude(groups__name='system')
-
-    return User.objects.all()
