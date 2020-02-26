@@ -31,6 +31,7 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.28
     - Reorganize view classes and URL patterns (#480)
+    - Update ``CONTRIBUTING.rst``
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)
     - Refactor ``SODARCoreAPIBaseView`` into ``SODARCoreAPIBaseMixin`` (#461)
@@ -42,6 +43,9 @@ Changed
 Fixed
 -----
 
+- **General**
+    - Duplicate ``contributing.rst`` redirection file in docs (#481)
+    - ``.tox`` not ignored in ``black.sh``
 - **Projectroles**
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)

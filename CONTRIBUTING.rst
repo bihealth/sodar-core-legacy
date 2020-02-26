@@ -1,8 +1,7 @@
 .. highlight:: shell
 
-============
 Contributing
-============
+^^^^^^^^^^^^
 
 Contributions are welcome, and they are greatly appreciated! Every little bit
 helps, and credit will always be given.
@@ -10,10 +9,10 @@ helps, and credit will always be given.
 You can contribute in many ways:
 
 Types of Contributions
-----------------------
+======================
 
 Report Bugs
-~~~~~~~~~~~
+-----------
 
 Report bugs at https://github.com/bihealth/sodar_core/issues.
 
@@ -24,26 +23,26 @@ If you are reporting a bug, please include:
 * Detailed steps to reproduce the bug.
 
 Fix Bugs
-~~~~~~~~
+--------
 
 Look through the GitHub issues for bugs. Anything tagged with "bug" and "help
 wanted" is open to whoever wants to implement it.
 
 Implement Features
-~~~~~~~~~~~~~~~~~~
+------------------
 
 Look through the GitHub issues for features. Anything tagged with "enhancement"
 and "help wanted" is open to whoever wants to implement it.
 
 Write Documentation
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 SODAR Core could always use more documentation, whether as part of the
 official SODAR Core docs, in docstrings, or even on the web in blog posts,
 articles, and such.
 
 Submit Feedback
-~~~~~~~~~~~~~~~
+---------------
 
 The best way to send feedback is to file an issue at https://github.com/bihealth/sodar_core/issues.
 
@@ -55,11 +54,11 @@ If you are proposing a feature:
   are welcome :)
 
 Get Started!
-------------
+============
 
-Ready to contribute? Here's how to set up `sodar_core` for local development.
+Ready to contribute? Here's how to set up ``sodar_core`` for local development.
 
-1. Fork the `sodar_core` repo on GitHub.
+1. Fork the ``sodar_core`` repo on GitHub.
 2. Clone your fork locally::
 
     $ git clone git@github.com:your_name_here/sodar_core.git
@@ -72,15 +71,21 @@ Ready to contribute? Here's how to set up `sodar_core` for local development.
 
 4. Create a branch for local development::
 
-    $ git checkout -b name-of-your-bugfix-or-feature
+    $ git checkout -b name-of-your-bugfix-or-feature dev
 
-   Now you can make your changes locally.
+   Make sure you base your changes on the ``dev`` branch, which is the current
+   active development branch. The ``master`` branch is intended for merging
+   stable releases only. Now you can make your changes locally.
 
-5. When you're done making changes, check that your changes pass flake8 and the
-   tests, including testing other Python versions with tox::
+5. When you're done making changes, make sure to apply proper formatting using
+   Black and the settings specified in the accompanying ``black.sh`` script.
+   Next, check that your changes pass flake8 and the tests. It is recommended to
+   use the accompanying ``test.sh`` script to ensure the correct Django
+   configuration is used. For testing other Python versions use tox::
 
-    $ flake8 sodar_core tests
-    $ python setup.py test or pytest
+    $ ./black.sh
+    $ flake8 .
+    $ ./test.sh
     $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
@@ -94,24 +99,27 @@ Ready to contribute? Here's how to set up `sodar_core` for local development.
 7. Submit a pull request through the GitHub website.
 
 Pull Request Guidelines
------------------------
+=======================
 
 Before you submit a pull request, check that it meets these guidelines:
 
-1. The pull request should include tests.
-2. If the pull request adds functionality, the docs should be updated. Put
+1. Make sure your pull request is up to date with the ``dev`` branch.
+2. The pull request should include tests.
+3. Black and flake8 should have been executed without errors using settings
+   provided in the repo.
+4. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
-   feature to the list in README.rst.
-3. The pull request should work for Python 3.6, 3.7 and 3.8. Check
+   feature to the list in ``CHANGELOG.rst``.
+5. The pull request should work for Python 3.6, 3.7 and 3.8. Check
    https://travis-ci.org/bihealth/sodar_core/pull_requests
    and make sure that the tests pass for all supported Python versions.
 
 Deploying
----------
+=========
 
 A reminder for the maintainers on how to deploy.
-Make sure all your changes are committed (including an entry in HISTORY.rst).
-Then run::
+Make sure all your changes are committed (including an entry in
+``CHANGELOG.rst``). Then run::
 
 $ git tag vX.Y.Z
 $ git push
