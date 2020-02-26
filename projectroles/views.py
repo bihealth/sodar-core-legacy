@@ -11,7 +11,7 @@ from django.core.urlresolvers import resolve
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.http import HttpResponseRedirect, HttpResponseForbidden
+from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -681,7 +681,7 @@ class ProjectModifyMixin(ModelFormMixin):
                     kwargs={'project': project.sodar_uuid},
                 )
 
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
     def _handle_local_save(self, project, owner, project_settings):
         """Handle local saving of project data if SODAR Taskflow is not
@@ -864,7 +864,7 @@ class ProjectModifyMixin(ModelFormMixin):
             tl_event.set_status('OK')
 
         messages.success(self.request, '{} {}d.'.format(type_str, form_action))
-        return HttpResponseRedirect(
+        return redirect(
             reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
@@ -917,7 +917,7 @@ class ProjectCreateView(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                 ),
             )
-            return HttpResponseRedirect(reverse('home'))
+            return redirect(reverse('home'))
 
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
@@ -929,7 +929,7 @@ class ProjectCreateView(
                         get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                     ),
                 )
-                return HttpResponseRedirect(
+                return redirect(
                     reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
@@ -1224,12 +1224,10 @@ class RoleAssignmentDeleteView(
                     tl_event.set_status('FAILED', str(ex))
 
                 messages.error(self.request, str(ex))
-                return HttpResponseRedirect(
-                    redirect(
-                        reverse(
-                            'projectroles:roles',
-                            kwargs={'project': project.sodar_uuid},
-                        )
+                return redirect(
+                    reverse(
+                        'projectroles:roles',
+                        kwargs={'project': project.sodar_uuid},
                     )
                 )
 
@@ -1250,7 +1248,7 @@ class RoleAssignmentDeleteView(
             self.request, 'Membership of {} removed.'.format(user.username)
         )
 
-        return HttpResponseRedirect(
+        return redirect(
             reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
@@ -1332,7 +1330,7 @@ class RoleAssignmentOwnerTransferView(
             if timeline_event:
                 timeline_event.set_status('OK')
 
-        return HttpResponseRedirect(
+        return redirect(
             reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
@@ -1863,7 +1861,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
                 self.object.mode.capitalize(), self.object.name, form_action
             ),
         )
-        return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+        return redirect(reverse('projectroles:remote_sites'))
 
 
 class RemoteSiteCreateView(
@@ -1888,7 +1886,7 @@ class RemoteSiteCreateView(
             and RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0
         ):
             messages.error(request, 'Source site has already been set')
-            return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+            return redirect(reverse('projectroles:remote_sites'))
 
         return super().get(request, args, kwargs)
 
@@ -2013,7 +2011,7 @@ class RemoteProjectsBatchUpdateView(
                     get_display_name(PROJECT_TYPE_PROJECT)
                 ),
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         access_fields = {
             k: v for k, v in post_data.items() if k.startswith('remote_access')
@@ -2061,7 +2059,7 @@ class RemoteProjectsBatchUpdateView(
                         get_display_name(PROJECT_TYPE_PROJECT)
                     ),
                 )
-                return HttpResponseRedirect(redirect_url)
+                return redirect(redirect_url)
 
             context['modifying_access'] = modifying_access
 
@@ -2122,7 +2120,7 @@ class RemoteProjectsBatchUpdateView(
                 context['site'].name,
             ),
         )
-        return HttpResponseRedirect(redirect_url)
+        return redirect(redirect_url)
 
 
 class RemoteProjectsSyncView(
@@ -2161,7 +2159,7 @@ class RemoteProjectsSyncView(
             messages.error(
                 request, 'Site in SOURCE mode, remote sync not allowed'
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
@@ -2193,7 +2191,7 @@ class RemoteProjectsSyncView(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
                 ),
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         # Sync data
         update_data = remote_api.sync_source_data(site, remote_data, request)
@@ -2217,7 +2215,7 @@ class RemoteProjectsSyncView(
                 request,
                 'No changes in remote site detected, nothing to synchronize',
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         context['update_data'] = update_data
         context['user_count'] = user_count

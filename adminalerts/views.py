@@ -1,11 +1,7 @@
 from django.conf import settings
 from django.contrib import messages
-from django.http import (
-    HttpResponseRedirect,
-    HttpRequest,
-    HttpResponseBadRequest,
-    JsonResponse,
-)
+from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views import View
 from django.views.generic import (
@@ -70,7 +66,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
         form.save()
         form_action = 'update' if self.object else 'create'
         messages.success(self.request, 'Alert {}d.'.format(form_action))
-        return HttpResponseRedirect(reverse('adminalerts:list'))
+        return redirect(reverse('adminalerts:list'))
 
 
 class AdminAlertCreateView(
