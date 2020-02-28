@@ -154,6 +154,16 @@ urls_api = [
         name='api_project_retrieve',
     ),
     url(
+        regex=r'^api/create$',
+        view=views_api.ProjectCreateAPIView.as_view(),
+        name='api_project_create',
+    ),
+    url(
+        regex=r'^api/create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectCreateAPIView.as_view(),
+        name='api_project_create',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',

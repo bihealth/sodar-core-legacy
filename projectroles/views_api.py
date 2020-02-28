@@ -7,7 +7,7 @@ from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
-from rest_framework.generics import ListAPIView, RetrieveAPIView
+from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
 from rest_framework.permissions import (
     BasePermission,
     DjangoModelPermissions,
@@ -197,9 +197,9 @@ class SODARAPIGenericViewProjectMixin(
     lookup_url_kwarg = 'project'  # Replace with relevant model
 
     def get_serializer_context(self, *args, **kwargs):
-        result = super().get_serializer_context(*args, **kwargs)
-        result['project'] = self.get_project(request=result['request'])
-        return result
+        context = super().get_serializer_context(*args, **kwargs)
+        context['project'] = self.get_project(request=context['request'])
+        return context
 
     def get_queryset(self):
         return self.__class__.serializer_class.Meta.model.objects.filter(
@@ -258,6 +258,30 @@ class SODARCoreGenericViewProjectMixin(SODARAPIGenericViewProjectMixin):
     versioning_class = SODARCoreAPIVersioning
 
 
+# Projectroles Specific Base Views and Mixins ----------------------------------
+
+
+class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
+    """Permission class specific to Project creation"""
+
+    def has_permission(self, request, view):
+        """Override has_permission() to check for project creation permission"""
+        if request.user.is_superuser:
+            return True
+
+        parent_uuid = view.kwargs.get('project')
+
+        if not parent_uuid:
+            return False  # Superusers will not be checked for
+
+        parent = Project.objects.filter(sodar_uuid=parent_uuid).first()
+
+        if not parent or parent.type != PROJECT_TYPE_CATEGORY:
+            return False
+
+        return request.user.has_perm('projectroles.create_project', parent)
+
+
 # API Views --------------------------------------------------------------------
 
 
@@ -265,7 +289,7 @@ class ProjectListAPIView(ListAPIView):
     """
     API view for listing projects for which the user has access.
 
-    NOTE: Not using base mixins as there is no project context
+    NOTE: Not using base mixins as there is no project context.
     """
 
     permission_classes = [IsAuthenticated]
@@ -297,6 +321,25 @@ class ProjectRetrieveAPIView(
     lookup_url_kwarg = 'project'
     permission_required = 'projectroles.view_project'
     serializer_class = ProjectSerializer
+
+
+class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
+    """
+    API view for creating a category or a project.
+
+    NOTE: Not using base mixins as there is no project context.
+    """
+
+    permission_classes = [ProjectCreatePermission]
+    renderer_classes = [SODARCoreAPIRenderer]
+    serializer_class = ProjectSerializer
+    versioning_class = SODARCoreAPIVersioning
+
+    def get_serializer_context(self, *args, **kwargs):
+        context = super().get_serializer_context(*args, **kwargs)
+        project = self.get_project(request=context['request'])
+        context['project'] = str(project.sodar_uuid) if project else None
+        return context
 
 
 class UserListAPIView(ListAPIView):

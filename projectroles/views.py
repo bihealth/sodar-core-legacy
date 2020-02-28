@@ -11,6 +11,7 @@ from django.core.urlresolvers import resolve
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
+from django.db import transaction
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
@@ -569,8 +570,8 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
 # Project Editing Views --------------------------------------------------------
 
 
-class ProjectModifyMixin(ModelFormMixin):
-    """Mixin for Project creation/updating"""
+class ProjectModifyMixin:
+    """Mixin for Project creation/updating in UI and API views"""
 
     @staticmethod
     def _get_old_project_data(project):
@@ -580,6 +581,40 @@ class ProjectModifyMixin(ModelFormMixin):
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
         }
+
+    @staticmethod
+    def _get_app_settings(data, instance):
+        """
+        Return a dictionary of project app settings and their values.
+
+        :param data: Cleaned data from a form or serializer
+        :param instance: Existing Project object or None
+        :return: Dict
+        """
+        app_plugins = [p for p in get_active_plugins() if p.app_settings]
+        project_settings = {}
+
+        for plugin in app_plugins:
+            p_settings = app_settings.get_setting_defs(
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
+            )
+
+            for s_key, s_val in p_settings.items():
+                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_data = data.get(s_name)
+
+                if not s_data and not instance:
+                    s_data = app_settings.get_default_setting(
+                        plugin.name, s_key
+                    )
+
+                if s_data and s_val['type'] == 'JSON':
+                    project_settings[s_name] = json.dumps(s_data)
+
+                elif s_data:
+                    project_settings[s_name] = s_data
+
+        return project_settings
 
     @staticmethod
     def _get_project_update_data(old_data, project, owner, project_settings):
@@ -618,10 +653,22 @@ class ProjectModifyMixin(ModelFormMixin):
 
         return extra_data, upd_fields
 
+    @classmethod
     def _submit_with_taskflow(
-        self, project, owner, project_settings, form_action, tl_event
+        cls, project, owner, project_settings, action, request, tl_event=None
     ):
-        """Submit project modification flow via SODAR Taskflow"""
+        """
+        Submit project modification flow via SODAR Taskflow.
+
+        :param project: Project object
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param action: "create" or "update" (string)
+        :param request: Request object for triggering the update
+        :param tl_event: Timeline ProjectEvent object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        """
         taskflow = get_backend_api('taskflow')
 
         if tl_event:
@@ -639,7 +686,7 @@ class ProjectModifyMixin(ModelFormMixin):
             'settings': project_settings,
         }
 
-        if form_action == 'update':
+        if action == 'update':
             old_owner = project.get_owner().user
             flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
             flow_data['old_owner_username'] = old_owner.username
@@ -648,9 +695,9 @@ class ProjectModifyMixin(ModelFormMixin):
         try:
             taskflow.submit(
                 project_uuid=str(project.sodar_uuid),
-                flow_name='project_{}'.format(form_action),
+                flow_name='project_{}'.format(action),
                 flow_data=flow_data,
-                request=self.request,
+                request=request,
             )
 
         except (
@@ -658,32 +705,16 @@ class ProjectModifyMixin(ModelFormMixin):
             taskflow.FlowSubmitException,
         ) as ex:
             # NOTE: No need to update status as project will be deleted
-            if form_action == 'create':
+            if action == 'create':
                 project.delete()
 
             elif tl_event:  # Update
                 tl_event.set_status('FAILED', str(ex))
 
-            messages.error(self.request, str(ex))
+            raise ex
 
-            if form_action == 'create' and project.parent:
-                redirect_url = reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.parent.sodar_uuid},
-                )
-
-            elif form_action == 'create':  # No parent
-                redirect_url = reverse('home')
-
-            else:  # Update
-                redirect_url = reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid},
-                )
-
-            return redirect(redirect_url)
-
-    def _handle_local_save(self, project, owner, project_settings):
+    @classmethod
+    def _handle_local_save(cls, project, owner, project_settings):
         """Handle local saving of project data if SODAR Taskflow is not
         enabled"""
 
@@ -714,80 +745,74 @@ class ProjectModifyMixin(ModelFormMixin):
                 validate=False,
             )  # Already validated in form
 
-    def form_valid(self, form):
-        """Handle project updating if form is valid"""
+    def modify_project(self, data, request, instance=None):
+        """
+        Create or update a Project, either locally or using the SODAR Taskflow.
+        This method should be called either in form_valid() in a Django form
+        view or save() in a DRF serializer.
+
+        :param data: Cleaned data from a form or serializer
+        :param request: Request initiating the action
+        :param instance: Existing Project object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        :return: Created or updated Project object
+        """
         taskflow = get_backend_api('taskflow')
         timeline = get_backend_api('timeline_backend')
-
-        use_taskflow = (
-            True
-            if taskflow
-            and form.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-            else False
-        )
-
         tl_event = None
-        form_action = 'update' if self.object else 'create'
+        action = 'update' if instance else 'create'
         old_data = {}
 
-        app_plugins = [p for p in get_active_plugins() if p.app_settings]
-
-        if self.object:
-            project = self.get_object()
-            old_data = self._get_old_project_data(project)  # Store old data
-            project.title = form.cleaned_data.get('title')
-            project.description = form.cleaned_data.get('description')
-            project.type = form.cleaned_data.get('type')
-            project.readme = form.cleaned_data.get('readme')
+        if instance:
+            project = instance
+            old_data = self._get_old_project_data(instance)  # Store old data
+            project.title = data.get('title')
+            project.description = data.get('description')
+            project.type = data.get('type')
+            project.readme = data.get('readme')
 
         else:
             project = Project(
-                title=form.cleaned_data.get('title'),
-                description=form.cleaned_data.get('description'),
-                type=form.cleaned_data.get('type'),
-                parent=form.cleaned_data.get('parent'),
-                readme=form.cleaned_data.get('readme'),
+                title=data.get('title'),
+                description=data.get('description'),
+                type=data.get('type'),
+                parent=data.get('parent'),
+                readme=data.get('readme'),
             )
 
-        if form_action == 'create':
+        use_taskflow = (
+            True
+            if taskflow and data.get('type') == PROJECT_TYPE_PROJECT
+            else False
+        )
+
+        if action == 'create':
             project.submit_status = (
                 SUBMIT_STATUS_PENDING_TASKFLOW
                 if use_taskflow
                 else SUBMIT_STATUS_PENDING
             )
-            project.save()  # Always save locally if creating (to get uuid)
+            # HACK to avoid db error when running tests with DRF serializer
+            # See: https://stackoverflow.com/a/60331668
+            with transaction.atomic():
+                project.save()  # Always save locally if creating (to get UUID)
 
         else:
             project.submit_status = SUBMIT_STATUS_OK
 
         # Save project with changes if updating without taskflow
-        if form_action == 'update' and not use_taskflow:
+        if action == 'update' and not use_taskflow:
             project.save()
 
-        owner = form.cleaned_data.get('owner')
+        owner = data.get('owner')
         type_str = project.type.capitalize()
 
         # Get settings
-        project_settings = {}
-
-        for plugin in app_plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin
-            )
-
-            for s_key, s_val in p_settings.items():
-                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
-
-                if s_val['type'] == 'JSON':
-                    project_settings[s_name] = json.dumps(
-                        form.cleaned_data.get(s_name)
-                    )
-
-                else:
-                    project_settings[s_name] = form.cleaned_data.get(s_name)
+        project_settings = self._get_app_settings(data, instance)
 
         if timeline:
-            if form_action == 'create':
+            if action == 'create':
                 tl_desc = (
                     'create ' + type_str.lower() + ' with {owner} as owner'
                 )
@@ -823,59 +848,96 @@ class ProjectModifyMixin(ModelFormMixin):
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=self.request.user,
-                event_name='project_{}'.format(form_action),
+                user=request.user,
+                event_name='project_{}'.format(action),
                 description=tl_desc,
                 extra_data=extra_data,
             )
 
-            if form_action == 'create':
+            if action == 'create':
                 tl_event.add_object(owner, 'owner', owner.username)
 
         # Submit with Taskflow
+        # NOTE: may raise an exception which needs to be handled in caller
         if use_taskflow:
-            response = self._submit_with_taskflow(
-                project, owner, project_settings, form_action, tl_event
+            self._submit_with_taskflow(
+                project, owner, project_settings, action, request, tl_event
             )
-
-            if response:
-                return response  # Exception encountered with Taskflow
 
         # Local save without Taskflow
         else:
             self._handle_local_save(project, owner, project_settings)
 
         # Post submit/save
-        if form_action == 'create':
+        if action == 'create' and project.submit_status != SUBMIT_STATUS_OK:
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
-        if SEND_EMAIL and (not self.object or old_data['owner'] != owner):
+        if SEND_EMAIL and (not instance or old_data['owner'] != owner):
             # send mail
             send_role_change_mail(
-                form_action,
+                action,
                 project,
                 owner,
                 RoleAssignment.objects.get_assignment(owner, project).role,
-                self.request,
+                request,
             )
 
         if tl_event:
             tl_event.set_status('OK')
 
-        messages.success(self.request, '{} {}d.'.format(type_str, form_action))
-        return redirect(
-            reverse(
+        return project
+
+
+class ProjectModifyFormMixin(ProjectModifyMixin):
+    """Mixin for Project creation/updating in Django form views"""
+
+    def form_valid(self, form):
+        """Handle project updating if form is valid"""
+        instance = form.instance if form.instance.pk else None
+        action = 'update' if instance else 'create'
+
+        if instance and instance.parent:
+            redirect_url = reverse(
+                'projectroles:detail',
+                kwargs={'project': instance.parent.sodar_uuid},
+            )
+
+        else:
+            redirect_url = reverse('home')
+
+        try:
+            project = self.modify_project(
+                data=form.cleaned_data,
+                request=self.request,
+                instance=form.instance if instance else None,
+            )
+            messages.success(
+                self.request, '{} {}d'.format(project.type.capitalize(), action)
+            )
+            redirect_url = reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
-        )
+
+        except Exception as ex:
+            messages.error(
+                self.request,
+                'Unable to {} {}: {}'.format(
+                    action, form.cleaned_data['type'].lower(), ex
+                ),
+            )
+
+            if settings.DEBUG:
+                raise ex
+
+        return redirect(redirect_url)
 
 
 class ProjectCreateView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectPermissionMixin,
-    ProjectModifyMixin,
+    ProjectModifyFormMixin,
     ProjectContextMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
@@ -943,7 +1005,7 @@ class ProjectUpdateView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
-    ProjectModifyMixin,
+    ProjectModifyFormMixin,
     CurrentUserFormMixin,
     UpdateView,
 ):

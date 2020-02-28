@@ -18,7 +18,7 @@ Added
 - **Projectroles**
     - Import new REST API view base classes from SODAR (#48, #461)
     - Import base serializers from SODAR (#462)
-    - API views for project and user retrieval (#48, #450)
+    - API views for project and user retrieval, project creation (#48, #450)
     - ``projectroles.tests.test_views_api.TestAPIViewsBase`` for API view testing (#48)
     - ``SODARAPIPermissionTestMixin`` for API view permission tests
     - New helper methods in ``SODARAPIViewTestMixin``
@@ -49,6 +49,7 @@ Fixed
 - **Projectroles**
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)
+    - Redundant updating of ``Project.submit_status`` during project creation
 
 Removed
 -------

@@ -4,6 +4,8 @@ import json
 import pytz
 
 from django.conf import settings
+from django.forms.models import model_to_dict
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -12,7 +14,7 @@ from knox.models import AuthToken
 from test_plus.test import APITestCase
 
 from projectroles import views_api
-from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
 from projectroles.plugins import change_plugin_status, get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
@@ -40,6 +42,10 @@ from projectroles.utils import build_secret, set_user_group
 
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
 CORE_API_VERSION_INVALID = '9.9.9'
+
+INVALID_UUID = '11111111-1111-1111-1111-111111111111'
+NEW_CATEGORY_TITLE = 'New Category'
+NEW_PROJECT_TITLE = 'New Project'
 
 
 # Base Classes -----------------------------------------------------------------
@@ -129,17 +135,21 @@ class SODARAPIViewTestMixin:
         self.assertEqual(response.status_code, 200)
         return response.data['token']
 
-    def get_knox(
+    def request_knox(
         self,
         url,
+        method='GET',
+        data=None,
         token=None,
         media_type=views_api.CORE_API_MEDIA_TYPE,
         version=views_api.CORE_API_DEFAULT_VERSION,
     ):
         """
-        Perform a HTTP GET request with Knox token auth.
+        Perform a HTTP request with Knox token auth.
 
-        :param url: URL for getting
+        :param url: URL for the request
+        :param method: Request method (string, default="GET")
+        :param data: Optional data for request (dict)
         :param token: Knox token string (if None, use self.knox_token)
         :param media_type: String (default = SODAR Core default media type)
         :param version: String (default = SODAR Core default version)
@@ -148,11 +158,22 @@ class SODARAPIViewTestMixin:
         if not token:
             token = self.knox_token
 
-        return self.client.get(
-            url,
+        req_kwargs = {
             **self.get_accept_header(media_type, version),
             **self.get_token_header(token),
-        )
+        }
+
+        if data:
+            req_kwargs['data'] = data
+
+        if method == 'GET':
+            return self.client.get(url, **req_kwargs)
+
+        elif method == 'POST':
+            return self.client.post(url, **req_kwargs)
+
+        else:  # TODO: Add and test support for other requests
+            raise ValueError('Method "{}" not supported')
 
 
 class TestAPIViewsBase(
@@ -210,7 +231,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
     def test_get(self):
         """Test ProjectListAPIView get() as project owner"""
         url = reverse('projectroles:api_project_list')
-        response = self.get_knox(url)
+        response = self.request_knox(url)
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -222,7 +243,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
                 'type': self.category.type,
                 'parent': None,
                 'description': self.category.description,
-                'readme': None,
+                'readme': '',
                 'submit_status': self.category.submit_status,
                 'roles': {
                     str(self.cat_owner_as.sodar_uuid): {
@@ -242,7 +263,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
                 'type': self.project.type,
                 'parent': str(self.category.sodar_uuid),
                 'description': self.project.description,
-                'readme': None,
+                'readme': '',
                 'submit_status': self.project.submit_status,
                 'roles': {
                     str(self.owner_as.sodar_uuid): {
@@ -264,7 +285,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
         """Test ProjectListAPIView get() without roles"""
         user_no_roles = self.make_user('user_no_roles')
         url = reverse('projectroles:api_project_list')
-        response = self.get_knox(url, token=self.get_token(user_no_roles))
+        response = self.request_knox(url, token=self.get_token(user_no_roles))
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -278,7 +299,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
             self.project, user_no_roles, self.role_contributor
         )
         url = reverse('projectroles:api_project_list')
-        response = self.get_knox(url, token=self.get_token(user_no_roles))
+        response = self.request_knox(url, token=self.get_token(user_no_roles))
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -295,7 +316,7 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
             'projectroles:api_project_retrieve',
             kwargs={'project': self.project.sodar_uuid},
         )
-        response = self.get_knox(url)
+        response = self.request_knox(url)
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -305,7 +326,7 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
             'type': self.project.type,
             'parent': str(self.category.sodar_uuid),
             'description': self.project.description,
-            'readme': None,
+            'readme': '',
             'submit_status': self.project.submit_status,
             'roles': {
                 str(self.owner_as.sodar_uuid): {
@@ -328,7 +349,7 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
             'projectroles:api_project_retrieve',
             kwargs={'project': self.category.sodar_uuid},
         )
-        response = self.get_knox(url)
+        response = self.request_knox(url)
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -338,7 +359,7 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
             'type': self.category.type,
             'parent': None,
             'description': self.category.description,
-            'readme': None,
+            'readme': '',
             'submit_status': self.category.submit_status,
             'roles': {
                 str(self.cat_owner_as.sodar_uuid): {
@@ -356,6 +377,313 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
+class TestProjectCreateAPIView(TestAPIViewsBase):
+    """Tests for ProjectCreateAPIView"""
+
+    def test_create_category(self):
+        """Test creating a root category"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Project.objects.count(), 3)
+
+        # Assert object content
+        new_category = Project.objects.get(title=NEW_CATEGORY_TITLE)
+        model_dict = model_to_dict(new_category)
+        model_dict['readme'] = model_dict['readme'].raw  # HACK to compare
+        expected = {
+            'id': new_category.pk,
+            'title': new_category.title,
+            'type': new_category.type,
+            'parent': None,
+            'description': new_category.description,
+            'readme': new_category.readme.raw,
+            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'sodar_uuid': new_category.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert role assignment
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=new_category, user=self.user, role=self.role_owner
+            ).count(),
+            1,
+        )
+
+        # Assert API response
+        expected = {
+            'title': NEW_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': None,
+            'description': new_category.description,
+            'readme': new_category.readme.raw,
+            'sodar_uuid': str(new_category.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_category_nested(self):
+        """Test creating a category under an existing category"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'title': NEW_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Project.objects.count(), 3)
+
+        # Assert object content
+        new_category = Project.objects.get(title=NEW_CATEGORY_TITLE)
+        model_dict = model_to_dict(new_category)
+        model_dict['readme'] = model_dict['readme'].raw  # HACK to compare
+        expected = {
+            'id': new_category.pk,
+            'title': new_category.title,
+            'type': new_category.type,
+            'parent': self.category.pk,
+            'description': new_category.description,
+            'readme': new_category.readme.raw,
+            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'sodar_uuid': new_category.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert role assignment
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=new_category, user=self.user, role=self.role_owner
+            ).count(),
+            1,
+        )
+
+        # Assert API response
+        expected = {
+            'title': NEW_CATEGORY_TITLE,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent': str(self.category.sodar_uuid),
+            'description': new_category.description,
+            'readme': new_category.readme.raw,
+            'sodar_uuid': str(new_category.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_project(self):
+        """Test creating a project under an existing category"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Project.objects.count(), 3)
+
+        # Assert object content
+        new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
+        model_dict = model_to_dict(new_project)
+        model_dict['readme'] = model_dict['readme'].raw  # HACK to compare
+        expected = {
+            'id': new_project.pk,
+            'title': new_project.title,
+            'type': new_project.type,
+            'parent': self.category.pk,
+            'description': new_project.description,
+            'readme': new_project.readme.raw,
+            'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'sodar_uuid': new_project.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert role assignment
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=new_project, user=self.user, role=self.role_owner
+            ).count(),
+            1,
+        )
+
+        # Assert API response
+        expected = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': new_project.description,
+            'readme': new_project.readme.raw,
+            'sodar_uuid': str(new_project.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_project_root(self):
+        """Test creating a project in root (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_create_project_disable_categories(self):
+        """Test creating a project in root with disabled categories"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Project.objects.count(), 3)
+
+    def test_create_project_duplicate_title(self):
+        """Test creating a project with a title already in category (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'title': self.project.title,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
+    def test_create_project_unknown_user(self):
+        """Test creating a project with a non-existent user (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': INVALID_UUID,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
+    def test_create_project_unknown_parent(self):
+        """Test creating a project with a non-existent parent category (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create', kwargs={'project': INVALID_UUID}
+        )
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
+    def test_create_project_invalid_parent(self):
+        """Test creating a project with a project as parent (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse(
+            'projectroles:api_project_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Project.objects.count(), 2)
+
+
 class TestUserListAPIView(TestAPIViewsBase):
     """Tests for UserListAPIView"""
 
@@ -369,7 +697,9 @@ class TestUserListAPIView(TestAPIViewsBase):
     def test_get(self):
         """Test UserListAPIView get() as a regular user"""
         url = reverse('projectroles:api_user_list')
-        response = self.get_knox(url, token=self.get_token(self.domain_user))
+        response = self.request_knox(
+            url, token=self.get_token(self.domain_user)
+        )
 
         # Assert response
         self.assertEqual(response.status_code, 200)
@@ -388,7 +718,7 @@ class TestUserListAPIView(TestAPIViewsBase):
     def test_get_superuser(self):
         """Test UserListAPIView get() as a superuser"""
         url = reverse('projectroles:api_user_list')
-        response = self.get_knox(url)  # Default token is for superuser
+        response = self.request_knox(url)  # Default token is for superuser
 
         # Assert response
         self.assertEqual(response.status_code, 200)
