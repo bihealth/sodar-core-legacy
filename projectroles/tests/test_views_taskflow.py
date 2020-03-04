@@ -13,13 +13,10 @@ from django.test import LiveServerTestCase, tag, override_settings
 # HACK to get around https://stackoverflow.com/a/25081791
 from django.urls import reverse
 
-from projectroles.tests.taskflow_testcase import TestCase
-
 from unittest import skipIf
 
-from projectroles.tests.test_views import TestViewsBase, TASKFLOW_SECRET_INVALID
 from projectroles import views_taskflow
-
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
@@ -28,13 +25,15 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import get_backend_api, change_plugin_status
-from projectroles.app_settings import AppSettingAPI
+from projectroles.tests.taskflow_testcase import TestCase
 from projectroles.tests.test_models import (
     ProjectInviteMixin,
     ProjectMixin,
     RoleAssignmentMixin,
 )
+from projectroles.tests.test_views import TestViewsBase, TASKFLOW_SECRET_INVALID
 
+# Access Django user model
 User = auth.get_user_model()
 
 # App settings API
@@ -68,20 +67,25 @@ TASKFLOW_TEST_MODE = getattr(settings, 'TASKFLOW_TEST_MODE', False)
 # Base Classes -----------------------------------------------------------------
 
 
-@tag('Taskflow')  # Tests will be skipped if iRODS and taskflow are not enabled
-class TestTaskflowBase(LiveServerTestCase, TestCase):
-    """Base class for testing views and APIs with taskflow"""
+@tag('Taskflow')  # Run tests if iRODS and SODAR Taskflow are enabled
+class TestTaskflowBase(
+    ProjectMixin, RoleAssignmentMixin, LiveServerTestCase, TestCase
+):
+    """Base class for testing UI views with taskflow"""
 
     def _make_project_taskflow(self, title, type, parent, owner, description):
-        values = {
-            'title': title,
-            'type': type,
-            'parent': parent.sodar_uuid if parent else None,
-            'owner': owner.sodar_uuid,
-            'description': description,
-            'sodar_url': self.live_server_url,
-        }  # HACK: Override callback URL
-        values.update(
+        """Make Project with taskflow for UI view tests"""
+        post_data = dict(self.request_data)
+        post_data.update(
+            {
+                'title': title,
+                'type': type,
+                'parent': parent.sodar_uuid if parent else None,
+                'owner': owner.sodar_uuid,
+                'description': description,
+            }
+        )
+        post_data.update(
             app_settings.get_all_defaults(
                 APP_SETTING_SCOPE_PROJECT, post_safe=True
             )
@@ -91,7 +95,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
 
         with self.login(self.user):
             response = self.client.post(
-                reverse('projectroles:create', kwargs=post_kwargs), values
+                reverse('projectroles:create', kwargs=post_kwargs), post_data
             )
             self.assertEqual(response.status_code, 302)
             project = Project.objects.get(title=title)
@@ -103,17 +107,19 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
                 ),
             )
 
-        project = Project.objects.get(title=title)
         owner_as = project.get_owner()
         return project, owner_as
 
     def _make_assignment_taskflow(self, project, user, role):
-        values = {
-            'project': project.sodar_uuid,
-            'user': user.sodar_uuid,
-            'role': role.pk,
-            'sodar_url': self.live_server_url,
-        }
+        """Make RoleAssignment with taskflow for UI view tests"""
+        post_data = dict(self.request_data)
+        post_data.update(
+            {
+                'project': project.sodar_uuid,
+                'user': user.sodar_uuid,
+                'role': role.pk,
+            }
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -121,7 +127,7 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
                     'projectroles:role_create',
                     kwargs={'project': project.sodar_uuid},
                 ),
-                values,
+                post_data,
             )
             role_as = RoleAssignment.objects.get(project=project, user=user)
             self.assertRedirects(
@@ -131,7 +137,6 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
                 ),
             )
 
-        role_as = RoleAssignment.objects.get(project=project, user=user)
         return role_as
 
     def setUp(self):
@@ -141,6 +146,9 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
                 'TASKFLOW_TEST_MODE not True, '
                 'testing with SODAR Taskflow disabled'
             )
+
+        # Set up live server URL for requests
+        self.request_data = {'sodar_url': self.live_server_url}
 
         # Get taskflow plugin (or None if taskflow not enabled)
         change_plugin_status(
@@ -164,25 +172,11 @@ class TestTaskflowBase(LiveServerTestCase, TestCase):
         self.user.is_superuser = True
         self.user.save()
 
-        # Create category
-        # TODO: Create locally, categories no longer created in iRODS
-        values = {
-            'title': 'TestCategory',
-            'type': PROJECT_TYPE_CATEGORY,
-            'parent': None,
-            'owner': self.user.sodar_uuid,
-            'description': 'description',
-        }
-        values.update(
-            app_settings.get_all_defaults(
-                APP_SETTING_SCOPE_PROJECT, post_safe=True
-            )
-        )  # Add default settings
-
-        with self.login(self.user):
-            self.client.post(reverse('projectroles:create'), values)
-
-        self.category = Project.objects.get(title='TestCategory')
+        # Create category locally (categories are not handled with taskflow)
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(self.category, self.user, self.role_owner)
 
     def tearDown(self):
         self.taskflow.cleanup()
@@ -575,10 +569,10 @@ class TestTaskflowAPIViewAccess(
 # Tests Requiring iRODS --------------------------------------------------------
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestProjectCreateView(TestTaskflowBase):
     """Tests for Project creation view with taskflow"""
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_create_project(self):
         """Test Project creation with taskflow"""
 
@@ -629,6 +623,7 @@ class TestProjectCreateView(TestTaskflowBase):
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestProjectUpdateView(TestTaskflowBase):
     """Tests for Project updating view"""
 
@@ -644,22 +639,21 @@ class TestProjectUpdateView(TestTaskflowBase):
             description='description',
         )
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_update_project(self):
         """Test Project updating with taskflow"""
 
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 2)
 
-        values = model_to_dict(self.project)
-        values['title'] = 'updated title'
-        values['description'] = 'updated description'
-        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        values['readme'] = 'updated readme'
-        values.update(
+        request_data = model_to_dict(self.project)
+        request_data['title'] = 'updated title'
+        request_data['description'] = 'updated description'
+        request_data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        request_data['readme'] = 'updated readme'
+        request_data.update(
             app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
-        values['sodar_url'] = self.live_server_url  # HACK
+        request_data['sodar_url'] = self.live_server_url  # HACK
 
         with self.login(self.user):
             response = self.client.post(
@@ -667,7 +661,7 @@ class TestProjectUpdateView(TestTaskflowBase):
                     'projectroles:update',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
-                values,
+                request_data,
             )
 
         # Assert Project state after update
@@ -699,7 +693,6 @@ class TestProjectUpdateView(TestTaskflowBase):
                 ),
             )
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_update_project_new_owner(self):
         """Test Project updating with new user as owner"""
 
@@ -708,15 +701,15 @@ class TestProjectUpdateView(TestTaskflowBase):
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 2)
 
-        values = model_to_dict(self.project)
-        values['title'] = 'updated title'
-        values['description'] = 'updated description'
-        values['owner'] = new_user.sodar_uuid
-        values['readme'] = 'updated readme'
-        values.update(
+        request_data = model_to_dict(self.project)
+        request_data['title'] = 'updated title'
+        request_data['description'] = 'updated description'
+        request_data['owner'] = new_user.sodar_uuid
+        request_data['readme'] = 'updated readme'
+        request_data.update(
             app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
-        values['sodar_url'] = self.live_server_url  # HACK
+        request_data['sodar_url'] = self.live_server_url  # HACK
 
         with self.login(self.user):
             self.client.post(
@@ -724,7 +717,7 @@ class TestProjectUpdateView(TestTaskflowBase):
                     'projectroles:update',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
-                values,
+                request_data,
             )
 
         # Assert Project and owner role state after update
@@ -733,6 +726,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         self.assertEqual(self.project.get_owner().user, new_user)
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestRoleAssignmentCreateView(TestTaskflowBase):
     """Tests for RoleAssignment creation view"""
 
@@ -750,19 +744,19 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
 
         self.user_new = self.make_user('guest')
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_create_assignment(self):
         """Test RoleAssignment creation with taskflow"""
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
         # Issue POST request
-        values = {
-            'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
-            'role': self.role_guest.pk,
-            'sodar_url': self.live_server_url,
-        }
+        self.request_data.update(
+            {
+                'project': self.project.sodar_uuid,
+                'user': self.user_new.sodar_uuid,
+                'role': self.role_guest.pk,
+            }
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -770,7 +764,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
                     'projectroles:role_create',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
-                values,
+                self.request_data,
             )
 
         # Assert RoleAssignment state after creation
@@ -801,6 +795,7 @@ class TestRoleAssignmentCreateView(TestTaskflowBase):
             )
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestRoleAssignmentUpdateView(TestTaskflowBase):
     """Tests for RoleAssignment update view with taskflow"""
 
@@ -822,19 +817,19 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
             self.project, self.user_new, self.role_guest
         )
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_update_assignment(self):
         """Test RoleAssignment updating with taskflow"""
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
-        values = {
-            'project': self.project.sodar_uuid,
-            'user': self.user_new.sodar_uuid,
-            'role': self.role_contributor.pk,
-            'sodar_url': self.live_server_url,
-        }
+        self.request_data.update(
+            {
+                'project': self.project.sodar_uuid,
+                'user': self.user_new.sodar_uuid,
+                'role': self.role_contributor.pk,
+            }
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -842,7 +837,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
                     'projectroles:role_update',
                     kwargs={'roleassignment': self.role_as.sodar_uuid},
                 ),
-                values,
+                self.request_data,
             )
 
         # Assert RoleAssignment state after update
@@ -873,6 +868,7 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
             )
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestRoleAssignmentDeleteView(TestTaskflowBase):
     """Tests for RoleAssignment delete view """
 
@@ -894,7 +890,6 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
             self.project, self.user_new, self.role_guest
         )
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_delete_assignment(self):
         """Test RoleAssignment deleting with taskflow"""
 
@@ -907,7 +902,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
                     'projectroles:role_delete',
                     kwargs={'roleassignment': self.role_as.sodar_uuid},
                 ),
-                {'sodar_url': self.live_server_url},
+                self.request_data,
             )
 
         # Assert RoleAssignment state after update
@@ -924,6 +919,7 @@ class TestRoleAssignmentDeleteView(TestTaskflowBase):
             )
 
 
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
     """Tests for ProjectInvite accepting view with taskflow"""
 
@@ -951,7 +947,6 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
             message='',
         )
 
-    @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
     def test_accept_invite(self):
         """Test user accepting an invite with taskflow"""
 
@@ -973,7 +968,7 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
                     'projectroles:invite_accept',
                     kwargs={'secret': self.invite.secret},
                 ),
-                {'sodar_url': self.live_server_url},
+                self.request_data,
             )
 
             self.assertRedirects(

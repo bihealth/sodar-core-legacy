@@ -763,22 +763,30 @@ class ProjectModifyMixin:
         tl_event = None
         action = 'update' if instance else 'create'
         old_data = {}
+        old_project = None
 
         if instance:
             project = instance
+
+            # In case of a PATCH request, get existing obj to fill out fields
+            old_project = Project.objects.get(sodar_uuid=instance.sodar_uuid)
+
             old_data = self._get_old_project_data(instance)  # Store old data
-            project.title = data.get('title')
-            project.description = data.get('description')
-            project.type = data.get('type')
-            project.readme = data.get('readme')
+            project.title = data.get('title') or old_project.title
+            project.description = (
+                data.get('description') or old_project.description
+            )
+            project.type = data.get('type') or old_project.type
+            project.readme = data.get('readme') or old_project.readme
+            project.parent = data.get('parent') or old_project.parent
 
         else:
             project = Project(
                 title=data.get('title'),
                 description=data.get('description'),
                 type=data.get('type'),
-                parent=data.get('parent'),
                 readme=data.get('readme'),
+                parent=data.get('parent'),
             )
 
         use_taskflow = (
@@ -806,6 +814,10 @@ class ProjectModifyMixin:
             project.save()
 
         owner = data.get('owner')
+
+        if not owner and old_project:  # In case of a PATCH request
+            owner = old_project.get_owner().user
+
         type_str = project.type.capitalize()
 
         # Get settings

@@ -9,6 +9,7 @@ from projectroles.tests.test_permissions import TestProjectPermissionBase
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
+from rest_framework.test import APITestCase
 
 NEW_PROJECT_TITLE = 'New Project'
 
@@ -46,14 +47,12 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         """
 
         def _send_request():
-            if method.upper() == 'GET':
-                return self.client.get(url, **req_kwargs)
+            req_method = getattr(self.client, method.lower(), None)
 
-            elif method.upper() == 'POST':
-                return self.client.post(url, **req_kwargs)
+            if not req_method:
+                raise ValueError('Invalid method "{}"'.format(method))
 
-            else:
-                raise ValueError('Method "{}" not supported'.format(method))
+            return req_method(url, **req_kwargs)
 
         if not isinstance(users, (list, tuple)):
             users = [users]
@@ -88,12 +87,18 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             self.assertEqual(response.status_code, status_code, msg=msg)
 
 
+class TestProjectAPIPermissionBase(
+    SODARAPIPermissionTestMixin, APITestCase, TestProjectPermissionBase
+):
+    """Base class for testing project permissions in API views"""
+
+    pass
+
+
 # Tests ------------------------------------------------------------------------
 
 
-class TestAPIPermissions(
-    SODARAPIPermissionTestMixin, TestProjectPermissionBase
-):
+class TestAPIPermissions(TestProjectAPIPermissionBase):
     """Tests for projectroles API view permissions"""
 
     def test_project_list(self):
@@ -131,16 +136,55 @@ class TestAPIPermissions(
         self.assert_response_api(url, good_users, 200, knox=True)
         self.assert_response_api(url, bad_users, 403, knox=True)
 
+    def test_project_create_root(self):
+        """Test permissions for ProjectCreateAPIView with no parent"""
+        # TODO: Set up a better way to test perms for data-altering API views
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY'],
+            'parent': '',
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.as_owner.user.sodar_uuid),
+        }
+        bad_users = [
+            self.as_owner.user,
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+
+        # Test with good users (delete object after creation)
+        self.assert_response_api(
+            url, self.superuser, 201, method='POST', data=post_data
+        )
+        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
+        # Test with bad users
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+
+        # Test with Knox
+        self.assert_response_api(
+            url, self.superuser, 201, method='POST', data=post_data, knox=True
+        )
+        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+
     def test_project_create(self):
         """Test permissions for ProjectCreateAPIView"""
-        # TODO: Set up a better way to test perms for data-altering API views
-        url = reverse(
-            'projectroles:api_project_create',
-            kwargs={'project': self.category.sodar_uuid},
-        )
+        url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
             'type': SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            'parent': str(self.category.sodar_uuid),
             'description': 'description',
             'readme': 'readme',
             'owner': str(self.as_owner.user.sodar_uuid),
@@ -186,6 +230,44 @@ class TestAPIPermissions(
         Project.objects.get(title=NEW_PROJECT_TITLE).delete()
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+
+    def test_project_update(self):
+        """Test permissions for ProjectUpdateAPIView"""
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        put_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.as_owner.user.sodar_uuid),
+        }
+        good_users = [self.as_owner.user, self.as_delegate.user]
+        bad_users = [
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+
+        self.assert_response_api(
+            url, good_users, 200, method='PUT', data=put_data
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='PUT', data=put_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PUT', data=put_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url, good_users, 200, method='PUT', data=put_data, knox=True
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='PUT', data=put_data, knox=True
         )
 
     def test_user_list(self):

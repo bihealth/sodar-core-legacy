@@ -7,7 +7,12 @@ from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
-from rest_framework.generics import CreateAPIView, ListAPIView, RetrieveAPIView
+from rest_framework.generics import (
+    CreateAPIView,
+    ListAPIView,
+    RetrieveAPIView,
+    UpdateAPIView,
+)
 from rest_framework.permissions import (
     BasePermission,
     DjangoModelPermissions,
@@ -269,10 +274,10 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
         if request.user.is_superuser:
             return True
 
-        parent_uuid = view.kwargs.get('project')
+        parent_uuid = request.POST.get('parent')
 
         if not parent_uuid:
-            return False  # Superusers will not be checked for
+            return False
 
         parent = Project.objects.filter(sodar_uuid=parent_uuid).first()
 
@@ -335,10 +340,28 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     serializer_class = ProjectSerializer
     versioning_class = SODARCoreAPIVersioning
 
+
+class ProjectUpdateAPIView(
+    ProjectAccessMixin,
+    ProjectQuerysetMixin,
+    SODARCoreAPIBaseMixin,
+    UpdateAPIView,
+):
+    """
+    API view for updating a project.
+    """
+
+    lookup_field = 'sodar_uuid'
+    lookup_url_kwarg = 'project'
+    permission_required = 'projectroles.update_project'
+    serializer_class = ProjectSerializer
+
     def get_serializer_context(self, *args, **kwargs):
         context = super().get_serializer_context(*args, **kwargs)
         project = self.get_project(request=context['request'])
-        context['project'] = str(project.sodar_uuid) if project else None
+        context['parent'] = (
+            str(project.parent.sodar_uuid) if project.parent else None
+        )
         return context
 
 

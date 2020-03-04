@@ -159,9 +159,9 @@ urls_api = [
         name='api_project_create',
     ),
     url(
-        regex=r'^api/create/(?P<project>[0-9a-f-]+)$',
-        view=views_api.ProjectCreateAPIView.as_view(),
-        name='api_project_create',
+        regex=r'^api/update/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectUpdateAPIView.as_view(),
+        name='api_project_update',
     ),
     url(
         regex=r'^api/users/list$',

@@ -1,11 +1,9 @@
 """API view model serializers for the projectroles app"""
 
-from collections import OrderedDict
-
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
-from rest_framework import serializers
+from rest_framework import exceptions, serializers
 from drf_keyed_list import KeyedListSerializer
 
 from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
@@ -68,7 +66,13 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     """Serializer for the Project model"""
 
     owner = serializers.CharField(write_only=True)
-    parent = serializers.SerializerMethodField(read_only=True)
+    # parent = serializers.CharField(allow_blank=True, allow_null=True)
+    parent = serializers.SlugRelatedField(
+        slug_field='sodar_uuid',
+        many=False,
+        allow_null=True,
+        queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
+    )
     readme = serializers.CharField(required=False)
     roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
 
@@ -87,51 +91,65 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         ]
         read_only_fields = ['submit_status']
 
-    def get_parent(self, obj):
-        if isinstance(obj, (dict, OrderedDict)) and obj.get('parent'):
-            return obj['parent'].sodar_uuid
-
-        elif isinstance(obj, Project) and obj.parent:
-            return str(obj.parent.sodar_uuid)
-
     def validate(self, attrs):
-        # Validate and set parent
-        parent_uuid = self.context.get('project')
-        parent = None
+        user = self.context['request'].user
 
-        # Parent found
-        if parent_uuid:
-            parent = Project.objects.filter(sodar_uuid=parent_uuid).first()
+        # Validate parent
+        parent = attrs.get('parent')
 
-            if not parent:
-                raise serializers.ValidationError('Parent category not found')
+        # Attempting to move project under category without perms
+        if (
+            parent
+            and not user.is_superuser
+            and not user.has_perm('projectroles.create_project', parent)
+            and (not self.instance or self.instance.parent != parent)
+        ):
+            raise exceptions.PermissionDenied(
+                'User lacks permission to place project under given category'
+            )
 
-            if parent and parent.type != PROJECT_TYPE_CATEGORY:
-                raise serializers.ValidationError('Parent is not a category')
+        if parent and parent.type != PROJECT_TYPE_CATEGORY:
+            raise serializers.ValidationError('Parent is not a category')
 
-        #  Attempting to create project in root
+        # Attempting to create/move project in root
         elif (
-            attrs['type'] == PROJECT_TYPE_PROJECT
-            and not parent_uuid
+            attrs.get('type') == PROJECT_TYPE_PROJECT
+            and not parent
             and not settings.PROJECTROLES_DISABLE_CATEGORIES
         ):
             raise serializers.ValidationError(
                 'Project must be placed under a category'
             )
 
-        attrs['parent'] = parent
+        # Validate type
+        if (
+            attrs.get('type')
+            and self.instance
+            and attrs['type'] != self.instance.type
+        ):
+            raise serializers.ValidationError(
+                'Changing the project type is not allowed'
+            )
 
         # Validate title
-        if parent and attrs['title'] == parent.title:
+        if parent and attrs.get('title') == parent.title:
             raise serializers.ValidationError('Title can\'t match with parent')
 
-        if Project.objects.filter(title=attrs['title'], parent=parent):
+        if (
+            attrs.get('title')
+            and not self.instance
+            and Project.objects.filter(title=attrs['title'], parent=parent)
+        ):
             raise serializers.ValidationError(
                 'Title must be unique within parent'
             )
 
         # Validate type
-        if attrs['type'] not in [PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT]:
+        if attrs.get('type') not in [
+            PROJECT_TYPE_CATEGORY,
+            PROJECT_TYPE_PROJECT,
+            None,
+        ]:  # None is ok for PATCH (will be updated in modify_project())
             raise serializers.ValidationError(
                 'Type is not {} or {}'.format(
                     PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT
@@ -139,12 +157,13 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             )
 
         # Validate and set owner
-        owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
+        if attrs.get('owner'):
+            owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
 
-        if not owner:
-            raise serializers.ValidationError('Owner not found')
+            if not owner:
+                raise serializers.ValidationError('Owner not found')
 
-        attrs['owner'] = owner
+            attrs['owner'] = owner
 
         # Set readme
         if 'readme' in attrs and 'raw' in attrs['readme']:
@@ -162,25 +181,19 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
     def to_representation(self, instance):
         """
-        Override to make sure sodar_uuid is correctly returned: upon creation
-        the (required) atomic save() within modify_project() causes no UUID
-        to appear.
+        Override to make sure fields are correctly returned.
         """
         representation = super().to_representation(instance)
+        parent = representation.get('parent')
+        project = Project.objects.get(
+            title=representation['title'],
+            **{'parent__sodar_uuid': parent} if parent else {},
+        )
+
+        # TODO: Better way to ensure this?
+        representation['readme'] = project.readme.raw or ''
 
         if not representation.get('sodar_uuid'):
-            parent = representation.get('parent')
-
-            if parent:
-                project = Project.objects.get(
-                    title=representation['title'], parent__sodar_uuid=parent
-                )
-
-            else:
-                project = Project.objects.get(
-                    title=representation['title'], parent=None
-                )
-
             representation['sodar_uuid'] = str(project.sodar_uuid)
 
         return representation

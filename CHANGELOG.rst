@@ -22,6 +22,8 @@ Added
     - ``projectroles.tests.test_views_api.TestAPIViewsBase`` for API view testing (#48)
     - ``SODARAPIPermissionTestMixin`` for API view permission tests
     - New helper methods in ``SODARAPIViewTestMixin``
+    - Provide live server URL for Taskflow in ``TestTaskflowBase.request_data`` (#479)
+    - ``TestTaskflowAPIBase`` for testing API views with SODAR Taskflow (#488)
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -39,6 +41,7 @@ Changed
     - Move ``SODARAPIViewTestMixin`` into ``test_views_api`` and rename (#471)
     - Move ``KnoxAuthMixin`` functionality into ``SODARAPIViewTestMixin``
     - ``get_accept_header()`` in API tests returns header as dict
+    - Refactor base permission test classes (#490)
 
 Fixed
 -----

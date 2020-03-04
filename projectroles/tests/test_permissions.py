@@ -36,8 +36,8 @@ REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_SECRET = build_secret()
 
 
-class TestPermissionBase(TestCase):
-    """Base helper class for permission tests"""
+class TestPermissionMixin:
+    """Helper class for permission tests"""
 
     def assert_response(
         self,
@@ -97,10 +97,24 @@ class TestPermissionBase(TestCase):
                 self.assertEqual(response.url, redirect_url, msg=msg)
 
 
+class TestPermissionBase(TestPermissionMixin, TestCase):
+    """
+    Base class for permission tests for UI views.
+
+    NOTE: To use with DRF API views, you need to use APITestCase
+    """
+
+    pass
+
+
 class TestProjectPermissionBase(
     ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestPermissionBase
 ):
-    """Base class for testing project permissions"""
+    """
+    Base class for testing project permissions.
+
+    NOTE: To use with DRF API views, you need to use APITestCase
+    """
 
     def setUp(self):
         # Init roles

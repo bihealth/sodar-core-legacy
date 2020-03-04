@@ -67,6 +67,8 @@ detailed below.
 - ``get_accept_header()`` returns the header as dict instead of a string.
 - ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
   ``TestPermissionBase``. Please use ``assert_response()`` instead.
+- ``assert_response()`` can also be included to your test view from
+  ``TestPermissionMixin`` if ``TestPermissionBase`` does not suit your needs.
 
 Remote Project Sync Minimum API Version Updated
 -----------------------------------------------
