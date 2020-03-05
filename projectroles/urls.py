@@ -164,6 +164,11 @@ urls_api = [
         name='api_project_update',
     ),
     url(
+        regex=r'^api/roles/create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.RoleAssignmentCreateAPIView.as_view(),
+        name='api_role_create',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',

@@ -6,15 +6,22 @@ from django.contrib.auth import get_user_model
 from rest_framework import exceptions, serializers
 from drf_keyed_list import KeyedListSerializer
 
-from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
-from projectroles.views import ProjectModifyMixin
+from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
+from projectroles.views import ProjectModifyMixin, RoleAssignmentModifyMixin
 
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
+
+# Local constants
+DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
 User = get_user_model()
 
@@ -30,14 +37,89 @@ class SODARModelSerializer(serializers.ModelSerializer):
     class Meta:
         pass
 
+    def to_representation(self, instance):
+        """
+        Override to_representation() to ensure sodar_uuid is included for object
+        creation POST responses.
+        """
+        representation = super().to_representation(instance)
+
+        if 'sodar_uuid' not in representation and 'sodar_uuid' in self.context:
+            representation['sodar_uuid'] = str(self.context['sodar_uuid'])
+
+        return representation
+
+    def save(self, **kwargs):
+        """
+        Override save() to ensure sodar_uuid is included for object creation
+        POST responses.
+        """
+        obj = super().save(**kwargs)
+        return self.post_save(obj)
+
+    def post_save(self, obj):
+        """
+        Function to call at the end of a custom save() method. Ensures the
+        returning of sodar_uuid in object creation POST responses.
+        :param obj: Object created in save()
+        :return: obj
+        """
+        if hasattr(obj, 'sodar_uuid'):
+            self.context['sodar_uuid'] = obj.sodar_uuid
+
+        return obj
+
+
+class SODARProjectModelSerializer(SODARModelSerializer):
+    """Base serializer for SODAR models with a project relation"""
+
+    # The project field is read only because we get it from the URL
+    project = serializers.ReadOnlyField(source='project.sodar_uuid')
+
+    class Meta:
+        pass
+
+    def to_representation(self, instance):
+        """
+        Override to_representation() to ensure the project value is included
+        in responses.
+        """
+        representation = super().to_representation(instance)
+
+        if 'project' not in representation and 'project' in self.context:
+            representation['project'] = str(self.context['project'].sodar_uuid)
+
+        return representation
+
+    def create(self, validated_data):
+        """Override create() to add project into validated data"""
+        if 'project' not in validated_data and 'project' in self.context:
+            validated_data['project'] = self.context['project']
+
+        return super().create(validated_data)
+
 
 class SODARNestedListSerializer(SODARModelSerializer):
-    """Serializer for SODAR models in nested lists. To be used in cases where
-    the object is not intended to be listed or modified on its own."""
+    """
+    Serializer to display nested SODAR models as dicts with sodar_uuid as key.
+    """
 
     class Meta:
         list_serializer_class = KeyedListSerializer
         keyed_list_serializer_field = 'sodar_uuid'
+
+    def to_representation(self, instance):
+        """
+        Override to_representation() to pop project from a nested list
+        representation, where the project context is already known in the
+        topmost model.
+        """
+        representation = super().to_representation(instance)
+
+        if self.context.get('project'):
+            representation.pop('project', None)
+
+        return representation
 
 
 # Projectroles Serializers -----------------------------------------------------
@@ -51,15 +133,100 @@ class SODARUserSerializer(SODARModelSerializer):
         fields = ['username', 'name', 'email', 'sodar_uuid']
 
 
-class RoleAssignmentNestedListSerializer(SODARNestedListSerializer):
-    """List serializer for the RoleAssignment model"""
+class RoleAssignmentSerializer(
+    RoleAssignmentModifyMixin, SODARProjectModelSerializer
+):
+    """Serializer for the RoleAssignment model"""
 
-    role = serializers.ReadOnlyField(source='role.name')
-    user = SODARUserSerializer(read_only=True, many=False)
+    role = serializers.SlugRelatedField(
+        slug_field='name', queryset=Role.objects.all()
+    )
+    user = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', queryset=User.objects.all()
+    )
+
+    class Meta:
+        model = RoleAssignment
+        fields = ['project', 'role', 'user', 'sodar_uuid']
+
+    def validate(self, attrs):
+        project = self.context['project']
+        current_user = self.context['request'].user
+
+        # Do not allow editing owner here
+        if attrs['role'].name == PROJECT_ROLE_OWNER:
+            raise serializers.ValidationError(
+                'Use project updating API to update owner'
+            )
+
+        # Check delegate perms
+        if attrs[
+            'role'
+        ].name == PROJECT_ROLE_DELEGATE and not current_user.has_perm(
+            'projectroles.update_project_delegate', project
+        ):
+            raise exceptions.PermissionDenied(
+                'User lacks permission to assign delegates'
+            )
+
+        # Do not allow non-owners in categories (before we do #463)
+        if (
+            project.type == PROJECT_TYPE_CATEGORY
+            and attrs['role'].name != PROJECT_ROLE_OWNER
+        ):
+            raise serializers.ValidationError(
+                'Roles other than project owner not allowed for categories'
+            )
+
+        # Check delegate limit
+        if (
+            attrs['role'].name == PROJECT_ROLE_DELEGATE
+            and settings.PROJECTROLES_DELEGATE_LIMIT != 0
+            and len(project.get_delegates()) >= DELEGATE_LIMIT
+        ):
+            raise serializers.ValidationError(
+                'Project delegate limit of {} has been reached'.format(
+                    DELEGATE_LIMIT
+                )
+            )
+
+        # Check for existing role
+        old_as = RoleAssignment.objects.filter(
+            project=project, user=attrs['user']
+        ).first()
+
+        if old_as:
+            raise serializers.ValidationError(
+                'User already has the role of "{}" in project (UUID={})'.format(
+                    old_as.role.name, old_as.sodar_uuid
+                )
+            )
+
+        return attrs
+
+    def save(self, **kwargs):
+        """Override save() to handle saving locally or through Taskflow"""
+        return self.post_save(
+            self.modify_assignment(
+                data=self.validated_data,
+                request=self.context['request'],
+                project=self.context['project'],
+                instance=self.instance,
+            )
+        )
+
+
+class RoleAssignmentNestedListSerializer(
+    SODARNestedListSerializer, RoleAssignmentSerializer
+):
+    """Nested list serializer for the RoleAssignment model."""
+
+    user = SODARUserSerializer(read_only=True)
 
     class Meta(SODARNestedListSerializer.Meta):
         model = RoleAssignment
-        fields = ['user', 'role', 'sodar_uuid']
+        fields = ['role', 'user', 'sodar_uuid']
+        read_only_fields = ['role']
 
 
 class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
@@ -92,7 +259,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         read_only_fields = ['submit_status']
 
     def validate(self, attrs):
-        user = self.context['request'].user
+        current_user = self.context['request'].user
 
         # Validate parent
         parent = attrs.get('parent')
@@ -100,8 +267,8 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Attempting to move project under category without perms
         if (
             parent
-            and not user.is_superuser
-            and not user.has_perm('projectroles.create_project', parent)
+            and not current_user.is_superuser
+            and not current_user.has_perm('projectroles.create_project', parent)
             and (not self.instance or self.instance.parent != parent)
         ):
             raise exceptions.PermissionDenied(
@@ -173,6 +340,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
     def save(self, **kwargs):
         """Override save() to handle saving locally or through Taskflow"""
+        # NOTE: post_save() not needed here since we do an atomic model.save()
         return self.modify_project(
             data=self.validated_data,
             request=self.context['request'],

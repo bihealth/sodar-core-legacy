@@ -1063,8 +1063,95 @@ class ProjectRoleView(
         return context
 
 
-class RoleAssignmentModifyMixin(ModelFormMixin):
-    """Mixin for RoleAssignment creation and updating"""
+class RoleAssignmentModifyMixin:
+    """Mixin for RoleAssignment creation/updating in UI and API views"""
+
+    def modify_assignment(self, data, request, project, instance=None):
+        """
+        Create or update a RoleAssignment, either locally or using the SODAR
+        Taskflow. This method should be called either in form_valid() in a
+        Django form view or save() in a DRF serializer.
+
+        :param data: Cleaned data from a form or serializer
+        :param request: Request initiating the action
+        :param project: Project object
+        :param instance: Existing Project object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        :return: Created or updated RoleAssignment object
+        """
+        timeline = get_backend_api('timeline_backend')
+        taskflow = get_backend_api('taskflow')
+        action = 'update' if instance else 'create'
+        tl_event = None
+        user = data.get('user')
+        role = data.get('role')
+        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
+
+        # Init Timeline event
+        if timeline:
+            tl_desc = '{} role {}"{}" for {{{}}}'.format(
+                action, 'to ' if action == 'update' else '', role.name, 'user'
+            )
+
+            tl_event = timeline.add_event(
+                project=project,
+                app_name=APP_NAME,
+                user=request.user,
+                event_name='role_{}'.format(action),
+                description=tl_desc,
+            )
+            tl_event.add_object(user, 'user', user.username)
+
+        # Submit with taskflow
+        if use_taskflow:
+            if tl_event:
+                tl_event.set_status('SUBMIT')
+
+            flow_data = {
+                'username': user.username,
+                'user_uuid': str(user.sodar_uuid),
+                'role_pk': role.pk,
+            }
+
+            try:
+                taskflow.submit(
+                    project_uuid=project.sodar_uuid,
+                    flow_name='role_update',
+                    flow_data=flow_data,
+                    request=request,
+                )
+
+            except taskflow.FlowSubmitException as ex:
+                if tl_event:
+                    tl_event.set_status('FAILED', str(ex))
+
+                raise ex
+
+            # Get object
+            role_as = RoleAssignment.objects.get(project=project, user=user)
+
+        # Local save without Taskflow
+        elif action == 'create':
+            role_as = RoleAssignment(project=project, user=user, role=role)
+
+        else:
+            role_as = RoleAssignment.objects.get(project=project, user=user)
+            role_as.role = role
+
+        role_as.save()
+
+        if SEND_EMAIL:
+            send_role_change_mail(action, project, user, role, request)
+
+        if tl_event:
+            tl_event.set_status('OK')
+
+        return role_as
+
+
+class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
+    """Mixin for RoleAssignment creation and updating in Django form views"""
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -1093,99 +1180,31 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
         return context
 
     def form_valid(self, form):
-        timeline = get_backend_api('timeline_backend')
-        taskflow = get_backend_api('taskflow')
+        """Handle RoleAssignment updating if form is valid"""
+        instance = form.instance if form.instance.pk else None
+        action = 'update' if instance else 'create'
 
-        form_action = 'update' if self.object else 'create'
-        tl_event = None
-        project = self.get_context_data()['project']
-        user = form.cleaned_data.get('user')
-        role = form.cleaned_data.get('role')
-        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
-
-        # Init Timeline event
-        if timeline:
-            tl_desc = '{} role {}"{}" for {{{}}}'.format(
-                form_action,
-                'to ' if form_action == 'update' else '',
-                role.name,
-                'user',
+        try:
+            self.object = self.modify_assignment(
+                data=form.cleaned_data,
+                request=self.request,
+                project=self.get_project(),
+                instance=form.instance if instance else None,
+            )
+            messages.success(
+                self.request,
+                'Membership {} for {} with the role of {}.'.format(
+                    'added' if action == 'create' else 'updated',
+                    self.object.user.username,
+                    self.object.role.name,
+                ),
             )
 
-            tl_event = timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=self.request.user,
-                event_name='role_{}'.format(form_action),
-                description=tl_desc,
-            )
-            tl_event.add_object(user, 'user', user.username)
-
-        # Submit with taskflow
-        if use_taskflow:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
-
-            flow_data = {
-                'username': user.username,
-                'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk,
-            }
-
-            try:
-                taskflow.submit(
-                    project_uuid=project.sodar_uuid,
-                    flow_name='role_update',
-                    flow_data=flow_data,
-                    request=self.request,
-                )
-
-            except taskflow.FlowSubmitException as ex:
-                if tl_event:
-                    tl_event.set_status('FAILED', str(ex))
-
-                messages.error(self.request, str(ex))
-                return redirect(
-                    reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                )
-
-            # Get object
-            self.object = RoleAssignment.objects.get(project=project, user=user)
-
-        # Local save without Taskflow
-        else:
-            if form_action == 'create':
-                self.object = RoleAssignment(
-                    project=project, user=user, role=role
-                )
-
-            else:
-                self.object = RoleAssignment.objects.get(
-                    project=project, user=user
-                )
-                self.object.role = role
-
-            self.object.save()
-
-        if SEND_EMAIL:
-            send_role_change_mail(
-                form_action, project, user, role, self.request
+        except Exception as ex:
+            messages.error(
+                self.request, 'Membership updating failed: {}'.format(ex)
             )
 
-        if tl_event:
-            tl_event.set_status('OK')
-
-        messages.success(
-            self.request,
-            'Membership {} for {} with the role of {}.'.format(
-                'added' if form_action == 'create' else 'updated',
-                self.object.user.username,
-                self.object.role.name,
-            ),
-        )
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -1199,7 +1218,7 @@ class RoleAssignmentCreateView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     CurrentUserFormMixin,
-    RoleAssignmentModifyMixin,
+    RoleAssignmentModifyFormMixin,
     CreateView,
 ):
     """RoleAssignment creation view"""
@@ -1219,7 +1238,7 @@ class RoleAssignmentUpdateView(
     LoginRequiredMixin,
     RolePermissionMixin,
     ProjectContextMixin,
-    RoleAssignmentModifyMixin,
+    RoleAssignmentModifyFormMixin,
     CurrentUserFormMixin,
     UpdateView,
 ):

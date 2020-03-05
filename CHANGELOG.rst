@@ -24,6 +24,7 @@ Added
     - New helper methods in ``SODARAPIViewTestMixin``
     - Provide live server URL for Taskflow in ``TestTaskflowBase.request_data`` (#479)
     - ``TestTaskflowAPIBase`` for testing API views with SODAR Taskflow (#488)
+    - Permission tests using Knox tokens (#476)
 - **Tokens**
     - Add app from varfish-web (#452)
 

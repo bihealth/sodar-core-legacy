@@ -32,7 +32,11 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.remote_projects import RemoteProjectAPI
-from projectroles.serializers import ProjectSerializer, SODARUserSerializer
+from projectroles.serializers import (
+    ProjectSerializer,
+    RoleAssignmentSerializer,
+    SODARUserSerializer,
+)
 from projectroles.views import ProjectAccessMixin, SITE_MODE_TARGET
 
 
@@ -181,8 +185,25 @@ class SODARAPIBaseProjectMixin(SODARAPIBaseMixin):
     permission_classes = [SODARAPIProjectPermission]
 
 
+class APIProjectContextMixin(ProjectAccessMixin):
+    """
+    Mixin to provide project context and queryset for generic API views. Can
+    be used both in SODAR and SODAR Core API base views.
+    """
+
+    def get_serializer_context(self, *args, **kwargs):
+        context = super().get_serializer_context(*args, **kwargs)
+        context['project'] = self.get_project(request=context['request'])
+        return context
+
+    def get_queryset(self):
+        return self.__class__.serializer_class.Meta.model.objects.filter(
+            project=self.get_project()
+        )
+
+
 class SODARAPIGenericViewProjectMixin(
-    ProjectAccessMixin, SODARAPIBaseProjectMixin
+    APIProjectContextMixin, SODARAPIBaseProjectMixin
 ):
     """
     API view mixin for generic DRF API views with serializers, SODAR
@@ -200,16 +221,6 @@ class SODARAPIGenericViewProjectMixin(
 
     lookup_field = 'project__sodar_uuid'
     lookup_url_kwarg = 'project'  # Replace with relevant model
-
-    def get_serializer_context(self, *args, **kwargs):
-        context = super().get_serializer_context(*args, **kwargs)
-        context['project'] = self.get_project(request=context['request'])
-        return context
-
-    def get_queryset(self):
-        return self.__class__.serializer_class.Meta.model.objects.filter(
-            project=self.get_project()
-        )
 
 
 class SheetSubmitBaseAPIView(SODARAPIBaseProjectMixin, APIView):
@@ -235,32 +246,43 @@ class ProjectQuerysetMixin:
 # SODAR Core Base Views and Mixins ---------------------------------------------
 
 
-class SODARCoreAPIVersioning(AcceptHeaderVersioning):
+class CoreAPIVersioning(AcceptHeaderVersioning):
     allowed_versions = CORE_API_ALLOWED_VERSIONS
     default_version = CORE_API_DEFAULT_VERSION
     version_param = 'version'
 
 
-class SODARCoreAPIRenderer(JSONRenderer):
+class CoreAPIRenderer(JSONRenderer):
     media_type = CORE_API_MEDIA_TYPE
 
 
-class SODARCoreAPIBaseMixin:
+class CoreAPIBaseMixin:
     """
     SODAR Core API view mixin, which overrides versioning and renderer classes
     with ones intended for use with internal SODAR Core API views.
     """
 
+    renderer_classes = [CoreAPIRenderer]
+    versioning_class = CoreAPIVersioning
+
+
+class CoreAPIBaseProjectMixin(CoreAPIBaseMixin):
+    """
+    SODAR Core API view mixin for the base DRF APIView class with project
+    permission checking, but without serializers and other generic view
+    functionality.
+    """
+
     permission_classes = [SODARAPIProjectPermission]
-    renderer_classes = [SODARCoreAPIRenderer]
-    versioning_class = SODARCoreAPIVersioning
 
 
-class SODARCoreGenericViewProjectMixin(SODARAPIGenericViewProjectMixin):
+class CoreAPIGenericProjectMixin(
+    APIProjectContextMixin, CoreAPIBaseProjectMixin
+):
     """Generic API view mixin for internal SODAR Core API views"""
 
-    renderer_classes = [SODARCoreAPIRenderer]
-    versioning_class = SODARCoreAPIVersioning
+    lookup_field = 'project__sodar_uuid'
+    lookup_url_kwarg = 'project'  # Replace with relevant model
 
 
 # Projectroles Specific Base Views and Mixins ----------------------------------
@@ -298,9 +320,9 @@ class ProjectListAPIView(ListAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    renderer_classes = [SODARCoreAPIRenderer]
+    renderer_classes = [CoreAPIRenderer]
     serializer_class = ProjectSerializer
-    versioning_class = SODARCoreAPIVersioning
+    versioning_class = CoreAPIVersioning
 
     def get_queryset(self):
         """
@@ -318,7 +340,7 @@ class ProjectListAPIView(ListAPIView):
 
 
 class ProjectRetrieveAPIView(
-    ProjectQuerysetMixin, SODARCoreGenericViewProjectMixin, RetrieveAPIView
+    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
 ):
     """API view for retrieving a project by UUID."""
 
@@ -336,16 +358,13 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     """
 
     permission_classes = [ProjectCreatePermission]
-    renderer_classes = [SODARCoreAPIRenderer]
+    renderer_classes = [CoreAPIRenderer]
     serializer_class = ProjectSerializer
-    versioning_class = SODARCoreAPIVersioning
+    versioning_class = CoreAPIVersioning
 
 
 class ProjectUpdateAPIView(
-    ProjectAccessMixin,
-    ProjectQuerysetMixin,
-    SODARCoreAPIBaseMixin,
-    UpdateAPIView,
+    ProjectQuerysetMixin, CoreAPIGenericProjectMixin, UpdateAPIView
 ):
     """
     API view for updating a project.
@@ -365,6 +384,16 @@ class ProjectUpdateAPIView(
         return context
 
 
+# TODO: View, permission and taskflow tests
+class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+    """
+    API view for creating a role assignment in a project.
+    """
+
+    permission_required = 'projectroles.update_project_members'
+    serializer_class = RoleAssignmentSerializer
+
+
 class UserListAPIView(ListAPIView):
     """
     API view for listing users in the system.
@@ -373,9 +402,9 @@ class UserListAPIView(ListAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    renderer_classes = [SODARCoreAPIRenderer]
+    renderer_classes = [CoreAPIRenderer]
     serializer_class = SODARUserSerializer
-    versioning_class = SODARCoreAPIVersioning
+    versioning_class = CoreAPIVersioning
 
     def get_queryset(self):
         """
@@ -391,7 +420,7 @@ class UserListAPIView(ListAPIView):
 
 
 # TODO: Update this for new API base classes
-class RemoteProjectGetAPIView(SODARCoreAPIBaseMixin, APIView):
+class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
     """API view for retrieving remote projects from a source site"""
 
     permission_classes = (AllowAny,)  # We check the secret in get()/post()

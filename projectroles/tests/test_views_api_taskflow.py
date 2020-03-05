@@ -419,3 +419,45 @@ class TestProjectUpdateAPIView(TestTaskflowAPIBase):
 
         # Assert role assignment
         self.assertEqual(self.project.get_owner().user, self.user)
+
+
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
+class TestRoleAssignmentCreateAPIView(TestTaskflowAPIBase):
+    """Tests for RoleAssignmentCreateAPIView with taskflow"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Make project with owner in Taskflow and Django
+        self.project, self.owner_as = self._make_project_taskflow(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+            description='description',
+        )
+
+        # Create user for assignments
+        self.assign_user = self.make_user('assign_user')
+
+    def test_create_role(self):
+        """Test role assignment creation"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.request_data.update(
+            {
+                'role': PROJECT_ROLE_CONTRIBUTOR,
+                'user': str(self.assign_user.sodar_uuid),
+            }
+        )
+        response = self.request_knox(url, method='POST', data=self.request_data)
+
+        # Assert response and object status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)

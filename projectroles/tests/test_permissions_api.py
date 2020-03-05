@@ -4,7 +4,7 @@ import json
 
 from django.core.urlresolvers import reverse
 
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
 from projectroles.tests.test_permissions import TestProjectPermissionBase
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
@@ -30,6 +30,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         media_type=CORE_API_MEDIA_TYPE,
         version=CORE_API_DEFAULT_VERSION,
         knox=False,
+        cleanup_data=None,
     ):
         """
         Assert a response status code for url with API headers and optional
@@ -44,7 +45,11 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param media_type: String (default = SODAR Core default media type)
         :param version: String (default = SODAR Core default version)
         :param knox: Use Knox token auth instead of Django login (boolean)
+        :param cleanup_data: Dict or list of dicts for cleaning up the database
+               after each successful request, with members "class" and "kwargs"
         """
+        if cleanup_data and not isinstance(cleanup_data, (list, tuple)):
+            cleanup_data = [cleanup_data]
 
         def _send_request():
             req_method = getattr(self.client, method.lower(), None)
@@ -85,6 +90,12 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
                 user, json.loads(response.content)
             )
             self.assertEqual(response.status_code, status_code, msg=msg)
+
+            if cleanup_data:
+                for cleanup_item in cleanup_data:
+                    cleanup_item['class'].objects.filter(
+                        **cleanup_item['kwargs']
+                    ).delete()
 
 
 class TestProjectAPIPermissionBase(
@@ -138,7 +149,6 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
 
     def test_project_create_root(self):
         """Test permissions for ProjectCreateAPIView with no parent"""
-        # TODO: Set up a better way to test perms for data-altering API views
         url = reverse('projectroles:api_project_create')
         post_data = {
             'title': NEW_PROJECT_TITLE,
@@ -148,6 +158,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'readme': 'readme',
             'owner': str(self.as_owner.user.sodar_uuid),
         }
+        cleanup_data = {
+            'class': Project,
+            'kwargs': {'title': NEW_PROJECT_TITLE},
+        }
+        good_users = [self.superuser]
         bad_users = [
             self.as_owner.user,
             self.as_delegate.user,
@@ -156,24 +171,30 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             self.user_no_roles,
         ]
 
-        # Test with good users (delete object after creation)
         self.assert_response_api(
-            url, self.superuser, 201, method='POST', data=post_data
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            cleanup_data=cleanup_data,
         )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
-        # Test with bad users
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data
         )
         self.assert_response_api(
             url, self.anonymous, 401, method='POST', data=post_data
         )
-
         # Test with Knox
         self.assert_response_api(
-            url, self.superuser, 201, method='POST', data=post_data, knox=True
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_data=cleanup_data,
         )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
         )
@@ -189,6 +210,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'readme': 'readme',
             'owner': str(self.as_owner.user.sodar_uuid),
         }
+        cleanup_data = {
+            'class': Project,
+            'kwargs': {'title': NEW_PROJECT_TITLE},
+        }
+        good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.as_delegate.user,
             self.as_contributor.user,
@@ -196,38 +222,30 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             self.user_no_roles,
         ]
 
-        # Test with good users (delete object after creation)
         self.assert_response_api(
-            url, self.superuser, 201, method='POST', data=post_data
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            cleanup_data=cleanup_data,
         )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
-        self.assert_response_api(
-            url, self.as_owner.user, 201, method='POST', data=post_data
-        )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
-
-        # Test with bad users
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data
         )
         self.assert_response_api(
             url, self.anonymous, 401, method='POST', data=post_data
         )
-
         # Test with Knox
         self.assert_response_api(
-            url, self.superuser, 201, method='POST', data=post_data, knox=True
-        )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
-        self.assert_response_api(
             url,
-            self.as_owner.user,
+            good_users,
             201,
             method='POST',
             data=post_data,
             knox=True,
+            cleanup_data=cleanup_data,
         )
-        Project.objects.get(title=NEW_PROJECT_TITLE).delete()
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
         )
@@ -268,6 +286,64 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
         )
         self.assert_response_api(
             url, bad_users, 403, method='PUT', data=put_data, knox=True
+        )
+
+    def test_role_create(self):
+        """Test permissions for RoleAssignmentCreateAPIView"""
+
+        # Create user for assignments
+        assign_user = self.make_user('assign_user')
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
+            'user': str(assign_user.sodar_uuid),
+        }
+        cleanup_data = {
+            'class': RoleAssignment,
+            'kwargs': {
+                'project': self.project,
+                'role__name': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
+                'user': assign_user,
+            },
+        }
+
+        good_users = [self.as_owner.user, self.as_delegate.user]
+        bad_users = [
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+
+        self.assert_response_api(
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            cleanup_data=cleanup_data,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_data=cleanup_data,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
         )
 
     def test_user_list(self):

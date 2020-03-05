@@ -1035,6 +1035,203 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
+class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
+    """Tests for RoleAssignmentCreateAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.assign_user = self.make_user('assign_user')
+
+    def test_create_contributor(self):
+        """Test creating a contributor role for user"""
+
+        # Assert preconditions
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+
+        # Assert object
+        role_as = RoleAssignment.objects.filter(
+            project=self.project,
+            role=self.role_contributor,
+            user=self.assign_user,
+        ).first()
+        self.assertIsNotNone(role_as)
+
+        # Assert API response
+        expected = {
+            'project': str(self.project.sodar_uuid),
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'user': str(self.assign_user.sodar_uuid),
+            'sodar_uuid': str(role_as.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_owner(self):
+        """Test creating an owner role (should fail)"""
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_OWNER,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_create_delegate(self):
+        """Test creating a delegate role for user as owner"""
+
+        # Disable superuser status from self.user
+        self.user.is_superuser = False
+        self.user.save()
+
+        # Assert preconditions
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+
+        # Assert object
+        role_as = RoleAssignment.objects.filter(
+            project=self.project, role=self.role_delegate, user=self.assign_user
+        ).first()
+        self.assertIsNotNone(role_as)
+
+    def test_create_delegate_unauthorized(self):
+        """Test creating a delegate role without authorization (should fail)"""
+
+        # Create new user and grant delegate role
+        new_user = self.make_user('new_user')
+        self._make_assignment(self.project, new_user, self.role_contributor)
+        new_user_token = self.get_token(new_user)
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(
+            url, method='POST', data=post_data, token=new_user_token
+        )
+
+        # Assert response
+        self.assertEqual(response.status_code, 403, msg=response.content)
+
+    def test_create_delegate_limit(self):
+        """Test creating a delegate role with limit reached (should fail)"""
+
+        # Create new user and grant delegate role
+        new_user = self.make_user('new_user')
+        self._make_assignment(self.project, new_user, self.role_delegate)
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+
+        # NOTE: Post as owner
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_create_delegate_category(self):
+        """Test creating a non-owner role for category (should fail)"""
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_create_role_existing(self):
+        """Test creating a role for user already in the project"""
+
+        # Assert preconditions
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+
+        # Post again
+        post_data = {
+            'role': PROJECT_ROLE_GUEST,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+
+
 class TestUserListAPIView(TestAPIViewsBase):
     """Tests for UserListAPIView"""
 
