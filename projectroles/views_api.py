@@ -7,11 +7,14 @@ from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
+from rest_framework import serializers
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
     RetrieveAPIView,
     UpdateAPIView,
+    DestroyAPIView,
 )
 from rest_framework.permissions import (
     BasePermission,
@@ -37,12 +40,20 @@ from projectroles.serializers import (
     RoleAssignmentSerializer,
     SODARUserSerializer,
 )
-from projectroles.views import ProjectAccessMixin, SITE_MODE_TARGET
+from projectroles.views import (
+    ProjectAccessMixin,
+    RoleAssignmentDeleteMixin,
+    SITE_MODE_TARGET,
+)
 
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 
 
 # API constants for external SODAR Core sites
@@ -219,7 +230,7 @@ class SODARAPIGenericViewProjectMixin(
           "sodar_uuid"
     """
 
-    lookup_field = 'project__sodar_uuid'
+    lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
     lookup_url_kwarg = 'project'  # Replace with relevant model
 
 
@@ -281,7 +292,7 @@ class CoreAPIGenericProjectMixin(
 ):
     """Generic API view mixin for internal SODAR Core API views"""
 
-    lookup_field = 'project__sodar_uuid'
+    lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
     lookup_url_kwarg = 'project'  # Replace with relevant model
 
 
@@ -344,8 +355,6 @@ class ProjectRetrieveAPIView(
 ):
     """API view for retrieving a project by UUID."""
 
-    lookup_field = 'sodar_uuid'
-    lookup_url_kwarg = 'project'
     permission_required = 'projectroles.view_project'
     serializer_class = ProjectSerializer
 
@@ -370,8 +379,6 @@ class ProjectUpdateAPIView(
     API view for updating a project.
     """
 
-    lookup_field = 'sodar_uuid'
-    lookup_url_kwarg = 'project'
     permission_required = 'projectroles.update_project'
     serializer_class = ProjectSerializer
 
@@ -384,7 +391,6 @@ class ProjectUpdateAPIView(
         return context
 
 
-# TODO: View, permission and taskflow tests
 class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
     """
     API view for creating a role assignment in a project.
@@ -394,6 +400,52 @@ class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
     serializer_class = RoleAssignmentSerializer
 
 
+class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
+    """
+    API view for updating the role assignment for a user in a project.
+    """
+
+    lookup_url_kwarg = 'roleassignment'
+    permission_required = 'projectroles.update_project_members'
+    serializer_class = RoleAssignmentSerializer
+
+
+class RoleAssignmentDestroyAPIView(
+    RoleAssignmentDeleteMixin, CoreAPIGenericProjectMixin, DestroyAPIView
+):
+    """
+    API view for destroying a role assignment.
+    """
+
+    lookup_url_kwarg = 'roleassignment'
+    permission_required = 'projectroles.update_project_members'
+    serializer_class = RoleAssignmentSerializer
+
+    def perform_destroy(self, instance):
+        """
+        Override perform_destroy() to handle RoleAssignment deletion with or
+        without SODAR Taskflow.
+        """
+        project = self.get_project()
+
+        # Do not allow editing owner here
+        if instance.role.name == PROJECT_ROLE_OWNER:
+            raise serializers.ValidationError(
+                'Use project updating API to update owner'
+            )
+
+        # Check delegate perms
+        if (
+            instance.role.name == PROJECT_ROLE_DELEGATE
+            and not self.request.user.has_perm(
+                'projectroles.update_project_delegate', project
+            )
+        ):
+            raise PermissionDenied('User lacks permission to assign delegates')
+
+        self.delete_assignment(request=self.request, instance=instance)
+
+
 class UserListAPIView(ListAPIView):
     """
     API view for listing users in the system.
@@ -401,6 +453,7 @@ class UserListAPIView(ListAPIView):
     NOTE: Not using base mixins as there is no project context
     """
 
+    lookup_field = 'project__sodar_uuid'
     permission_classes = [IsAuthenticated]
     renderer_classes = [CoreAPIRenderer]
     serializer_class = SODARUserSerializer

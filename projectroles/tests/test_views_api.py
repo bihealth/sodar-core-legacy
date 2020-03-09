@@ -1232,6 +1232,250 @@ class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
         )
 
 
+class TestRoleAssignmentUpdateAPIView(TestAPIViewsBase):
+    """Tests for RoleAssignmentUpdateAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.assign_user = self.make_user('assign_user')
+        self.update_as = self._make_assignment(
+            self.project, self.assign_user, self.role_contributor
+        )
+
+    def test_put_role(self):
+        """Test put() for role assignment updating"""
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        put_data = {
+            'role': PROJECT_ROLE_GUEST,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='PUT', data=put_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        # Assert object content
+        self.update_as.refresh_from_db()
+        model_dict = model_to_dict(self.update_as)
+        expected = {
+            'id': self.update_as.pk,
+            'project': self.project.pk,
+            'role': self.role_guest.pk,
+            'user': self.assign_user.pk,
+            'sodar_uuid': self.update_as.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert API response
+        expected = {
+            'project': str(self.project.sodar_uuid),
+            'role': PROJECT_ROLE_GUEST,
+            'user': str(self.assign_user.sodar_uuid),
+            'sodar_uuid': str(self.update_as.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_put_delegate(self):
+        """Test put() for delegate role assignment"""
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        put_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='PUT', data=put_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 200, msg=response.content)
+
+        # Assert object content
+        self.update_as.refresh_from_db()
+        model_dict = model_to_dict(self.update_as)
+        expected = {
+            'id': self.update_as.pk,
+            'project': self.project.pk,
+            'role': self.role_delegate.pk,
+            'user': self.assign_user.pk,
+            'sodar_uuid': self.update_as.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert API response
+        expected = {
+            'project': str(self.project.sodar_uuid),
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+            'sodar_uuid': str(self.update_as.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_put_owner(self):
+        """Test put() for owner role assignment (should fail)"""
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        put_data = {
+            'role': PROJECT_ROLE_OWNER,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='PUT', data=put_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_put_change_user(self):
+        """Test put() with a different user (should fail)"""
+        new_user = self.make_user('new_user')
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        put_data = {
+            'role': PROJECT_ROLE_GUEST,
+            'user': str(new_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='PUT', data=put_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_patch_role(self):
+        """Test patch() for role assignment updating"""
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        patch_data = {'role': PROJECT_ROLE_GUEST}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        # Assert object content
+        self.update_as.refresh_from_db()
+        model_dict = model_to_dict(self.update_as)
+        expected = {
+            'id': self.update_as.pk,
+            'project': self.project.pk,
+            'role': self.role_guest.pk,
+            'user': self.assign_user.pk,
+            'sodar_uuid': self.update_as.sodar_uuid,
+        }
+        self.assertEqual(model_dict, expected)
+
+        # Assert API response
+        expected = {
+            'project': str(self.project.sodar_uuid),
+            'role': PROJECT_ROLE_GUEST,
+            'user': str(self.assign_user.sodar_uuid),
+            'sodar_uuid': str(self.update_as.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+
+    def test_patch_change_user(self):
+        """Test patch() with a different user (should fail)"""
+        new_user = self.make_user('new_user')
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        patch_data = {'user': str(new_user.sodar_uuid)}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestRoleAssignmentDestroyAPIView(TestAPIViewsBase):
+    """Tests for RoleAssignmentDestroyAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.assign_user = self.make_user('assign_user')
+
+        self.update_as = self._make_assignment(
+            self.project, self.assign_user, self.role_contributor
+        )
+
+    def test_delete_role(self):
+        """Test delete for role assignment deletion"""
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        response = self.request_knox(url, method='DELETE')
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 204, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 2)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.assign_user
+            ).count(),
+            0,
+        )
+
+    def test_delete_delegate_unauthorized(self):
+        """Test delete for delegate deletion without perms (should fail)"""
+        new_user = self.make_user('new_user')
+        delegate_as = self._make_assignment(
+            self.project, new_user, self.role_delegate
+        )
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 4)
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': delegate_as.sodar_uuid},
+        )
+        # NOTE: Perform record as contributor user
+        token = self.get_token(self.assign_user)
+        response = self.request_knox(url, method='DELETE', token=token)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 4)
+
+    def test_delete_owner(self):
+        """Test delete for owner deletion (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.owner_as.sodar_uuid},
+        )
+        response = self.request_knox(url, method='DELETE')
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+
 class TestUserListAPIView(TestAPIViewsBase):
     """Tests for UserListAPIView"""
 

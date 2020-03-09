@@ -1,6 +1,7 @@
 """REST API view permission tests for the projectroles app"""
 
 import json
+import uuid
 
 from django.core.urlresolvers import reverse
 
@@ -31,6 +32,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         version=CORE_API_DEFAULT_VERSION,
         knox=False,
         cleanup_data=None,
+        cleanup_method=None,
     ):
         """
         Assert a response status code for url with API headers and optional
@@ -47,9 +49,14 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param knox: Use Knox token auth instead of Django login (boolean)
         :param cleanup_data: Dict or list of dicts for cleaning up the database
                after each successful request, with members "class" and "kwargs"
+        :param cleanup_method: Callable method to clean up data after a
+               successful request
         """
         if cleanup_data and not isinstance(cleanup_data, (list, tuple)):
             cleanup_data = [cleanup_data]
+
+        if cleanup_method and not callable(cleanup_method):
+            raise ValueError('cleanup_method is not callable')
 
         def _send_request():
             req_method = getattr(self.client, method.lower(), None)
@@ -87,7 +94,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
                 response = _send_request()
 
             msg = 'user={}; content="{}"'.format(
-                user, json.loads(response.content)
+                user, json.loads(response.content) if response.content else ''
             )
             self.assertEqual(response.status_code, status_code, msg=msg)
 
@@ -96,6 +103,9 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
                     cleanup_item['class'].objects.filter(
                         **cleanup_item['kwargs']
                     ).delete()
+
+            if cleanup_method:
+                cleanup_method()
 
 
 class TestProjectAPIPermissionBase(
@@ -344,6 +354,91 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+
+    def test_role_update(self):
+        """Test permissions for RoleAssignmentUpdateAPIView"""
+
+        # Create user and assignment
+        assign_user = self.make_user('assign_user')
+        update_as = self._make_assignment(
+            self.project, assign_user, self.role_contributor
+        )
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': update_as.sodar_uuid},
+        )
+        put_data = {
+            'role': self.role_guest.name,
+            'user': str(assign_user.sodar_uuid),
+        }
+        good_users = [self.as_owner.user, self.as_delegate.user]
+        bad_users = [
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+
+        self.assert_response_api(
+            url, good_users, 200, method='PUT', data=put_data
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='PUT', data=put_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PUT', data=put_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url, good_users, 200, method='PUT', data=put_data, knox=True
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='PUT', data=put_data, knox=True
+        )
+
+    def test_role_delete(self):
+        """Test permissions for RoleAssignmentDestroyAPIView"""
+
+        # Create user and assignment
+        assign_user = self.make_user('assign_user')
+        role_uuid = uuid.uuid4()  # Ensure fixed uuid
+
+        def _make_as():
+            update_as = self._make_assignment(
+                self.project, assign_user, self.role_contributor
+            )
+            update_as.sodar_uuid = role_uuid
+            update_as.save()
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': role_uuid},
+        )
+        good_users = [self.as_owner.user, self.as_delegate.user]
+        bad_users = [
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+        _make_as()
+
+        self.assert_response_api(
+            url, good_users, 204, method='DELETE', cleanup_method=_make_as
+        )
+        self.assert_response_api(url, bad_users, 403, method='DELETE')
+        self.assert_response_api(url, self.anonymous, 401, method='DELETE')
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            204,
+            method='DELETE',
+            cleanup_method=_make_as,
+            knox=True,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='DELETE', knox=True
         )
 
     def test_user_list(self):

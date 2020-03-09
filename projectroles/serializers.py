@@ -153,6 +153,17 @@ class RoleAssignmentSerializer(
         project = self.context['project']
         current_user = self.context['request'].user
 
+        # Do not allow updating user
+        if (
+            self.instance
+            and 'user' in attrs
+            and attrs['user'] != self.instance.user
+        ):
+            raise serializers.ValidationError(
+                'Updating the user is not allowed, create a new role '
+                'assignment instead'
+            )
+
         # Do not allow editing owner here
         if attrs['role'].name == PROJECT_ROLE_OWNER:
             raise serializers.ValidationError(
@@ -190,23 +201,29 @@ class RoleAssignmentSerializer(
                 )
             )
 
-        # Check for existing role
-        old_as = RoleAssignment.objects.filter(
-            project=project, user=attrs['user']
-        ).first()
+        # Check for existing role if creating
+        if not self.instance:
+            old_as = RoleAssignment.objects.filter(
+                project=project, user=attrs['user']
+            ).first()
 
-        if old_as:
-            raise serializers.ValidationError(
-                'User already has the role of "{}" in project (UUID={})'.format(
-                    old_as.role.name, old_as.sodar_uuid
+            if old_as:
+                raise serializers.ValidationError(
+                    'User already has the role of "{}" in project '
+                    '(UUID={})'.format(old_as.role.name, old_as.sodar_uuid)
                 )
-            )
+
+        # Add user to instance for PATCH requests
+        if self.instance and not attrs.get('user'):
+            attrs['user'] = self.instance.user
 
         return attrs
 
     def save(self, **kwargs):
         """Override save() to handle saving locally or through Taskflow"""
-        return self.post_save(
+        # NOTE: Role not updated in response data unless we set self.instance
+        # TODO: Figure out a clean fix
+        self.instance = self.post_save(
             self.modify_assignment(
                 data=self.validated_data,
                 request=self.context['request'],
@@ -214,6 +231,7 @@ class RoleAssignmentSerializer(
                 instance=self.instance,
             )
         )
+        return self.instance
 
 
 class RoleAssignmentNestedListSerializer(

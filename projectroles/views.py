@@ -1213,6 +1213,74 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         )
 
 
+class RoleAssignmentDeleteMixin:
+    """Mixin for RoleAssignment deletion/destroying in UI and API views"""
+
+    def delete_assignment(self, request, instance):
+        timeline = get_backend_api('timeline_backend')
+        taskflow = get_backend_api('taskflow')
+
+        tl_event = None
+        project = instance.project
+        user = instance.user
+        role = instance.role
+        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
+
+        # Init Timeline event
+        if timeline:
+            tl_event = timeline.add_event(
+                project=project,
+                app_name=APP_NAME,
+                user=request.user,
+                event_name='role_delete',
+                description='delete role "{}" from {{{}}}'.format(
+                    role.name, 'user'
+                ),
+            )
+            tl_event.add_object(user, 'user', user.username)
+
+        # Submit with taskflow
+        if use_taskflow:
+            if tl_event:
+                tl_event.set_status('SUBMIT')
+
+            flow_data = {
+                'username': user.username,
+                'user_uuid': str(user.sodar_uuid),
+                'role_pk': role.pk,
+            }
+
+            try:
+                taskflow.submit(
+                    project_uuid=project.sodar_uuid,
+                    flow_name='role_delete',
+                    flow_data=flow_data,
+                    request=request,
+                )
+                instance = None
+
+            except taskflow.FlowSubmitException as ex:
+                if tl_event:
+                    tl_event.set_status('FAILED', str(ex))
+
+                raise ex
+
+        # Local save without Taskflow
+        else:
+            instance.delete()
+
+        if SEND_EMAIL:
+            send_role_change_mail('delete', project, user, None, request)
+
+        # Remove project star from user if it exists
+        remove_tag(project=project, user=user)
+
+        if tl_event:
+            tl_event.set_status('OK')
+
+        return instance
+
+
 class RoleAssignmentCreateView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
@@ -1257,6 +1325,7 @@ class RoleAssignmentDeleteView(
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
     CurrentUserFormMixin,
+    RoleAssignmentDeleteMixin,
     DeleteView,
 ):
     """RoleAssignment deletion view"""
@@ -1267,79 +1336,25 @@ class RoleAssignmentDeleteView(
     slug_field = 'sodar_uuid'
 
     def post(self, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
-        taskflow = get_backend_api('taskflow')
-
-        tl_event = None
-        self.object = RoleAssignment.objects.get(
-            sodar_uuid=kwargs['roleassignment']
-        )
-        project = self.object.project
+        self.object = self.get_object()
         user = self.object.user
-        role = self.object.role
-        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
+        project = self.object.project
 
-        # Init Timeline event
-        if timeline:
-            tl_event = timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=self.request.user,
-                event_name='role_delete',
-                description='delete role "{}" from {{{}}}'.format(
-                    role.name, 'user'
+        try:
+            self.object = self.delete_assignment(
+                request=self.request, instance=self.object
+            )
+            messages.success(
+                self.request, 'Membership of {} removed.'.format(user.username)
+            )
+
+        except Exception as ex:
+            messages.error(
+                self.request,
+                'Failed to remove membership of {}: {}'.format(
+                    user.username, ex
                 ),
             )
-            tl_event.add_object(user, 'user', user.username)
-
-        # Submit with taskflow
-        if use_taskflow:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
-
-            flow_data = {
-                'username': user.username,
-                'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk,
-            }
-
-            try:
-                taskflow.submit(
-                    project_uuid=project.sodar_uuid,
-                    flow_name='role_delete',
-                    flow_data=flow_data,
-                    request=self.request,
-                )
-                self.object = None
-
-            except taskflow.FlowSubmitException as ex:
-                if tl_event:
-                    tl_event.set_status('FAILED', str(ex))
-
-                messages.error(self.request, str(ex))
-                return redirect(
-                    reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                )
-
-        # Local save without Taskflow
-        else:
-            self.object.delete()
-
-        if SEND_EMAIL:
-            send_role_change_mail('delete', project, user, None, self.request)
-
-        # Remove project star from user if it exists
-        remove_tag(project=project, user=user)
-
-        if tl_event:
-            tl_event.set_status('OK')
-
-        messages.success(
-            self.request, 'Membership of {} removed.'.format(user.username)
-        )
 
         return redirect(
             reverse(

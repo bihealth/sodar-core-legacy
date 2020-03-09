@@ -18,7 +18,7 @@ Added
 - **Projectroles**
     - Import new REST API view base classes from SODAR (#48, #461)
     - Import base serializers from SODAR (#462)
-    - API views for project and user retrieval, project creation (#48, #450)
+    - API views for project and role management (#48, #450)
     - ``projectroles.tests.test_views_api.TestAPIViewsBase`` for API view testing (#48)
     - ``SODARAPIPermissionTestMixin`` for API view permission tests
     - New helper methods in ``SODARAPIViewTestMixin``

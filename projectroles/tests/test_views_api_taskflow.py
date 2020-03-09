@@ -69,7 +69,7 @@ class TestTaskflowAPIBase(
     def _make_project_taskflow(
         self, title, type, parent, owner, description='', readme=''
     ):
-        """Make Project with taskflow for UI view tests"""
+        """Make Project with taskflow for API view tests."""
         post_data = dict(self.request_data)
         post_data.update(
             {
@@ -92,7 +92,18 @@ class TestTaskflowAPIBase(
         project = Project.objects.get(title=title)
         return project, project.get_owner()
 
-    # TODO: Add version of _make_assignment_taskflow()
+    def _make_assignment_taskflow(self, project, role, user):
+        """Make RoleAssignment with taskflow for API view tests."""
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': project.sodar_uuid},
+        )
+        self.request_data.update(
+            {'role': role.name, 'user': str(user.sodar_uuid)}
+        )
+        response = self.request_knox(url, method='POST', data=self.request_data)
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        return RoleAssignment.objects.get(project=project, user=user, role=role)
 
     def setUp(self):
         # Ensure TASKFLOW_TEST_MODE is True to avoid data loss
@@ -461,3 +472,116 @@ class TestRoleAssignmentCreateAPIView(TestTaskflowAPIBase):
         # Assert response and object status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
+class TestRoleAssignmentUpdateAPIView(TestTaskflowAPIBase):
+    """Tests for RoleAssignmentUpdateAPIView with taskflow"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Make project with owner in Taskflow and Django
+        self.project, self.owner_as = self._make_project_taskflow(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+            description='description',
+        )
+
+        # Create user for assignments
+        self.assign_user = self.make_user('assign_user')
+
+        # Make extra assignment with Taskflow
+        self.update_as = self._make_assignment_taskflow(
+            project=self.project,
+            role=self.role_contributor,
+            user=self.assign_user,
+        )
+
+    def test_put_role(self):
+        """Test put() for role assignment updating"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        self.request_data.update(
+            {
+                'role': PROJECT_ROLE_GUEST,
+                'user': str(self.assign_user.sodar_uuid),
+            }
+        )
+        response = self.request_knox(url, method='PUT', data=self.request_data)
+
+        # Assert response and object status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+    def test_patch_role(self):
+        """Test patch() for role assignment updating"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        self.request_data.update({'role': PROJECT_ROLE_GUEST})
+        response = self.request_knox(
+            url, method='PATCH', data=self.request_data
+        )
+
+        # Assert response and object status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
+class TestRoleAssignmentDestroyAPIView(TestTaskflowAPIBase):
+    """Tests for RoleAssignmentDestroyAPIView with taskflow"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Make project with owner in Taskflow and Django
+        self.project, self.owner_as = self._make_project_taskflow(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+            description='description',
+        )
+
+        # Create user for assignments
+        self.assign_user = self.make_user('assign_user')
+
+        # Make extra assignment with Taskflow
+        self.update_as = self._make_assignment_taskflow(
+            project=self.project,
+            role=self.role_contributor,
+            user=self.assign_user,
+        )
+
+    def test_delete_role(self):
+        """Test delete() for role assignment deletion"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        response = self.request_knox(
+            url, method='DELETE', data=self.request_data
+        )
+
+        # Assert response and object status
+        self.assertEqual(response.status_code, 204, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)

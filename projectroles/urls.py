@@ -169,6 +169,16 @@ urls_api = [
         name='api_role_create',
     ),
     url(
+        regex=r'^api/roles/update/(?P<roleassignment>[0-9a-f-]+)$',
+        view=views_api.RoleAssignmentUpdateAPIView.as_view(),
+        name='api_role_update',
+    ),
+    url(
+        regex=r'^api/roles/destroy/(?P<roleassignment>[0-9a-f-]+)$',
+        view=views_api.RoleAssignmentDestroyAPIView.as_view(),
+        name='api_role_destroy',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
