@@ -1,10 +1,8 @@
-"""Views for the timeline Django app"""
+"""UI views for the timeline Django app"""
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
-
-from rest_framework.response import Response
 
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
@@ -14,9 +12,8 @@ from projectroles.views import (
     ProjectContextMixin,
     ProjectPermissionMixin,
 )
-from projectroles.views_taskflow import BaseTaskflowAPIView
 
-from .models import ProjectEvent
+from timeline.models import ProjectEvent
 
 
 # Local variables
@@ -86,31 +83,3 @@ class ObjectTimelineView(ProjectTimelineView):
             queryset = queryset.filter(classified=False)
 
         return queryset
-
-
-# Taskflow API Views -----------------------------------------------------------
-
-
-class TaskflowEventStatusSetAPIView(BaseTaskflowAPIView):
-    def post(self, request):
-        try:
-            tl_event = ProjectEvent.objects.get(
-                sodar_uuid=request.data['event_uuid']
-            )
-
-        except ProjectEvent.DoesNotExist:
-            return Response('Timeline event not found', status=404)
-
-        try:
-            tl_event.set_status(
-                status_type=request.data['status_type'],
-                status_desc=request.data['status_desc'],
-                extra_data=request.data['extra_data']
-                if 'extra_data' in request.data
-                else None,
-            )
-
-        except TypeError:
-            return Response('Invalid status type', status=400)
-
-        return Response('ok', status=200)
