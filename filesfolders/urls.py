@@ -1,14 +1,14 @@
 from django.conf.urls import url
 
-from . import views
+from . import views, views_api
 
-# NOTE: file/folder/hyperlink objects can be referred to as "item", but only if
+# NOTE: file/folder/hyperlink objects can be referred to as 'item', but only if
 #       ObjectPermissionMixin is used in the view
 
 
 app_name = 'filesfolders'
 
-urlpatterns = [
+urls_ui = [
     url(
         regex=r'^(?P<project>[0-9a-f-]+)$',
         view=views.ProjectFileView.as_view(),
@@ -105,3 +105,43 @@ urlpatterns = [
         name='batch_edit',
     ),
 ]
+
+urls_api = [
+    url(
+        regex=r'^api/folder/list-create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.FolderListCreateAPIView.as_view(),
+        name='api_folder_list_create',
+    ),
+    url(
+        regex=r'^api/folder/retrieve-update-destroy/(?P<folder>[0-9a-f-]+)$',
+        view=views_api.FolderRetrieveUpdateDestroyAPIView.as_view(),
+        name='api_folder_retrieve_update_destroy',
+    ),
+    url(
+        regex=r'^api/file/list-create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.FileListCreateAPIView.as_view(),
+        name='api_file_list_create',
+    ),
+    url(
+        regex=r'^api/file/retrieve-update-destroy/(?P<file>[0-9a-f-]+)$',
+        view=views_api.FileRetrieveUpdateDestroyAPIView.as_view(),
+        name='api_file_retrieve_update_destroy',
+    ),
+    url(
+        regex=r'^api/file/serve/(?P<file>[0-9a-f-]+)$',
+        view=views_api.FileServeAPIView.as_view(),
+        name='api_file_serve',
+    ),
+    url(
+        regex=r'^api/hyperlink/list-create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.HyperLinkListCreateAPIView.as_view(),
+        name='api_hyperlink_list_create',
+    ),
+    url(
+        regex=r'^api/hyperlink/retrieve-update-destroy/(?P<hyperlink>[0-9a-f-]+)$',
+        view=views_api.HyperLinkRetrieveUpdateDestroyAPIView.as_view(),
+        name='api_hyperlink_retrieve_update_destroy',
+    ),
+]
+
+urlpatterns = urls_ui + urls_api

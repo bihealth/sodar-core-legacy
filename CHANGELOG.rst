@@ -15,6 +15,8 @@ Added
 
 - **General**
     - "For the Impatient" section in docs
+- **Filesfolders**
+    - API views for file, folder and hyperlink management (#443)
 - **Projectroles**
     - Import new REST API view base classes from SODAR (#48, #461)
     - Import base serializers from SODAR (#462)

@@ -157,6 +157,7 @@ class SODARAPIViewTestMixin:
         self,
         url,
         method='GET',
+        format='json',
         data=None,
         token=None,
         media_type=views_api.CORE_API_MEDIA_TYPE,
@@ -167,6 +168,7 @@ class SODARAPIViewTestMixin:
 
         :param url: URL for the request
         :param method: Request method (string, default="GET")
+        :param format: Request format (string, default="json")
         :param data: Optional data for request (dict)
         :param token: Knox token string (if None, use self.knox_token)
         :param media_type: String (default = SODAR Core default media type)
@@ -177,6 +179,7 @@ class SODARAPIViewTestMixin:
             token = self.knox_token
 
         req_kwargs = {
+            'format': format,
             **self.get_accept_header(media_type, version),
             **self.get_token_header(token),
         }

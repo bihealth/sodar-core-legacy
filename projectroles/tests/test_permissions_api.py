@@ -1,6 +1,5 @@
 """REST API view permission tests for the projectroles app"""
 
-import json
 import uuid
 
 from django.core.urlresolvers import reverse
@@ -27,6 +26,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         users,
         status_code,
         method='GET',
+        format='json',
         data=None,
         media_type=CORE_API_MEDIA_TYPE,
         version=CORE_API_DEFAULT_VERSION,
@@ -42,7 +42,8 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param url: Target URL for the request
         :param users: Users to test (single user, list or tuple)
         :param status_code: Status code
-        :param method: Method for request (default='GET')
+        :param method: Method for request (default="GET")
+        :param format: Request format (string, default="json")
         :param data: Optional data for request (dict)
         :param media_type: String (default = SODAR Core default media type)
         :param version: String (default = SODAR Core default version)
@@ -70,7 +71,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             users = [users]
 
         for user in users:
-            req_kwargs = {}
+            req_kwargs = {'format': format}
 
             if data:
                 req_kwargs['data'] = data
@@ -93,9 +94,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
             else:  # Anonymous, no knox
                 response = _send_request()
 
-            msg = 'user={}; content="{}"'.format(
-                user, json.loads(response.content) if response.content else ''
-            )
+            msg = 'user={}; content="{}"'.format(user, response.content)
             self.assertEqual(response.status_code, status_code, msg=msg)
 
             if cleanup_data:
@@ -220,10 +219,12 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'readme': 'readme',
             'owner': str(self.as_owner.user.sodar_uuid),
         }
-        cleanup_data = {
-            'class': Project,
-            'kwargs': {'title': NEW_PROJECT_TITLE},
-        }
+
+        def _cleanup():
+            p = Project.objects.filter(title=NEW_PROJECT_TITLE).first()
+            if p:
+                p.delete()
+
         good_users = [self.superuser, self.as_owner.user]
         bad_users = [
             self.as_delegate.user,
@@ -238,7 +239,7 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             201,
             method='POST',
             data=post_data,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data
@@ -254,7 +255,7 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             method='POST',
             data=post_data,
             knox=True,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True

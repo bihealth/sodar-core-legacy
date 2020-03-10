@@ -307,7 +307,7 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
         if request.user.is_superuser:
             return True
 
-        parent_uuid = request.POST.get('parent')
+        parent_uuid = request.data.get('parent')
 
         if not parent_uuid:
             return False
