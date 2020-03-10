@@ -97,7 +97,7 @@ class TaskflowAPI:
             elif request.GET.get('sodar_url'):
                 data['sodar_url'] = request.GET['sodar_url']
 
-            elif request.data.get('sodar_url'):
+            elif hasattr(request, 'data') and request.data.get('sodar_url'):
                 data['sodar_url'] = request.data['sodar_url']
 
         elif sodar_url:

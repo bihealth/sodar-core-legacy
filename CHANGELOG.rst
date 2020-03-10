@@ -35,6 +35,7 @@ Changed
 
 - **General**
     - Upgrade minimum Django version to 1.11.28
+    - General upgrade for Python package requirements (#124, #459)
     - Reorganize view classes and URL patterns (#480)
     - Update ``CONTRIBUTING.rst``
 - **Projectroles**

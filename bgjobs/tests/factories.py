@@ -10,8 +10,6 @@ class BackgroundJobFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = BackgroundJob
 
-    project = (
-        None
-    )  # Can't set this because of circular dependency. factory.SubFactory(ProjectFactory)
+    project = None  # Can't set this because of circular dependency. factory.SubFactory(ProjectFactory)
     user = None  # Wait for SODAR core to offer a UserFactory
     job_type = 'type'

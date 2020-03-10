@@ -68,15 +68,14 @@ detailed below.
 - ``get_accept_header()`` returns the header as dict instead of a string.
 - ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
   ``TestPermissionBase``. Please use ``assert_response()`` instead.
-- ``assert_response()`` can also be included to your test view from
-  ``TestPermissionMixin`` if ``TestPermissionBase`` does not suit your needs.
 
-Remote Project Sync Minimum API Version Updated
------------------------------------------------
+System Prerequisites
+--------------------
 
-Sites using django-sodar-core v0.7.x will no longer be compatible for remote
-project sync. The minimum supported version is ``0.8.0``.
-
+The minimum supported versions have been upgraded for a number of Python
+packages in this release. It is highly recommended to also upgrade these for
+your SODAR Core based site. See the ``requirements`` directory for up-to date
+dependencies.
 
 
 v0.7.2 (2020-01-31)
