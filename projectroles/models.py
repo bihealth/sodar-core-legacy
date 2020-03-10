@@ -2,7 +2,7 @@ import uuid
 
 from django.apps import apps
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
@@ -14,8 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
 
-from .constants import get_sodar_constants
-from .utils import set_user_group
+from projectroles.constants import get_sodar_constants
 
 
 # Access Django user model
@@ -965,6 +964,10 @@ class SODARUser(AbstractUser):
     def __str__(self):
         return self.username
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.set_group()
+
     def get_full_name(self):
         """Return full name or username if not set"""
 
@@ -975,6 +978,21 @@ class SODARUser(AbstractUser):
             return '{} {}'.format(self.first_name, self.last_name)
 
         return self.username
+
+    def set_group(self):
+        """Set user group based on user name."""
+
+        if self.username.find('@') != -1:
+            group_name = self.username.split('@')[1].lower()
+
+        else:
+            group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+
+        group, created = Group.objects.get_or_create(name=group_name)
+
+        if group not in self.groups.all():
+            group.user_set.add(self)
+            return group_name
 
 
 # User signals -----------------------------------------------------------------
@@ -1005,7 +1023,7 @@ def handle_ldap_login(sender, user, **kwargs):
 
 def assign_user_group(sender, user, **kwargs):
     """Signal for user group assignment"""
-    set_user_group(user)
+    user.set_group()
 
 
 user_logged_in.connect(handle_ldap_login)

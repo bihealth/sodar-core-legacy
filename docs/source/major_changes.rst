@@ -69,6 +69,13 @@ detailed below.
 - ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
   ``TestPermissionBase``. Please use ``assert_response()`` instead.
 
+User Group Updating
+-------------------
+
+The ``set_user_group()`` helper has been moved from ``projectroles.utils`` into
+the ``SODARUser`` model. It is called automatically on ``SODARUser.save()``, so
+manual calling of the method is not required for most cases.
+
 System Prerequisites
 --------------------
 

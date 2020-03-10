@@ -25,7 +25,7 @@ from projectroles.models import (
     PROJECT_TAG_STARRED,
 )
 from projectroles.plugins import get_app_plugin
-from projectroles.utils import build_secret, set_user_group
+from projectroles.utils import build_secret
 
 
 # SODAR constants
@@ -259,7 +259,6 @@ class SodarUserMixin:
             user.sodar_uuid = sodar_uuid
 
         user.save()
-        set_user_group(user)
         return user
 
 

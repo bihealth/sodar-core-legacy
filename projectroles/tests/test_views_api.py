@@ -37,7 +37,7 @@ from projectroles.tests.test_views import (
     REMOTE_SITE_DESC,
     REMOTE_SITE_SECRET,
 )
-from projectroles.utils import build_secret, set_user_group
+from projectroles.utils import build_secret
 
 
 CORE_API_MEDIA_TYPE_INVALID = 'application/vnd.bihealth.invalid'
@@ -1486,8 +1486,6 @@ class TestUserListAPIView(TestAPIViewsBase):
         super().setUp()
         # Create additional users
         self.domain_user = self.make_user('domain_user@domain')
-        set_user_group(self.domain_user)
-        set_user_group(self.user)  # Set system group for default user
 
     def test_get(self):
         """Test UserListAPIView get() as a regular user"""

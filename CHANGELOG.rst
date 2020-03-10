@@ -46,6 +46,8 @@ Changed
     - Move ``KnoxAuthMixin`` functionality into ``SODARAPIViewTestMixin``
     - ``get_accept_header()`` in API tests returns header as dict
     - Refactor base permission test classes (#490)
+    - Move ``utils.set_user_group()`` to ``SODARUser.set_group()`` (#483)
+    - Call ``set_group()`` in ``SODARUser.save()`` (#483)
 
 Fixed
 -----
@@ -57,7 +59,7 @@ Fixed
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)
     - Redundant updating of ``Project.submit_status`` during project creation
-    - Make `test_widget_user_options()` more reliable (#253)
+    - Make ``test_widget_user_options()`` more reliable (#253)
 
 Removed
 -------

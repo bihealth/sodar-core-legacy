@@ -2,7 +2,6 @@ import random
 import string
 
 from django.conf import settings
-from django.contrib.auth.models import Group
 from django.urls import reverse
 from django.utils import timezone
 
@@ -101,19 +100,3 @@ def get_app_names():
                 ret.append(s[0])
 
     return sorted(ret)
-
-
-def set_user_group(user):
-    """Set user group based on user name."""
-
-    if user.username.find('@') != -1:
-        group_name = user.username.split('@')[1].lower()
-
-    else:
-        group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
-
-    group, created = Group.objects.get_or_create(name=group_name)
-
-    if group not in user.groups.all():
-        group.user_set.add(user)
-        return group_name

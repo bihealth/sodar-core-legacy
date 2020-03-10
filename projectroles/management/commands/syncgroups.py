@@ -4,9 +4,6 @@ from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from projectroles.utils import set_user_group
-
-
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
 
@@ -23,12 +20,13 @@ class Command(BaseCommand):
         with transaction.atomic():
             for user in User.objects.all():
                 user.groups.clear()
-                user.save()
-                group_name = set_user_group(user)
+                user.save()  # Group is updated during save
 
-                if group_name:
+                if user.groups.count() > 0:
                     logger.debug(
-                        'Group set: {} -> {}'.format(user.username, group_name)
+                        'Group set: {} -> {}'.format(
+                            user.username, user.groups.first().name
+                        )
                     )
 
         logger.info(
