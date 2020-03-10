@@ -1,7 +1,5 @@
 """UI view permission tests for the projectroles app"""
 
-import json
-
 from urllib.parse import urlencode
 
 from django.core.urlresolvers import reverse
@@ -181,7 +179,7 @@ class TestProjectPermissionBase(
 
 
 class TestBaseViews(TestProjectPermissionBase):
-    """Tests for base views"""
+    """Tests for base UI views"""
 
     def test_home(self):
         """Test permissions for the home view"""
@@ -283,7 +281,7 @@ class TestBaseViews(TestProjectPermissionBase):
 
 
 class TestProjectViews(TestProjectPermissionBase):
-    """Permission tests for Project views"""
+    """Permission tests for Project UI views"""
 
     def test_category_details(self):
         """Test permissions for category details"""
@@ -691,71 +689,6 @@ class TestProjectViews(TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
-
-    def test_starring_ajax(self):
-        """Test permissions for project starring Ajax view"""
-        url = reverse(
-            'projectroles:ajax_star',
-            kwargs={'project': self.project.sodar_uuid},
-        )
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
-        ]
-        bad_users = [self.anonymous, self.user_no_roles]
-        self.assert_response(url, good_users, 200, method='POST')
-        self.assert_response(url, bad_users, 403, method='POST')
-
-    def test_starring_ajax_category(self):
-        """Test permissions for project starring Ajax view under category"""
-        url = reverse(
-            'projectroles:ajax_star',
-            kwargs={'project': self.category.sodar_uuid},
-        )
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
-        ]
-        bad_users = [self.anonymous, self.user_no_roles]
-        self.assert_response(url, good_users, 200, method='POST')
-        self.assert_response(url, bad_users, 403, method='POST')
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_user_autocomplete_ajax(self):
-        """Test UserAutocompleteAjaxView access"""
-        good_users = [
-            self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
-        ]
-        bad_users = [self.anonymous, self.user_no_roles]
-
-        values = {'project': self.project.sodar_uuid}
-
-        for user in good_users:
-            with self.login(user):
-                response = self.client.get(
-                    reverse('projectroles:ajax_autocomplete_user'), values
-                )
-                self.assertEqual(response.status_code, 200)
-                data = json.loads(response.content)
-                self.assertNotEqual(len(data['results']), 0)
-
-        for user in bad_users:
-            response = self.client.get(
-                reverse('projectroles:ajax_autocomplete_user'), values
-            )
-            self.assertEqual(response.status_code, 200)
-            data = json.loads(response.content)
-            self.assertFalse(data['results'])
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)

@@ -15,7 +15,7 @@ from projectroles.tests.test_views import TestViewsBase, PROJECT_TYPE_PROJECT
 class TestProjectStarringAjaxView(
     ProjectMixin, RoleAssignmentMixin, ProjectUserTagMixin, TestViewsBase
 ):
-    """Tests for project starring API view"""
+    """Tests for the project starring Ajax view"""
 
     def setUp(self):
         super().setUp()

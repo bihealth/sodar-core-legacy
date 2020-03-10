@@ -62,6 +62,7 @@ Fixed
     - Make ``test_widget_user_options()`` more reliable (#253)
     - Missing permission check by role type in ``RoleAssignmentDeleteView.post()`` (#492)
     - Unordered queryset warnings from the ``User`` model (#494)
+    - Incorrect user iteration in ``test_user_autocomplete_ajax()`` (#469)
 
 Removed
 -------

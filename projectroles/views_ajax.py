@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
 from django.db.models import Q
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
 from dal import autocomplete
@@ -74,9 +74,6 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         - "exclude": list of explicit User.sodar_uuid to exclude from queryset
 
         """
-        if not self.request.user.is_authenticated():
-            return User.objects.none()
-
         current_user = self.request.user
         project_uuid = self.forwarded.get('project', None)
         exclude_uuids = self.forwarded.get('exclude', None)
@@ -147,6 +144,12 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
     def get_result_value(self, user):
         """Use sodar_uuid in the User model instead of pk"""
         return str(user.sodar_uuid)
+
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated():
+            return HttpResponseForbidden()
+
+        return super().get(request, *args, **kwargs)
 
 
 class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
