@@ -1088,7 +1088,7 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         self.assertEqual(
             len(
                 self.selenium.find_elements_by_class_name(
-                    'select2-results__message'
+                    'select2-selection__rendered'
                 )
             ),
             1,

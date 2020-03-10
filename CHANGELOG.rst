@@ -57,6 +57,7 @@ Fixed
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)
     - Redundant updating of ``Project.submit_status`` during project creation
+    - Make `test_widget_user_options()` more reliable (#253)
 
 Removed
 -------
