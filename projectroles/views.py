@@ -1340,21 +1340,36 @@ class RoleAssignmentDeleteView(
         user = self.object.user
         project = self.object.project
 
-        try:
-            self.object = self.delete_assignment(
-                request=self.request, instance=self.object
+        # Override perms for owner/delegate
+        if self.object.role.name == PROJECT_ROLE_OWNER or (
+            self.object.role.name == PROJECT_ROLE_DELEGATE
+            and not self.request.user.has_perm(
+                'projectroles.update_project_delegate', project
             )
-            messages.success(
-                self.request, 'Membership of {} removed.'.format(user.username)
-            )
-
-        except Exception as ex:
+        ):
             messages.error(
                 self.request,
-                'Failed to remove membership of {}: {}'.format(
-                    user.username, ex
-                ),
+                'You do not have permission to remove the '
+                'membership of {}'.format(self.object.role.name),
             )
+
+        else:
+            try:
+                self.object = self.delete_assignment(
+                    request=self.request, instance=self.object
+                )
+                messages.success(
+                    self.request,
+                    'Membership of {} removed.'.format(user.username),
+                )
+
+            except Exception as ex:
+                messages.error(
+                    self.request,
+                    'Failed to remove membership of {}: {}'.format(
+                        user.username, ex
+                    ),
+                )
 
         return redirect(
             reverse(

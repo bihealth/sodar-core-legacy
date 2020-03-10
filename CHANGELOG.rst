@@ -60,6 +60,7 @@ Fixed
     - Remote sync for owner role failing with specific user order in data (#439)
     - Redundant updating of ``Project.submit_status`` during project creation
     - Make ``test_widget_user_options()`` more reliable (#253)
+    - Missing permission check by role type in ``RoleAssignmentDeleteView.post()`` (#492)
 
 Removed
 -------

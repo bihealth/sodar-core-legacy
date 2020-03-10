@@ -1276,6 +1276,49 @@ class TestRoleAssignmentDeleteView(
                 ),
             )
 
+    def test_delete_owner(self):
+        """Test RoleAssignment owner deletion (should fail)"""
+
+        owner_user = self.make_user('owner_user')
+        self.owner_as.user = owner_user  # Not a superuser
+        self.owner_as.save()
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        with self.login(owner_user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.owner_as.sodar_uuid},
+                )
+            )
+
+        # Assert RoleAssignment state after update
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+    def test_delete_delegate(self):
+        """Test RoleAssignment delegate deleting by contributor (should fail)"""
+
+        contrib_user = self.make_user('contrib_user')
+        self._make_assignment(self.project, contrib_user, self.role_contributor)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        with self.login(contrib_user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_delete',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                )
+            )
+
+        # Assert RoleAssignment state after update
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
 
 class TestRoleAssignmentTransferOwnershipView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
