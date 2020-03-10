@@ -74,7 +74,11 @@ class SODARProjectModelSerializer(SODARModelSerializer):
     """Base serializer for SODAR models with a project relation"""
 
     # The project field is read only because we get it from the URL
-    project = serializers.ReadOnlyField(source='project.sodar_uuid')
+    # project = serializers.ReadOnlyField(source='project.sodar_uuid')
+
+    project = serializers.SlugRelatedField(
+        slug_field='sodar_uuid', read_only=True
+    )
 
     class Meta:
         pass
@@ -258,7 +262,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         allow_null=True,
         queryset=Project.objects.filter(type=PROJECT_TYPE_CATEGORY),
     )
-    readme = serializers.CharField(required=False)
+    readme = serializers.CharField(required=False, allow_blank=True)
     roles = RoleAssignmentNestedListSerializer(read_only=True, many=True)
 
     class Meta:

@@ -255,7 +255,7 @@ class File(BaseFilesfoldersClass):
         default=False, help_text='Allow providing a public URL for the file'
     )
 
-    #: Secret string for creating public URL (auto created by form)
+    #: Secret string for creating public URL (auto created by form / serializer)
     secret = models.CharField(
         max_length=255,
         unique=True,

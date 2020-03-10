@@ -91,11 +91,14 @@ class TaskflowAPI:
 
         # HACK: Add overriding URL for test server
         if request:
-            if request.POST and 'sodar_url' in request.POST:
+            if request.POST.get('sodar_url'):
                 data['sodar_url'] = request.POST['sodar_url']
 
-            elif request.GET and 'sodar_url' in request.GET:
+            elif request.GET.get('sodar_url'):
                 data['sodar_url'] = request.GET['sodar_url']
+
+            elif request.data.get('sodar_url'):
+                data['sodar_url'] = request.data['sodar_url']
 
         elif sodar_url:
             data['sodar_url'] = sodar_url

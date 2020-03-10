@@ -16,6 +16,7 @@ v0.8.0 (WIP)
 Release Highlights
 ==================
 
+- Add API views for the ``projectroles`` and ``filesfolders`` apps
 - Import the ``tokens`` API token management app from VarFish
 - Reorganization of ``projectroles`` views
 
