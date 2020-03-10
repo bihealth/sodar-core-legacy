@@ -61,6 +61,7 @@ Fixed
     - Redundant updating of ``Project.submit_status`` during project creation
     - Make ``test_widget_user_options()`` more reliable (#253)
     - Missing permission check by role type in ``RoleAssignmentDeleteView.post()`` (#492)
+    - Unordered queryset warnings from the ``User`` model (#494)
 
 Removed
 -------

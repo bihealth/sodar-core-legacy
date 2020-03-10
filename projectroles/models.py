@@ -960,6 +960,7 @@ class SODARUser(AbstractUser):
 
     class Meta:
         abstract = True
+        ordering = ['name', 'username']
 
     def __str__(self):
         return self.username
