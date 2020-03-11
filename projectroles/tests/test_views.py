@@ -198,16 +198,6 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             ),
         )
 
-    def test_redirect_invalid_input(self):
-        """Test to ensure the project search view redirects if input is not valid"""
-        with self.login(self.user):
-            response = self.client.get(
-                reverse('projectroles:search')
-                + '?'
-                + urlencode({'s': 'test\'"%,'})
-            )
-            self.assertRedirects(response, reverse('home'))
-
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
         """Test redirecting the view due to search being disabled"""

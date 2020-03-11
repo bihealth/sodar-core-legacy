@@ -65,6 +65,7 @@ Fixed
     - Missing permission check by role type in ``RoleAssignmentDeleteView.post()`` (#492)
     - Unordered queryset warnings from the ``User`` model (#494)
     - Incorrect user iteration in ``test_user_autocomplete_ajax()`` (#469)
+    - Redundant input validation preventing search with valid characters (#472)
 
 Removed
 -------
