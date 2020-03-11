@@ -384,6 +384,7 @@ class ProjectContextMixin(
         return context
 
 
+# TODO: Remove
 class APIPermissionMixin(PermissionRequiredMixin):
     """Mixin for handling permission response for API functions"""
 

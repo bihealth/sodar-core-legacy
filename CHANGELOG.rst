@@ -27,6 +27,7 @@ Added
     - Provide live server URL for Taskflow in ``TestTaskflowBase.request_data`` (#479)
     - ``TestTaskflowAPIBase`` for testing API views with SODAR Taskflow (#488)
     - Permission tests using Knox tokens (#476)
+    - Base Ajax view classes in ``projectroles.views_ajax`` (#465)
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -37,6 +38,7 @@ Changed
     - Upgrade minimum Django version to 1.11.28
     - General upgrade for Python package requirements (#124, #459)
     - Reorganize view classes and URL patterns (#480)
+    - Refactor Ajax views (#465, #475)
     - Update ``CONTRIBUTING.rst``
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)

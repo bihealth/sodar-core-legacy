@@ -1,9 +1,9 @@
+"""UI views for the adminalerts app"""
+
 from django.conf import settings
 from django.contrib import messages
-from django.http import HttpRequest, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import redirect
 from django.urls import reverse
-from django.views import View
 from django.views.generic import (
     DetailView,
     UpdateView,
@@ -20,8 +20,8 @@ from projectroles.views import (
     CurrentUserFormMixin,
 )
 
-from .forms import AdminAlertForm
-from .models import AdminAlert
+from adminalerts.forms import AdminAlertForm
+from adminalerts.models import AdminAlert
 
 
 DEFAULT_PAGINATION = 15
@@ -30,6 +30,7 @@ DEFAULT_PAGINATION = 15
 # Listing/details views --------------------------------------------------------
 
 
+# TODO: Rename "uuid" kwargs with proper class name
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
 
@@ -113,28 +114,3 @@ class AdminAlertDeleteView(
         """Override for redirecting alert list view with message"""
         messages.success(self.request, 'Alert deleted.')
         return reverse('adminalerts:list')
-
-
-# API views --------------------------------------------------------------------
-
-
-class AdminAlertActivationAPIView(
-    LoggedInPermissionMixin, HTTPRefererMixin, View
-):
-    """AdminAlert activation/deactivation API view"""
-
-    permission_required = 'adminalerts.update_alert'
-    http_method_names = ['post']
-
-    def post(self, request: HttpRequest):
-        uuid = request.POST.get('uuid', None)
-
-        try:
-            alert = AdminAlert.objects.get(sodar_uuid__exact=uuid)
-
-        except AdminAlert.DoesNotExist:
-            return HttpResponseBadRequest()
-
-        alert.active = not alert.active
-        alert.save()
-        return JsonResponse({'is_active': alert.active})

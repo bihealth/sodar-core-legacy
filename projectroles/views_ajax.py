@@ -8,9 +8,12 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
 from dal import autocomplete
-
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rules.contrib.views import PermissionRequiredMixin
 
 from projectroles.models import (
     Project,
@@ -21,23 +24,58 @@ from projectroles.models import (
 from projectroles.plugins import get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.views import (
-    LoginRequiredMixin,
-    ProjectPermissionMixin,
-    APIPermissionMixin,
+    ProjectAccessMixin,
     APP_NAME,
     User,
 )
+from projectroles.views_api import SODARAPIProjectPermission
 
 
-class ProjectStarringAjaxView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
+# Base Classes and Mixins ------------------------------------------------------
+
+
+class SODARBaseAjaxView(APIView):
+    """
+    Base Ajax view with Django session authentication.
+
+    NOTE: No permission classes or mixins used, you will have to supply your
+          own if using this class directly.
+    """
+
+    authentication_classes = [SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+    renderer_classes = [JSONRenderer]
+
+
+class SODARBasePermissionAjaxView(PermissionRequiredMixin, SODARBaseAjaxView):
+    """
+    Base Ajax view with permission checks, to be used e.g. in site apps with no
+    project context.
+
+    NOTE: User-based perms such as is_superuser can be used with this class.
+    """
+
+    def handle_no_permission(self):
+        """Override handle_no_permission() to provide 403"""
+        return HttpResponseForbidden()
+
+
+class SODARBaseProjectAjaxView(ProjectAccessMixin, SODARBaseAjaxView):
+    """Base Ajax view with SODAR project permission checks"""
+
+    permission_classes = [SODARAPIProjectPermission]
+
+
+# Projectroles Ajax Views ------------------------------------------------------
+
+
+class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
     """View to handle starring and unstarring a project"""
 
     permission_required = 'projectroles.view_project'
 
     def post(self, request, *args, **kwargs):
-        project = self.get_permission_object()
+        project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')
 
