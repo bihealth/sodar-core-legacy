@@ -187,7 +187,7 @@ class SODARAPIBaseMixin:
     versioning_class = SODARAPIVersioning
 
 
-class SODARAPIBaseProjectMixin(SODARAPIBaseMixin):
+class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     """
     API view mixin for the base DRF APIView class with project permission
     checking, but without serializers and other generic view functionality.
@@ -277,7 +277,7 @@ class CoreAPIBaseMixin:
     versioning_class = CoreAPIVersioning
 
 
-class CoreAPIBaseProjectMixin(CoreAPIBaseMixin):
+class CoreAPIBaseProjectMixin(ProjectAccessMixin, CoreAPIBaseMixin):
     """
     SODAR Core API view mixin for the base DRF APIView class with project
     permission checking, but without serializers and other generic view

@@ -1,20 +1,19 @@
-"""Views for the sodarcache app"""
-
-from django.contrib.auth.mixins import LoginRequiredMixin
+"""API views for the sodarcache app"""
 
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 # Projectroles dependency
 from projectroles.plugins import get_backend_api
-from projectroles.views import ProjectPermissionMixin, APIPermissionMixin
+from projectroles.views_api import CoreAPIBaseProjectMixin
 
 APP_NAME = 'sodarcache'
 
 
-class SodarCacheSetAPIView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
+# TODO: Refactor views and URLs to match SODAR conventions in v0.9 (see #498)
+
+
+class SodarCacheSetAPIView(CoreAPIBaseProjectMixin, APIView):
     """API View for creating or updating the value of a cache item"""
 
     permission_required = 'sodarcache.set_cache_value'
@@ -39,9 +38,7 @@ class SodarCacheSetAPIView(
         return Response({'message': 'ok'}, status=200)
 
 
-class SodarCacheGetAPIView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
+class SodarCacheGetAPIView(CoreAPIBaseProjectMixin, APIView):
     """API View for retrieving the value of a cache item"""
 
     permission_required = 'sodarcache.get_cache_value'
@@ -73,9 +70,7 @@ class SodarCacheGetAPIView(
             return Response({'message': str(ex)}, status=500)
 
 
-class SodarCacheGetDateAPIView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
+class SodarCacheGetDateAPIView(CoreAPIBaseProjectMixin, APIView):
     """API View for retrieving the update date of a cache item"""
 
     permission_required = 'sodarcache.get_cache_value'

@@ -1,4 +1,4 @@
-"""Tests for views in the sodarcache app"""
+"""Tests for API views in the sodarcache app"""
 
 import json
 
