@@ -734,26 +734,27 @@ API View usage will be explained in this chapter, currently under construction.
 Ajax API Views
 --------------
 
-To set up Ajax API views for the UI, you can use the standard login and project
-permission mixins along with ``APIPermissionMixin`` together with any Django
-Rest Framework view class. Permissions can be managed as with normal Django
-views. Example with generic ``APIView``:
+To set up Ajax API views for the UI, it is recommended to use the base Ajax
+view classes and mixins found in ``projectroles.views_ajax``. Note that Knox
+token authentication is not expected to be used with these views and may not
+work.
+
+Available base classes:
+
+- ``SODARBaseAjaxView``: Base Ajax view with Django session authentication.
+- ``SODARBasePermissionAjaxView``: Base Ajax view which supports permission
+  checks, to be used e.g. in site apps with no project context.
+- ``SODARBaseProjectAjaxView``: Base Ajax view with SODAR project permission
+  checks.
+
+Example with generic ``APIView``:
 
 .. code-block:: python
 
     from rest_framework.views import APIView
-    from projectroles.views import (
-        LoginRequiredMixin,
-        ProjectPermissionMixin,
-        APIPermissionMixin,
-    )
+    from projectroles.views import SODARBaseProjectAjaxView
 
-    class ExampleAjaxAPIView(
-            LoginRequiredMixin,
-            ProjectPermissionMixin,
-            APIPermissionMixin,
-            APIView,
-    ):
+    class ExampleAjaxAPIView(SODARBaseProjectAjaxView, APIView):
 
     permission_required = 'projectroles.view_project'
 

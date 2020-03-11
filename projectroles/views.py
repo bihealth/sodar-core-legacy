@@ -12,7 +12,6 @@ from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.db import transaction
-from django.http import HttpResponseForbidden
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -382,15 +381,6 @@ class ProjectContextMixin(
             )
 
         return context
-
-
-# TODO: Remove
-class APIPermissionMixin(PermissionRequiredMixin):
-    """Mixin for handling permission response for API functions"""
-
-    def handle_no_permission(self):
-        """Override handle_no_permission to provide 403"""
-        return HttpResponseForbidden()
 
 
 class CurrentUserFormMixin:

@@ -74,6 +74,7 @@ Removed
     - ``KnoxAuthMixin`` from view tests
     - ``get_selectable_users()`` from ``forms``
     - Redundant render/redirect helpers from ``TestPermissionBase``: use ``assert_response()`` instead (#484)
+    - ``APIPermissionMixin`` for API views: use base API/Ajax view classes instead (#467)
 
 
 v0.7.2 (2020-01-31)

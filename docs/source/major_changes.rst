@@ -17,8 +17,9 @@ Release Highlights
 ==================
 
 - Add API views for the ``projectroles`` and ``filesfolders`` apps
+- Add new base view classes and mixins for API/Ajax views
 - Import the ``tokens`` API token management app from VarFish
-- Reorganization of ``projectroles`` views
+- Reorganization of views in apps
 
 Breaking Changes
 ================
@@ -51,10 +52,9 @@ intended to be usable by other apps have been renamed. They are listed below.
 API View Class Changes
 ----------------------
 
-Changes have been made to the base API view classes and mixins.
-
-- ``SODARAPIBaseView`` has been removed. Please use one of the mixins found in
-  ``projectroles.views_api`` instead.
+``SODARAPIBaseView`` and ``APIPermissionMixin`` have been removed. Please use
+appropriate classes and mixins found in ``projectroles.views_api`` and
+``projectroles.views_ajax`` instead.
 
 Base Test Class and Mixin Changes
 ---------------------------------
