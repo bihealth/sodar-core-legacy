@@ -42,7 +42,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
     def test_alert_update(self):
         """Test permissions for AdminAlert updating"""
         url = reverse(
-            'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+            'adminalerts:update', kwargs={'adminalert': self.alert.sodar_uuid}
         )
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
@@ -52,7 +52,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
     def test_alert_delete(self):
         """Test permissions for AdminAlert deletion"""
         url = reverse(
-            'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+            'adminalerts:delete', kwargs={'adminalert': self.alert.sodar_uuid}
         )
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
@@ -70,7 +70,7 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
     def test_alert_detail(self):
         """Test permissions for AdminAlert details"""
         url = reverse(
-            'adminalerts:detail', kwargs={'uuid': self.alert.sodar_uuid}
+            'adminalerts:detail', kwargs={'adminalert': self.alert.sodar_uuid}
         )
         good_users = [self.superuser, self.regular_user]
         bad_users = [self.anonymous]

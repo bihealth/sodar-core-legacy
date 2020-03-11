@@ -30,7 +30,6 @@ DEFAULT_PAGINATION = 15
 # Listing/details views --------------------------------------------------------
 
 
-# TODO: Rename "uuid" kwargs with proper class name
 class AdminAlertListView(LoggedInPermissionMixin, ListView):
     """Alert list view"""
 
@@ -40,7 +39,7 @@ class AdminAlertListView(LoggedInPermissionMixin, ListView):
     paginate_by = getattr(
         settings, 'ADMINALERTS_PAGINATION', DEFAULT_PAGINATION
     )
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
     def get_queryset(self):
@@ -55,7 +54,7 @@ class AdminAlertDetailView(
     permission_required = 'adminalerts.view_alert'
     template_name = 'adminalerts/alert_detail.html'
     model = AdminAlert
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
 
@@ -96,7 +95,7 @@ class AdminAlertUpdateView(
     model = AdminAlert
     form_class = AdminAlertForm
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
 
@@ -107,7 +106,7 @@ class AdminAlertDeleteView(
 
     model = AdminAlert
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):

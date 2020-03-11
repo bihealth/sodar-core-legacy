@@ -53,7 +53,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
                     '<i class="fa fa-arrow-circle-right"></i> '
                     'Details</a>'.format(
                         reverse(
-                            'adminalerts:detail', kwargs={'uuid': a.sodar_uuid}
+                            'adminalerts:detail',
+                            kwargs={'adminalert': a.sodar_uuid},
                         )
                     )
                 )
