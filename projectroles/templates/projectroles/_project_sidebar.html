@@ -51,7 +51,7 @@
   {% endif %}
 
   {# Role and project editing #}
-  {% if project.type != PROJECT_TYPE_CATEGORY and can_view_roles %}
+  {% if can_view_roles %}
     <li id="sodar-pr-nav-project-roles"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}">
       <a class="nav-link"

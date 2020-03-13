@@ -19,6 +19,7 @@ Release Highlights
 - Add API views for the ``projectroles`` and ``filesfolders`` apps
 - Add new base view classes and mixins for API/Ajax views
 - Import the ``tokens`` API token management app from VarFish
+- Allow assigning roles other than owner for categories
 - Reorganization of views in apps
 
 Breaking Changes

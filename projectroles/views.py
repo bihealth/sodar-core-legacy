@@ -89,7 +89,6 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
-ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'ajax_star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 
@@ -219,10 +218,8 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
-            if (
-                request_url.app_name != APP_NAME
-                or request_url.url_name not in ALLOWED_CATEGORY_URLS
-            ):
+            # TODO: Update this for allowing stuff in categories
+            if request_url.app_name != APP_NAME:
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked

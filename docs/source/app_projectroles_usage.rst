@@ -98,8 +98,8 @@ Category and Project Management
 
 In SODAR based sites, data is split into **categories** and **projects**.
 Categories may be freely nested and are used as containers of projects. They
-may contain a description and readme, but project apps and user roles beyond
-owner are disabled for categories. Projects can not be nested within each other.
+may contain a description and readme, but project apps apart from Timeline
+are disabled for categories. Projects can not be nested within each other.
 
 Creating a Top Level Category
 -----------------------------

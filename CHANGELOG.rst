@@ -28,6 +28,7 @@ Added
     - ``TestTaskflowAPIBase`` for testing API views with SODAR Taskflow (#488)
     - Permission tests using Knox tokens (#476)
     - Base Ajax view classes in ``projectroles.views_ajax`` (#465)
+    - Allow assigning roles for categories (#463)
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -66,6 +67,7 @@ Fixed
     - Unordered queryset warnings from the ``User`` model (#494)
     - Incorrect user iteration in ``test_user_autocomplete_ajax()`` (#469)
     - Redundant input validation preventing search with valid characters (#472)
+    - Local users disabled in local development configuration (#500)
 
 Removed
 -------

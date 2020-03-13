@@ -540,14 +540,6 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         except ValidationError as e:
             self.fail(e)
 
-    def test_validate_category(self):
-        """Test category validation: can't add roles other than owner for
-        projects of type CATEGORY"""
-        with self.assertRaises(ValidationError):
-            self._make_assignment(
-                self.category_top, self.user_bob, self.role_contributor
-            )
-
     # Tests for RoleAssignmentManager
 
     def test_get_assignment(self):

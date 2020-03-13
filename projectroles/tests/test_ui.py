@@ -630,6 +630,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             (
                 self.superuser,
                 [
+                    'sodar-pr-link-project-roles',
                     'sodar-pr-link-project-update',
                     'sodar-pr-link-project-create',
                     'sodar-pr-link-project-star',
@@ -638,6 +639,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             (
                 self.as_owner.user,
                 [
+                    'sodar-pr-link-project-roles',
                     'sodar-pr-link-project-update',
                     'sodar-pr-link-project-create',
                     'sodar-pr-link-project-star',

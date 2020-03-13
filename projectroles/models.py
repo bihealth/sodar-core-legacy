@@ -407,7 +407,6 @@ class RoleAssignment(models.Model):
         self._validate_user()
         self._validate_owner()
         self._validate_delegate()
-        self._validate_category()
         super().save(*args, **kwargs)
 
     def _validate_user(self):
@@ -458,17 +457,6 @@ class RoleAssignment(models.Model):
                             'The limit ({}) of delegates for this project has '
                             'already been reached.'.format(delegate_limit)
                         )
-
-    def _validate_category(self):
-        """Validate project and role types to ensure roles other than project
-        owner are not set for category-type projects"""
-        if (
-            self.project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-            and self.role.name != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-        ):
-            raise ValidationError(
-                'Only the role of project owner is allowed for categories'
-            )
 
 
 # AppSetting ---------------------------------------------------------------
