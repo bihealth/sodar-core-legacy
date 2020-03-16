@@ -21,6 +21,7 @@ from ..project_tags import get_tag_state
 HELP_HIGHLIGHT_DAYS = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
 
 # SODAR Constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
@@ -106,14 +107,25 @@ def allow_project_creation():
 
 
 @register.simple_tag
-def is_app_hidden(plugin, user):
-    """Check if app plugin is included in PROJECTROLES_HIDE_APPS"""
+def is_app_link_visible(plugin, project, user):
+    """Check if app link should be visible for user in a specific project"""
+    can_view_app = user.has_perm(plugin.app_permission, project)
+    app_hidden = False
+
     if (
         hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS')
         and plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS
         and not user.is_superuser
     ):
+        app_hidden = True
+
+    if (
+        can_view_app
+        and not app_hidden
+        and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
+    ):
         return True
+
     return False
 
 

@@ -2,6 +2,7 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
+{% sodar_constant 'PROJECT_TYPE_PROJECT' as PROJECT_TYPE_PROJECT %}
 {% sodar_constant 'PROJECT_TYPE_CATEGORY' as PROJECT_TYPE_CATEGORY %}
 {% allow_project_creation as allow_creation %}
 {% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
@@ -32,23 +33,20 @@
   </li>
 
   {# App plugins #}
-  {% if project.type != PROJECT_TYPE_CATEGORY %}
-    {% for plugin in app_plugins %}
-      {% has_perm plugin.app_permission request.user project as can_view_app %}
-      {% is_app_hidden plugin request.user as app_hidden %}
-      {% if can_view_app and not app_hidden %}
-        {% get_sidebar_app_legend plugin.title as app_legend %}
-        <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
-            class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
-          <a class="nav-link"
-             href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
-             id="sodar-pr-link-app-plugin-{{ plugin.name }}">
-            <i class="fa fa-{{ plugin.icon }}"></i><br />{{ app_legend | safe }}
-          </a>
-        </li>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
+  {% for plugin in app_plugins %}
+    {% is_app_link_visible plugin project request.user as app_link_visible %}
+    {% if app_link_visible %}
+      {% get_sidebar_app_legend plugin.title as app_legend %}
+      <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
+          class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
+        <a class="nav-link"
+           href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
+           id="sodar-pr-link-app-plugin-{{ plugin.name }}">
+          <i class="fa fa-{{ plugin.icon }}"></i><br />{{ app_legend | safe }}
+        </a>
+      </li>
+    {% endif %}
+  {% endfor %}
 
   {# Role and project editing #}
   {% if can_view_roles %}

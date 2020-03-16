@@ -47,12 +47,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     details_template = 'timeline/_details_card.html'
 
     #: App card title for the project details page
-    details_title = '{} Timeline Overview'.format(
-        get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], title=True)
-    )
+    details_title = 'Timeline Overview'
 
     #: Position in plugin ordering
     plugin_ordering = 40
+
+    #: Display application for categories in addition to projects
+    category_enable = True
 
     def get_statistics(self):
         return {

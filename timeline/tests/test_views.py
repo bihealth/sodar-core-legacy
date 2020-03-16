@@ -47,9 +47,15 @@ class TestViewsBase(
         self.user.is_superuser = True
         self.user.save()
 
-        # Init project
+        # Init category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self._make_assignment(
+            self.category, self.user, self.role_owner
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
@@ -70,12 +76,23 @@ class TestProjectListView(TestViewsBase):
     """Tests for the timeline project list view"""
 
     def test_render(self):
-        """Test to ensure the view renders correctly"""
+        """Test rendering the list view for a project"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'timeline:list_project',
                     kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+            self.assertEqual(response.status_code, 200)
+
+    def test_render_category(self):
+        """Test rendering the list view for a category"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:list_project',
+                    kwargs={'project': self.category.sodar_uuid},
                 )
             )
             self.assertEqual(response.status_code, 200)

@@ -29,6 +29,7 @@ Added
     - Permission tests using Knox tokens (#476)
     - Base Ajax view classes in ``projectroles.views_ajax`` (#465)
     - Allow assigning roles for categories (#463)
+    - Allow displaying project apps in categories with ``category_enable`` (#447)
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -51,6 +52,9 @@ Changed
     - Refactor base permission test classes (#490)
     - Move ``utils.set_user_group()`` to ``SODARUser.set_group()`` (#483)
     - Call ``set_group()`` in ``SODARUser.save()`` (#483)
+    - Replace ``projectroles_tags.is_app_hidden()`` with ``is_app_link_visible()``
+- **Timeline**
+    - Display app for categories (#447)
 
 Fixed
 -----
@@ -78,6 +82,7 @@ Removed
     - ``get_selectable_users()`` from ``forms``
     - Redundant render/redirect helpers from ``TestPermissionBase``: use ``assert_response()`` instead (#484)
     - ``APIPermissionMixin`` for API views: use base API/Ajax view classes instead (#467)
+    - ``is_app_hidden()`` from ``projectroles_tags``
 
 
 v0.7.2 (2020-01-31)

@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
 # Projectroles dependency
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import Project
 from projectroles.utils import get_display_name
 from projectroles.views import (
     LoggedInPermissionMixin,
@@ -37,9 +37,7 @@ class ProjectTimelineView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['timeline_title'] = '{} Timeline'.format(
-            get_display_name(
-                SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], title=True
-            )
+            get_display_name(context['project'].type, title=True)
         )
         context['timeline_mode'] = 'project'
         return context

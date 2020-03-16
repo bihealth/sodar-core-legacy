@@ -209,6 +209,10 @@ Implementing the following is **optional**:
 - ``search_template``: Implement if searching the data of the app is enabled
 - ``project_list_columns``: Optional custom columns do be shown in the project
   list. See the plugin point definition for an example.
+- ``category_enable``: Whether the app should also be made available for
+  categories. Defaults to ``False`` and should only be overridden when required.
+  For an example of a project app enabled in categories, see
+  :ref:`Timeline <app_timeline>`.
 - ``get_taskflow_sync_data()``: Applicable only if working with
   ``sodar_taskflow`` and iRODS
 - ``get_object_link()``: If Django models are associated with the app. Used e.g.

@@ -20,6 +20,7 @@ Release Highlights
 - Add new base view classes and mixins for API/Ajax views
 - Import the ``tokens`` API token management app from VarFish
 - Allow assigning roles other than owner for categories
+- Allow displaying project apps in categories with ``category_enable``
 - Reorganization of views in apps
 
 Breaking Changes

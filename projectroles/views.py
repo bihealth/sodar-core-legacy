@@ -59,7 +59,11 @@ from projectroles.models import (
     PROJECT_TAG_STARRED,
     SODARUser,
 )
-from projectroles.plugins import get_active_plugins, get_backend_api
+from projectroles.plugins import (
+    get_active_plugins,
+    get_app_plugin,
+    get_backend_api,
+)
 from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
@@ -214,12 +218,16 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         """Overrides for project permission access"""
         project = self.get_project()
 
-        # Disable project app access for categories
+        # Disable project app access for categories unless specifically enabled
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
-            # TODO: Update this for allowing stuff in categories
             if request_url.app_name != APP_NAME:
+                app_plugin = get_app_plugin(request_url.app_name)
+
+                if app_plugin and app_plugin.category_enable:
+                    return True
+
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked

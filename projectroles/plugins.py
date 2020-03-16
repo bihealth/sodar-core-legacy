@@ -104,6 +104,10 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Define project list column data in your app plugin (optional)
     project_list_columns = {}
 
+    #: Display application for categories in addition to projects
+    # TODO: Override this in your app plugin if needed
+    category_enable = False
+
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
         """
