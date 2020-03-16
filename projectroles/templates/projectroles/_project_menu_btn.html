@@ -4,6 +4,7 @@
 
 {% allow_project_creation as allow_creation %}
 {% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
+{% has_perm 'projectroles.view_project_roles' request.user project as can_view_roles %}
 
 <div class="btn-group sodar-sidebar-alt-btn pull-left collapse" role="group" id="sodar-pr-sidebar-alt-btn">
   <button class="btn btn-dark dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -44,7 +45,7 @@
       {% endfor %}
 
       {# Role and project editing #}
-      {% if project.type != PROJECT_TYPE_CATEGORY and can_view_roles %}
+      {% if can_view_roles %}
         <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}"
            href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
            title="Members"

@@ -72,6 +72,7 @@ Fixed
     - Incorrect user iteration in ``test_user_autocomplete_ajax()`` (#469)
     - Redundant input validation preventing search with valid characters (#472)
     - Local users disabled in local development configuration (#500)
+    - Member link not visible in responsive project dropdown (#466)
 
 Removed
 -------
