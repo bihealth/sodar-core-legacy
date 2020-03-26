@@ -198,9 +198,19 @@ class TestUIBase(
         """
         Login with Selenium by setting a cookie, wait for redirect to given URL.
 
+        If PROJECTROLES_TEST_UI_LEGACY_LOGIN=True, use legacy UI login method.
+
         :param user: User object
         :param url: URL to redirect to (string)
         """
+
+        # Legacy login mode
+        if getattr(settings, 'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False):
+            return self.login_and_redirect_with_ui(
+                user, url, wait_elem, wait_loc
+            )
+
+        # Cookie login mode
         self.selenium.get(self.build_selenium_url('/blank/'))
 
         session = SessionStore()
@@ -234,7 +244,7 @@ class TestUIBase(
                 )
             )
 
-    # NOTE: Replaced by the cookie-based function above, should not be used
+    # NOTE: Used if PROJECTROLES_TEST_UI_LEGACY_LOGIN is set True
     def login_and_redirect_with_ui(
         self, user, url, wait_elem=None, wait_loc=DEFAULT_WAIT_LOC
     ):

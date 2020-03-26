@@ -6,15 +6,16 @@ from django.conf import settings
 from django.urls import reverse
 from django.utils import timezone
 
-from ..models import (
+from projectroles.models import (
     Project,
     RoleAssignment,
     RemoteProject,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
-from ..plugins import get_active_plugins
-from ..project_tags import get_tag_state
+from projectroles.plugins import get_active_plugins
+from projectroles.project_tags import get_tag_state
+from projectroles.templatetags.projectroles_common_tags import get_info_link
 
 
 # Settings
@@ -22,6 +23,7 @@ HELP_HIGHLIGHT_DAYS = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
 
 # SODAR Constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
@@ -266,18 +268,27 @@ def get_project_column_count(app_plugins):
     )
 
 
+# TODO: Update tests
 @register.simple_tag
 def get_user_role_html(project, user):
     """Return user role HTML"""
     if user.is_superuser:
         return '<span class="text-danger">Superuser</span>'
 
-    try:
-        role_as = RoleAssignment.objects.get(project=project, user=user)
+    role_as = RoleAssignment.objects.filter(project=project, user=user).first()
+
+    if project.is_owner(user):
+        if role_as and role_as.role.name == PROJECT_ROLE_OWNER:
+            return 'Owner'
+
+        return '<span class="text-muted">Owner</span> {}'.format(
+            get_info_link('Ownership inherited from parent category')
+        )
+
+    if role_as:
         return role_as.role.name.split(' ')[1].capitalize()
 
-    except RoleAssignment.DoesNotExist:
-        return '<span class="text-muted">N/A</span>'
+    return '<span class="text-muted">N/A</span>'
 
 
 @register.simple_tag

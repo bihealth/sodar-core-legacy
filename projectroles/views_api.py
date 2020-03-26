@@ -8,7 +8,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -30,6 +30,7 @@ from rest_framework.views import APIView
 from projectroles import __version__ as core_version
 from projectroles.models import (
     Project,
+    Role,
     RoleAssignment,
     RemoteSite,
     SODAR_CONSTANTS,
@@ -43,6 +44,7 @@ from projectroles.serializers import (
 from projectroles.views import (
     ProjectAccessMixin,
     RoleAssignmentDeleteMixin,
+    RoleAssignmentOwnerTransferMixin,
     SITE_MODE_TARGET,
 )
 
@@ -444,6 +446,78 @@ class RoleAssignmentDestroyAPIView(
             raise PermissionDenied('User lacks permission to assign delegates')
 
         self.delete_assignment(request=self.request, instance=instance)
+
+
+class RoleAssignmentOwnerTransferAPIView(
+    RoleAssignmentOwnerTransferMixin, CoreAPIBaseProjectMixin, APIView
+):
+    """
+    API view for transferring project ownership to another user with a role in
+    the project. Also reassigns a different role to the previous owner.
+    """
+
+    permission_required = 'projectroles.update_project_owner'
+
+    def post(self, request, *args, **kwargs):
+        """Handle ownership transfer in a POST request"""
+        project = self.get_project()
+        new_owner = User.objects.filter(
+            username=request.data.get('new_owner')
+        ).first()
+        old_owner_role = Role.objects.filter(
+            name=request.data.get('old_owner_role')
+        ).first()
+        old_owner_as = project.get_owner()
+
+        # Validate input
+        if not new_owner or not old_owner_role:
+            raise serializers.ValidationError(
+                'Fields "new_owner" and "old_owner_role" must be present'
+            )
+
+        if not old_owner_role:
+            raise serializers.ValidationError(
+                'Unknown role "{}"'.format(request.data.get('old_owner_role'))
+            )
+
+        if not old_owner_as:
+            raise serializers.ValidationError('Existing owner role not found')
+
+        if not new_owner:
+            raise serializers.ValidationError(
+                'User "{}" not found'.format(request.data.get('new_owner'))
+            )
+
+        if new_owner == old_owner_as.user:
+            raise serializers.ValidationError('Owner role already set for user')
+
+        if not project.has_role(new_owner):
+            raise serializers.ValidationError(
+                'User {} is not a member of the project'.format(
+                    new_owner.username
+                )
+            )
+
+        # All OK, transfer owner
+        try:
+            self.transfer_owner(
+                project, new_owner, old_owner_as, old_owner_role
+            )
+
+        except Exception as ex:
+            raise APIException('Unable to transfer owner: {}'.format(ex))
+
+        return Response(
+            {
+                'detail': 'Ownership transferred from {} to {} in '
+                'project "{}"'.format(
+                    old_owner_as.user.username,
+                    new_owner.username,
+                    project.title,
+                )
+            },
+            status=200,
+        )
 
 
 class UserListAPIView(ListAPIView):

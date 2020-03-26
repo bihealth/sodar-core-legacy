@@ -68,14 +68,24 @@
           </tr>
         </thead>
         <tbody>
+          {% for i_owner in inherited_owners %}
+            {% get_info_link 'Ownership inherited from parent category' as inherit_info %}
+            <tr>
+              <td class="text-muted">{{ i_owner.user.username }}</td>
+              <td class="text-muted">{{ i_owner.user.name }}</td>
+              <td><a href="mailto:{{ owner.user.email }}">{{ owner.user.email }}</a></td>
+              <td class="text-muted"><strong>Inherited Owner</strong> {{ inherit_info | safe }}</td>
+              <td></td>
+            </tr>
+          {% endfor %}
           <tr>
             <td>{{ owner.user.username }}</td>
             <td>{{ owner.user.name }}</td>
             <td><a href="mailto:{{ owner.user.email }}">{{ owner.user.email }}</a></td>
-            <td><strong>project owner <i class="fa fa-star" aria-hidden="true"></i></strong></td>
+            <td><strong>{% get_display_name 'PROJECT' title=True %} Owner <i class="fa fa-star" aria-hidden="true"></i></strong></td>
             <td>
               {% if not project.is_remote and can_update_owner %}
-                {% include 'projectroles/_project_roles_owner_dropdown.html' with user=owner.user assignment_id=owner.sodar_uuid %}
+                {% include 'projectroles/_project_roles_buttons_owner.html' with user=owner.user assignment_id=owner.sodar_uuid %}
               {% endif %}
             </td>
           </tr>
@@ -84,7 +94,7 @@
               <td>{{ delegate.user.username }}</td>
               <td>{{ delegate.user.name }}</td>
               <td><a href="mailto:{{ delegate.user.email }}">{{ delegate.user.email }}</a></td>
-              <td><strong>project delegate <i class="fa fa-star-half-o" aria-hidden="true"></i></strong></td>
+              <td><strong>{% get_display_name 'PROJECT' title=True %} Delegate <i class="fa fa-star-half-o" aria-hidden="true"></i></strong></td>
               <td>
                 {% if not project.is_remote and can_update_delegate %}
                   {% include 'projectroles/_project_roles_buttons.html' with user=delegate.user assignment_id=delegate.sodar_uuid %}
@@ -97,7 +107,7 @@
               <td>{{ member.user.username }}</td>
               <td>{{ member.user.name }}</td>
               <td><a href="mailto:{{ member.user.email }}">{{ member.user.email }}</a></td>
-              <td>{{ member.role.name }}</td>
+              <td>{% get_role_display_name member title=True %}</td>
               <td>
                 {% if not project.is_remote and can_update_members %}
                   {% include 'projectroles/_project_roles_buttons.html' with user=member.user assignment_id=member.sodar_uuid %}

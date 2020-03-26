@@ -17,7 +17,6 @@ from rules.contrib.views import PermissionRequiredMixin
 
 from projectroles.models import (
     Project,
-    RoleAssignment,
     PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
 )
@@ -130,11 +129,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
             ):
                 return User.objects.none()
 
-            project_users = (
-                RoleAssignment.objects.filter(project=project)
-                .values_list('user')
-                .distinct()
-            )
+            project_users = [a.user.pk for a in project.get_all_roles()]
 
             if scope == 'project':  # Limit choices to current project users
                 qs = User.objects.filter(pk__in=project_users)

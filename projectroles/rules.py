@@ -20,13 +20,11 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 
 @rules.predicate
 def is_project_owner(user, obj):
-    """Whether or not the user has the role of project owner"""
-    assignment = RoleAssignment.objects.get_assignment(user, obj)
-
-    if assignment:
-        return assignment.role.name == PROJECT_ROLE_OWNER
-
-    return False
+    """
+    Whether or not the user has the role of project owner, or is the owner of
+    a parent category of the current project.
+    """
+    return obj.is_owner(user) if obj else False
 
 
 @rules.predicate
@@ -65,7 +63,12 @@ def is_project_guest(user, obj):
 @rules.predicate
 def has_project_role(user, obj):
     """Whether or not the user has any role in the project"""
-    return RoleAssignment.objects.get_assignment(user, obj) is not None
+    if RoleAssignment.objects.get_assignment(user, obj) or (
+        obj and obj.is_owner(user)
+    ):
+        return True
+
+    return False
 
 
 @rules.predicate
@@ -104,7 +107,16 @@ def can_create_projects():
 # Combined predicates ----------------------------------------------------------
 
 
-is_update_user = is_project_owner | is_project_delegate
+# Allow creating projects under the current category
+is_project_create_user = (
+    is_project_owner | is_project_delegate | is_project_contributor
+)
+
+# Allow updating project
+is_project_update_user = is_project_owner | is_project_delegate
+
+# Allow creating/updating roles
+is_role_update_user = is_project_owner | is_project_delegate
 
 
 # Rules ------------------------------------------------------------------------
@@ -123,18 +135,19 @@ rules.add_perm(
 
 # Allow project updating
 rules.add_perm(
-    'projectroles.update_project', is_update_user & is_modifiable_project
+    'projectroles.update_project',
+    is_project_update_user & is_modifiable_project,
 )
 
 # Allow creation of projects
 rules.add_perm(
-    'projectroles.create_project', is_project_owner & can_create_projects
+    'projectroles.create_project', is_project_create_user & can_create_projects
 )
 
 # Allow updating project settings
 rules.add_perm(
     'projectroles.update_project_settings',
-    is_update_user & is_modifiable_project,
+    is_role_update_user & is_modifiable_project,
 )
 
 # Allow viewing project roles
@@ -161,12 +174,12 @@ rules.add_perm(
 # Allow updating project members
 rules.add_perm(
     'projectroles.update_project_members',
-    is_update_user & is_modifiable_project,
+    is_role_update_user & is_modifiable_project,
 )
 
 # Allow inviting users to project via email
 rules.add_perm(
-    'projectroles.invite_users', is_update_user & is_modifiable_project
+    'projectroles.invite_users', is_role_update_user & is_modifiable_project
 )
 
 # Allow importing roles from another project

@@ -34,6 +34,7 @@ from projectroles.email import (
     send_invite_mail,
     send_accept_note,
     send_expiry_note,
+    send_project_create_mail,
     get_invite_subject,
     get_invite_body,
     get_invite_message,
@@ -57,7 +58,6 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
-    SODARUser,
 )
 from projectroles.plugins import (
     get_active_plugins,
@@ -67,7 +67,6 @@ from projectroles.plugins import (
 from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
-from timeline.models import ProjectEvent
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -681,6 +680,14 @@ class ProjectModifyMixin:
             flow_data['old_owner_username'] = old_owner.username
             flow_data['project_readme'] = project.readme.raw
 
+        else:  # Create
+            inherited_owners = project.get_owners(inherited_only=True)
+
+            if inherited_owners:
+                flow_data['inherited_owners'] = [
+                    a.user.username for a in inherited_owners
+                ]
+
         try:
             taskflow.submit(
                 project_uuid=str(project.sodar_uuid),
@@ -874,15 +881,21 @@ class ProjectModifyMixin:
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
-        if SEND_EMAIL and (not instance or old_data['owner'] != owner):
-            # send mail
-            send_role_change_mail(
-                action,
-                project,
-                owner,
-                RoleAssignment.objects.get_assignment(owner, project).role,
-                request,
-            )
+        # Send emails
+        if SEND_EMAIL:
+            owner_as = RoleAssignment.objects.get_assignment(owner, project)
+            # Owner change notification
+            if not instance or old_data['owner'] != owner:
+                send_role_change_mail(
+                    action, project, owner, owner_as.role, request,
+                )
+
+            # Project creation for parent category owner
+            if (
+                project.parent
+                and project.parent.get_owner().user != owner_as.user
+            ):
+                send_project_create_mail(project, request)
 
         if tl_event:
             tl_event.set_status('OK')
@@ -1039,8 +1052,17 @@ class ProjectRoleView(
         project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
         context['owner'] = project.get_owner()
-        context['delegates'] = project.get_delegates()
-        context['members'] = project.get_members()
+        inherited_owners = project.get_owners(inherited_only=True)
+        context['inherited_owners'] = [
+            a for a in inherited_owners if a.user != context['owner'].user
+        ]
+        inherited_users = [a.user for a in inherited_owners]
+        context['delegates'] = [
+            a for a in project.get_delegates() if a.user not in inherited_users
+        ]
+        context['members'] = [
+            a for a in project.get_members() if a.user not in inherited_users
+        ]
 
         if project.is_remote():
             context[
@@ -1367,11 +1389,115 @@ class RoleAssignmentDeleteView(
         )
 
 
+class RoleAssignmentOwnerTransferMixin:
+    """Mixin for owner RoleAssignment transfer in UI and API views"""
+
+    def _create_timeline_event(self, old_owner, new_owner, project):
+        timeline = get_backend_api('timeline_backend')
+        # Init Timeline event
+        if not timeline:
+            return None
+
+        tl_desc = (
+            'transfer ownership from {{prev_owner}} to '
+            '{{new_owner}}'.format(old_owner.username, new_owner.username)
+        )
+
+        tl_event = timeline.add_event(
+            project=project,
+            app_name=APP_NAME,
+            user=self.request.user,
+            event_name='role_transfer_owner',
+            description=tl_desc,
+            extra_data={
+                'prev_owner': old_owner.username,
+                'new_owner': new_owner.username,
+            },
+        )
+        tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
+        tl_event.add_object(new_owner, 'new_owner', new_owner.username)
+        return tl_event
+
+    def _handle_transfer(
+        self, project, old_owner_as, new_owner, old_owner_role
+    ):
+        taskflow = get_backend_api('taskflow')
+
+        # Handle inherited owner roles for categories if taskflow is enabled
+        if taskflow and project.type == PROJECT_TYPE_CATEGORY:
+            flow_data = {
+                'roles_add': taskflow.get_inherited_roles(project, new_owner),
+                'roles_delete': taskflow.get_inherited_roles(
+                    project, old_owner_as.user
+                ),
+            }
+
+            # Submit taskflow (Requires SODAR Taskflow v0.4.0+)
+            # NOTE: Can raise exception
+            taskflow.submit(
+                project_uuid=None,  # Batch flow for multiple projects
+                flow_name='role_update_irods_batch',
+                flow_data=flow_data,
+                request=self.request,
+            )
+
+        # If taskflow submission was successful / skipped, update database
+        old_owner_as.role = old_owner_role
+        old_owner_as.save()
+
+        role_as = RoleAssignment.objects.get_assignment(new_owner, project)
+        role_as.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        role_as.save()
+
+        return True
+
+    def transfer_owner(self, project, new_owner, old_owner_as, old_owner_role):
+        """
+        Transfer project ownership to a new user and assign a new role to the
+        previous owner.
+
+        :param project: Project object
+        :param new_owner: User object
+        :param old_owner_as: RoleAssignment object
+        :param old_owner_role: Role object
+        :return:
+        """
+        old_owner = old_owner_as.user
+        tl_event = self._create_timeline_event(old_owner, new_owner, project)
+
+        try:
+            self._handle_transfer(
+                project, old_owner_as, new_owner, old_owner_role
+            )
+
+        except Exception as ex:
+            if tl_event:
+                tl_event.set_status('FAILED', str(ex))
+
+            raise ex
+
+        if SEND_EMAIL:
+            send_role_change_mail(
+                'update', project, old_owner, old_owner_role, self.request
+            )
+            send_role_change_mail(
+                'update',
+                project,
+                new_owner,
+                Role.objects.get(name=PROJECT_ROLE_OWNER),
+                self.request,
+            )
+
+        if tl_event:
+            tl_event.set_status('OK')
+
+
 class RoleAssignmentOwnerTransferView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     CurrentUserFormMixin,
     ProjectContextMixin,
+    RoleAssignmentOwnerTransferMixin,
     FormView,
 ):
     permission_required = 'projectroles.update_project_owner'
@@ -1397,102 +1523,35 @@ class RoleAssignmentOwnerTransferView(
 
     def form_valid(self, form):
         project = form.project
-        prev_owner = form.current_owner
-        prev_owner_ra = RoleAssignment.objects.get_assignment(
-            prev_owner, project
-        )
-
+        old_owner = form.current_owner
+        old_owner_as = project.get_owner()
         new_owner = form.cleaned_data['new_owner']
-        ex_owner_role = form.cleaned_data['ex_owner_role']
-
-        timeline_event = self.create_timeline_event(
-            prev_owner, new_owner, project
+        old_owner_role = form.cleaned_data['ex_owner_role']
+        redirect_url = reverse(
+            'projectroles:roles', kwargs={'project': project.sodar_uuid}
         )
 
-        if self.transfer_ownership(
-            timeline_event, project, prev_owner_ra, new_owner, ex_owner_role
-        ):
-
-            if SEND_EMAIL:
-                send_role_change_mail(
-                    'update', project, prev_owner, ex_owner_role, self.request
-                )
-                send_role_change_mail(
-                    'update',
-                    project,
-                    new_owner,
-                    Role.objects.get(name=PROJECT_ROLE_OWNER),
-                    self.request,
-                )
-                messages.success(
-                    self.request,
-                    'Successfully transferred ownership  from {} to {}. A '
-                    'notification email has been send to both users.'.format(
-                        prev_owner.username, new_owner.username
-                    ),
-                )
-            else:
-                messages.success(
-                    self.request,
-                    'Successfully transferred ownership  from {} to {}.'.format(
-                        prev_owner.username, new_owner.username
-                    ),
-                )
-
-            if timeline_event:
-                timeline_event.set_status('OK')
-
-        return redirect(
-            reverse(
-                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+        try:
+            self.transfer_owner(
+                project, new_owner, old_owner_as, old_owner_role
             )
+
+        except Exception as ex:
+            # TODO: Add logging
+            messages.error(
+                self.request, 'Unable to transfer ownership: {}'.format(ex)
+            )
+
+        success_msg = (
+            'Successfully transferred ownership from '
+            '{} to {}.'.format(old_owner.username, new_owner.username)
         )
 
-    def create_timeline_event(
-        self, prev_owner: SODARUser, new_owner: SODARUser, project: Project
-    ) -> ProjectEvent:
-        timeline = get_backend_api('timeline_backend')
-        # Init Timeline event
-        if not timeline:
-            return None
+        if SEND_EMAIL:
+            success_msg += ' A notification email has been sent to both users.'
 
-        tl_desc = (
-            'transfer ownership from {{prev_owner}} to '
-            '{{new_owner}}'.format(prev_owner.username, new_owner.username)
-        )
-
-        tl_event = timeline.add_event(
-            project=project,
-            app_name=APP_NAME,
-            user=self.request.user,
-            event_name='role_transfer_owner',
-            description=tl_desc,
-            extra_data={
-                'prev_owner': prev_owner.username,
-                'new_owner': new_owner.username,
-            },
-        )
-        tl_event.add_object(prev_owner, 'prev_owner', prev_owner.username)
-        tl_event.add_object(new_owner, 'new_owner', new_owner.username)
-        return tl_event
-
-    def transfer_ownership(
-        self,
-        timeline_event: ProjectEvent,
-        project: Project,
-        prev_owner: RoleAssignment,
-        new_owner: SODARUser,
-        prev_owner_role: Role,
-    ) -> bool:
-
-        prev_owner.role = prev_owner_role
-        prev_owner.save()
-
-        # make it an owner
-        ra = RoleAssignment.objects.get_assignment(new_owner, project)
-        ra.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
-        ra.save()
-        return True
+        messages.success(self.request, success_msg)
+        return redirect(redirect_url)
 
 
 # ProjectInvite Views ----------------------------------------------------------

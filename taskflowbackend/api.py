@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import RoleAssignment, SODAR_CONSTANTS
 
 
 logger = logging.getLogger(__name__)
@@ -162,3 +162,34 @@ class TaskflowAPI:
         return 'Taskflow "{}" failed! Reason: "{}"'.format(
             flow_name, submit_info[:256]
         )
+
+    @classmethod
+    def get_inherited_roles(cls, project, user, roles=None):
+        """
+        Return list of inherited owner roles to be used in raskflow sync
+
+        :param project: Project object
+        :param user: User object
+        :pram roles: previously collected roles (optional, list or None)
+        :return: List of dicts
+        """
+        if roles is None:
+            roles = []
+
+        # TODO: Remove support for legacy roles in v0.9 (see #506)
+        if (
+            project.type == PROJECT_TYPE_PROJECT
+            and not RoleAssignment.objects.filter(project=project, user=user)
+        ):
+            r = {
+                'project_uuid': str(project.sodar_uuid),
+                'username': user.username,
+            }
+
+            if r not in roles:  # Avoid unnecessary dupes
+                roles.append(r)
+
+        for child in project.get_children():
+            roles = cls.get_inherited_roles(child, user, roles)
+
+        return roles

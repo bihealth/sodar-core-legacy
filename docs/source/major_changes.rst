@@ -20,11 +20,22 @@ Release Highlights
 - Add new base view classes and mixins for API/Ajax views
 - Import the ``tokens`` API token management app from VarFish
 - Allow assigning roles other than owner for categories
+- Allow category delegates and owners to create sub-categories and projects
+- Inherit owner permissions from parent categories
 - Allow displaying project apps in categories with ``category_enable``
 - Reorganization of views in apps
 
 Breaking Changes
 ================
+
+Owner Permissions Inherited from Categories
+-------------------------------------------
+
+Starting in this version of SODAR Core, category owner permissions are
+automatically inherited by projects below those categories, as well as possible
+subcategories. If this does not fit your use case, it is recommend to reorganize
+your project structure and/or give category access to admin users who have
+access to all projects anyway.
 
 Projectroles Views Reorganized
 ------------------------------
@@ -71,6 +82,11 @@ detailed below.
 - ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
   ``TestPermissionBase``. Please use ``assert_response()`` instead.
 
+In addition to the aforementioned changes, certain minor setup details such as
+default user rights and may have changed. If you experience unexpected failures
+in your tests, please review the SODAR Core base test classes and helper
+methods, refactoring your tests where required.
+
 User Group Updating
 -------------------
 
@@ -85,6 +101,12 @@ The minimum supported versions have been upgraded for a number of Python
 packages in this release. It is highly recommended to also upgrade these for
 your SODAR Core based site. See the ``requirements`` directory for up-to date
 dependencies.
+
+SODAR Taskflow v0.4.0 Required
+------------------------------
+
+If using SODAR Taskflow, this release requires release v0.4.0 or higher due to
+required support for the ``role_update_irods_batch`` flow.
 
 
 v0.7.2 (2020-01-31)

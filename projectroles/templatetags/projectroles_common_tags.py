@@ -133,6 +133,19 @@ def get_display_name(key, title=False, count=1, plural=False):
 
 
 @register.simple_tag
+def get_role_display_name(role_as, title=False):
+    """Return display name for role assignment"""
+    role_suffix = role_as.role.name.split(' ')[1]
+
+    if title:
+        role_suffix = role_suffix.title()
+
+    return '{} {}'.format(
+        _get_display_name(role_as.project.type, title=title), role_suffix
+    )
+
+
+@register.simple_tag
 def get_project_title_html(project):
     """Return HTML version of the full project title including parents"""
     ret = ''

@@ -136,6 +136,25 @@ to grant the user access to the {project_label}.
 '''.lstrip()
 
 
+# Project/Category Creation Notification Template ------------------------------
+
+
+SUBJECT_PROJECT_CREATE = '{project_type} "{project}" created by {user_name}'
+
+MESSAGE_PROJECT_CREATE_BODY = r'''
+{user_name} ({user_email}) has created a new {project_type}
+under "{category}".
+You are receiving this email because you are the owner of the parent category.
+You have automatically inherited owner rights to the created {project_type}.
+
+Title: {project}
+Owner: {owner_name} ({owner_email})
+
+You can access the project at the following link:
+{project_url}
+'''.lstrip()
+
+
 # Email composing helpers ------------------------------------------------------
 
 
@@ -452,6 +471,56 @@ def send_expiry_note(invite, request):
     message += get_email_footer()
 
     return send_mail(subject, message, [invite.issuer.email], request)
+
+
+def send_project_create_mail(project, request):
+    """
+    Send email about project creation to the owner of the parent category, if
+    they are a different user than the project creator.
+
+    :param project: Project object for the newly created project
+    :param request: Request object
+    :return: Amount of sent email (int)
+    """
+    parent = project.parent
+    parent_owner = project.parent.get_owner() if project.parent else None
+    project_owner = project.get_owner()
+
+    if not parent or not parent_owner or parent_owner.user == request.user:
+        return 0
+
+    subject = SUBJECT_PROJECT_CREATE.format(
+        project_type=get_display_name(project.type, title=True),
+        project=project.title,
+        user_name=request.user.get_full_name(),
+    )
+
+    message = MESSAGE_HEADER.format(
+        recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
+    )
+    message += MESSAGE_PROJECT_CREATE_BODY.format(
+        user_name=request.user.get_full_name(),
+        user_email=request.user.email,
+        project_type=get_display_name(project.type),
+        category=parent.title,
+        project=project.title,
+        owner_name=project_owner.user.get_full_name(),
+        owner_email=project_owner.user.email,
+        project_url=request.build_absolute_uri(
+            reverse(
+                'projectroles:detail', kwargs={'project': project.sodar_uuid}
+            )
+        ),
+    )
+    message += get_email_footer()
+
+    return send_mail(
+        subject,
+        message,
+        [parent_owner.user.email],
+        request,
+        reply_to=[request.user.email],
+    )
 
 
 def send_generic_mail(

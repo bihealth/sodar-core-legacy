@@ -700,7 +700,6 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
 
     def test_put_category(self):
         """Test put() for category updating"""
-        new_owner = self.make_user('new_owner')
 
         # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
@@ -715,7 +714,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
             'parent': '',
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'owner': str(new_owner.sodar_uuid),
+            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -739,12 +738,6 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert role assignment
-        self.assertEqual(
-            RoleAssignment.objects.filter(project=self.category).count(), 1
-        )
-        self.assertEqual(self.category.get_owner().user, new_owner)
-
         # Assert API response
         expected = {
             'title': UPDATED_TITLE,
@@ -756,7 +749,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
             'roles': {
                 str(self.category.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
-                    'user': self.get_serialized_user(new_owner),
+                    'user': self.get_serialized_user(self.user),
                 }
             },
             'sodar_uuid': str(self.category.sodar_uuid),
@@ -765,7 +758,6 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
 
     def test_put_project(self):
         """Test put() for project updating"""
-        new_owner = self.make_user('new_owner')
 
         # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
@@ -780,7 +772,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
             'parent': str(self.category.sodar_uuid),
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
-            'owner': str(new_owner.sodar_uuid),
+            'owner': str(self.user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
@@ -804,12 +796,6 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert role assignment
-        self.assertEqual(
-            RoleAssignment.objects.filter(project=self.project).count(), 1
-        )
-        self.assertEqual(self.project.get_owner().user, new_owner)
-
         # Assert API response
         expected = {
             'title': UPDATED_TITLE,
@@ -821,7 +807,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
             'roles': {
                 str(self.project.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
-                    'user': self.get_serialized_user(new_owner),
+                    'user': self.get_serialized_user(self.user),
                 }
             },
             'sodar_uuid': str(self.project.sodar_uuid),
@@ -945,7 +931,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         self.assertEqual(json.loads(response.content), expected)
 
     def test_patch_project_owner(self):
-        """Test patch() for updating project owner"""
+        """Test patch() for updating project owner (should fail)"""
         new_owner = self.make_user('new_owner')
 
         url = reverse(
@@ -956,23 +942,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
         # Assert response
-        self.assertEqual(response.status_code, 200, msg=response.content)
-
-        # Assert role assignment
-        self.project.refresh_from_db()
-        self.assertEqual(
-            RoleAssignment.objects.filter(project=self.project).count(), 1
-        )
-        self.assertEqual(self.project.get_owner().user, new_owner)
-
-        # Assert roles in API response
-        expected = {
-            str(self.project.get_owner().sodar_uuid): {
-                'role': PROJECT_ROLE_OWNER,
-                'user': self.get_serialized_user(new_owner),
-            }
-        }
-        self.assertEqual(json.loads(response.content)['roles'], expected)
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_move(self):
         """Test patch() for moving project under a different category"""
@@ -1182,7 +1152,7 @@ class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_create_delegate_category(self):
-        """Test creating a non-owner role for category (should fail)"""
+        """Test creating a non-owner role for category"""
 
         url = reverse(
             'projectroles:api_role_create',
@@ -1195,7 +1165,7 @@ class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         # Assert response
-        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(response.status_code, 201, msg=response.content)
 
     def test_create_role_existing(self):
         """Test creating a role for user already in the project"""
@@ -1477,6 +1447,82 @@ class TestRoleAssignmentDestroyAPIView(TestAPIViewsBase):
         # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
+
+
+class TestRoleAssignmentOwnerTransferAPIView(TestAPIViewsBase):
+    """Tests for RoleAssignmentOwnerTransferAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        self.assign_user = self.make_user('assign_user')
+
+    def test_transfer_owner(self):
+        """Test transferring ownership for a project"""
+
+        # Assign role to new user
+        self._make_assignment(
+            self.project, self.assign_user, self.role_contributor
+        )
+
+        # Assert preconditions
+        self.assertEqual(self.project.get_owner().user, self.user)
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.assign_user.username,
+            'old_owner_role': self.role_contributor.name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.assign_user)
+
+    def test_transfer_owner_category(self):
+        """Test transferring ownership for a category"""
+
+        # Assign role to new user
+        self._make_assignment(
+            self.category, self.assign_user, self.role_contributor
+        )
+
+        # Assert preconditions
+        self.assertEqual(self.category.get_owner().user, self.user)
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.assign_user.username,
+            'old_owner_role': self.role_contributor.name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.category.get_owner().user, self.assign_user)
+
+    def test_transfer_owner_no_roles(self):
+        """Test transferring ownership to user with no existing roles (should fail)"""
+
+        # NOTE: No role given to user
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.assign_user.username,
+            'old_owner_role': self.role_contributor.name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
 
 
 class TestUserListAPIView(TestAPIViewsBase):

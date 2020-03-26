@@ -126,6 +126,7 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
         url = reverse('projectroles:api_project_list')
         good_users = [
             self.superuser,
+            self.as_owner_cat.user,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
@@ -144,6 +145,7 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
         )
         good_users = [
             self.superuser,
+            self.as_owner_cat.user,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
@@ -173,6 +175,7 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
         }
         good_users = [self.superuser]
         bad_users = [
+            self.as_owner_cat.user,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
@@ -225,8 +228,9 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             if p:
                 p.delete()
 
-        good_users = [self.superuser, self.as_owner.user]
+        good_users = [self.superuser, self.as_owner_cat.user]
         bad_users = [
+            self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,
             self.as_guest.user,
@@ -275,7 +279,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'readme': 'readme',
             'owner': str(self.as_owner.user.sodar_uuid),
         }
-        good_users = [self.as_owner.user, self.as_delegate.user]
+        good_users = [
+            self.as_owner_cat.user,
+            self.as_owner.user,
+            self.as_delegate.user,
+        ]
         bad_users = [
             self.as_contributor.user,
             self.as_guest.user,
@@ -322,7 +330,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             },
         }
 
-        good_users = [self.as_owner.user, self.as_delegate.user]
+        good_users = [
+            self.as_owner_cat.user,
+            self.as_owner.user,
+            self.as_delegate.user,
+        ]
         bad_users = [
             self.as_contributor.user,
             self.as_guest.user,
@@ -374,7 +386,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'role': self.role_guest.name,
             'user': str(assign_user.sodar_uuid),
         }
-        good_users = [self.as_owner.user, self.as_delegate.user]
+        good_users = [
+            self.as_owner_cat.user,
+            self.as_owner.user,
+            self.as_delegate.user,
+        ]
         bad_users = [
             self.as_contributor.user,
             self.as_guest.user,
@@ -416,7 +432,11 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             'projectroles:api_role_destroy',
             kwargs={'roleassignment': role_uuid},
         )
-        good_users = [self.as_owner.user, self.as_delegate.user]
+        good_users = [
+            self.as_owner_cat.user,
+            self.as_owner.user,
+            self.as_delegate.user,
+        ]
         bad_users = [
             self.as_contributor.user,
             self.as_guest.user,
@@ -442,11 +462,78 @@ class TestAPIPermissions(TestProjectAPIPermissionBase):
             url, bad_users, 403, method='DELETE', knox=True
         )
 
+    def test_owner_transfer(self):
+        """Test permissions for RoleAssignmentOwnerTransferAPIView"""
+
+        # Create user for assignments
+        self.new_owner = self.make_user('new_owner')
+        self.as_owner_new = self._make_assignment(
+            self.project, self.new_owner, self.role_contributor
+        )
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.new_owner.username,
+            'old_owner_role': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
+        }
+
+        def _cleanup():
+            self.as_owner_new.refresh_from_db()
+            self.as_owner_new.role = self.role_contributor
+            self.as_owner_new.save()
+
+            self.as_owner.refresh_from_db()
+            self.as_owner.role = self.role_owner
+            self.as_owner.save()
+
+        good_users = [
+            self.as_owner_cat.user,
+            self.as_owner.user,
+        ]
+        bad_users = [
+            self.as_delegate.user,
+            self.as_contributor.user,
+            self.as_guest.user,
+            self.user_no_roles,
+        ]
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+
     def test_user_list(self):
         """Test permissions for UserListAPIView"""
         url = reverse('projectroles:api_user_list')
         good_users = [
             self.superuser,
+            self.as_owner_cat.user,
             self.as_owner.user,
             self.as_delegate.user,
             self.as_contributor.user,

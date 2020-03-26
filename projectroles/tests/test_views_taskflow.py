@@ -166,17 +166,18 @@ class TestTaskflowBase(
         )[0]
         self.role_guest = Role.objects.get_or_create(name=PROJECT_ROLE_GUEST)[0]
 
-        # Init user
+        # Init users
+        self.user_cat = self.make_user('user_cat')
         self.user = self.make_user('superuser')
         self.user.is_staff = True
         self.user.is_superuser = True
         self.user.save()
 
-        # Create category locally (categories are not handled with taskflow)
+        # Create category locally
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self._make_assignment(self.category, self.user, self.role_owner)
+        self._make_assignment(self.category, self.user_cat, self.role_owner)
 
     def tearDown(self):
         self.taskflow.cleanup()
@@ -693,38 +694,6 @@ class TestProjectUpdateView(TestTaskflowBase):
                 ),
             )
 
-    def test_update_project_new_owner(self):
-        """Test Project updating with new user as owner"""
-
-        new_user = self.make_user('new_test_user')
-
-        # Assert precondition
-        self.assertEqual(Project.objects.all().count(), 2)
-
-        request_data = model_to_dict(self.project)
-        request_data['title'] = 'updated title'
-        request_data['description'] = 'updated description'
-        request_data['owner'] = new_user.sodar_uuid
-        request_data['readme'] = 'updated readme'
-        request_data.update(
-            app_settings.get_all_settings(project=self.project, post_safe=True)
-        )  # Add default settings
-        request_data['sodar_url'] = self.live_server_url  # HACK
-
-        with self.login(self.user):
-            self.client.post(
-                reverse(
-                    'projectroles:update',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                request_data,
-            )
-
-        # Assert Project and owner role state after update
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.project.refresh_from_db()
-        self.assertEqual(self.project.get_owner().user, new_user)
-
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestRoleAssignmentCreateView(TestTaskflowBase):
@@ -866,6 +835,64 @@ class TestRoleAssignmentUpdateView(TestTaskflowBase):
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+
+@skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
+class TestRoleAssignmentOwnerTransferView(TestTaskflowBase):
+    """Tests for ownership transfer view with taskflow"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Make project with owner in Taskflow and Django
+        self.project, self.owner_as = self._make_project_taskflow(
+            title='TestProject',
+            type=PROJECT_TYPE_PROJECT,
+            parent=self.category,
+            owner=self.user,
+            description='description',
+        )
+
+        # Create guest user and role
+        self.user_new = self.make_user('newuser')
+        self.role_as = self._make_assignment(
+            self.project, self.user_new, self.role_guest
+        )
+
+    def test_transfer_owner(self):
+        """Test ownership transfer with taskflow"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        self.request_data.update(
+            {
+                'project': self.project.sodar_uuid,
+                'user': self.user_new.sodar_uuid,
+                'role': self.role_contributor.pk,
+            }
+        )
+
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:role_transfer_owner',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'ex_owner_role': self.role_guest.pk,
+                    'new_owner': self.user_new.sodar_uuid,
+                },
+            )
+
+        # Assert RoleAssignment state after update
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_new
+        )
+        self.assertEqual(role_as.role, self.role_owner)
+        # TODO: Test resulting users in iRODS once we do issue #387
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)

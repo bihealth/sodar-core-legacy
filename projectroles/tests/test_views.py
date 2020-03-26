@@ -567,32 +567,6 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 ),
             )
 
-    def test_update_project_owner(self):
-        """Test email sending on project owner update"""
-        user_new = self.make_user('newuser')
-
-        values = model_to_dict(self.project)
-        values['owner'] = user_new.sodar_uuid  # NOTE: Must add owner
-
-        # Add settings values
-        values.update(
-            app_settings.get_all_settings(project=self.project, post_safe=True)
-        )
-
-        with self.login(self.user):
-            self.client.post(
-                reverse(
-                    'projectroles:update',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-                values,
-            )
-
-        # Mail should be send, cause the owner has changed
-        self.assertEqual(len(mail.outbox), 1)
-        new_owner_as = self.project.get_owner()
-        self.assertEqual(new_owner_as.user, user_new)
-
     def test_render_category(self):
         """Test rendering of Project updating form with an existing category"""
         with self.login(self.user):
@@ -610,11 +584,10 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
-        self.assertNotIsInstance(form.fields['owner'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
 
     def test_update_category(self):
         """Test category updating"""
-        user_new = self.make_user('newuser')
 
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 2)
@@ -622,7 +595,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values = model_to_dict(self.category)
         values['title'] = 'updated title'
         values['description'] = 'updated description'
-        values['owner'] = user_new.sodar_uuid
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
         values.update(
@@ -642,8 +615,8 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(Project.objects.all().count(), 2)
         self.category.refresh_from_db()
         self.assertIsNotNone(self.category)
-        # Ensure email is sent
-        self.assertEqual(len(mail.outbox), 1)
+        # Ensure no email is sent (owner not updated)
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': self.category.pk,
@@ -658,10 +631,6 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         model_dict = model_to_dict(self.category)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
-
-        # Assert ownership change
-        owner_as = self.category.get_owner()
-        self.assertEqual(owner_as.user, user_new)
 
         # TODO: Assert settings
 
@@ -1310,7 +1279,7 @@ class TestRoleAssignmentDeleteView(
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
 
-class TestRoleAssignmentTransferOwnershipView(
+class TestRoleAssignmentOwnerTransferView(
     ProjectMixin, RoleAssignmentMixin, TestViewsBase
 ):
     def setUp(self):
@@ -1330,7 +1299,7 @@ class TestRoleAssignmentTransferOwnershipView(
         )
 
     def test_transfer_ownership(self):
-        """Test RoleAssignment deleting"""
+        """Test ownership transfer"""
 
         # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)

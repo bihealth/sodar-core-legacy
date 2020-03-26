@@ -171,7 +171,7 @@ class RoleAssignmentSerializer(
         # Do not allow editing owner here
         if attrs['role'].name == PROJECT_ROLE_OWNER:
             raise serializers.ValidationError(
-                'Use project updating API to update owner'
+                'Use ownership transfer API view to update owner'
             )
 
         # Check delegate perms
@@ -182,15 +182,6 @@ class RoleAssignmentSerializer(
         ):
             raise exceptions.PermissionDenied(
                 'User lacks permission to assign delegates'
-            )
-
-        # Do not allow non-owners in categories (before we do #463)
-        if (
-            project.type == PROJECT_TYPE_CATEGORY
-            and attrs['role'].name != PROJECT_ROLE_OWNER
-        ):
-            raise serializers.ValidationError(
-                'Roles other than project owner not allowed for categories'
             )
 
         # Check delegate limit
@@ -347,6 +338,15 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
         # Validate and set owner
         if attrs.get('owner'):
+            if (
+                self.partial
+                and attrs['owner'] != self.instance.get_owner().user.sodar_uuid
+            ):
+                raise serializers.ValidationError(
+                    'Modifying owner not allowed here, '
+                    'use ownership transfer API view instead'
+                )
+
             owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
 
             if not owner:

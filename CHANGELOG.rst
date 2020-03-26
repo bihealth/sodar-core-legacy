@@ -30,6 +30,14 @@ Added
     - Base Ajax view classes in ``projectroles.views_ajax`` (#465)
     - Allow assigning roles for categories (#463)
     - Allow displaying project apps in categories with ``category_enable`` (#447)
+    - Allow category delegates and owners to create sub-categories and projects (#464)
+    - ``get_role_display_name()`` helper in ``projectroles_common_tags`` (#505)
+    - ``get_owners()``, ``is_owner()`` and ``get_all_roles()`` helpers for ``Project`` (#464)
+    - Allow using legacy UI test login method with ``PROJECTROLES_TEST_UI_LEGACY_LOGIN`` (#509)
+- **Taskflowbackend**
+    - ``get_inherited_roles()`` helper (#464)
+- **Timeline**
+    - ``get_models()`` helper
 - **Tokens**
     - Add app from varfish-web (#452)
 
@@ -53,6 +61,11 @@ Changed
     - Move ``utils.set_user_group()`` to ``SODARUser.set_group()`` (#483)
     - Call ``set_group()`` in ``SODARUser.save()`` (#483)
     - Replace ``projectroles_tags.is_app_hidden()`` with ``is_app_link_visible()``
+    - Inherit owner permissions from parent categories (#464)
+    - Refactor project roles template (#505)
+    - Disable owner updating in project update form (#508)
+- **Taskflowbackend**
+    - Refactor ``synctaskflow`` management command and add logging
 - **Timeline**
     - Display app for categories (#447)
 

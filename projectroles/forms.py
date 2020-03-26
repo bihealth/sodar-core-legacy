@@ -179,20 +179,13 @@ class ProjectForm(forms.ModelForm):
         model = Project
         fields = ['title', 'type', 'parent', 'owner', 'description', 'readme']
 
-    def __init__(self, project=None, current_user=None, *args, **kwargs):
-        """Override for form initialization"""
-        super().__init__(*args, **kwargs)
-
-        # Get current user for checking permissions for form items
-        if current_user:
-            self.current_user = current_user
-
+    def _init_app_settings(self):
         # Set up setting query kwargs
         self.p_kwargs = (
-            {'user_modifiable': True} if not current_user.is_superuser else {}
+            {'user_modifiable': True}
+            if not self.current_user.is_superuser
+            else {}
         )
-
-        # Add settings fields
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
@@ -282,6 +275,17 @@ class ProjectForm(forms.ModelForm):
                     self.fields[s_field].label += ' [HIDDEN]'
                     self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
 
+    def __init__(self, project=None, current_user=None, *args, **kwargs):
+        """Override for form initialization"""
+        super().__init__(*args, **kwargs)
+
+        # Get current user for checking permissions for form items
+        if current_user:
+            self.current_user = current_user
+
+        # Add settings fields
+        self._init_app_settings()
+
         # Access parent project if present
         parent_project = None
 
@@ -331,9 +335,8 @@ class ProjectForm(forms.ModelForm):
             # Set owner value
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
 
-            # Hide owner widget if a project (changed in member modification UI)
-            if self.initial['type'] == PROJECT_TYPE_PROJECT:
-                self.fields['owner'].widget = forms.HiddenInput()
+            # Hide owner widget if updating (changed in member modification UI)
+            self.fields['owner'].widget = forms.HiddenInput()
 
             # Set initial value for parent
             if parent_project:
@@ -352,9 +355,15 @@ class ProjectForm(forms.ModelForm):
                 # Parent must be current parent
                 self.initial['parent'] = parent_project.sodar_uuid
 
-                # Set parent owner as initial value
-                parent_owner = parent_project.get_owner().user
-                self.initial['owner'] = parent_owner.sodar_uuid
+                # Set current user as initial value
+                self.initial['owner'] = self.current_user.sodar_uuid
+
+                # If current user is not parent owner, disable owner select
+                if (
+                    not self.current_user.is_superuser
+                    and self.current_user != parent_project.get_owner().user
+                ):
+                    self.fields['owner'].widget = forms.HiddenInput()
 
             # Creating a top level project
             else:
@@ -373,6 +382,7 @@ class ProjectForm(forms.ModelForm):
 
     def clean(self):
         """Function for custom form validation and cleanup"""
+        instance_owner_as = self.instance.get_owner() if self.instance else None
 
         # Ensure the title is unique within parent
         try:
@@ -405,6 +415,17 @@ class ProjectForm(forms.ModelForm):
                 'Owner must be set for {}'.format(
                     get_display_name(self.cleaned_data.get('type'))
                 ),
+            )
+
+        # Ensure owner is not changed on update (must use ownership transfer)
+        if (
+            instance_owner_as
+            and self.cleaned_data.get('owner') != instance_owner_as.user
+        ):
+            self.add_error(
+                'owner',
+                'Owner update is not allowed in this form, use Ownership '
+                'Transfer instead',
             )
 
         # Verify settings fields

@@ -210,7 +210,10 @@ class Project(models.Model):
         return ret
 
     def get_owner(self):
-        """Return RoleAssignment for owner or None if not set"""
+        """'
+        Return RoleAssignment for owner (without inherited owners) or None if
+        not set.
+        """
         try:
             return self.roles.get(
                 role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -219,6 +222,41 @@ class Project(models.Model):
         except RoleAssignment.DoesNotExist:
             return None
 
+    def get_owners(self, inherited_only=False):
+        """
+        Return RoleAssignments for project owner as well as possible inherited
+        owners from parent projects.
+
+        :param inherited_only: Only show inherited owners if True (bool)
+        :return: List
+        """
+        owners = []
+        owner_as = self.get_owner()
+
+        if owner_as and not inherited_only:
+            owners.append(owner_as)
+
+        parent = self.parent
+
+        while parent:
+            parent_owner_as = parent.get_owner()
+
+            if parent_owner_as and parent_owner_as.user not in [
+                a.user for a in owners
+            ]:
+                owners.append(parent_owner_as)
+
+            parent = parent.parent
+
+        return owners
+
+    def is_owner(self, user):
+        """
+        Return True if user is owner in this project or inherits ownership from
+        a parent category.
+        """
+        return True if user in [a.user for a in self.get_owners()] else False
+
     def get_delegates(self):
         """Return RoleAssignments for delegates"""
         return self.roles.filter(
@@ -226,17 +264,35 @@ class Project(models.Model):
         )
 
     def get_members(self):
-        """Return RoleAssignments for members of project excluding owner and
-        delegates"""
+        """
+        Return RoleAssignments for members of project excluding owner and
+        delegates.
+        """
         return self.roles.filter(
             ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
             & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
         )
 
+    def get_all_roles(self):
+        """
+        Return all RoleAssignments for the project, including inherited owner
+        rights from parent categories.
+
+        :return: List
+        """
+        return (
+            self.get_owners()
+            + list(self.get_delegates())
+            + list(self.get_members())
+        )
+
     def has_role(self, user, include_children=False):
-        """Return whether user has roles in Project. If include_children is
-        True, return True if user has roles in ANY child project"""
-        if self.roles.filter(user=user).count() > 0:
+        """
+        Return whether user has roles in Project. If include_children is
+        True, return True if user has roles in ANY child project. Also return
+        True if user inherits owner permissions from a parent category.
+        """
+        if self.is_owner(user) or self.roles.filter(user=user).count() > 0:
             return True
 
         if include_children:

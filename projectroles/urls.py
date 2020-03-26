@@ -179,6 +179,11 @@ urls_api = [
         name='api_role_destroy',
     ),
     url(
+        regex=r'^api/roles/owner-transfer/(?P<project>[0-9a-f-]+)$',
+        view=views_api.RoleAssignmentOwnerTransferAPIView.as_view(),
+        name='api_role_owner_transfer',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
