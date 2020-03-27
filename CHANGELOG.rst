@@ -125,6 +125,7 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.27
     - Base ``RemoteProjectGetAPIView`` on ``SODARCoreAPIBaseView`` (#442)
+    - Upgrade to Chromedriver v80 (#510)
 - **Bgjobs**
     - Make ``specialize_job()`` more robust (#456)
 - **Projectroles**
