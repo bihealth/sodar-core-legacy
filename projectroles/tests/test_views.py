@@ -322,7 +322,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values = {
             'title': 'TestProject',
             'type': PROJECT_TYPE_CATEGORY,
-            'parent': None,
+            'parent': '',
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
@@ -338,9 +338,12 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         with self.login(self.user):
             response = self.client.post(reverse('projectroles:create'), values)
 
+        # Assert response
+        self.assertEqual(response.status_code, 302)
+
         # Assert Project state after creation
         self.assertEqual(Project.objects.all().count(), 1)
-        project = Project.objects.all()[0]
+        project = Project.objects.first()
         self.assertIsNotNone(project)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -392,7 +395,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values = {
             'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
-            'parent': None,
+            'parent': '',
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
@@ -406,15 +409,17 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
         with self.login(self.user):
-            self.client.post(reverse('projectroles:create'), values)
+            response = self.client.post(reverse('projectroles:create'), values)
 
-        category = Project.objects.all()[0]
+        self.assertEqual(response.status_code, 302)
+        category = Project.objects.first()
+        self.assertIsNotNone(category)
 
         # Make project with owner in Django
         values = {
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
-            'parent': category.pk,
+            'parent': category.sodar_uuid,
             'owner': self.user.sodar_uuid,
             'description': 'description',
         }
@@ -427,13 +432,16 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
         with self.login(self.user):
-            self.client.post(
+            response = self.client.post(
                 reverse(
                     'projectroles:create',
                     kwargs={'project': category.sodar_uuid},
                 ),
                 values,
             )
+
+        # Assert response
+        self.assertEqual(response.status_code, 302)
 
         # Assert Project state after creation
         self.assertEqual(Project.objects.all().count(), 2)
@@ -506,7 +514,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
-        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
 
     def test_update_project(self):
@@ -519,6 +527,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values['title'] = 'updated title'
         values['description'] = 'updated description'
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        values['parent'] = ''
 
         # Add settings values
         values.update(
@@ -583,7 +592,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
-        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
 
     def test_update_category(self):
@@ -596,6 +605,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values['title'] = 'updated title'
         values['description'] = 'updated description'
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        values['parent'] = ''
 
         # Add settings values
         values.update(
@@ -610,6 +620,9 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 ),
                 values,
             )
+
+        # Assert response
+        self.assertEqual(response.status_code, 302)
 
         # Assert category state after update
         self.assertEqual(Project.objects.all().count(), 2)

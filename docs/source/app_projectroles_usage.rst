@@ -150,7 +150,10 @@ Updating Projects
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
 before will be presented to the user. The owner can not be changed here, but
-must be modified in the *Members* view instead.
+must be modified in the *Members* view instead. It is possible to move the
+current category or project under another category by altering the ``parent``
+field. The user who does the updating must have a sufficient role in the
+target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center

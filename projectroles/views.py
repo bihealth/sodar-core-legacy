@@ -28,20 +28,8 @@ from django.views.generic.detail import ContextMixin
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
+from projectroles import email
 from projectroles.app_settings import AppSettingAPI
-from projectroles.email import (
-    send_role_change_mail,
-    send_invite_mail,
-    send_accept_note,
-    send_expiry_note,
-    send_project_create_mail,
-    get_invite_subject,
-    get_invite_body,
-    get_invite_message,
-    get_email_footer,
-    get_role_change_body,
-    get_role_change_subject,
-)
 from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
@@ -642,8 +630,69 @@ class ProjectModifyMixin:
         return extra_data, upd_fields
 
     @classmethod
+    def _create_timeline_event(
+        cls, project, action, owner, old_data, project_settings, request
+    ):
+        timeline = get_backend_api('timeline_backend')
+
+        if not timeline:
+            return None
+
+        type_str = project.type.capitalize()
+
+        if action == 'create':
+            tl_desc = 'create ' + type_str.lower() + ' with {owner} as owner'
+            extra_data = {
+                'title': project.title,
+                'owner': owner.username,
+                'description': project.description,
+                'readme': project.readme.raw,
+            }
+
+            # Add settings to extra data
+            for k, v in project_settings.items():
+                a_name = k.split('.')[1]
+                s_name = k.split('.')[2]
+                s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+
+                if s_def['type'] == 'JSON':
+                    v = json.loads(v)
+
+                extra_data[k] = v
+
+        else:  # Update
+            tl_desc = 'update ' + type_str.lower()
+            extra_data, upd_fields = cls._get_project_update_data(
+                old_data, project, owner, project_settings
+            )
+
+            if len(upd_fields) > 0:
+                tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
+
+        tl_event = timeline.add_event(
+            project=project,
+            app_name=APP_NAME,
+            user=request.user,
+            event_name='project_{}'.format(action),
+            description=tl_desc,
+            extra_data=extra_data,
+        )
+
+        if action == 'create':
+            tl_event.add_object(owner, 'owner', owner.username)
+
+        return tl_event
+
+    @classmethod
     def _submit_with_taskflow(
-        cls, project, owner, project_settings, action, request, tl_event=None
+        cls,
+        project,
+        owner,
+        project_settings,
+        action,
+        request,
+        old_parent=None,
+        tl_event=None,
     ):
         """
         Submit project modification flow via SODAR Taskflow.
@@ -653,6 +702,7 @@ class ProjectModifyMixin:
         :param project_settings: Dict
         :param action: "create" or "update" (string)
         :param request: Request object for triggering the update
+        :param old_parent: Project object of old parent if it was changed
         :param tl_event: Timeline ProjectEvent object or None
         :raise: ConnectionError if unable to connect to SODAR Taskflow
         :raise: FlowSubmitException if SODAR Taskflow submission fails
@@ -667,7 +717,7 @@ class ProjectModifyMixin:
             'project_description': project.description,
             'parent_uuid': str(project.parent.sodar_uuid)
             if project.parent
-            else 0,
+            else '',
             'owner_username': owner.username,
             'owner_uuid': str(owner.sodar_uuid),
             'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
@@ -680,13 +730,26 @@ class ProjectModifyMixin:
             flow_data['old_owner_username'] = old_owner.username
             flow_data['project_readme'] = project.readme.raw
 
-        else:  # Create
-            inherited_owners = project.get_owners(inherited_only=True)
+            if old_parent:
+                # Get inherited owners for project and its children to add
+                new_roles = taskflow.get_inherited_users(project)
+                flow_data['roles_add'] = new_roles
+                new_users = set([r['username'] for r in new_roles])
 
-            if inherited_owners:
-                flow_data['inherited_owners'] = [
-                    a.user.username for a in inherited_owners
+                # Get old inherited owners from previous parent to remove
+                old_roles = taskflow.get_inherited_users(old_parent)
+                flow_data['roles_delete'] = [
+                    r for r in old_roles if r['username'] not in new_users
                 ]
+
+        else:  # Create
+            flow_data['roles_add'] = [
+                {
+                    'project_uuid': str(project.sodar_uuid),
+                    'username': a.user.username,
+                }
+                for a in project.get_owners(inherited_only=True)
+            ]
 
         try:
             taskflow.submit(
@@ -755,8 +818,6 @@ class ProjectModifyMixin:
         :return: Created or updated Project object
         """
         taskflow = get_backend_api('taskflow')
-        timeline = get_backend_api('timeline_backend')
-        tl_event = None
         action = 'update' if instance else 'create'
         old_data = {}
         old_project = None
@@ -774,7 +835,11 @@ class ProjectModifyMixin:
             )
             project.type = data.get('type') or old_project.type
             project.readme = data.get('readme') or old_project.readme
-            project.parent = data.get('parent') or old_project.parent
+
+            # NOTE: Must do this as parent can exist but be None
+            project.parent = (
+                data['parent'] if 'parent' in data else old_project.parent
+            )
 
         else:
             project = Project(
@@ -814,62 +879,34 @@ class ProjectModifyMixin:
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
 
-        type_str = project.type.capitalize()
-
         # Get settings
         project_settings = self._get_app_settings(data, instance)
 
-        if timeline:
-            if action == 'create':
-                tl_desc = (
-                    'create ' + type_str.lower() + ' with {owner} as owner'
-                )
-                extra_data = {
-                    'title': project.title,
-                    'owner': owner.username,
-                    'description': project.description,
-                    'readme': project.readme.raw,
-                }
+        # Create timeline event
+        tl_event = self._create_timeline_event(
+            project, action, owner, old_data, project_settings, request
+        )
 
-                # Add settings to extra data
-                for k, v in project_settings.items():
-                    a_name = k.split('.')[1]
-                    s_name = k.split('.')[2]
-                    s_def = app_settings.get_setting_def(
-                        s_name, app_name=a_name
-                    )
+        # Get old parent for project moving
+        old_parent = (
+            old_project.parent
+            if old_project
+            and old_project.parent
+            and old_project.parent != project.parent
+            else None
+        )
 
-                    if s_def['type'] == 'JSON':
-                        v = json.loads(v)
-
-                    extra_data[k] = v
-
-            else:  # Update
-                tl_desc = 'update ' + type_str.lower()
-                extra_data, upd_fields = self._get_project_update_data(
-                    old_data, project, owner, project_settings
-                )
-
-                if len(upd_fields) > 0:
-                    tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
-
-            tl_event = timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=request.user,
-                event_name='project_{}'.format(action),
-                description=tl_desc,
-                extra_data=extra_data,
-            )
-
-            if action == 'create':
-                tl_event.add_object(owner, 'owner', owner.username)
-
-        # Submit with Taskflow
+        # Submit with Taskflow if enabled
         # NOTE: may raise an exception which needs to be handled in caller
         if use_taskflow:
             self._submit_with_taskflow(
-                project, owner, project_settings, action, request, tl_event
+                project,
+                owner,
+                project_settings,
+                action,
+                request,
+                old_parent,
+                tl_event,
             )
 
         # Local save without Taskflow
@@ -886,16 +923,21 @@ class ProjectModifyMixin:
             owner_as = RoleAssignment.objects.get_assignment(owner, project)
             # Owner change notification
             if not instance or old_data['owner'] != owner:
-                send_role_change_mail(
+                email.send_role_change_mail(
                     action, project, owner, owner_as.role, request,
                 )
 
-            # Project creation for parent category owner
+            # Project creation/moving for parent category owner
             if (
                 project.parent
                 and project.parent.get_owner().user != owner_as.user
+                and project.parent.get_owner().user != request.user
             ):
-                send_project_create_mail(project, request)
+                if not instance:
+                    email.send_project_create_mail(project, request)
+
+                elif old_parent:
+                    email.send_project_move_mail(project, request)
 
         if tl_event:
             tl_event.set_status('OK')
@@ -1153,7 +1195,7 @@ class RoleAssignmentModifyMixin:
         role_as.save()
 
         if SEND_EMAIL:
-            send_role_change_mail(action, project, user, role, request)
+            email.send_role_change_mail(action, project, user, role, request)
 
         if tl_event:
             tl_event.set_status('OK')
@@ -1171,10 +1213,10 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         project = self.get_project()
 
         if change_type != 'delete':
-            context['preview_subject'] = get_role_change_subject(
+            context['preview_subject'] = email.get_role_change_subject(
                 change_type, project
             )
-            context['preview_body'] = get_role_change_body(
+            context['preview_body'] = email.get_role_change_body(
                 change_type=change_type,
                 project=project,
                 user_name='{user_name}',
@@ -1281,7 +1323,7 @@ class RoleAssignmentDeleteMixin:
             instance.delete()
 
         if SEND_EMAIL:
-            send_role_change_mail('delete', project, user, None, request)
+            email.send_role_change_mail('delete', project, user, None, request)
 
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
@@ -1477,10 +1519,10 @@ class RoleAssignmentOwnerTransferMixin:
             raise ex
 
         if SEND_EMAIL:
-            send_role_change_mail(
+            email.send_role_change_mail(
                 'update', project, old_owner, old_owner_role, self.request
             )
-            send_role_change_mail(
+            email.send_role_change_mail(
                 'update',
                 project,
                 new_owner,
@@ -1574,7 +1616,7 @@ class ProjectInviteMixin:
         status_desc = None
 
         if SEND_EMAIL:
-            sent_mail = send_invite_mail(invite, request)
+            sent_mail = email.send_invite_mail(invite, request)
 
             if sent_mail == 0:
                 status_type = 'FAILED'
@@ -1662,18 +1704,20 @@ class ProjectInviteCreateView(
 
         project = self.get_permission_object()
 
-        context['preview_subject'] = get_invite_subject(project)
-        context['preview_body'] = get_invite_body(
+        context['preview_subject'] = email.get_invite_subject(project)
+        context['preview_body'] = email.get_invite_body(
             project=project,
             issuer=self.request.user,
             role_name='{role_name}',
             invite_url='http://XXXXXXXXXXXXXXXXXXXXXXX',
             date_expire_str='YYYY-MM-DD HH:MM',
         ).replace('\n', '\\n')
-        context['preview_message'] = get_invite_message('{message}').replace(
+        context['preview_message'] = email.get_invite_message(
+            '{message}'
+        ).replace('\n', '\\n')
+        context['preview_footer'] = email.get_email_footer().replace(
             '\n', '\\n'
         )
-        context['preview_footer'] = get_email_footer().replace('\n', '\\n')
 
         return context
 
@@ -1777,7 +1821,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
 
             # Send notification of expiry to issuer
             if SEND_EMAIL:
-                send_expiry_note(invite, self.request)
+                email.send_expiry_note(invite, self.request)
 
             revoke_invite(invite, failed=True, fail_desc='Invite expired')
             return redirect(reverse('home'))
@@ -1841,7 +1885,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
 
         # ..notify the issuer by email..
         if SEND_EMAIL:
-            send_accept_note(invite, self.request)
+            email.send_accept_note(invite, self.request)
 
         # ..deactivate the invite..
         revoke_invite(invite, failed=False)

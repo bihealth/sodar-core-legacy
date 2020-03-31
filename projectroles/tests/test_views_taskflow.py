@@ -250,8 +250,14 @@ class TestProjectUpdateAPIView(
     def setUp(self):
         super().setUp()
 
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self.cat_owner_as = self._make_assignment(
+            self.category, self.user, self.role_owner
+        )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
@@ -270,6 +276,7 @@ class TestProjectUpdateAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
+                'parent_uuid': str(self.category.sodar_uuid),
                 'description': desc,
                 'readme': readme,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
@@ -297,6 +304,7 @@ class TestProjectUpdateAPIView(
             data={
                 'project_uuid': str(self.project.sodar_uuid),
                 'title': title,
+                'parent_uuid': str(self.category.sodar_uuid),
                 'readme': readme,
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
             },
@@ -310,6 +318,29 @@ class TestProjectUpdateAPIView(
         self.assertEqual(self.project.title, title)
         self.assertEqual(self.project.description, '')
         self.assertEqual(self.project.readme.raw, readme)
+
+    def test_post_move(self):
+        """Test POST request for moving a project"""
+
+        new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
+
+        request = self.req_factory.post(
+            reverse('projectroles:taskflow_project_update'),
+            data={
+                'project_uuid': str(self.project.sodar_uuid),
+                'title': self.project.title,
+                'parent_uuid': str(new_category.sodar_uuid),
+                'description': self.project.description,
+                'readme': '',
+                'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
+            },
+        )
+        response = views_taskflow.TaskflowProjectUpdateAPIView.as_view()(
+            request
+        )
+        self.assertEqual(response.status_code, 200)
+        self.project.refresh_from_db()
+        self.assertEqual(self.project.parent, new_category)
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
@@ -651,6 +682,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         request_data['description'] = 'updated description'
         request_data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         request_data['readme'] = 'updated readme'
+        request_data['parent'] = str(self.category.sodar_uuid)
         request_data.update(
             app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings

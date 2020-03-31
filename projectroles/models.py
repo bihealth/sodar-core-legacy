@@ -192,8 +192,29 @@ class Project(models.Model):
         )
 
     # Custom row-level functions
-    def get_children(self):
-        """Return child objects for the Project sorted by title"""
+
+    def get_children(self, flat=False):
+        """
+        Return child objects for the Project sorted by title.
+
+        :param flat: Return all children recursively as a flat list (bool)
+        :return: Iterable of Project
+        """
+        if flat:
+
+            def _get(obj, ret=None):
+                if ret is None:
+                    ret = []
+
+                ret += list(obj.get_children())
+
+                for child in obj.get_children():
+                    ret = _get(child, ret)
+
+                return ret
+
+            return _get(self)
+
         return self.children.filter(
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
@@ -210,7 +231,7 @@ class Project(models.Model):
         return ret
 
     def get_owner(self):
-        """'
+        """
         Return RoleAssignment for owner (without inherited owners) or None if
         not set.
         """
@@ -273,18 +294,16 @@ class Project(models.Model):
             & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
         )
 
-    def get_all_roles(self):
+    def get_all_roles(self, inherited=True):
         """
         Return all RoleAssignments for the project, including inherited owner
         rights from parent categories.
 
+        :param inherited: Include inherited owners (bool, default=True)
         :return: List
         """
-        return (
-            self.get_owners()
-            + list(self.get_delegates())
-            + list(self.get_members())
-        )
+        owners = self.get_owners() if inherited else [self.get_owner()]
+        return owners + list(self.get_delegates()) + list(self.get_members())
 
     def has_role(self, user, include_children=False):
         """

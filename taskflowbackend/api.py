@@ -166,11 +166,11 @@ class TaskflowAPI:
     @classmethod
     def get_inherited_roles(cls, project, user, roles=None):
         """
-        Return list of inherited owner roles to be used in raskflow sync
+        Return list of inherited owner roles to be used in taskflow sync.
 
         :param project: Project object
         :param user: User object
-        :pram roles: previously collected roles (optional, list or None)
+        :pram roles: Previously collected roles (optional, list or None)
         :return: List of dicts
         """
         if roles is None:
@@ -191,5 +191,36 @@ class TaskflowAPI:
 
         for child in project.get_children():
             roles = cls.get_inherited_roles(child, user, roles)
+
+        return roles
+
+    @classmethod
+    def get_inherited_users(cls, project, roles=None):
+        """
+        Return list of all inherited users within a project and its children, to
+        be used in taskflow sync.
+
+        :param project: Project object
+        :pram roles: Previously collected roles (optional, list or None)
+        :return: List of dicts
+        """
+
+        if roles is None:
+            roles = []
+
+        if project.type == PROJECT_TYPE_PROJECT:
+            i_owners = [a.user for a in project.get_owners(inherited_only=True)]
+            all_users = [a.user for a in project.get_all_roles(inherited=False)]
+
+            for u in [u for u in i_owners if u not in all_users]:
+                roles.append(
+                    {
+                        'project_uuid': str(project.sodar_uuid),
+                        'username': u.username,
+                    }
+                )
+
+        for child in project.get_children():
+            roles = cls.get_inherited_users(child, roles)
 
         return roles

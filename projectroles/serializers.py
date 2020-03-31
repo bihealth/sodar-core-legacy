@@ -246,7 +246,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
     """Serializer for the Project model"""
 
     owner = serializers.CharField(write_only=True)
-    # parent = serializers.CharField(allow_blank=True, allow_null=True)
     parent = serializers.SlugRelatedField(
         slug_field='sodar_uuid',
         many=False,
@@ -291,14 +290,37 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         if parent and parent.type != PROJECT_TYPE_CATEGORY:
             raise serializers.ValidationError('Parent is not a category')
 
-        # Attempting to create/move project in root
         elif (
-            attrs.get('type') == PROJECT_TYPE_PROJECT
+            'parent' in attrs
             and not parent
+            and self.instance
+            and self.instance.parent
+            and not current_user.is_superuser
+        ):
+            raise exceptions.PermissionDenied(
+                'Only superusers are allowed to place categories in root'
+            )
+
+        # Attempting to create/move project in root
+        if (
+            'parent' in attrs
+            and not parent
+            and attrs.get('type') == PROJECT_TYPE_PROJECT
             and not settings.PROJECTROLES_DISABLE_CATEGORIES
         ):
             raise serializers.ValidationError(
                 'Project must be placed under a category'
+            )
+
+        # Ensure we are not moving a category under one of its children
+        if (
+            parent
+            and self.instance
+            and self.instance.type == PROJECT_TYPE_CATEGORY
+            and parent in self.instance.get_children(flat=True)
+        ):
+            raise serializers.ValidationError(
+                'Moving a category under its own child is not allowed'
             )
 
         # Validate type

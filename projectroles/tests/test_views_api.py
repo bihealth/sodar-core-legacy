@@ -995,6 +995,62 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         # Assert response
         self.assertEqual(response.status_code, 403, msg=response.content)
 
+    def test_patch_project_move_root(self):
+        """Test patch() for moving project without permissions (should fail)"""
+
+        new_category = self._make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        new_owner = self.make_user('new_owner')
+        self._make_assignment(new_category, new_owner, self.role_owner)
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        patch_data = {'parent': ''}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 200, msg=response.content)
+
+    def test_patch_project_move_root_unallowed(self):
+        """Test patch() for moving project to root without permissions (should fail)"""
+
+        new_category = self._make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        new_owner = self.make_user('new_owner')
+        self._make_assignment(new_category, new_owner, self.role_owner)
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        patch_data = {'parent': ''}
+        # Disable superuser status from self.user and perform request
+        self.user.is_superuser = False
+        self.user.save()
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 403, msg=response.content)
+
+    def test_patch_project_move_child(self):
+        """Test patch() for moving a category inside its child (should fail)"""
+
+        new_category = self._make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, self.category
+        )
+        self._make_assignment(new_category, self.user, self.role_owner)
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        patch_data = {'parent': str(new_category.sodar_uuid)}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
     def test_patch_project_type_change(self):
         """Test patch() with a changed project type (should fail)"""
         url = reverse(

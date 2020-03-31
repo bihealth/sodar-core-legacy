@@ -34,6 +34,9 @@ Added
     - ``get_role_display_name()`` helper in ``projectroles_common_tags`` (#505)
     - ``get_owners()``, ``is_owner()`` and ``get_all_roles()`` helpers for ``Project`` (#464)
     - Allow using legacy UI test login method with ``PROJECTROLES_TEST_UI_LEGACY_LOGIN`` (#509)
+    - Allow moving categories and projects under different categories (#512)
+    - ``SODARForm`` and ``SODARModelForm`` base classes for forms
+    - Enable retrieving flat recursive list of children objects in ``Project.get_children()``
 - **Taskflowbackend**
     - ``get_inherited_roles()`` helper (#464)
 - **Timeline**
@@ -64,6 +67,7 @@ Changed
     - Inherit owner permissions from parent categories (#464)
     - Refactor project roles template (#505)
     - Disable owner updating in project update form (#508)
+    - Allow updating project parent via SODAR Taskflow (#512)
 - **Taskflowbackend**
     - Refactor ``synctaskflow`` management command and add logging
 - **Timeline**

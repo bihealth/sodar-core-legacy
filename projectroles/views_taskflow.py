@@ -78,12 +78,14 @@ class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
             project = Project.objects.get(
                 sodar_uuid=request.data['project_uuid']
             )
-            project.title = request.data['title']
-            project.description = (
-                request.data['description']
-                if 'description' in request.data
-                else ''
+            parent = (
+                Project.objects.get(sodar_uuid=request.data['parent_uuid'])
+                if request.data.get('parent_uuid')
+                else None
             )
+            project.parent = parent
+            project.title = request.data['title']
+            project.description = request.data.get('description') or ''
             project.readme.raw = request.data['readme']
             project.save()
 

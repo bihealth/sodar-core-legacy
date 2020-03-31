@@ -21,6 +21,7 @@ Release Highlights
 - Import the ``tokens`` API token management app from VarFish
 - Allow assigning roles other than owner for categories
 - Allow category delegates and owners to create sub-categories and projects
+- Allow moving categories and projects under different categories
 - Inherit owner permissions from parent categories
 - Allow displaying project apps in categories with ``category_enable``
 - Reorganization of views in apps
