@@ -492,7 +492,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             self.category, self.user, self.role_owner
         )
         self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
         )
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
@@ -519,15 +519,19 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_update_project(self):
         """Test Project updating"""
+        timeline = get_backend_api('timeline_backend')
+
+        new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
+        self._make_assignment(new_category, self.user, self.role_owner)
 
         # Assert precondition
-        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(Project.objects.all().count(), 3)
 
         values = model_to_dict(self.project)
         values['title'] = 'updated title'
         values['description'] = 'updated description'
+        values['parent'] = new_category.sodar_uuid  # NOTE: Updated parent
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
-        values['parent'] = ''
 
         # Add settings values
         values.update(
@@ -544,7 +548,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             )
 
         # Assert Project state after update
-        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
         self.assertIsNotNone(self.project)
         # No mail should be send, cause the owner has not changed
@@ -554,7 +558,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'id': self.project.pk,
             'title': 'updated title',
             'type': PROJECT_TYPE_PROJECT,
-            'parent': None,
+            'parent': new_category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
             'sodar_uuid': self.project.sodar_uuid,
@@ -575,6 +579,15 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+        # Assert timeline event
+        tl_event = (
+            timeline.get_project_events(self.project).order_by('-pk').first()
+        )
+        self.assertEqual(tl_event.event_name, 'project_update')
+        self.assertIn('title', tl_event.extra_data)
+        self.assertIn('description', tl_event.extra_data)
+        self.assertIn('parent', tl_event.extra_data)
 
     def test_render_category(self):
         """Test rendering of Project updating form with an existing category"""

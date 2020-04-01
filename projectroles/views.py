@@ -553,6 +553,7 @@ class ProjectModifyMixin:
     def _get_old_project_data(project):
         return {
             'title': project.title,
+            'parent': project.parent,
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
@@ -600,6 +601,12 @@ class ProjectModifyMixin:
         if old_data['title'] != project.title:
             extra_data['title'] = project.title
             upd_fields.append('title')
+
+        if old_data['parent'] != project.parent:
+            extra_data['parent'] = (
+                str(project.parent.sodar_uuid) if project.parent else None
+            )
+            upd_fields.append('parent')
 
         if old_data['owner'] != owner:
             extra_data['owner'] = owner.username
@@ -827,8 +834,8 @@ class ProjectModifyMixin:
 
             # In case of a PATCH request, get existing obj to fill out fields
             old_project = Project.objects.get(sodar_uuid=instance.sodar_uuid)
+            old_data = self._get_old_project_data(old_project)  # Store old data
 
-            old_data = self._get_old_project_data(instance)  # Store old data
             project.title = data.get('title') or old_project.title
             project.description = (
                 data.get('description') or old_project.description
