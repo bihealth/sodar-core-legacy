@@ -37,6 +37,7 @@ Added
     - Allow moving categories and projects under different categories (#512)
     - ``SODARForm`` and ``SODARModelForm`` base classes for forms
     - Enable retrieving flat recursive list of children objects in ``Project.get_children()``
+    - Support for ``data`` in permission test ``assert_response()`` method (#155)
 - **Taskflowbackend**
     - ``get_inherited_roles()`` helper (#464)
 - **Timeline**

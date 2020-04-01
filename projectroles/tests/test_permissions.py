@@ -45,6 +45,7 @@ class TestPermissionMixin:
         redirect_user=None,
         redirect_anon=None,
         method='GET',
+        data=None,
     ):
         """
         Assert a response status code for url with a list of users. Also checks
@@ -56,22 +57,23 @@ class TestPermissionMixin:
         :param redirect_user: Redirect URL for signed in user (None=default)
         :param redirect_anon: Redirect URL for anonymous (None=default)
         :param method: Method for request (default='GET')
+        :param data: Optional data for request (dict)
         """
 
         def _send_request():
-            if method.upper() == 'GET':
-                return self.client.get(url)
+            req_method = getattr(self.client, method.lower(), None)
 
-            elif method.upper() == 'POST':
-                return self.client.post(url)
+            if not req_method:
+                raise ValueError('Invalid method "{}"'.format(method))
 
-            else:
-                raise ValueError('Method "{}" not supported'.format(method))
+            return req_method(url, **req_kwargs)
 
         if not isinstance(users, (list, tuple)):
             users = [users]
 
         for user in users:
+            req_kwargs = {'data': data} if data else {}
+
             if user:  # Authenticated user
                 redirect_url = (
                     redirect_user if redirect_user else reverse('home')
