@@ -7,6 +7,7 @@ import urllib.request
 
 from django.apps import apps
 from django.conf import settings
+from django.core.exceptions import ImproperlyConfigured
 from django.core.urlresolvers import resolve
 from django.contrib import auth
 from django.contrib import messages
@@ -113,19 +114,23 @@ class ProjectAccessMixin:
         :param kwargs: View kwargs (optional)
         :return: Object of project_class or None if not found
         """
-        if not request:
-            request = self.request
+        request = request or getattr(self, 'request')
+        kwargs = kwargs or getattr(self, 'kwargs')
 
-        if not kwargs:
-            kwargs = self.kwargs
+        # Ensure kwargs can be accessed
+        if kwargs is None:
+            raise ImproperlyConfigured('View kwargs are not accessible')
 
-        # First check for a kwarg named 'project'
+        # Project class object
         if 'project' in kwargs:
             return self.project_class.objects.filter(
                 sodar_uuid=kwargs['project']
             ).first()
 
         # Other object types
+        if not request:
+            raise ImproperlyConfigured('Current HTTP request is not accessible')
+
         model = None
         uuid_kwarg = None
 

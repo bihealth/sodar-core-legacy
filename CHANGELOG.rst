@@ -94,6 +94,7 @@ Fixed
     - Local users disabled in local development configuration (#500)
     - Member link not visible in responsive project dropdown (#466)
     - CSS issues with Bootstrap 4.4.1 in search pagination (#372, #460)
+    - Raise ``ImproperlyConfigured`` for missing parameters in ``ProjectAccessMixin`` (#516)
 - **Timeline**
     - CSS issues with Bootstrap 4.4.1 (#460)
 
