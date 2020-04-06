@@ -131,10 +131,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
         expected_true = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -149,11 +149,11 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         permissions"""
         expected_true = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
-        expected_false = [self.as_guest.user]
+        expected_false = [self.guest_as.user]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
         )
@@ -170,10 +170,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test file action buttons visibility according to user permissions"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -185,10 +185,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         permissions"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -200,10 +200,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         permissions"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -215,10 +215,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         permissions"""
         expected = [
             (self.superuser, 6),
-            (self.as_owner.user, 6),
-            (self.as_delegate.user, 6),
-            (self.as_contributor.user, 3),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 6),
+            (self.delegate_as.user, 6),
+            (self.contributor_as.user, 3),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -230,10 +230,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         permissions"""
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -252,10 +252,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
         expected = [
             (self.superuser, 0),
-            (self.as_owner.user, 0),
-            (self.as_delegate.user, 0),
-            (self.as_contributor.user, 0),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -275,10 +275,10 @@ class TestListView(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
 
         expected = [
             (self.superuser, 3),
-            (self.as_owner.user, 3),
-            (self.as_delegate.user, 3),
-            (self.as_contributor.user, 3),
-            (self.as_guest.user, 3),
+            (self.owner_as.user, 3),
+            (self.delegate_as.user, 3),
+            (self.contributor_as.user, 3),
+            (self.guest_as.user, 3),
         ]
         url = reverse(
             'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
@@ -370,10 +370,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test search items visibility according to user permissions"""
         expected = [
             (self.superuser, 6),
-            (self.as_owner.user, 6),
-            (self.as_delegate.user, 6),
-            (self.as_contributor.user, 6),
-            (self.as_guest.user, 6),
+            (self.owner_as.user, 6),
+            (self.delegate_as.user, 6),
+            (self.contributor_as.user, 6),
+            (self.guest_as.user, 6),
             (self.user_no_roles, 0),
         ]
         url = (
@@ -387,10 +387,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test search items visibility with 'file' type"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 2),
-            (self.as_guest.user, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
             (self.user_no_roles, 0),
         ]
         url = (
@@ -404,10 +404,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test search items visibility with 'folder' type"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 2),
-            (self.as_guest.user, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
             (self.user_no_roles, 0),
         ]
         url = (
@@ -421,10 +421,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test search items visibility with 'link' as type"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 2),
-            (self.as_guest.user, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
             (self.user_no_roles, 0),
         ]
         url = (
@@ -438,10 +438,10 @@ class TestSearch(FolderMixin, FileMixin, HyperLinkMixin, TestUIBase):
         """Test search items visibility with a nonexisting type"""
         expected = [
             (self.superuser, 0),
-            (self.as_owner.user, 0),
-            (self.as_delegate.user, 0),
-            (self.as_contributor.user, 0),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
             (self.user_no_roles, 0),
         ]
         url = (
@@ -460,10 +460,10 @@ class TestHomeView(TestUIBase):
 
         users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         url = reverse('home')

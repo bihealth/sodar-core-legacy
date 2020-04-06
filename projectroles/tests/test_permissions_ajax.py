@@ -27,10 +27,10 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
@@ -44,10 +44,10 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
@@ -59,10 +59,10 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse('projectroles:ajax_autocomplete_user')
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         bad_users = [self.anonymous]

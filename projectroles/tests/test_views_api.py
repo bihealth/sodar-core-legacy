@@ -60,6 +60,11 @@ class SODARAPIViewTestMixin:
     authorization and general helper methods.
     """
 
+    # Default API header parameters are for external SODAR site APIs
+    # Override these for testing SODAR Core API views
+    media_type = settings.SODAR_API_MEDIA_TYPE
+    api_version = settings.SODAR_API_DEFAULT_VERSION
+
     # Copied from Knox tests
     @classmethod
     def _get_basic_auth_header(cls, username, password):
@@ -111,17 +116,21 @@ class SODARAPIViewTestMixin:
 
     @classmethod
     def get_accept_header(
-        cls,
-        media_type=views_api.CORE_API_MEDIA_TYPE,
-        version=views_api.CORE_API_DEFAULT_VERSION,
+        cls, media_type=None, version=None,
     ):
         """
         Return version accept header based on the media type and version string.
 
-        :param media_type: String (default = SODAR Core default media type)
-        :param version: String (default = SODAR Core default version)
+        :param media_type: String (default = cls.media_type)
+        :param version: String (default = cls.api_version)
         :return: Dict
         """
+        if not media_type:
+            media_type = cls.media_type
+
+        if not version:
+            version = cls.api_version
+
         return {'HTTP_ACCEPT': '{}; version={}'.format(media_type, version)}
 
     @classmethod
@@ -160,8 +169,8 @@ class SODARAPIViewTestMixin:
         format='json',
         data=None,
         token=None,
-        media_type=views_api.CORE_API_MEDIA_TYPE,
-        version=views_api.CORE_API_DEFAULT_VERSION,
+        media_type=None,
+        version=None,
     ):
         """
         Perform a HTTP request with Knox token auth.
@@ -171,8 +180,8 @@ class SODARAPIViewTestMixin:
         :param format: Request format (string, default="json")
         :param data: Optional data for request (dict)
         :param token: Knox token string (if None, use self.knox_token)
-        :param media_type: String (default = SODAR Core default media type)
-        :param version: String (default = SODAR Core default version)
+        :param media_type: String (default = cls.media_type)
+        :param version: String (default = cls.api_version)
         :return: Response object
         """
         if not token:
@@ -241,10 +250,17 @@ class TestAPIViewsBase(
         self.knox_token = self.get_token(self.user)
 
 
+class TestCoreAPIViewsBase(TestAPIViewsBase):
+    """Override of TestAPIViewsBase to be used with SODAR Core API views"""
+
+    media_type = views_api.CORE_API_MEDIA_TYPE
+    api_version = views_api.CORE_API_DEFAULT_VERSION
+
+
 # Tests ------------------------------------------------------------------------
 
 
-class TestProjectListAPIView(TestAPIViewsBase):
+class TestProjectListAPIView(TestCoreAPIViewsBase):
     """Tests for ProjectListAPIView"""
 
     def test_get(self):
@@ -326,7 +342,7 @@ class TestProjectListAPIView(TestAPIViewsBase):
         self.assertEqual(len(response_data), 1)
 
 
-class TestProjectRetrieveAPIView(TestAPIViewsBase):
+class TestProjectRetrieveAPIView(TestCoreAPIViewsBase):
     """Tests for ProjectRetrieveAPIView"""
 
     def test_get_category(self):
@@ -396,7 +412,7 @@ class TestProjectRetrieveAPIView(TestAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestProjectCreateAPIView(TestAPIViewsBase):
+class TestProjectCreateAPIView(TestCoreAPIViewsBase):
     """Tests for ProjectCreateAPIView"""
 
     def test_create_category(self):
@@ -695,7 +711,7 @@ class TestProjectCreateAPIView(TestAPIViewsBase):
         self.assertEqual(Project.objects.count(), 2)
 
 
-class TestProjectUpdateAPIView(TestAPIViewsBase):
+class TestProjectUpdateAPIView(TestCoreAPIViewsBase):
     """Tests for ProjectUpdateAPIView"""
 
     def test_put_category(self):
@@ -1064,7 +1080,7 @@ class TestProjectUpdateAPIView(TestAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
+class TestRoleAssignmentCreateAPIView(TestCoreAPIViewsBase):
     """Tests for RoleAssignmentCreateAPIView"""
 
     def setUp(self):
@@ -1261,7 +1277,7 @@ class TestRoleAssignmentCreateAPIView(TestAPIViewsBase):
         )
 
 
-class TestRoleAssignmentUpdateAPIView(TestAPIViewsBase):
+class TestRoleAssignmentUpdateAPIView(TestCoreAPIViewsBase):
     """Tests for RoleAssignmentUpdateAPIView"""
 
     def setUp(self):
@@ -1433,7 +1449,7 @@ class TestRoleAssignmentUpdateAPIView(TestAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestRoleAssignmentDestroyAPIView(TestAPIViewsBase):
+class TestRoleAssignmentDestroyAPIView(TestCoreAPIViewsBase):
     """Tests for RoleAssignmentDestroyAPIView"""
 
     def setUp(self):
@@ -1505,7 +1521,7 @@ class TestRoleAssignmentDestroyAPIView(TestAPIViewsBase):
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
 
-class TestRoleAssignmentOwnerTransferAPIView(TestAPIViewsBase):
+class TestRoleAssignmentOwnerTransferAPIView(TestCoreAPIViewsBase):
     """Tests for RoleAssignmentOwnerTransferAPIView"""
 
     def setUp(self):
@@ -1581,7 +1597,7 @@ class TestRoleAssignmentOwnerTransferAPIView(TestAPIViewsBase):
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
-class TestUserListAPIView(TestAPIViewsBase):
+class TestUserListAPIView(TestCoreAPIViewsBase):
     """Tests for UserListAPIView"""
 
     def setUp(self):
@@ -1645,6 +1661,9 @@ class TestRemoteProjectGetAPIView(
     TestViewsBase,
 ):
     """Tests for remote project getting API view"""
+
+    media_type = views_api.CORE_API_MEDIA_TYPE
+    api_version = views_api.CORE_API_DEFAULT_VERSION
 
     def setUp(self):
         super().setUp()

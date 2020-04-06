@@ -6,6 +6,7 @@ from test_plus.test import APITestCase
 
 # Projectroles dependency
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 from filesfolders.tests.test_views import ZIP_PATH_NO_FILES, TestViewsBaseMixin
 from filesfolders.models import Folder, File, HyperLink
@@ -14,7 +15,10 @@ from filesfolders.models import Folder, File, HyperLink
 class TestFilesfoldersAPIViewsBase(
     TestViewsBaseMixin, SODARAPIViewTestMixin, APITestCase
 ):
-    """Base class for API tests"""
+    """Base class for filesfolders API tests"""
+
+    media_type = CORE_API_MEDIA_TYPE
+    api_version = CORE_API_DEFAULT_VERSION
 
     def setUp(self):
         super().setUp()

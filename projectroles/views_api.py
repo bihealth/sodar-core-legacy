@@ -181,7 +181,6 @@ class SODARAPIRenderer(JSONRenderer):
 # Base API Mixins and Views ----------------------------------------------------
 
 
-# TODO: Combine with SODARAPIBaseProjectMixin? Is this needed on its own?
 class SODARAPIBaseMixin:
     """Base SODAR API mixin to be used by external SODAR Core based sites"""
 
@@ -215,7 +214,7 @@ class APIProjectContextMixin(ProjectAccessMixin):
         )
 
 
-class SODARAPIGenericViewProjectMixin(
+class SODARAPIGenericProjectMixin(
     APIProjectContextMixin, SODARAPIBaseProjectMixin
 ):
     """
@@ -234,16 +233,6 @@ class SODARAPIGenericViewProjectMixin(
 
     lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
     lookup_url_kwarg = 'project'  # Replace with relevant model
-
-
-class SheetSubmitBaseAPIView(SODARAPIBaseProjectMixin, APIView):
-    """
-    Base API view for initiating sample sheet operations via SODAR Taskflow.
-    NOTE: Not tied to serializer or generic views, as the actual object will not
-          be updated here.
-    """
-
-    http_method_names = ['post']
 
 
 class ProjectQuerysetMixin:

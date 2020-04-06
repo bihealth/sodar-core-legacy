@@ -17,6 +17,7 @@ from projectroles.plugins import get_backend_api, change_plugin_status
 from projectroles.tests.taskflow_testcase import TestCase
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 
 # SODAR constants
@@ -85,6 +86,8 @@ class TestTaskflowAPIBase(
             reverse('projectroles:api_project_create'),
             method='POST',
             data=post_data,
+            media_type=CORE_API_MEDIA_TYPE,
+            version=CORE_API_DEFAULT_VERSION,
         )
 
         # Assert response and object status
@@ -101,7 +104,13 @@ class TestTaskflowAPIBase(
         self.request_data.update(
             {'role': role.name, 'user': str(user.sodar_uuid)}
         )
-        response = self.request_knox(url, method='POST', data=self.request_data)
+        response = self.request_knox(
+            url,
+            method='POST',
+            data=self.request_data,
+            media_type=CORE_API_MEDIA_TYPE,
+            version=CORE_API_DEFAULT_VERSION,
+        )
         self.assertEqual(response.status_code, 201, msg=response.content)
         return RoleAssignment.objects.get(project=project, user=user, role=role)
 
@@ -151,8 +160,16 @@ class TestTaskflowAPIBase(
         self.taskflow.cleanup()
 
 
+@tag('Taskflow')  # Run tests if iRODS and SODAR Taskflow are enabled
+class TestCoreTaskflowAPIBase(TestTaskflowAPIBase):
+    """Override of TestTaskflowAPIBase for SODAR Core API views"""
+
+    media_type = CORE_API_MEDIA_TYPE
+    api_version = CORE_API_DEFAULT_VERSION
+
+
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestProjectCreateAPIView(TestTaskflowAPIBase):
+class TestProjectCreateAPIView(TestCoreTaskflowAPIBase):
     """Tests for ProjectCreateAPIView with taskflow"""
 
     def test_create_project(self):
@@ -180,7 +197,7 @@ class TestProjectCreateAPIView(TestTaskflowAPIBase):
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestProjectUpdateAPIView(TestTaskflowAPIBase):
+class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
     """Tests for ProjectUpdateAPIView with taskflow"""
 
     def setUp(self):
@@ -410,7 +427,7 @@ class TestProjectUpdateAPIView(TestTaskflowAPIBase):
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestRoleAssignmentCreateAPIView(TestTaskflowAPIBase):
+class TestRoleAssignmentCreateAPIView(TestCoreTaskflowAPIBase):
     """Tests for RoleAssignmentCreateAPIView with taskflow"""
 
     def setUp(self):
@@ -452,7 +469,7 @@ class TestRoleAssignmentCreateAPIView(TestTaskflowAPIBase):
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestRoleAssignmentUpdateAPIView(TestTaskflowAPIBase):
+class TestRoleAssignmentUpdateAPIView(TestCoreTaskflowAPIBase):
     """Tests for RoleAssignmentUpdateAPIView with taskflow"""
 
     def setUp(self):
@@ -520,7 +537,7 @@ class TestRoleAssignmentUpdateAPIView(TestTaskflowAPIBase):
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestRoleAssignmentDestroyAPIView(TestTaskflowAPIBase):
+class TestRoleAssignmentDestroyAPIView(TestCoreTaskflowAPIBase):
     """Tests for RoleAssignmentDestroyAPIView with taskflow"""
 
     def setUp(self):
@@ -565,7 +582,7 @@ class TestRoleAssignmentDestroyAPIView(TestTaskflowAPIBase):
 
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
-class TestRoleAssignmentOwnerTransferAPIView(TestTaskflowAPIBase):
+class TestRoleAssignmentOwnerTransferAPIView(TestCoreTaskflowAPIBase):
     """Tests for RoleAssignmentOwnerTransferAPIView"""
 
     def setUp(self):

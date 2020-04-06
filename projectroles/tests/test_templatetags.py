@@ -79,10 +79,10 @@ class TestTemplateTagsBase(
         )
 
         # Init role assignments
-        self.as_owner_cat = self._make_assignment(
+        self.owner_as_cat = self._make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.as_owner = self._make_assignment(
+        self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
 

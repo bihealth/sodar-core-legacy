@@ -163,19 +163,19 @@ class TestProjectPermissionBase(
         )
 
         # Init role assignments
-        self.as_owner_cat = self._make_assignment(
+        self.owner_as_cat = self._make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-        self.as_owner = self._make_assignment(
+        self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-        self.as_delegate = self._make_assignment(
+        self.delegate_as = self._make_assignment(
             self.project, self.user_delegate, self.role_delegate
         )
-        self.as_contributor = self._make_assignment(
+        self.contributor_as = self._make_assignment(
             self.project, self.user_contributor, self.role_contributor
         )
-        self.as_guest = self._make_assignment(
+        self.guest_as = self._make_assignment(
             self.project, self.user_guest, self.role_guest
         )
 
@@ -188,10 +188,10 @@ class TestBaseViews(TestProjectPermissionBase):
         url = reverse('home')
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         bad_users = [self.anonymous]
@@ -203,10 +203,10 @@ class TestBaseViews(TestProjectPermissionBase):
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         bad_users = [self.anonymous]
@@ -219,10 +219,10 @@ class TestBaseViews(TestProjectPermissionBase):
         good_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -232,10 +232,10 @@ class TestBaseViews(TestProjectPermissionBase):
         url = reverse('logout')
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(
@@ -252,10 +252,10 @@ class TestBaseViews(TestProjectPermissionBase):
         good_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -266,10 +266,10 @@ class TestBaseViews(TestProjectPermissionBase):
         good_users = [self.superuser]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -299,11 +299,11 @@ class TestProjectViews(TestProjectPermissionBase):
 
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             new_user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
@@ -318,11 +318,11 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,  # Inherited
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200)
@@ -335,14 +335,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -353,13 +353,13 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse(
             'projectroles:update', kwargs={'project': self.category.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner_cat.user]
+        good_users = [self.superuser, self.owner_as_cat.user]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -371,10 +371,10 @@ class TestProjectViews(TestProjectPermissionBase):
         good_users = [self.superuser]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -385,13 +385,13 @@ class TestProjectViews(TestProjectPermissionBase):
         url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner_cat.user]
+        good_users = [self.superuser, self.owner_as_cat.user]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -404,11 +404,11 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200)
@@ -419,13 +419,13 @@ class TestProjectViews(TestProjectPermissionBase):
 
         # Set up category roles
         self._make_assignment(
-            self.category, self.as_delegate.user, self.role_delegate
+            self.category, self.delegate_as.user, self.role_delegate
         )
         self._make_assignment(
-            self.category, self.as_contributor.user, self.role_contributor
+            self.category, self.contributor_as.user, self.role_contributor
         )
         self._make_assignment(
-            self.category, self.as_guest.user, self.role_guest
+            self.category, self.guest_as.user, self.role_guest
         )
 
         url = reverse(
@@ -433,12 +433,12 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
-        bad_users = [self.anonymous, self.as_owner.user, self.user_no_roles]
+        bad_users = [self.anonymous, self.owner_as.user, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
@@ -450,13 +450,13 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -467,13 +467,13 @@ class TestProjectViews(TestProjectPermissionBase):
 
         # Set up category roles
         self._make_assignment(
-            self.category, self.as_delegate.user, self.role_delegate
+            self.category, self.delegate_as.user, self.role_delegate
         )
         self._make_assignment(
-            self.category, self.as_contributor.user, self.role_contributor
+            self.category, self.contributor_as.user, self.role_contributor
         )
         self._make_assignment(
-            self.category, self.as_guest.user, self.role_guest
+            self.category, self.guest_as.user, self.role_guest
         )
 
         url = reverse(
@@ -482,14 +482,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,  # Not the owner here
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,  # Not the owner here
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -499,18 +499,18 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for role updating"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            kwargs={'roleassignment': self.contributor_as.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -520,18 +520,18 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for role deletion"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            kwargs={'roleassignment': self.contributor_as.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -541,16 +541,16 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for owner role update (should fail)"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_owner.sodar_uuid},
+            kwargs={'roleassignment': self.owner_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -559,16 +559,16 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for owner role deletion: (should fail)"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_owner.sodar_uuid},
+            kwargs={'roleassignment': self.owner_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -577,18 +577,18 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for delegate role update"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+            kwargs={'roleassignment': self.delegate_as.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -598,18 +598,18 @@ class TestProjectViews(TestProjectPermissionBase):
         """Test permissions for role deletion for delegate"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+            kwargs={'roleassignment': self.delegate_as.sodar_uuid},
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -623,14 +623,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -644,14 +644,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -662,13 +662,13 @@ class TestProjectViews(TestProjectPermissionBase):
 
         # Set up category roles
         self._make_assignment(
-            self.category, self.as_delegate.user, self.role_delegate
+            self.category, self.delegate_as.user, self.role_delegate
         )
         self._make_assignment(
-            self.category, self.as_contributor.user, self.role_contributor
+            self.category, self.contributor_as.user, self.role_contributor
         )
         self._make_assignment(
-            self.category, self.as_guest.user, self.role_guest
+            self.category, self.guest_as.user, self.role_guest
         )
 
         url = reverse(
@@ -677,14 +677,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -697,14 +697,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -715,13 +715,13 @@ class TestProjectViews(TestProjectPermissionBase):
 
         # Set up category roles
         self._make_assignment(
-            self.category, self.as_delegate.user, self.role_delegate
+            self.category, self.delegate_as.user, self.role_delegate
         )
         self._make_assignment(
-            self.category, self.as_contributor.user, self.role_contributor
+            self.category, self.contributor_as.user, self.role_contributor
         )
         self._make_assignment(
-            self.category, self.as_guest.user, self.role_guest
+            self.category, self.guest_as.user, self.role_guest
         )
 
         url = reverse(
@@ -729,14 +729,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -760,14 +760,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(
@@ -799,14 +799,14 @@ class TestProjectViews(TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
         ]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -853,11 +853,11 @@ class TestTargetProjectViews(
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -868,11 +868,11 @@ class TestTargetProjectViews(
         good_users = [self.superuser]
         bad_users = [
             self.anonymous,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -883,13 +883,13 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner_cat.user]
+        good_users = [self.superuser, self.owner_as_cat.user]
         bad_users = [
             self.anonymous,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -904,11 +904,11 @@ class TestTargetProjectViews(
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -921,12 +921,12 @@ class TestTargetProjectViews(
         )
         bad_users = [
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -935,16 +935,16 @@ class TestTargetProjectViews(
         """Test permissions for role updating as target"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            kwargs={'roleassignment': self.contributor_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -953,16 +953,16 @@ class TestTargetProjectViews(
         """Test permissions for role deletion as target"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_contributor.sodar_uuid},
+            kwargs={'roleassignment': self.contributor_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -971,16 +971,16 @@ class TestTargetProjectViews(
         """Test permissions for delegate role update as target"""
         url = reverse(
             'projectroles:role_update',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+            kwargs={'roleassignment': self.delegate_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -989,16 +989,16 @@ class TestTargetProjectViews(
         """Test permissions for role deletion for delegate as target"""
         url = reverse(
             'projectroles:role_delete',
-            kwargs={'roleassignment': self.as_delegate.sodar_uuid},
+            kwargs={'roleassignment': self.delegate_as.sodar_uuid},
         )
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -1012,11 +1012,11 @@ class TestTargetProjectViews(
         bad_users = [
             self.superuser,
             self.anonymous,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -1029,11 +1029,11 @@ class TestTargetProjectViews(
         bad_users = [
             self.superuser,
             self.anonymous,
-            self.as_owner_cat.user,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, bad_users, 302)
@@ -1076,11 +1076,11 @@ class TestRevokedRemoteProject(
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
@@ -1091,11 +1091,11 @@ class TestRevokedRemoteProject(
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
             self.anonymous,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
