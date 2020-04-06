@@ -49,7 +49,9 @@ Changed
 -------
 
 - **General**
-    - Upgrade minimum Django version to 1.11.28
+    - Upgrade minimum Django version to v1.11.28
+    - Upgrade JQuery to v3.4.1 (#519)
+    - Upgrade Bootstrap to v4.4.1 (#460)
     - General upgrade for Python package requirements (#124, #459)
     - Reorganize view classes and URL patterns (#480)
     - Refactor Ajax views (#465, #475)
@@ -91,6 +93,9 @@ Fixed
     - Redundant input validation preventing search with valid characters (#472)
     - Local users disabled in local development configuration (#500)
     - Member link not visible in responsive project dropdown (#466)
+    - CSS issues with Bootstrap 4.4.1 in search pagination (#372, #460)
+- **Timeline**
+    - CSS issues with Bootstrap 4.4.1 (#460)
 
 Removed
 -------

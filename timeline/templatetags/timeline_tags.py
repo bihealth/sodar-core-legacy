@@ -91,8 +91,8 @@ def get_event_details(event):
     ret = (
         '<table class="table table-striped sodar-card-table '
         'sodar-tl-table-detail">\n'
-        '<thead>\n<th>Timestamp</th>\n<th>Description</th>\n'
-        '<th>Status</th>\n</thead>\n<tbody>'
+        '<thead>\n<tr><th>Timestamp</th>\n<th>Description</th>\n'
+        '<th>Status</th></tr>\n</thead>\n<tbody>'
     )
     status_changes = event.get_status_changes(reverse=True)
 

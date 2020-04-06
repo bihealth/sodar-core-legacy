@@ -98,10 +98,23 @@ manual calling of the method is not required for most cases.
 System Prerequisites
 --------------------
 
+The following third party JS/CSS requirements have been updated:
+
+- JQuery v3.4.1
+- Bootstrap v4.4.1
+- Popper.js v1.16.0
+
 The minimum supported versions have been upgraded for a number of Python
 packages in this release. It is highly recommended to also upgrade these for
 your SODAR Core based site. See the ``requirements`` directory for up-to date
 dependencies.
+
+Default Templates Modified
+--------------------------
+
+The default template ``base_site.html`` has been modified in this version. If
+you override it with your own altered version, please review the difference and
+update your templates as appropriate.
 
 SODAR Taskflow v0.4.0 Required
 ------------------------------
