@@ -82,6 +82,7 @@ Fixed
 - **General**
     - Duplicate ``contributing.rst`` redirection file in docs (#481)
     - ``.tox`` not ignored in ``black.sh``
+    - Coverage checks in Travis-CI (#507)
 - **Projectroles**
     - Swapping owner and delegate roles not allowed if at delegate limit (#477)
     - Remote sync for owner role failing with specific user order in data (#439)

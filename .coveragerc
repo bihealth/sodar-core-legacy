@@ -1,7 +1,7 @@
 [run]
 omit = *migrations*, *tests*, *config*, *docs*, manage.py, *env/lib/*,
        *templates/bootstrap4/*, *__init__.py, *env/src/*, *staticfiles/*,
-       versioneer.py, setup.py, htmlcov/*
+       versioneer.py, setup.py, htmlcov/*, /home/travis/virtualenv/*
 plugins =
     django_coverage_plugin
 
