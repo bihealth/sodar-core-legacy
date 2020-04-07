@@ -109,6 +109,8 @@ packages in this release. It is highly recommended to also upgrade these for
 your SODAR Core based site. See the ``requirements`` directory for up-to date
 dependencies.
 
+The minimum version requirement for Django has been bumped to 1.11.29.
+
 Default Templates Modified
 --------------------------
 

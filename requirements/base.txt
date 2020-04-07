@@ -2,7 +2,7 @@
 wheel==0.34.2
 
 # Conservative Django
-django>=1.11.28, <2.0
+django>=1.11.29, <2.0
 
 # Configuration
 django-environ>=0.4.5, <0.5

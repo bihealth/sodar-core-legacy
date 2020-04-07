@@ -49,7 +49,7 @@ Changed
 -------
 
 - **General**
-    - Upgrade minimum Django version to v1.11.28
+    - Upgrade minimum Django version to v1.11.29 (#520)
     - Upgrade JQuery to v3.4.1 (#519)
     - Upgrade Bootstrap to v4.4.1 (#460)
     - General upgrade for Python package requirements (#124, #459)
