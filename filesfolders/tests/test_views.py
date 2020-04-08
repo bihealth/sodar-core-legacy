@@ -2,8 +2,8 @@
 import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
 from django.test import RequestFactory
+from django.urls import reverse
 
 from test_plus.test import TestCase
 
@@ -38,16 +38,9 @@ ZIP_PATH_NO_FILES = TEST_DATA_PATH + 'no_files.zip'
 app_settings = AppSettingAPI()
 
 
-class TestViewsBase(
-    ProjectMixin,
-    RoleAssignmentMixin,
-    FileMixin,
-    FolderMixin,
-    HyperLinkMixin,
-    TestCase,
+class TestViewsBaseMixin(
+    ProjectMixin, RoleAssignmentMixin, FileMixin, FolderMixin, HyperLinkMixin
 ):
-    """Base class for view testing"""
-
     def setUp(self):
         self.req_factory = RequestFactory()
 
@@ -116,6 +109,10 @@ class TestViewsBase(
             owner=self.user,
             description='',
         )
+
+
+class TestViewsBase(TestViewsBaseMixin, TestCase):
+    """Base class for view testing"""
 
 
 # List View --------------------------------------------------------------

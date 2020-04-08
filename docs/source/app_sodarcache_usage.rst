@@ -10,8 +10,8 @@ Usage instructions for the ``sodarcache`` app are detailed in this document.
 Backend API for Data Caching
 ============================
 
-The API for logging events is located in ``sodarcache.api``. For the full API
-documentation, see `here <app_sodarcache_api>`_.
+The Django backend API for caching data is located in ``sodarcache.api``. For
+the full documentation, see `here <app_sodarcache_api_django>`_.
 
 Invoking the API
 ----------------

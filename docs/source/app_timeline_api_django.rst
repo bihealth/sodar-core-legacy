@@ -1,11 +1,12 @@
-.. _app_timeline_api:
+.. _app_timeline_api_django:
 
 
-Timeline API Documentation
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Timeline Django API Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This document contains API documentation for the ``timeline`` app. Included
-are functionalities and classes intended to be used by other applications.
+This document contains Django API documentation for the ``timeline`` app.
+Included are functionalities and classes intended to be used by other
+applications.
 
 
 Backend API

@@ -19,7 +19,7 @@
   {# Project starring/unstarring #}
   <a role="link" class="btn btn-link mr-2 sodar-pr-btn-title sodar-pr-btn-star"
      href="#" id="sodar-pr-link-project-star"
-     star-url="{% url 'projectroles:star' project=project.sodar_uuid %}"
+     star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
      title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
      data-toggle="tooltip" data-placement="top">
     {% if project_starred %}
@@ -43,14 +43,6 @@
   <div class="sodar-pr-content-title-secondary text-muted">
     {% if project.description %}
       {{ project.description }}
-    {% endif %}
-    {% if project.type == 'CATEGORY' and project.get_owner and not kiosk_mode %}
-      {% get_user_html project.get_owner.user as owner_html %}
-      {% if project.description %}
-        (Owner: {{ owner_html | safe }})
-      {% else %}
-        Owner: {{ owner_html | safe }}
-      {% endif %}
     {% endif %}
   </div>
   {% if project.is_remote and request.user.is_superuser %}

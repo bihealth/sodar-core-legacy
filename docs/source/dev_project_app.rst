@@ -209,6 +209,10 @@ Implementing the following is **optional**:
 - ``search_template``: Implement if searching the data of the app is enabled
 - ``project_list_columns``: Optional custom columns do be shown in the project
   list. See the plugin point definition for an example.
+- ``category_enable``: Whether the app should also be made available for
+  categories. Defaults to ``False`` and should only be overridden when required.
+  For an example of a project app enabled in categories, see
+  :ref:`Timeline <app_timeline>`.
 - ``get_taskflow_sync_data()``: Applicable only if working with
   ``sodar_taskflow`` and iRODS
 - ``get_object_link()``: If Django models are associated with the app. Used e.g.
@@ -723,42 +727,76 @@ Example:
 API Views
 =========
 
-API View usage will be explained in this chapter, currently under construction.
+API view usage in project apps is detailed in this section.
 
-.. warning::
+Rest API Views
+--------------
 
-    A unified SODAR API is currently under development and will be documented
-    once stable. Current practices and base classes for API views are subject to
-    change!
+To set up REST API views for project apps, it is recommended to use the base
+SODAR API view classes and mixins found in ``projectroles.views_api``. These
+set up the recommended authentication methods, versioning through accept headers
+and project-based permission checks.
+
+By default, the REST API views built on SODAR Core base classes support two
+methods of authentication: Knox tokens and Django session auth. These can of
+course be modified by overriding/extending the base classes.
+
+For versioning we strongly recommend using accept header versioning, which is
+what is supported by the SODAR Core base classes. For this, supply your custom
+media type and version data using the corresponding ``SODAR_API_*`` settings.
+For details on these, see :ref:`app_projectroles_settings`.
+
+The base classes provide permission checks via SODAR Core project objects
+similar to UI view mixins.
+
+Base REST API classes without a project context can also be used in site apps.
+
+API documentation for each available base class and mixin for REST API views can
+be found in :ref:`app_projectroles_api_django`.
+
+.. note::
+
+    Internal SODAR Core REST API views, specifically ones used in apps provided
+    by the django-sodar-core package, use different media type and versioning
+    from views to be implemented on your site. This is to prevent version number
+    clashes and not require changes from your API when SODAR Core is updated.
 
 Ajax API Views
 --------------
 
-To set up Ajax API views for the UI, you can use the standard login and project
-permission mixins along with ``APIPermissionMixin`` together with any Django
-Rest Framework view class. Permissions can be managed as with normal Django
-views. Example with generic ``APIView``:
+To set up Ajax API views for the UI, it is recommended to use the base Ajax
+view classes found in ``projectroles.views_ajax``. These views only support
+Django session authentication by default, so Knox token authentication will not
+work. Versioning is omitted. Base views without project permission checks can
+also be used in site apps.
+
+API documentation for the base classes Ajax API views can be found in
+:ref:`app_projectroles_api_django`.
+
+Example:
 
 .. code-block:: python
 
-    from rest_framework.views import APIView
-    from projectroles.views import (
-        LoginRequiredMixin,
-        ProjectPermissionMixin,
-        APIPermissionMixin,
-    )
+    from projectroles.views_api import SODARBaseProjectAjaxView
 
-    class ExampleAjaxAPIView(
-            LoginRequiredMixin,
-            ProjectPermissionMixin,
-            APIPermissionMixin,
-            APIView,
-    ):
+    class ExampleAjaxAPIView(SODARBaseProjectAjaxView):
 
     permission_required = 'projectroles.view_project'
 
     def get(self, request):
         # ...
+
+
+Serializers
+-----------
+
+Base serializers for SODAR Core based API views are available in
+``projectroles.serializers``. They provide ``Project`` context where needed, as
+well as setting default fields such as ``sodar_uuid`` which should be always
+used in place of ``pk``.
+
+API documentation for the base serializers can be found in
+:ref:`app_projectroles_api_django`.
 
 
 Removing a Project App

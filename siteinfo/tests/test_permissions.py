@@ -15,9 +15,7 @@ class TestSiteInfoPermissions(TestPermissionBase):
         self.superuser.is_superuser = True
         self.superuser.is_staff = True
         self.superuser.save()
-
         self.regular_user = self.make_user('regular_user')
-
         # No user
         self.anonymous = None
 
@@ -25,5 +23,5 @@ class TestSiteInfoPermissions(TestPermissionBase):
         url = reverse('siteinfo:info')
         good_users = [self.superuser]
         bad_users = [self.anonymous, self.regular_user]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)

@@ -15,6 +15,101 @@ Added
 
 - **General**
     - "For the Impatient" section in docs
+- **Filesfolders**
+    - API views for file, folder and hyperlink management (#443)
+- **Projectroles**
+    - Import new REST API view base classes from SODAR (#48, #461)
+    - Import base serializers from SODAR (#462)
+    - API views for project and role management (#48, #450)
+    - ``projectroles.tests.test_views_api.TestAPIViewsBase`` for API view testing (#48)
+    - ``SODARAPIPermissionTestMixin`` for API view permission tests
+    - New helper methods in ``SODARAPIViewTestMixin``
+    - Provide live server URL for Taskflow in ``TestTaskflowBase.request_data`` (#479)
+    - ``TestTaskflowAPIBase`` for testing API views with SODAR Taskflow (#488)
+    - Permission tests using Knox tokens (#476)
+    - Base Ajax view classes in ``projectroles.views_ajax`` (#465)
+    - Allow assigning roles for categories (#463)
+    - Allow displaying project apps in categories with ``category_enable`` (#447)
+    - Allow category delegates and owners to create sub-categories and projects (#464)
+    - ``get_role_display_name()`` helper in ``projectroles_common_tags`` (#505)
+    - ``get_owners()``, ``is_owner()`` and ``get_all_roles()`` helpers for ``Project`` (#464)
+    - Allow using legacy UI test login method with ``PROJECTROLES_TEST_UI_LEGACY_LOGIN`` (#509)
+    - Allow moving categories and projects under different categories (#512)
+    - ``SODARForm`` and ``SODARModelForm`` base classes for forms
+    - Enable retrieving flat recursive list of children objects in ``Project.get_children()``
+    - Support for ``data`` in permission test ``assert_response()`` method (#155)
+- **Taskflowbackend**
+    - ``get_inherited_roles()`` helper (#464)
+- **Timeline**
+    - ``get_models()`` helper
+- **Tokens**
+    - Add app from varfish-web (#452)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v1.11.29 (#520)
+    - Upgrade JQuery to v3.4.1 (#519)
+    - Upgrade Bootstrap to v4.4.1 (#460)
+    - General upgrade for Python package requirements (#124, #459)
+    - Reorganize view classes and URL patterns (#480)
+    - Refactor Ajax views (#465, #475)
+    - Update ``CONTRIBUTING.rst``
+    - Use ``SODARForm`` and ``SODARModelForm`` base classes in forms
+- **Projectroles**
+    - Suppress peer site removal logging if nothing was removed (#478)
+    - Refactor ``SODARCoreAPIBaseView`` into ``SODARCoreAPIBaseMixin`` (#461)
+    - Allow providing single user to ``assert_response()`` in permission tests (#474)
+    - Move ``SODARAPIViewTestMixin`` into ``test_views_api`` and rename (#471)
+    - Move ``KnoxAuthMixin`` functionality into ``SODARAPIViewTestMixin``
+    - ``get_accept_header()`` in API tests returns header as dict
+    - Refactor base permission test classes (#490)
+    - Move ``utils.set_user_group()`` to ``SODARUser.set_group()`` (#483)
+    - Call ``set_group()`` in ``SODARUser.save()`` (#483)
+    - Replace ``projectroles_tags.is_app_hidden()`` with ``is_app_link_visible()``
+    - Inherit owner permissions from parent categories (#464)
+    - Refactor project roles template (#505)
+    - Disable owner updating in project update form (#508)
+    - Allow updating project parent via SODAR Taskflow (#512)
+- **Taskflowbackend**
+    - Refactor ``synctaskflow`` management command and add logging
+- **Timeline**
+    - Display app for categories (#447)
+
+Fixed
+-----
+
+- **General**
+    - Duplicate ``contributing.rst`` redirection file in docs (#481)
+    - ``.tox`` not ignored in ``black.sh``
+    - Coverage checks in Travis-CI (#507)
+- **Projectroles**
+    - Swapping owner and delegate roles not allowed if at delegate limit (#477)
+    - Remote sync for owner role failing with specific user order in data (#439)
+    - Redundant updating of ``Project.submit_status`` during project creation
+    - Make ``test_widget_user_options()`` more reliable (#253)
+    - Missing permission check by role type in ``RoleAssignmentDeleteView.post()`` (#492)
+    - Unordered queryset warnings from the ``User`` model (#494)
+    - Incorrect user iteration in ``test_user_autocomplete_ajax()`` (#469)
+    - Redundant input validation preventing search with valid characters (#472)
+    - Local users disabled in local development configuration (#500)
+    - Member link not visible in responsive project dropdown (#466)
+    - CSS issues with Bootstrap 4.4.1 in search pagination (#372, #460)
+    - Raise ``ImproperlyConfigured`` for missing parameters in ``ProjectAccessMixin`` (#516)
+- **Timeline**
+    - CSS issues with Bootstrap 4.4.1 (#460)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``SODARAPIBaseView`` base class, replaced by API view mixins (#461)
+    - ``KnoxAuthMixin`` from view tests
+    - ``get_selectable_users()`` from ``forms``
+    - Redundant render/redirect helpers from ``TestPermissionBase``: use ``assert_response()`` instead (#484)
+    - ``APIPermissionMixin`` for API views: use base API/Ajax view classes instead (#467)
+    - ``is_app_hidden()`` from ``projectroles_tags``
 
 
 v0.7.2 (2020-01-31)
@@ -43,6 +138,7 @@ Changed
 - **General**
     - Upgrade minimum Django version to 1.11.27
     - Base ``RemoteProjectGetAPIView`` on ``SODARCoreAPIBaseView`` (#442)
+    - Upgrade to Chromedriver v80 (#510)
 - **Bgjobs**
     - Make ``specialize_job()`` more robust (#456)
 - **Projectroles**

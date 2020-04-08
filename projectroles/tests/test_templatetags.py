@@ -4,9 +4,9 @@ from importlib import import_module
 import mistune
 import uuid
 
-from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.test import override_settings, RequestFactory
+from django.urls import reverse
 
 from test_plus.test import TestCase
 
@@ -79,10 +79,10 @@ class TestTemplateTagsBase(
         )
 
         # Init role assignments
-        self.as_owner_cat = self._make_assignment(
+        self.owner_as_cat = self._make_assignment(
             self.category, self.user, self.role_owner
         )
-        self.as_owner = self._make_assignment(
+        self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
 
@@ -429,7 +429,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     def test_get_site_apps(self):
         """Test get_site_apps()"""
-        self.assertEqual(len(tags.get_site_apps()), 5)
+        self.assertEqual(len(tags.get_site_apps()), 6)
 
     # TODO: Test get_site_app_messages() (set up admin alert)
 
@@ -455,20 +455,41 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         """Test allow_project_creation() in target mode"""
         self.assertEqual(tags.allow_project_creation(), False)
 
-    def test_is_app_hidden(self):
-        """Test is_app_hidden()"""
+    def test_is_app_link_visible(self):
+        """Test is_app_link_visible()"""
         app_plugin = get_app_plugin('filesfolders')
-        self.assertEqual(tags.is_app_hidden(app_plugin, self.user), False)
+        self.assertEqual(
+            tags.is_app_link_visible(app_plugin, self.project, self.user), True
+        )
+
+    def test_is_app_link_visible_category(self):
+        """Test is_app_link_visible() with a category"""
+        app_plugin = get_app_plugin('filesfolders')
+        self.assertEqual(
+            tags.is_app_link_visible(app_plugin, self.category, self.user),
+            False,
+        )
+
+    def test_is_app_link_visible_category_enabled(self):
+        """Test is_app_link_visible() with category_enable=True"""
+        app_plugin = get_app_plugin('timeline')
+        self.assertEqual(
+            tags.is_app_link_visible(app_plugin, self.category, self.user), True
+        )
 
     @override_settings(PROJECTROLES_HIDE_APP_LINKS=['filesfolders'])
-    def test_is_app_hidden_hide(self):
-        """Test is_app_hidden() with a hidden app and normal/superuser"""
+    def test_is_app_link_visible_hide(self):
+        """Test is_app_link_visible() with a hidden app and normal/superuser"""
         app_plugin = get_app_plugin('filesfolders')
         superuser = self.make_user('superuser')
         superuser.is_superuser = True
         superuser.save()
-        self.assertEqual(tags.is_app_hidden(app_plugin, self.user), True)
-        self.assertEqual(tags.is_app_hidden(app_plugin, superuser), False)
+        self.assertEqual(
+            tags.is_app_link_visible(app_plugin, self.project, self.user), False
+        )
+        self.assertEqual(
+            tags.is_app_link_visible(app_plugin, self.project, superuser), True
+        )
 
     def test_get_project_list(self):
         """Test get_project_list()"""

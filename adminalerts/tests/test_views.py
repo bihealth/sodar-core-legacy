@@ -1,13 +1,11 @@
-"""Tests for views in the adminalerts app"""
-import json
-from django.http import JsonResponse
+"""Tests for UI views in the adminalerts app"""
 from django.urls import reverse
 from django.utils import timezone
 
 from test_plus.test import TestCase
 
-from ..models import AdminAlert
-from .test_models import AdminAlertMixin
+from adminalerts.models import AdminAlert
+from adminalerts.tests.test_models import AdminAlertMixin
 
 
 class TestViewsBase(TestCase, AdminAlertMixin):
@@ -61,7 +59,8 @@ class TestAdminAlertDetailView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:detail', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:detail',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
             self.assertEqual(response.status_code, 200)
@@ -137,7 +136,8 @@ class TestAdminAlertUpdateView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:update',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
             self.assertEqual(response.status_code, 200)
@@ -158,7 +158,8 @@ class TestAdminAlertUpdateView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
-                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:update',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 ),
                 post_data,
             )
@@ -188,7 +189,8 @@ class TestAdminAlertUpdateView(TestViewsBase):
         with self.login(superuser2):
             response = self.client.post(
                 reverse(
-                    'adminalerts:update', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:update',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 ),
                 post_data,
             )
@@ -207,7 +209,8 @@ class TestAdminAlertDeleteView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
-                    'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:delete',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
             self.assertEqual(response.status_code, 200)
@@ -221,7 +224,8 @@ class TestAdminAlertDeleteView(TestViewsBase):
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
-                    'adminalerts:delete', kwargs={'uuid': self.alert.sodar_uuid}
+                    'adminalerts:delete',
+                    kwargs={'adminalert': self.alert.sodar_uuid},
                 )
             )
             self.assertEqual(response.status_code, 302)
@@ -229,40 +233,3 @@ class TestAdminAlertDeleteView(TestViewsBase):
 
         # Assert postconditions
         self.assertEqual(AdminAlert.objects.all().count(), 0)
-
-
-class TestAdminAlertActivationView(TestViewsBase):
-    """Tests for the AdminAlert activation API view"""
-
-    def test_deactivate_alert(self):
-        """Test alert deactivation"""
-        with self.login(self.superuser):
-            self.assertTrue(self.alert.active)
-
-            response: JsonResponse = self.client.post(
-                reverse('adminalerts:api_alert_activation'),
-                data={'uuid': self.alert.sodar_uuid},
-            )
-            self.assertEquals(response.status_code, 200)
-
-            data = json.loads(response.content)
-            self.alert.refresh_from_db()
-            self.assertFalse(self.alert.active)
-            self.assertFalse(data['is_active'])
-
-    def test_activate_alert(self):
-        """Test alert activation"""
-        with self.login(self.superuser):
-            self.alert.active = False
-            self.alert.save()
-
-            response: JsonResponse = self.client.post(
-                reverse('adminalerts:api_alert_activation'),
-                data={'uuid': self.alert.sodar_uuid},
-            )
-            self.assertEquals(response.status_code, 200)
-
-            data = json.loads(response.content)
-            self.alert.refresh_from_db()
-            self.assertTrue(self.alert.active)
-            self.assertTrue(data['is_active'])

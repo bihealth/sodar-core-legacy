@@ -5,9 +5,13 @@ from django.urls import reverse
 
 from test_plus.test import TestCase, RequestFactory
 
-from ..models import Role, SODAR_CONSTANTS
-from ..email import send_role_change_mail, send_generic_mail
-from .test_models import ProjectMixin, RoleAssignmentMixin
+from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.email import (
+    send_role_change_mail,
+    send_generic_mail,
+    send_project_create_mail,
+)
+from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
 
 # SODAR constants
@@ -48,12 +52,13 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
         self.category = self._make_project(
             'top_category', PROJECT_TYPE_CATEGORY, None
         )
+        self.cat_owner_as = self._make_assignment(
+            self.category, self.user_owner, self.role_owner
+        )
 
         self.project = self._make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )
-
-        # Assign owner role
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
@@ -105,6 +110,26 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)
             self.assertEqual(mail.outbox[0].reply_to[0], self.user_owner.email)
+
+    def test_project_create_mail(self):
+        """Test project creation mail sending"""
+        new_project = self._make_project(
+            'New Project', PROJECT_TYPE_PROJECT, self.category
+        )
+        new_user = self.make_user('new_user')
+        new_user.email = 'new_user@example.com'
+        new_user.save()
+        self._make_assignment(new_project, new_user, self.role_owner)
+
+        with self.login(new_user):
+            request = self.factory.get(reverse('home'))
+            request.user = new_user
+            email_sent = send_project_create_mail(
+                project=new_project, request=request,
+            )
+            self.assertEqual(email_sent, 1)
+            self.assertEqual(len(mail.outbox), 1)
+            self.assertEqual(mail.outbox[0].reply_to[0], new_user.email)
 
     def test_generic_mail_user(self):
         """Test send_generic_mail() with a User recipient"""

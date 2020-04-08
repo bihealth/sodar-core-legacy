@@ -10,8 +10,8 @@ Usage instructions for the ``timeline`` app are detailed in this document.
 Timeline UI
 ===========
 
-You can browse events logged for each project by navigating to the project and
-selecting the "Timeline" app from the project sidebar.
+You can browse events by navigating to a project or a category and selecting the
+"Timeline" app from the project sidebar.
 
 By clicking on the time stamp for each event, you can see details of the event
 execution (in case of e.g. asynchronous events).
@@ -37,8 +37,8 @@ normal users.
 Backend API for Event Logging
 =============================
 
-The API for logging events is located in ``timeline.api``. For the full API
-documentation, see `here <app_timeline_api>`_.
+The Django backend API for logging events is located in ``timeline.api``. For
+the full documentation, see `here <app_timeline_api_django>`_.
 
 Invoking the API
 ----------------

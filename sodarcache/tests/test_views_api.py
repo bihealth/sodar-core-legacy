@@ -1,16 +1,19 @@
-"""Tests for views in the sodarcache app"""
+"""Tests for API views in the sodarcache app"""
 
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from django.forms.models import model_to_dict
 
 # Projectroles dependency
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 
-from .test_models import TestJsonCacheItemBase, JsonCacheItemMixin
-from ..models import JSONCacheItem
+from sodarcache.models import JSONCacheItem
+from sodarcache.tests.test_models import (
+    TestJsonCacheItemBase,
+    JsonCacheItemMixin,
+)
 
 
 # SODAR constants

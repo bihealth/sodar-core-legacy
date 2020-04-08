@@ -1,0 +1,64 @@
+{% extends 'projectroles/base.html' %}
+
+{% block title %}
+  API Tokens in {{ project.title }}
+{% endblock title %}
+
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    table#sodar-tk-list-table thead tr th:first-child,
+    table#sodar-tk-list-table tbody tr td:first-child {
+      width: 60px !important;
+    }
+
+    @media screen and (max-width: 650px) {
+      table#sodar-tk-list-table thead tr th:nth-child(2),
+      table#sodar-tk-list-table tbody tr td:nth-child(2) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
+
+{% block projectroles %}
+
+<div class="row sodar-subtitle-container bg-white sticky-top">
+  <h2><i class="fa fa-key"></i> API Tokens</h2>
+  <a role="button" class="btn btn-primary ml-auto"
+     href="{% url 'tokens:create' %}">
+    <i class="fa fa-plus"></i> Create Token
+  </a>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  <div class="card" id="sodar-tk-token-list">
+    <div class="card-body p-0">
+      <table class="table table-striped sodar-card-table" id="sodar-tk-list-table">
+        <thead>
+          <tr>
+            <th class="text-right">#</th>
+            <th>Created</th>
+            <th>Expires</th>
+            <th>Key</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if object_list.count > 0 %}
+            {% for token in object_list %}
+              {% include 'tokens/_token_item.html' with item=token %}
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td class="bg-faded font-italic text-center" colspan="5">
+                No API tokens
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% endblock projectroles %}

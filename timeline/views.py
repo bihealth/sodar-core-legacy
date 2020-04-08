@@ -1,22 +1,19 @@
-"""Views for the timeline Django app"""
+"""UI views for the timeline Django app"""
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
-from rest_framework.response import Response
-
 # Projectroles dependency
-from projectroles.models import Project, SODAR_CONSTANTS
+from projectroles.models import Project
 from projectroles.utils import get_display_name
 from projectroles.views import (
     LoggedInPermissionMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,
-    BaseTaskflowAPIView,
 )
 
-from .models import ProjectEvent
+from timeline.models import ProjectEvent
 
 
 # Local variables
@@ -40,9 +37,7 @@ class ProjectTimelineView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['timeline_title'] = '{} Timeline'.format(
-            get_display_name(
-                SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'], title=True
-            )
+            get_display_name(context['project'].type, title=True)
         )
         context['timeline_mode'] = 'project'
         return context
@@ -86,31 +81,3 @@ class ObjectTimelineView(ProjectTimelineView):
             queryset = queryset.filter(classified=False)
 
         return queryset
-
-
-# Taskflow API Views -----------------------------------------------------------
-
-
-class TaskflowEventStatusSetAPIView(BaseTaskflowAPIView):
-    def post(self, request):
-        try:
-            tl_event = ProjectEvent.objects.get(
-                sodar_uuid=request.data['event_uuid']
-            )
-
-        except ProjectEvent.DoesNotExist:
-            return Response('Timeline event not found', status=404)
-
-        try:
-            tl_event.set_status(
-                status_type=request.data['status_type'],
-                status_desc=request.data['status_desc'],
-                extra_data=request.data['extra_data']
-                if 'extra_data' in request.data
-                else None,
-            )
-
-        except TypeError:
-            return Response('Invalid status type', status=400)
-
-        return Response('ok', status=200)

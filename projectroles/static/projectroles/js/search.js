@@ -5,7 +5,7 @@ $(document).ready(function() {
      *****************/
 
     $.fn.dataTable.ext.classes.sPageButton =
-        'btn btn-secondary sodar-list-btn ml-1 sodar-paginate-button';
+        'btn sodar-list-btn ml-1 sodar-paginate-button btn-outline-light text-primary';
 
     $('.sodar-search-table').each(function() {
         $(this).DataTable({
@@ -16,8 +16,8 @@ $(document).ready(function() {
             info: false,
             language: {
                 paginate: {
-                    previous: '<i class="fa fa-arrow-circle-left"></i> Previous',
-                    next: '<i class="fa fa-arrow-circle-right"></i> Next'
+                    previous: '<i class="fa fa-arrow-circle-left text-primary"></i> Prev',
+                    next: '<i class="fa fa-arrow-circle-right text-primary"></i> Next'
                 }
             },
             dom: 'tp',
@@ -26,10 +26,16 @@ $(document).ready(function() {
                 var currentPage = $(this).DataTable().page.info().page;
 
                 $(this).closest('.card-body').find('.sodar-paginate-button').each(function() {
-                    var btnPage = $(this).text();
+                    var btnPage = parseInt($(this).text());
 
-                    if (btnPage == currentPage + 1) {
-                        $(this).removeClass('btn-secondary').addClass('btn-success');
+                    if (btnPage === currentPage + 1) {
+                        $(this).removeClass('btn-outline-light').removeClass(
+                            'text-primary').addClass('btn-primary').addClass(
+                                'text-white');
+                    } else {
+                        $(this).addClass('btn-outline-light').addClass(
+                            'text-primary').removeClass('btn-primary').removeClass(
+                                'text-white');
                     }
                 });
 

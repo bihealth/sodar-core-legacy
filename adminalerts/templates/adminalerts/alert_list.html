@@ -9,8 +9,8 @@
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    table#sodar-aa-list-table tr td:nth-child(3),
-    table#sodar-aa-list-table tr td:nth-child(4) {
+    table#sodar-aa-list-table tbody tr td:nth-child(3),
+    table#sodar-aa-list-table tbody tr td:nth-child(4) {
       white-space: nowrap;
     }
 
@@ -25,22 +25,22 @@
 
     /* Responsive modifications */
     @media screen and (max-width: 1100px) {
-      table#sodar-aa-list-table tr th:nth-child(3),
-      table#sodar-aa-list-table tr td:nth-child(3) {
+      table#sodar-aa-list-table thead tr th:nth-child(3),
+      table#sodar-aa-list-table tbody tr td:nth-child(3) {
         display: none;
       }
     }
 
     @media screen and (max-width: 900px) {
-      table#sodar-aa-list-table tr th:nth-child(2),
-      table#sodar-aa-list-table tr td:nth-child(2) {
+      table#sodar-aa-list-table thead tr th:nth-child(2),
+      table#sodar-aa-list-table tbody tr td:nth-child(2) {
         display: none;
       }
     }
 
     @media screen and (max-width: 750px) {
-      table#sodar-aa-list-table tr th:nth-child(4),
-      table#sodar-aa-list-table tr td:nth-child(4) {
+      table#sodar-aa-list-table thead tr th:nth-child(4),
+      table#sodar-aa-list-table tbody tr td:nth-child(4) {
         display: none;
       }
     }
@@ -72,12 +72,10 @@
 
             $.ajax({
                 type: 'POST',
-                url: '{% url 'adminalerts:api_alert_activation' %}',
-                data: {
-                    'uuid': event.target.dataset.uuid,
-                },
+                url: event.target.dataset.url,
+
                 success: function (data) {
-                    // check if we guessed correctly
+                    // Check if we guessed correctly
                     if (data.is_active === is_active_guess)
                         return;
                     toogleBtnState(event.target, data.is_active);
@@ -119,7 +117,7 @@
             {% for a in object_list %}
               <tr {% if not a.is_active %}class="text-muted"{% endif %}
                   id="sodar-aa-alert-item-{{ a.pk }}">
-                <td><a href="{% url 'adminalerts:detail' uuid=a.sodar_uuid %}">{{ a.message }}</a></td>
+                <td><a href="{% url 'adminalerts:detail' adminalert=a.sodar_uuid %}">{{ a.message }}</a></td>
                 <td>{% get_user_html a.user as user_html %}{{ user_html|safe }}</td>
                 <td>{{ a.date_created | date:'Y-m-d H:i:s' }}</td>
                 <td>{{ a.date_expire | date:'Y-m-d' }}</td>
@@ -128,7 +126,7 @@
                           {% if not a.is_expired and a.active %}btn-success
                           {% elif not a.is_expired and not a.active %} btn-warning
                           {% else %} btn-danger{% endif %} js-change-alert-state-button"
-                          type="button" data-uuid="{{ a.sodar_uuid }}"
+                          type="button" data-url="{% url 'adminalerts:ajax_active_toggle' adminalert=a.sodar_uuid %}"
                           {% if a.is_expired %}disabled{% endif %}
                   >
                     {% if a.is_expired %}
@@ -148,11 +146,11 @@
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <a class="dropdown-item"
-                         href="{% url 'adminalerts:update' uuid=a.sodar_uuid %}">
+                         href="{% url 'adminalerts:update' adminalert=a.sodar_uuid %}">
                         <i class="fa fa-fw fa-pencil"></i> Update Alert
                       </a>
                       <a class="dropdown-item"
-                         href="{% url 'adminalerts:delete' uuid=a.sodar_uuid %}">
+                         href="{% url 'adminalerts:delete' adminalert=a.sodar_uuid %}">
                         <i class="fa fa-fw fa-close"></i> Delete Alert
                       </a>
                     </div>

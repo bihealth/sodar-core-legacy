@@ -54,10 +54,10 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test visibility of events in the timeline event list"""
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -79,10 +79,10 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
 
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -99,10 +99,10 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test visibility of events on the project details page"""
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -144,10 +144,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test visibility of extra data badges to open a model in the timeline event list"""
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -177,10 +177,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
 
         expected = [
             (self.superuser, 2),
-            (self.as_owner.user, 2),
-            (self.as_delegate.user, 2),
-            (self.as_contributor.user, 2),
-            (self.as_guest.user, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
         ]
 
         url = reverse(
@@ -205,10 +205,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
 
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -232,10 +232,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test visibility of events on the project details page"""
         expected = [
             (self.superuser, 0),
-            (self.as_owner.user, 0),
-            (self.as_delegate.user, 0),
-            (self.as_contributor.user, 0),
-            (self.as_guest.user, 0),
+            (self.owner_as.user, 0),
+            (self.delegate_as.user, 0),
+            (self.contributor_as.user, 0),
+            (self.guest_as.user, 0),
         ]
 
         url = reverse(
@@ -253,10 +253,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         """Test existence of modal content"""
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(
@@ -284,10 +284,10 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
 
         expected = [
             (self.superuser, 1),
-            (self.as_owner.user, 1),
-            (self.as_delegate.user, 1),
-            (self.as_contributor.user, 1),
-            (self.as_guest.user, 1),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
         ]
 
         url = reverse(

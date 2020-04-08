@@ -25,7 +25,7 @@ from projectroles.models import (
     PROJECT_TAG_STARRED,
 )
 from projectroles.plugins import get_app_plugin
-from projectroles.utils import build_secret, set_user_group
+from projectroles.utils import build_secret
 
 
 # SODAR constants
@@ -259,7 +259,6 @@ class SodarUserMixin:
             user.sodar_uuid = sodar_uuid
 
         user.save()
-        set_user_group(user)
         return user
 
 
@@ -541,14 +540,6 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         except ValidationError as e:
             self.fail(e)
 
-    def test_validate_category(self):
-        """Test category validation: can't add roles other than owner for
-        projects of type CATEGORY"""
-        with self.assertRaises(ValidationError):
-            self._make_assignment(
-                self.category_top, self.user_bob, self.role_contributor
-            )
-
     # Tests for RoleAssignmentManager
 
     def test_get_assignment(self):
@@ -572,6 +563,27 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
     def test_get_project_owner(self):
         """Test get_project_owner() results"""
         self.assertEqual(self.category_top.get_owner().user, self.user_alice)
+
+    def test_get_project_owners(self):
+        """Test project.get_owners() results"""
+
+        # Set bob as project owner
+        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+
+        self.assertEqual(len(self.project_sub.get_owners()), 2)
+        self.assertEqual(
+            len(self.project_sub.get_owners(inherited_only=True)), 1
+        )
+
+    def test_is_project_owner(self):
+        """Test project.is_owner() reuslts"""
+
+        # Set bob as project owner
+        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+
+        self.assertTrue(self.project_sub.is_owner(self.user_bob))
+        self.assertTrue(self.project_sub.is_owner(self.user_alice))
+        self.assertFalse(self.project_sub.is_owner(self.user_carol))
 
     def test_get_project_delegates(self):
         """Test get_project_delegates() results"""
@@ -609,7 +621,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
             self.assertEqual(model_to_dict(delegates[i]), expected[i])
 
     def test_get_project_members(self):
-        """Test get_project_members() results"""
+        """Test project.get_members() results"""
         assignment_c0 = self._make_assignment(
             self.project_top, self.user_erin, self.role_contributor
         )
@@ -639,9 +651,17 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
         for i in range(0, members.count()):
             self.assertEqual(model_to_dict(members[i]), expected[i])
 
+    def test_get_all_project_roles(self):
+        """Test project.get_all_roles() results"""
+
+        # Set bob as project owner
+        self._make_assignment(self.project_sub, self.user_bob, self.role_owner)
+        self.assertEqual(len(self.project_sub.get_all_roles()), 2)
+
     def test_has_role(self):
         """Test the has_role() function for an existing role"""
         self.assertEqual(self.category_top.has_role(self.user_alice), True)
+        self.assertEqual(self.project_sub.has_role(self.user_alice), True)
 
     def test_has_role_norole(self):
         """Test the has_role() function for a non-existing role without

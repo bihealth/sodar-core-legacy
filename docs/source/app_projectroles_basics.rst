@@ -14,7 +14,7 @@ Projects
 The projectroles app groups project-specific data, user access roles and other
 features into **projects** and **categories**. These can be nested in a tree
 structure with the *category* type working as a container for sub-projects with
-no project content of its own.
+limited content of its own.
 
 
 User Roles in Projects

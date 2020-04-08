@@ -40,7 +40,7 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.as_owner.user,  # Project owner is the owner of folder
+            owner=self.owner_as.user,  # Project owner is the owner of folder
             description='',
         )
 
@@ -52,13 +52,13 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
-        bad_users = [self.anonymous, self.as_guest.user, self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_folder_create_category(self):
         """Test folder creation under category"""
@@ -69,13 +69,13 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, bad_users, 302)
 
     def test_folder_update(self):
         """Test folder updating"""
@@ -83,15 +83,15 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             'filesfolders:folder_update',
             kwargs={'item': self.folder.sodar_uuid},
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the folder
+            self.contributor_as.user,  # NOTE: not the owner of the folder
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_folder_delete(self):
         """Test folder deletion"""
@@ -99,15 +99,15 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             'filesfolders:folder_delete',
             kwargs={'item': self.folder.sodar_uuid},
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the folder
+            self.contributor_as.user,  # NOTE: not the owner of the folder
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
 
 class TestFilePermissions(FileMixin, TestProjectPermissionBase):
@@ -129,7 +129,7 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
             file_content=self.file_content,
             project=self.project,
             folder=None,
-            owner=self.as_owner.user,  # Project owner is the file owner
+            owner=self.owner_as.user,  # Project owner is the file owner
             description='',
             public_url=True,
             secret=SECRET,
@@ -143,13 +143,13 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
-        bad_users = [self.anonymous, self.as_guest.user, self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_create_category(self):
         """Test file creation under category"""
@@ -160,43 +160,43 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_update(self):
         """Test file updating"""
         url = reverse(
             'filesfolders:file_update', kwargs={'item': self.file.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the file
+            self.contributor_as.user,  # NOTE: not the owner of the file
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_delete(self):
         """Test file deletion"""
         url = reverse(
             'filesfolders:file_delete', kwargs={'item': self.file.sodar_uuid}
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the file
+            self.contributor_as.user,  # NOTE: not the owner of the file
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_public_link(self):
         """Test generation and viewing of a public URL to a file"""
@@ -206,13 +206,13 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
-        bad_users = [self.anonymous, self.as_guest.user, self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_serve(self):
         """Test file serving for authenticated users"""
@@ -222,14 +222,14 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         bad_users = [self.anonymous, self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_file_serve_public(self):
         """Test public file serving"""
@@ -239,14 +239,14 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.anonymous,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
+        self.assert_response(url, good_users, 200)
 
     def test_file_serve_public_disabled(self):
         """Test public file serving if not allowed in project, should fail"""
@@ -259,10 +259,10 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         )
         bad_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
 
@@ -300,13 +300,13 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         )
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
-        bad_users = [self.anonymous, self.as_guest.user, self.user_no_roles]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_hyperlink_create_category(self):
         """Test hyperlink creation under category"""
@@ -317,13 +317,13 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         bad_users = [
             self.anonymous,
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
-            self.as_guest.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, bad_users, 302)
 
     def test_hyperlink_update(self):
         """Test hyperlink updating"""
@@ -331,15 +331,15 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             'filesfolders:hyperlink_update',
             kwargs={'item': self.hyperlink.sodar_uuid},
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the link
+            self.contributor_as.user,  # NOTE: not the owner of the link
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
     def test_hyperlink_delete(self):
         """Test hyperlink deletion"""
@@ -347,15 +347,15 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
             'filesfolders:hyperlink_delete',
             kwargs={'item': self.hyperlink.sodar_uuid},
         )
-        good_users = [self.superuser, self.as_owner.user, self.as_delegate.user]
+        good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [
-            self.as_contributor.user,  # NOTE: not the owner of the link
+            self.contributor_as.user,  # NOTE: not the owner of the link
             self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
-        self.assert_render200_ok(url, good_users)
-        self.assert_redirect(url, bad_users)
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
 
 
 class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
@@ -368,7 +368,7 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
             name='folder',
             project=self.project,
             folder=None,
-            owner=self.as_owner.user,  # Project owner is the owner of folder
+            owner=self.owner_as.user,  # Project owner is the owner of folder
             description='',
         )
 
@@ -382,13 +382,13 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
         # NOTE: Contributor is OK as checks for object perms happen after POST
         good_users = [
             self.superuser,
-            self.as_owner.user,
-            self.as_delegate.user,
-            self.as_contributor.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
         ]
         bad_users = [
             # self.anonymous,
-            self.as_guest.user,
+            self.guest_as.user,
             self.user_no_roles,
         ]
 

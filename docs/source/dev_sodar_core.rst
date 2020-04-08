@@ -122,6 +122,32 @@ Now you should be able to run the server:
     $ ./run.sh
 
 
+App Development
+===============
+
+Guidelines for developing **internal** SODAR Core apps (ones included when
+installing the django-sodar-core package) are detailed in this section.
+
+REST API Views
+--------------
+
+For internal SODAR Core apps, you need to use core counterparts to the mixins
+than provided for SODAR Core using sites. The counterparts use different media
+type and versioning from views to be implemented on external sites. This is to
+prevent version number clashes requiring changes in external APIs. The classes
+can be found in ``projectroles.views_api`` and are as follows:
+
+- ``CoreAPIVersioning``
+- ``CoreAPIRenderer``
+- ``CoreAPIBaseMixin``
+- ``CoreAPIBaseProjectMixin``
+- ``CoreAPIGenericProjectMixin``
+
+For detailed API descriptions, see docstrings in the ``view_api`` module. The
+media type and versioning for these views are **hardcoded** and should not be
+changed, except version information upon a new release of SODAR Core.
+
+
 Testing
 =======
 
@@ -151,12 +177,3 @@ can use the supplied shortcut script:
 .. code-block:: console
 
     $ ./test_taskflow.sh
-
-
-Contributing
-============
-
-SODAR Core is currently in active development in a private BIH repository. The
-public GitHub repository is primarily intended for publishing stable releases.
-Furthermore, the issue IDs within the code and documentation point to our
-private issue tracker unless otherwise mentioned.

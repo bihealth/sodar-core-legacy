@@ -10,6 +10,131 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.0 (WIP)
+************
+
+Release Highlights
+==================
+
+- Add API views for the ``projectroles`` and ``filesfolders`` apps
+- Add new base view classes and mixins for API/Ajax views
+- Import the ``tokens`` API token management app from VarFish
+- Allow assigning roles other than owner for categories
+- Allow category delegates and owners to create sub-categories and projects
+- Allow moving categories and projects under different categories
+- Inherit owner permissions from parent categories
+- Allow displaying project apps in categories with ``category_enable``
+- Reorganization of views in apps
+
+Breaking Changes
+================
+
+Owner Permissions Inherited from Categories
+-------------------------------------------
+
+Starting in this version of SODAR Core, category owner permissions are
+automatically inherited by projects below those categories, as well as possible
+subcategories. If this does not fit your use case, it is recommend to reorganize
+your project structure and/or give category access to admin users who have
+access to all projects anyway.
+
+Projectroles Views Reorganized
+------------------------------
+
+Views, base views related mixins for the ``projectroles`` app have been
+reorganized in this version. Please review your projectroles imports.
+
+The revised structure is as follows:
+
+- UI views and related mixins **remain** in ``projectroles.views``
+- Ajax API view classes were **moved** into ``projectroles.views_ajax``
+- REST API view classes **moved** into ``projectroles.views_api``
+- Taskflow API view classes **moved** into ``projectroles.views_taskflow``
+
+The same applies to classes and mxins in view tests. See
+``projectroles.tests.test_views*`` to update imports in your tests.
+
+Renamed Projectroles View Classes
+---------------------------------
+
+In addition to reorganizing classes into different views, certain view classes
+intended to be usable by other apps have been renamed. They are listed below.
+
+- ``UserAutocompleteAPIView`` -> ``UserAutocompleteAjaxView``
+- ``UserAutocompleteRedirectAPIView`` -> ``UserAutocompleteRedirectAjaxView``
+
+API View Class Changes
+----------------------
+
+``SODARAPIBaseView`` and ``APIPermissionMixin`` have been removed. Please use
+appropriate classes and mixins found in ``projectroles.views_api`` and
+``projectroles.views_ajax`` instead.
+
+Base Test Class and Mixin Changes
+---------------------------------
+
+Base test classes and helper mixins in ``projectroles`` have been changed as
+detailed below.
+
+- ``SODARAPIViewMixin`` has been moved into ``projectroles.test_views_api`` and
+  renamed into ``SODARAPIViewTestMixin``.
+- ``KnoxAuthMixin`` has been combined into ``SODARAPIViewTestMixin``.
+- ``get_accept_header()`` returns the header as dict instead of a string.
+- ``assert_render200_ok()`` and ``assert_redirect()`` have been removed from
+  ``TestPermissionBase``. Please use ``assert_response()`` instead.
+
+In addition to the aforementioned changes, certain minor setup details such as
+default user rights and may have changed. If you experience unexpected failures
+in your tests, please review the SODAR Core base test classes and helper
+methods, refactoring your tests where required.
+
+User Group Updating
+-------------------
+
+The ``set_user_group()`` helper has been moved from ``projectroles.utils`` into
+the ``SODARUser`` model. It is called automatically on ``SODARUser.save()``, so
+manual calling of the method is not required for most cases.
+
+System Prerequisites
+--------------------
+
+The following third party JS/CSS requirements have been updated:
+
+- JQuery v3.4.1
+- Bootstrap v4.4.1
+- Popper.js v1.16.0
+
+The minimum supported versions have been upgraded for a number of Python
+packages in this release. It is highly recommended to also upgrade these for
+your SODAR Core based site. See the ``requirements`` directory for up-to date
+dependencies.
+
+The minimum version requirement for Django has been bumped to 1.11.29.
+
+Default Templates Modified
+--------------------------
+
+The default template ``base_site.html`` has been modified in this version. If
+you override it with your own altered version, please review the difference and
+update your templates as appropriate.
+
+SODAR Taskflow v0.4.0 Required
+------------------------------
+
+If using SODAR Taskflow, this release requires release v0.4.0 or higher due to
+required support for the ``role_update_irods_batch`` flow.
+
+Known Issues
+============
+
+- Category roles beyond owner are not synchronized to target sites in remote
+  project sync. This was omitted to maintain compatibility in existing APIs in
+  this release. The feature is intended to be implemented in SODAR Core v0.9.
+- Project/user app settings cannot be set or updated in the project REST API. A
+  separate API for this will be developed. Currently the only way to modify
+  app settings is via the GUI.
+
+
 v0.7.2 (2020-01-31)
 *******************
 
@@ -99,7 +224,7 @@ app plugins to return data for extra project list columns has changed. The
 ``user`` argument which provides the current user has been added. If using this
 feature, please make sure to update your implementation(s) of the method.
 
-See :ref:`app_projectroles_api` to review the API changes.
+See :ref:`app_projectroles_api_django` to review the API changes.
 
 
 v0.7.0 (2019-10-09)
@@ -155,8 +280,8 @@ AppSettingAPI get_setting_defs() Signature Changed
 The ``get_settings_defs()`` function in the app settings API now accepts either
 a project app plugin or simply the name of the plugin as string. Due to this
 change, the signature of the API function including argument order has changed.
-Please see the :ref:`API documentation<app_projectroles_api>` for more details
-and update your function calls accordingly.
+Please see the :ref:`API documentation<app_projectroles_api_django>` for more
+details and update your function calls accordingly.
 
 Default Footer Styling Changed
 ------------------------------

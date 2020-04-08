@@ -8,7 +8,7 @@ from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
 # Projectroles dependency
-from projectroles.models import SODAR_CONSTANTS
+from projectroles.models import RoleAssignment, SODAR_CONSTANTS
 
 
 logger = logging.getLogger(__name__)
@@ -91,11 +91,14 @@ class TaskflowAPI:
 
         # HACK: Add overriding URL for test server
         if request:
-            if request.POST and 'sodar_url' in request.POST:
+            if request.POST.get('sodar_url'):
                 data['sodar_url'] = request.POST['sodar_url']
 
-            elif request.GET and 'sodar_url' in request.GET:
+            elif request.GET.get('sodar_url'):
                 data['sodar_url'] = request.GET['sodar_url']
+
+            elif hasattr(request, 'data') and request.data.get('sodar_url'):
+                data['sodar_url'] = request.data['sodar_url']
 
         elif sodar_url:
             data['sodar_url'] = sodar_url
@@ -159,3 +162,65 @@ class TaskflowAPI:
         return 'Taskflow "{}" failed! Reason: "{}"'.format(
             flow_name, submit_info[:256]
         )
+
+    @classmethod
+    def get_inherited_roles(cls, project, user, roles=None):
+        """
+        Return list of inherited owner roles to be used in taskflow sync.
+
+        :param project: Project object
+        :param user: User object
+        :pram roles: Previously collected roles (optional, list or None)
+        :return: List of dicts
+        """
+        if roles is None:
+            roles = []
+
+        # TODO: Remove support for legacy roles in v0.9 (see #506)
+        if (
+            project.type == PROJECT_TYPE_PROJECT
+            and not RoleAssignment.objects.filter(project=project, user=user)
+        ):
+            r = {
+                'project_uuid': str(project.sodar_uuid),
+                'username': user.username,
+            }
+
+            if r not in roles:  # Avoid unnecessary dupes
+                roles.append(r)
+
+        for child in project.get_children():
+            roles = cls.get_inherited_roles(child, user, roles)
+
+        return roles
+
+    @classmethod
+    def get_inherited_users(cls, project, roles=None):
+        """
+        Return list of all inherited users within a project and its children, to
+        be used in taskflow sync.
+
+        :param project: Project object
+        :pram roles: Previously collected roles (optional, list or None)
+        :return: List of dicts
+        """
+
+        if roles is None:
+            roles = []
+
+        if project.type == PROJECT_TYPE_PROJECT:
+            i_owners = [a.user for a in project.get_owners(inherited_only=True)]
+            all_users = [a.user for a in project.get_all_roles(inherited=False)]
+
+            for u in [u for u in i_owners if u not in all_users]:
+                roles.append(
+                    {
+                        'project_uuid': str(project.sodar_uuid),
+                        'username': u.username,
+                    }
+                )
+
+        for child in project.get_children():
+            roles = cls.get_inherited_users(child, roles)
+
+        return roles

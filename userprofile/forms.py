@@ -2,7 +2,9 @@ import json
 
 from django import forms
 
+# Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
+from projectroles.forms import SODARForm
 from projectroles.models import APP_SETTING_VAL_MAXLENGTH, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
 
@@ -18,7 +20,7 @@ app_settings = AppSettingAPI()
 # User Settings Form -----------------------------------------------------------
 
 
-class UserSettingsForm(forms.Form):
+class UserSettingsForm(SODARForm):
     """The form for configuring user settings."""
 
     def __init__(self, *args, **kwargs):

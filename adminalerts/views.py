@@ -1,13 +1,9 @@
+"""UI views for the adminalerts app"""
+
 from django.conf import settings
 from django.contrib import messages
-from django.http import (
-    HttpResponseRedirect,
-    HttpRequest,
-    HttpResponseBadRequest,
-    JsonResponse,
-)
+from django.shortcuts import redirect
 from django.urls import reverse
-from django.views import View
 from django.views.generic import (
     DetailView,
     UpdateView,
@@ -24,8 +20,8 @@ from projectroles.views import (
     CurrentUserFormMixin,
 )
 
-from .forms import AdminAlertForm
-from .models import AdminAlert
+from adminalerts.forms import AdminAlertForm
+from adminalerts.models import AdminAlert
 
 
 DEFAULT_PAGINATION = 15
@@ -43,7 +39,7 @@ class AdminAlertListView(LoggedInPermissionMixin, ListView):
     paginate_by = getattr(
         settings, 'ADMINALERTS_PAGINATION', DEFAULT_PAGINATION
     )
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
     def get_queryset(self):
@@ -58,7 +54,7 @@ class AdminAlertDetailView(
     permission_required = 'adminalerts.view_alert'
     template_name = 'adminalerts/alert_detail.html'
     model = AdminAlert
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
 
@@ -70,7 +66,7 @@ class AdminAlertModifyMixin(ModelFormMixin):
         form.save()
         form_action = 'update' if self.object else 'create'
         messages.success(self.request, 'Alert {}d.'.format(form_action))
-        return HttpResponseRedirect(reverse('adminalerts:list'))
+        return redirect(reverse('adminalerts:list'))
 
 
 class AdminAlertCreateView(
@@ -99,7 +95,7 @@ class AdminAlertUpdateView(
     model = AdminAlert
     form_class = AdminAlertForm
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
 
@@ -110,35 +106,10 @@ class AdminAlertDeleteView(
 
     model = AdminAlert
     permission_required = 'adminalerts.update_alert'
-    slug_url_kwarg = 'uuid'
+    slug_url_kwarg = 'adminalert'
     slug_field = 'sodar_uuid'
 
     def get_success_url(self):
         """Override for redirecting alert list view with message"""
         messages.success(self.request, 'Alert deleted.')
         return reverse('adminalerts:list')
-
-
-# API views --------------------------------------------------------------------
-
-
-class AdminAlertActivationAPIView(
-    LoggedInPermissionMixin, HTTPRefererMixin, View
-):
-    """AdminAlert activation/deactivation API view"""
-
-    permission_required = 'adminalerts.update_alert'
-    http_method_names = ['post']
-
-    def post(self, request: HttpRequest):
-        uuid = request.POST.get('uuid', None)
-
-        try:
-            alert = AdminAlert.objects.get(sodar_uuid__exact=uuid)
-
-        except AdminAlert.DoesNotExist:
-            return HttpResponseBadRequest()
-
-        alert.active = not alert.active
-        alert.save()
-        return JsonResponse({'is_active': alert.active})

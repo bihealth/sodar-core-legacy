@@ -1,26 +1,19 @@
+"""UI views for the projectroles app"""
+
 import json
 import re
 import requests
 import urllib.request
 
-from dal import autocomplete
-
 from django.apps import apps
 from django.conf import settings
-from django.core.exceptions import ValidationError
-from django.core.urlresolvers import resolve
-from django.core.validators import EmailValidator
+from django.core.exceptions import ImproperlyConfigured
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
-from django.db.models import Q
-from django.http import (
-    HttpResponseRedirect,
-    HttpResponseForbidden,
-    JsonResponse,
-)
+from django.db import transaction
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 from django.views.generic import (
     TemplateView,
@@ -33,34 +26,10 @@ from django.views.generic import (
 from django.views.generic.edit import ModelFormMixin, FormView
 from django.views.generic.detail import ContextMixin
 
-from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import (
-    AllowAny,
-    BasePermission,
-    DjangoModelPermissions,
-)
-from rest_framework.renderers import JSONRenderer
-from rest_framework.response import Response
-from rest_framework.versioning import AcceptHeaderVersioning
-from rest_framework.views import APIView
-
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from projectroles import __version__ as core_version
+from projectroles import email
 from projectroles.app_settings import AppSettingAPI
-from projectroles.email import (
-    send_role_change_mail,
-    send_invite_mail,
-    send_accept_note,
-    send_expiry_note,
-    get_invite_subject,
-    get_invite_body,
-    get_invite_message,
-    get_email_footer,
-    get_role_change_body,
-    get_role_change_subject,
-)
 from projectroles.forms import (
     ProjectForm,
     RoleAssignmentForm,
@@ -77,13 +46,15 @@ from projectroles.models import (
     RemoteProject,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
-    SODARUser,
 )
-from projectroles.plugins import get_active_plugins, get_backend_api
-from projectroles.project_tags import get_tag_state, set_tag_state, remove_tag
+from projectroles.plugins import (
+    get_active_plugins,
+    get_app_plugin,
+    get_backend_api,
+)
+from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
-from timeline.models import ProjectEvent
 
 # Settings
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
@@ -109,28 +80,10 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
-SEARCH_REGEX = re.compile(r'^[a-zA-Z0-9.:\-_\s\t]+$')
-ALLOWED_CATEGORY_URLS = ['detail', 'create', 'update', 'star']
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 
 
-# API constants for external SODAR Core sites
-SODAR_API_MEDIA_TYPE = getattr(
-    settings, 'SODAR_API_MEDIA_TYPE', 'application/UNDEFINED+json'
-)
-SODAR_API_DEFAULT_VERSION = getattr(
-    settings, 'SODAR_API_DEFAULT_VERSION', '0.1'
-)
-SODAR_API_ALLOWED_VERSIONS = getattr(
-    settings, 'SODAR_API_ALLOWED_VERSIONS', [SODAR_API_DEFAULT_VERSION]
-)
-
 # API constants for internal SODAR Core apps
-CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
-CORE_API_DEFAULT_VERSION = re.match(
-    r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
-)[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.1', '0.7.2']
 
 
 # Access Django user model
@@ -160,19 +113,23 @@ class ProjectAccessMixin:
         :param kwargs: View kwargs (optional)
         :return: Object of project_class or None if not found
         """
-        if not request:
-            request = self.request
+        request = request or getattr(self, 'request')
+        kwargs = kwargs or getattr(self, 'kwargs')
 
-        if not kwargs:
-            kwargs = self.kwargs
+        # Ensure kwargs can be accessed
+        if kwargs is None:
+            raise ImproperlyConfigured('View kwargs are not accessible')
 
-        # First check for a kwarg named 'project'
+        # Project class object
         if 'project' in kwargs:
             return self.project_class.objects.filter(
                 sodar_uuid=kwargs['project']
             ).first()
 
         # Other object types
+        if not request:
+            raise ImproperlyConfigured('Current HTTP request is not accessible')
+
         model = None
         uuid_kwarg = None
 
@@ -252,14 +209,16 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         """Overrides for project permission access"""
         project = self.get_project()
 
-        # Disable project app access for categories
+        # Disable project app access for categories unless specifically enabled
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
 
-            if (
-                request_url.app_name != APP_NAME
-                or request_url.url_name not in ALLOWED_CATEGORY_URLS
-            ):
+            if request_url.app_name != APP_NAME:
+                app_plugin = get_app_plugin(request_url.app_name)
+
+                if app_plugin and app_plugin.category_enable:
+                    return True
+
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked
@@ -417,14 +376,6 @@ class ProjectContextMixin(
             )
 
         return context
-
-
-class APIPermissionMixin(PermissionRequiredMixin):
-    """Mixin for handling permission response for API functions"""
-
-    def handle_no_permission(self):
-        """Override handle_no_permission to provide 403"""
-        return HttpResponseForbidden()
 
 
 class CurrentUserFormMixin:
@@ -593,29 +544,58 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
             return redirect('home')
 
         context = self.get_context_data(*args, **kwargs)
-
-        # Check input, redirect if unwanted characters are found
-        if not bool(re.match(SEARCH_REGEX, context['search_input'])):
-            messages.error(request, 'Please check your search input')
-            return redirect('home')
-
         return super().render_to_response(context)
 
 
 # Project Editing Views --------------------------------------------------------
 
 
-class ProjectModifyMixin(ModelFormMixin):
-    """Mixin for Project creation/updating"""
+class ProjectModifyMixin:
+    """Mixin for Project creation/updating in UI and API views"""
 
     @staticmethod
     def _get_old_project_data(project):
         return {
             'title': project.title,
+            'parent': project.parent,
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
         }
+
+    @staticmethod
+    def _get_app_settings(data, instance):
+        """
+        Return a dictionary of project app settings and their values.
+
+        :param data: Cleaned data from a form or serializer
+        :param instance: Existing Project object or None
+        :return: Dict
+        """
+        app_plugins = [p for p in get_active_plugins() if p.app_settings]
+        project_settings = {}
+
+        for plugin in app_plugins:
+            p_settings = app_settings.get_setting_defs(
+                APP_SETTING_SCOPE_PROJECT, plugin=plugin
+            )
+
+            for s_key, s_val in p_settings.items():
+                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_data = data.get(s_name)
+
+                if not s_data and not instance:
+                    s_data = app_settings.get_default_setting(
+                        plugin.name, s_key
+                    )
+
+                if s_data and s_val['type'] == 'JSON':
+                    project_settings[s_name] = json.dumps(s_data)
+
+                elif s_data:
+                    project_settings[s_name] = s_data
+
+        return project_settings
 
     @staticmethod
     def _get_project_update_data(old_data, project, owner, project_settings):
@@ -625,6 +605,12 @@ class ProjectModifyMixin(ModelFormMixin):
         if old_data['title'] != project.title:
             extra_data['title'] = project.title
             upd_fields.append('title')
+
+        if old_data['parent'] != project.parent:
+            extra_data['parent'] = (
+                str(project.parent.sodar_uuid) if project.parent else None
+            )
+            upd_fields.append('parent')
 
         if old_data['owner'] != owner:
             extra_data['owner'] = owner.username
@@ -654,10 +640,84 @@ class ProjectModifyMixin(ModelFormMixin):
 
         return extra_data, upd_fields
 
-    def _submit_with_taskflow(
-        self, project, owner, project_settings, form_action, tl_event
+    @classmethod
+    def _create_timeline_event(
+        cls, project, action, owner, old_data, project_settings, request
     ):
-        """Submit project modification flow via SODAR Taskflow"""
+        timeline = get_backend_api('timeline_backend')
+
+        if not timeline:
+            return None
+
+        type_str = project.type.capitalize()
+
+        if action == 'create':
+            tl_desc = 'create ' + type_str.lower() + ' with {owner} as owner'
+            extra_data = {
+                'title': project.title,
+                'owner': owner.username,
+                'description': project.description,
+                'readme': project.readme.raw,
+            }
+
+            # Add settings to extra data
+            for k, v in project_settings.items():
+                a_name = k.split('.')[1]
+                s_name = k.split('.')[2]
+                s_def = app_settings.get_setting_def(s_name, app_name=a_name)
+
+                if s_def['type'] == 'JSON':
+                    v = json.loads(v)
+
+                extra_data[k] = v
+
+        else:  # Update
+            tl_desc = 'update ' + type_str.lower()
+            extra_data, upd_fields = cls._get_project_update_data(
+                old_data, project, owner, project_settings
+            )
+
+            if len(upd_fields) > 0:
+                tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
+
+        tl_event = timeline.add_event(
+            project=project,
+            app_name=APP_NAME,
+            user=request.user,
+            event_name='project_{}'.format(action),
+            description=tl_desc,
+            extra_data=extra_data,
+        )
+
+        if action == 'create':
+            tl_event.add_object(owner, 'owner', owner.username)
+
+        return tl_event
+
+    @classmethod
+    def _submit_with_taskflow(
+        cls,
+        project,
+        owner,
+        project_settings,
+        action,
+        request,
+        old_parent=None,
+        tl_event=None,
+    ):
+        """
+        Submit project modification flow via SODAR Taskflow.
+
+        :param project: Project object
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param action: "create" or "update" (string)
+        :param request: Request object for triggering the update
+        :param old_parent: Project object of old parent if it was changed
+        :param tl_event: Timeline ProjectEvent object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        """
         taskflow = get_backend_api('taskflow')
 
         if tl_event:
@@ -668,25 +728,46 @@ class ProjectModifyMixin(ModelFormMixin):
             'project_description': project.description,
             'parent_uuid': str(project.parent.sodar_uuid)
             if project.parent
-            else 0,
+            else '',
             'owner_username': owner.username,
             'owner_uuid': str(owner.sodar_uuid),
             'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
             'settings': project_settings,
         }
 
-        if form_action == 'update':
+        if action == 'update':
             old_owner = project.get_owner().user
             flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
             flow_data['old_owner_username'] = old_owner.username
             flow_data['project_readme'] = project.readme.raw
 
+            if old_parent:
+                # Get inherited owners for project and its children to add
+                new_roles = taskflow.get_inherited_users(project)
+                flow_data['roles_add'] = new_roles
+                new_users = set([r['username'] for r in new_roles])
+
+                # Get old inherited owners from previous parent to remove
+                old_roles = taskflow.get_inherited_users(old_parent)
+                flow_data['roles_delete'] = [
+                    r for r in old_roles if r['username'] not in new_users
+                ]
+
+        else:  # Create
+            flow_data['roles_add'] = [
+                {
+                    'project_uuid': str(project.sodar_uuid),
+                    'username': a.user.username,
+                }
+                for a in project.get_owners(inherited_only=True)
+            ]
+
         try:
             taskflow.submit(
                 project_uuid=str(project.sodar_uuid),
-                flow_name='project_{}'.format(form_action),
+                flow_name='project_{}'.format(action),
                 flow_data=flow_data,
-                request=self.request,
+                request=request,
             )
 
         except (
@@ -694,32 +775,16 @@ class ProjectModifyMixin(ModelFormMixin):
             taskflow.FlowSubmitException,
         ) as ex:
             # NOTE: No need to update status as project will be deleted
-            if form_action == 'create':
+            if action == 'create':
                 project.delete()
 
             elif tl_event:  # Update
                 tl_event.set_status('FAILED', str(ex))
 
-            messages.error(self.request, str(ex))
+            raise ex
 
-            if form_action == 'create' and project.parent:
-                redirect_url = reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.parent.sodar_uuid},
-                )
-
-            elif form_action == 'create':  # No parent
-                redirect_url = reverse('home')
-
-            else:  # Update
-                redirect_url = reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid},
-                )
-
-            return HttpResponseRedirect(redirect_url)
-
-    def _handle_local_save(self, project, owner, project_settings):
+    @classmethod
+    def _handle_local_save(cls, project, owner, project_settings):
         """Handle local saving of project data if SODAR Taskflow is not
         enabled"""
 
@@ -750,168 +815,196 @@ class ProjectModifyMixin(ModelFormMixin):
                 validate=False,
             )  # Already validated in form
 
-    def form_valid(self, form):
-        """Handle project updating if form is valid"""
+    def modify_project(self, data, request, instance=None):
+        """
+        Create or update a Project, either locally or using the SODAR Taskflow.
+        This method should be called either in form_valid() in a Django form
+        view or save() in a DRF serializer.
+
+        :param data: Cleaned data from a form or serializer
+        :param request: Request initiating the action
+        :param instance: Existing Project object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        :return: Created or updated Project object
+        """
         taskflow = get_backend_api('taskflow')
-        timeline = get_backend_api('timeline_backend')
-
-        use_taskflow = (
-            True
-            if taskflow
-            and form.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-            else False
-        )
-
-        tl_event = None
-        form_action = 'update' if self.object else 'create'
+        action = 'update' if instance else 'create'
         old_data = {}
+        old_project = None
 
-        app_plugins = [p for p in get_active_plugins() if p.app_settings]
+        if instance:
+            project = instance
 
-        if self.object:
-            project = self.get_object()
-            old_data = self._get_old_project_data(project)  # Store old data
-            project.title = form.cleaned_data.get('title')
-            project.description = form.cleaned_data.get('description')
-            project.type = form.cleaned_data.get('type')
-            project.readme = form.cleaned_data.get('readme')
+            # In case of a PATCH request, get existing obj to fill out fields
+            old_project = Project.objects.get(sodar_uuid=instance.sodar_uuid)
+            old_data = self._get_old_project_data(old_project)  # Store old data
+
+            project.title = data.get('title') or old_project.title
+            project.description = (
+                data.get('description') or old_project.description
+            )
+            project.type = data.get('type') or old_project.type
+            project.readme = data.get('readme') or old_project.readme
+
+            # NOTE: Must do this as parent can exist but be None
+            project.parent = (
+                data['parent'] if 'parent' in data else old_project.parent
+            )
 
         else:
             project = Project(
-                title=form.cleaned_data.get('title'),
-                description=form.cleaned_data.get('description'),
-                type=form.cleaned_data.get('type'),
-                parent=form.cleaned_data.get('parent'),
-                readme=form.cleaned_data.get('readme'),
+                title=data.get('title'),
+                description=data.get('description'),
+                type=data.get('type'),
+                readme=data.get('readme'),
+                parent=data.get('parent'),
             )
 
-        if form_action == 'create':
+        use_taskflow = (
+            True
+            if taskflow and data.get('type') == PROJECT_TYPE_PROJECT
+            else False
+        )
+
+        if action == 'create':
             project.submit_status = (
                 SUBMIT_STATUS_PENDING_TASKFLOW
                 if use_taskflow
                 else SUBMIT_STATUS_PENDING
             )
-            project.save()  # Always save locally if creating (to get uuid)
+            # HACK to avoid db error when running tests with DRF serializer
+            # See: https://stackoverflow.com/a/60331668
+            with transaction.atomic():
+                project.save()  # Always save locally if creating (to get UUID)
 
         else:
             project.submit_status = SUBMIT_STATUS_OK
 
         # Save project with changes if updating without taskflow
-        if form_action == 'update' and not use_taskflow:
+        if action == 'update' and not use_taskflow:
             project.save()
 
-        owner = form.cleaned_data.get('owner')
-        type_str = project.type.capitalize()
+        owner = data.get('owner')
+
+        if not owner and old_project:  # In case of a PATCH request
+            owner = old_project.get_owner().user
 
         # Get settings
-        project_settings = {}
+        project_settings = self._get_app_settings(data, instance)
 
-        for plugin in app_plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin
-            )
+        # Create timeline event
+        tl_event = self._create_timeline_event(
+            project, action, owner, old_data, project_settings, request
+        )
 
-            for s_key, s_val in p_settings.items():
-                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
+        # Get old parent for project moving
+        old_parent = (
+            old_project.parent
+            if old_project
+            and old_project.parent
+            and old_project.parent != project.parent
+            else None
+        )
 
-                if s_val['type'] == 'JSON':
-                    project_settings[s_name] = json.dumps(
-                        form.cleaned_data.get(s_name)
-                    )
-
-                else:
-                    project_settings[s_name] = form.cleaned_data.get(s_name)
-
-        if timeline:
-            if form_action == 'create':
-                tl_desc = (
-                    'create ' + type_str.lower() + ' with {owner} as owner'
-                )
-                extra_data = {
-                    'title': project.title,
-                    'owner': owner.username,
-                    'description': project.description,
-                    'readme': project.readme.raw,
-                }
-
-                # Add settings to extra data
-                for k, v in project_settings.items():
-                    a_name = k.split('.')[1]
-                    s_name = k.split('.')[2]
-                    s_def = app_settings.get_setting_def(
-                        s_name, app_name=a_name
-                    )
-
-                    if s_def['type'] == 'JSON':
-                        v = json.loads(v)
-
-                    extra_data[k] = v
-
-            else:  # Update
-                tl_desc = 'update ' + type_str.lower()
-                extra_data, upd_fields = self._get_project_update_data(
-                    old_data, project, owner, project_settings
-                )
-
-                if len(upd_fields) > 0:
-                    tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
-
-            tl_event = timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=self.request.user,
-                event_name='project_{}'.format(form_action),
-                description=tl_desc,
-                extra_data=extra_data,
-            )
-
-            if form_action == 'create':
-                tl_event.add_object(owner, 'owner', owner.username)
-
-        # Submit with Taskflow
+        # Submit with Taskflow if enabled
+        # NOTE: may raise an exception which needs to be handled in caller
         if use_taskflow:
-            response = self._submit_with_taskflow(
-                project, owner, project_settings, form_action, tl_event
+            self._submit_with_taskflow(
+                project,
+                owner,
+                project_settings,
+                action,
+                request,
+                old_parent,
+                tl_event,
             )
-
-            if response:
-                return response  # Exception encountered with Taskflow
 
         # Local save without Taskflow
         else:
             self._handle_local_save(project, owner, project_settings)
 
         # Post submit/save
-        if form_action == 'create':
+        if action == 'create' and project.submit_status != SUBMIT_STATUS_OK:
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
-        if SEND_EMAIL and (not self.object or old_data['owner'] != owner):
-            # send mail
-            send_role_change_mail(
-                form_action,
-                project,
-                owner,
-                RoleAssignment.objects.get_assignment(owner, project).role,
-                self.request,
-            )
+        # Send emails
+        if SEND_EMAIL:
+            owner_as = RoleAssignment.objects.get_assignment(owner, project)
+            # Owner change notification
+            if not instance or old_data['owner'] != owner:
+                email.send_role_change_mail(
+                    action, project, owner, owner_as.role, request,
+                )
+
+            # Project creation/moving for parent category owner
+            if (
+                project.parent
+                and project.parent.get_owner().user != owner_as.user
+                and project.parent.get_owner().user != request.user
+            ):
+                if not instance:
+                    email.send_project_create_mail(project, request)
+
+                elif old_parent:
+                    email.send_project_move_mail(project, request)
 
         if tl_event:
             tl_event.set_status('OK')
 
-        messages.success(self.request, '{} {}d.'.format(type_str, form_action))
-        return HttpResponseRedirect(
-            reverse(
+        return project
+
+
+class ProjectModifyFormMixin(ProjectModifyMixin):
+    """Mixin for Project creation/updating in Django form views"""
+
+    def form_valid(self, form):
+        """Handle project updating if form is valid"""
+        instance = form.instance if form.instance.pk else None
+        action = 'update' if instance else 'create'
+
+        if instance and instance.parent:
+            redirect_url = reverse(
+                'projectroles:detail',
+                kwargs={'project': instance.parent.sodar_uuid},
+            )
+
+        else:
+            redirect_url = reverse('home')
+
+        try:
+            project = self.modify_project(
+                data=form.cleaned_data,
+                request=self.request,
+                instance=form.instance if instance else None,
+            )
+            messages.success(
+                self.request, '{} {}d'.format(project.type.capitalize(), action)
+            )
+            redirect_url = reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
-        )
+
+        except Exception as ex:
+            messages.error(
+                self.request,
+                'Unable to {} {}: {}'.format(
+                    action, form.cleaned_data['type'].lower(), ex
+                ),
+            )
+
+            if settings.DEBUG:
+                raise ex
+
+        return redirect(redirect_url)
 
 
 class ProjectCreateView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectPermissionMixin,
-    ProjectModifyMixin,
+    ProjectModifyFormMixin,
     ProjectContextMixin,
     HTTPRefererMixin,
     CurrentUserFormMixin,
@@ -953,7 +1046,7 @@ class ProjectCreateView(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                 ),
             )
-            return HttpResponseRedirect(reverse('home'))
+            return redirect(reverse('home'))
 
         if 'project' in self.kwargs:
             project = Project.objects.get(sodar_uuid=self.kwargs['project'])
@@ -965,7 +1058,7 @@ class ProjectCreateView(
                         get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                     ),
                 )
-                return HttpResponseRedirect(
+                return redirect(
                     reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
@@ -979,7 +1072,7 @@ class ProjectUpdateView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
-    ProjectModifyMixin,
+    ProjectModifyFormMixin,
     CurrentUserFormMixin,
     UpdateView,
 ):
@@ -1012,8 +1105,17 @@ class ProjectRoleView(
         project = self.get_project()
         context = super().get_context_data(*args, **kwargs)
         context['owner'] = project.get_owner()
-        context['delegates'] = project.get_delegates()
-        context['members'] = project.get_members()
+        inherited_owners = project.get_owners(inherited_only=True)
+        context['inherited_owners'] = [
+            a for a in inherited_owners if a.user != context['owner'].user
+        ]
+        inherited_users = [a.user for a in inherited_owners]
+        context['delegates'] = [
+            a for a in project.get_delegates() if a.user not in inherited_users
+        ]
+        context['members'] = [
+            a for a in project.get_members() if a.user not in inherited_users
+        ]
 
         if project.is_remote():
             context[
@@ -1025,60 +1127,42 @@ class ProjectRoleView(
         return context
 
 
-class RoleAssignmentModifyMixin(ModelFormMixin):
-    """Mixin for RoleAssignment creation and updating"""
+class RoleAssignmentModifyMixin:
+    """Mixin for RoleAssignment creation/updating in UI and API views"""
 
-    def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
+    def modify_assignment(self, data, request, project, instance=None):
+        """
+        Create or update a RoleAssignment, either locally or using the SODAR
+        Taskflow. This method should be called either in form_valid() in a
+        Django form view or save() in a DRF serializer.
 
-        change_type = self.request.resolver_match.url_name.split('_')[1]
-        project = self.get_project()
-
-        if change_type != 'delete':
-            context['preview_subject'] = get_role_change_subject(
-                change_type, project
-            )
-            context['preview_body'] = get_role_change_body(
-                change_type=change_type,
-                project=project,
-                user_name='{user_name}',
-                issuer=self.request.user,
-                role_name='{role_name}',
-                project_url=self.request.build_absolute_uri(
-                    reverse(
-                        'projectroles:detail',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                ),
-            ).replace('\n', '\\n')
-
-        return context
-
-    def form_valid(self, form):
+        :param data: Cleaned data from a form or serializer
+        :param request: Request initiating the action
+        :param project: Project object
+        :param instance: Existing Project object or None
+        :raise: ConnectionError if unable to connect to SODAR Taskflow
+        :raise: FlowSubmitException if SODAR Taskflow submission fails
+        :return: Created or updated RoleAssignment object
+        """
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
-
-        form_action = 'update' if self.object else 'create'
+        action = 'update' if instance else 'create'
         tl_event = None
-        project = self.get_context_data()['project']
-        user = form.cleaned_data.get('user')
-        role = form.cleaned_data.get('role')
+        user = data.get('user')
+        role = data.get('role')
         use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
         if timeline:
             tl_desc = '{} role {}"{}" for {{{}}}'.format(
-                form_action,
-                'to ' if form_action == 'update' else '',
-                role.name,
-                'user',
+                action, 'to ' if action == 'update' else '', role.name, 'user'
             )
 
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=self.request.user,
-                event_name='role_{}'.format(form_action),
+                user=request.user,
+                event_name='role_{}'.format(action),
                 description=tl_desc,
             )
             tl_event.add_object(user, 'user', user.username)
@@ -1099,55 +1183,92 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
                     project_uuid=project.sodar_uuid,
                     flow_name='role_update',
                     flow_data=flow_data,
-                    request=self.request,
+                    request=request,
                 )
 
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
 
-                messages.error(self.request, str(ex))
-                return redirect(
-                    reverse(
-                        'projectroles:roles',
-                        kwargs={'project': project.sodar_uuid},
-                    )
-                )
+                raise ex
 
             # Get object
-            self.object = RoleAssignment.objects.get(project=project, user=user)
+            role_as = RoleAssignment.objects.get(project=project, user=user)
 
         # Local save without Taskflow
+        elif action == 'create':
+            role_as = RoleAssignment(project=project, user=user, role=role)
+
         else:
-            if form_action == 'create':
-                self.object = RoleAssignment(
-                    project=project, user=user, role=role
-                )
+            role_as = RoleAssignment.objects.get(project=project, user=user)
+            role_as.role = role
 
-            else:
-                self.object = RoleAssignment.objects.get(
-                    project=project, user=user
-                )
-                self.object.role = role
-
-            self.object.save()
+        role_as.save()
 
         if SEND_EMAIL:
-            send_role_change_mail(
-                form_action, project, user, role, self.request
-            )
+            email.send_role_change_mail(action, project, user, role, request)
 
         if tl_event:
             tl_event.set_status('OK')
 
-        messages.success(
-            self.request,
-            'Membership {} for {} with the role of {}.'.format(
-                'added' if form_action == 'create' else 'updated',
-                self.object.user.username,
-                self.object.role.name,
-            ),
-        )
+        return role_as
+
+
+class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
+    """Mixin for RoleAssignment creation and updating in Django form views"""
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+
+        change_type = self.request.resolver_match.url_name.split('_')[1]
+        project = self.get_project()
+
+        if change_type != 'delete':
+            context['preview_subject'] = email.get_role_change_subject(
+                change_type, project
+            )
+            context['preview_body'] = email.get_role_change_body(
+                change_type=change_type,
+                project=project,
+                user_name='{user_name}',
+                issuer=self.request.user,
+                role_name='{role_name}',
+                project_url=self.request.build_absolute_uri(
+                    reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    )
+                ),
+            ).replace('\n', '\\n')
+
+        return context
+
+    def form_valid(self, form):
+        """Handle RoleAssignment updating if form is valid"""
+        instance = form.instance if form.instance.pk else None
+        action = 'update' if instance else 'create'
+
+        try:
+            self.object = self.modify_assignment(
+                data=form.cleaned_data,
+                request=self.request,
+                project=self.get_project(),
+                instance=form.instance if instance else None,
+            )
+            messages.success(
+                self.request,
+                'Membership {} for {} with the role of {}.'.format(
+                    'added' if action == 'create' else 'updated',
+                    self.object.user.username,
+                    self.object.role.name,
+                ),
+            )
+
+        except Exception as ex:
+            messages.error(
+                self.request, 'Membership updating failed: {}'.format(ex)
+            )
+
         return redirect(
             reverse(
                 'projectroles:roles',
@@ -1156,70 +1277,17 @@ class RoleAssignmentModifyMixin(ModelFormMixin):
         )
 
 
-class RoleAssignmentCreateView(
-    LoginRequiredMixin,
-    ProjectModifyPermissionMixin,
-    ProjectContextMixin,
-    CurrentUserFormMixin,
-    RoleAssignmentModifyMixin,
-    CreateView,
-):
-    """RoleAssignment creation view"""
+class RoleAssignmentDeleteMixin:
+    """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
-    permission_required = 'projectroles.update_project_members'
-    model = RoleAssignment
-    form_class = RoleAssignmentForm
-
-    def get_form_kwargs(self):
-        """Pass URL arguments and current user to form"""
-        kwargs = super().get_form_kwargs()
-        kwargs.update(self.kwargs)
-        return kwargs
-
-
-class RoleAssignmentUpdateView(
-    LoginRequiredMixin,
-    RolePermissionMixin,
-    ProjectContextMixin,
-    RoleAssignmentModifyMixin,
-    CurrentUserFormMixin,
-    UpdateView,
-):
-    """RoleAssignment updating view"""
-
-    permission_required = 'projectroles.update_project_members'
-    model = RoleAssignment
-    form_class = RoleAssignmentForm
-    slug_url_kwarg = 'roleassignment'
-    slug_field = 'sodar_uuid'
-
-
-class RoleAssignmentDeleteView(
-    LoginRequiredMixin,
-    RolePermissionMixin,
-    ProjectModifyPermissionMixin,
-    ProjectContextMixin,
-    CurrentUserFormMixin,
-    DeleteView,
-):
-    """RoleAssignment deletion view"""
-
-    permission_required = 'projectroles.update_project_members'
-    model = RoleAssignment
-    slug_url_kwarg = 'roleassignment'
-    slug_field = 'sodar_uuid'
-
-    def post(self, *args, **kwargs):
+    def delete_assignment(self, request, instance):
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
 
         tl_event = None
-        self.object = RoleAssignment.objects.get(
-            sodar_uuid=kwargs['roleassignment']
-        )
-        project = self.object.project
-        user = self.object.user
-        role = self.object.role
+        project = instance.project
+        user = instance.user
+        role = instance.role
         use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
@@ -1227,7 +1295,7 @@ class RoleAssignmentDeleteView(
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
-                user=self.request.user,
+                user=request.user,
                 event_name='role_delete',
                 description='delete role "{}" from {{{}}}'.format(
                     role.name, 'user'
@@ -1251,30 +1319,22 @@ class RoleAssignmentDeleteView(
                     project_uuid=project.sodar_uuid,
                     flow_name='role_delete',
                     flow_data=flow_data,
-                    request=self.request,
+                    request=request,
                 )
-                self.object = None
+                instance = None
 
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
 
-                messages.error(self.request, str(ex))
-                return HttpResponseRedirect(
-                    redirect(
-                        reverse(
-                            'projectroles:roles',
-                            kwargs={'project': project.sodar_uuid},
-                        )
-                    )
-                )
+                raise ex
 
         # Local save without Taskflow
         else:
-            self.object.delete()
+            instance.delete()
 
         if SEND_EMAIL:
-            send_role_change_mail('delete', project, user, None, self.request)
+            email.send_role_change_mail('delete', project, user, None, request)
 
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
@@ -1282,15 +1342,207 @@ class RoleAssignmentDeleteView(
         if tl_event:
             tl_event.set_status('OK')
 
-        messages.success(
-            self.request, 'Membership of {} removed.'.format(user.username)
-        )
+        return instance
 
-        return HttpResponseRedirect(
+
+class RoleAssignmentCreateView(
+    LoginRequiredMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    CurrentUserFormMixin,
+    RoleAssignmentModifyFormMixin,
+    CreateView,
+):
+    """RoleAssignment creation view"""
+
+    permission_required = 'projectroles.update_project_members'
+    model = RoleAssignment
+    form_class = RoleAssignmentForm
+
+    def get_form_kwargs(self):
+        """Pass URL arguments and current user to form"""
+        kwargs = super().get_form_kwargs()
+        kwargs.update(self.kwargs)
+        return kwargs
+
+
+class RoleAssignmentUpdateView(
+    LoginRequiredMixin,
+    RolePermissionMixin,
+    ProjectContextMixin,
+    RoleAssignmentModifyFormMixin,
+    CurrentUserFormMixin,
+    UpdateView,
+):
+    """RoleAssignment updating view"""
+
+    permission_required = 'projectroles.update_project_members'
+    model = RoleAssignment
+    form_class = RoleAssignmentForm
+    slug_url_kwarg = 'roleassignment'
+    slug_field = 'sodar_uuid'
+
+
+class RoleAssignmentDeleteView(
+    LoginRequiredMixin,
+    RolePermissionMixin,
+    ProjectModifyPermissionMixin,
+    ProjectContextMixin,
+    CurrentUserFormMixin,
+    RoleAssignmentDeleteMixin,
+    DeleteView,
+):
+    """RoleAssignment deletion view"""
+
+    permission_required = 'projectroles.update_project_members'
+    model = RoleAssignment
+    slug_url_kwarg = 'roleassignment'
+    slug_field = 'sodar_uuid'
+
+    def post(self, *args, **kwargs):
+        self.object = self.get_object()
+        user = self.object.user
+        project = self.object.project
+
+        # Override perms for owner/delegate
+        if self.object.role.name == PROJECT_ROLE_OWNER or (
+            self.object.role.name == PROJECT_ROLE_DELEGATE
+            and not self.request.user.has_perm(
+                'projectroles.update_project_delegate', project
+            )
+        ):
+            messages.error(
+                self.request,
+                'You do not have permission to remove the '
+                'membership of {}'.format(self.object.role.name),
+            )
+
+        else:
+            try:
+                self.object = self.delete_assignment(
+                    request=self.request, instance=self.object
+                )
+                messages.success(
+                    self.request,
+                    'Membership of {} removed.'.format(user.username),
+                )
+
+            except Exception as ex:
+                messages.error(
+                    self.request,
+                    'Failed to remove membership of {}: {}'.format(
+                        user.username, ex
+                    ),
+                )
+
+        return redirect(
             reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
         )
+
+
+class RoleAssignmentOwnerTransferMixin:
+    """Mixin for owner RoleAssignment transfer in UI and API views"""
+
+    def _create_timeline_event(self, old_owner, new_owner, project):
+        timeline = get_backend_api('timeline_backend')
+        # Init Timeline event
+        if not timeline:
+            return None
+
+        tl_desc = (
+            'transfer ownership from {{prev_owner}} to '
+            '{{new_owner}}'.format(old_owner.username, new_owner.username)
+        )
+
+        tl_event = timeline.add_event(
+            project=project,
+            app_name=APP_NAME,
+            user=self.request.user,
+            event_name='role_transfer_owner',
+            description=tl_desc,
+            extra_data={
+                'prev_owner': old_owner.username,
+                'new_owner': new_owner.username,
+            },
+        )
+        tl_event.add_object(old_owner, 'prev_owner', old_owner.username)
+        tl_event.add_object(new_owner, 'new_owner', new_owner.username)
+        return tl_event
+
+    def _handle_transfer(
+        self, project, old_owner_as, new_owner, old_owner_role
+    ):
+        taskflow = get_backend_api('taskflow')
+
+        # Handle inherited owner roles for categories if taskflow is enabled
+        if taskflow and project.type == PROJECT_TYPE_CATEGORY:
+            flow_data = {
+                'roles_add': taskflow.get_inherited_roles(project, new_owner),
+                'roles_delete': taskflow.get_inherited_roles(
+                    project, old_owner_as.user
+                ),
+            }
+
+            # Submit taskflow (Requires SODAR Taskflow v0.4.0+)
+            # NOTE: Can raise exception
+            taskflow.submit(
+                project_uuid=None,  # Batch flow for multiple projects
+                flow_name='role_update_irods_batch',
+                flow_data=flow_data,
+                request=self.request,
+            )
+
+        # If taskflow submission was successful / skipped, update database
+        old_owner_as.role = old_owner_role
+        old_owner_as.save()
+
+        role_as = RoleAssignment.objects.get_assignment(new_owner, project)
+        role_as.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
+        role_as.save()
+
+        return True
+
+    def transfer_owner(self, project, new_owner, old_owner_as, old_owner_role):
+        """
+        Transfer project ownership to a new user and assign a new role to the
+        previous owner.
+
+        :param project: Project object
+        :param new_owner: User object
+        :param old_owner_as: RoleAssignment object
+        :param old_owner_role: Role object
+        :return:
+        """
+        old_owner = old_owner_as.user
+        tl_event = self._create_timeline_event(old_owner, new_owner, project)
+
+        try:
+            self._handle_transfer(
+                project, old_owner_as, new_owner, old_owner_role
+            )
+
+        except Exception as ex:
+            if tl_event:
+                tl_event.set_status('FAILED', str(ex))
+
+            raise ex
+
+        if SEND_EMAIL:
+            email.send_role_change_mail(
+                'update', project, old_owner, old_owner_role, self.request
+            )
+            email.send_role_change_mail(
+                'update',
+                project,
+                new_owner,
+                Role.objects.get(name=PROJECT_ROLE_OWNER),
+                self.request,
+            )
+
+        if tl_event:
+            tl_event.set_status('OK')
 
 
 class RoleAssignmentOwnerTransferView(
@@ -1298,6 +1550,7 @@ class RoleAssignmentOwnerTransferView(
     ProjectModifyPermissionMixin,
     CurrentUserFormMixin,
     ProjectContextMixin,
+    RoleAssignmentOwnerTransferMixin,
     FormView,
 ):
     permission_required = 'projectroles.update_project_owner'
@@ -1323,102 +1576,35 @@ class RoleAssignmentOwnerTransferView(
 
     def form_valid(self, form):
         project = form.project
-        prev_owner = form.current_owner
-        prev_owner_ra = RoleAssignment.objects.get_assignment(
-            prev_owner, project
-        )
-
+        old_owner = form.current_owner
+        old_owner_as = project.get_owner()
         new_owner = form.cleaned_data['new_owner']
-        ex_owner_role = form.cleaned_data['ex_owner_role']
-
-        timeline_event = self.create_timeline_event(
-            prev_owner, new_owner, project
+        old_owner_role = form.cleaned_data['old_owner_role']
+        redirect_url = reverse(
+            'projectroles:roles', kwargs={'project': project.sodar_uuid}
         )
 
-        if self.transfer_ownership(
-            timeline_event, project, prev_owner_ra, new_owner, ex_owner_role
-        ):
-
-            if SEND_EMAIL:
-                send_role_change_mail(
-                    'update', project, prev_owner, ex_owner_role, self.request
-                )
-                send_role_change_mail(
-                    'update',
-                    project,
-                    new_owner,
-                    Role.objects.get(name=PROJECT_ROLE_OWNER),
-                    self.request,
-                )
-                messages.success(
-                    self.request,
-                    'Successfully transferred ownership  from {} to {}. A '
-                    'notification email has been send to both users.'.format(
-                        prev_owner.username, new_owner.username
-                    ),
-                )
-            else:
-                messages.success(
-                    self.request,
-                    'Successfully transferred ownership  from {} to {}.'.format(
-                        prev_owner.username, new_owner.username
-                    ),
-                )
-
-            if timeline_event:
-                timeline_event.set_status('OK')
-
-        return HttpResponseRedirect(
-            reverse(
-                'projectroles:roles', kwargs={'project': project.sodar_uuid}
+        try:
+            self.transfer_owner(
+                project, new_owner, old_owner_as, old_owner_role
             )
+
+        except Exception as ex:
+            # TODO: Add logging
+            messages.error(
+                self.request, 'Unable to transfer ownership: {}'.format(ex)
+            )
+
+        success_msg = (
+            'Successfully transferred ownership from '
+            '{} to {}.'.format(old_owner.username, new_owner.username)
         )
 
-    def create_timeline_event(
-        self, prev_owner: SODARUser, new_owner: SODARUser, project: Project
-    ) -> ProjectEvent:
-        timeline = get_backend_api('timeline_backend')
-        # Init Timeline event
-        if not timeline:
-            return None
+        if SEND_EMAIL:
+            success_msg += ' A notification email has been sent to both users.'
 
-        tl_desc = (
-            'transfer ownership from {{prev_owner}} to '
-            '{{new_owner}}'.format(prev_owner.username, new_owner.username)
-        )
-
-        tl_event = timeline.add_event(
-            project=project,
-            app_name=APP_NAME,
-            user=self.request.user,
-            event_name='role_transfer_owner',
-            description=tl_desc,
-            extra_data={
-                'prev_owner': prev_owner.username,
-                'new_owner': new_owner.username,
-            },
-        )
-        tl_event.add_object(prev_owner, 'prev_owner', prev_owner.username)
-        tl_event.add_object(new_owner, 'new_owner', new_owner.username)
-        return tl_event
-
-    def transfer_ownership(
-        self,
-        timeline_event: ProjectEvent,
-        project: Project,
-        prev_owner: RoleAssignment,
-        new_owner: SODARUser,
-        prev_owner_role: Role,
-    ) -> bool:
-
-        prev_owner.role = prev_owner_role
-        prev_owner.save()
-
-        # make it an owner
-        ra = RoleAssignment.objects.get_assignment(new_owner, project)
-        ra.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
-        ra.save()
-        return True
+        messages.success(self.request, success_msg)
+        return redirect(redirect_url)
 
 
 # ProjectInvite Views ----------------------------------------------------------
@@ -1441,7 +1627,7 @@ class ProjectInviteMixin:
         status_desc = None
 
         if SEND_EMAIL:
-            sent_mail = send_invite_mail(invite, request)
+            sent_mail = email.send_invite_mail(invite, request)
 
             if sent_mail == 0:
                 status_type = 'FAILED'
@@ -1529,18 +1715,20 @@ class ProjectInviteCreateView(
 
         project = self.get_permission_object()
 
-        context['preview_subject'] = get_invite_subject(project)
-        context['preview_body'] = get_invite_body(
+        context['preview_subject'] = email.get_invite_subject(project)
+        context['preview_body'] = email.get_invite_body(
             project=project,
             issuer=self.request.user,
             role_name='{role_name}',
             invite_url='http://XXXXXXXXXXXXXXXXXXXXXXX',
             date_expire_str='YYYY-MM-DD HH:MM',
         ).replace('\n', '\\n')
-        context['preview_message'] = get_invite_message('{message}').replace(
+        context['preview_message'] = email.get_invite_message(
+            '{message}'
+        ).replace('\n', '\\n')
+        context['preview_footer'] = email.get_email_footer().replace(
             '\n', '\\n'
         )
-        context['preview_footer'] = get_email_footer().replace('\n', '\\n')
 
         return context
 
@@ -1644,7 +1832,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
 
             # Send notification of expiry to issuer
             if SEND_EMAIL:
-                send_expiry_note(invite, self.request)
+                email.send_expiry_note(invite, self.request)
 
             revoke_invite(invite, failed=True, fail_desc='Invite expired')
             return redirect(reverse('home'))
@@ -1708,7 +1896,7 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
 
         # ..notify the issuer by email..
         if SEND_EMAIL:
-            send_accept_note(invite, self.request)
+            email.send_accept_note(invite, self.request)
 
         # ..deactivate the invite..
         revoke_invite(invite, failed=False)
@@ -1899,7 +2087,7 @@ class RemoteSiteModifyMixin(ModelFormMixin):
                 self.object.mode.capitalize(), self.object.name, form_action
             ),
         )
-        return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+        return redirect(reverse('projectroles:remote_sites'))
 
 
 class RemoteSiteCreateView(
@@ -1924,7 +2112,7 @@ class RemoteSiteCreateView(
             and RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0
         ):
             messages.error(request, 'Source site has already been set')
-            return HttpResponseRedirect(reverse('projectroles:remote_sites'))
+            return redirect(reverse('projectroles:remote_sites'))
 
         return super().get(request, args, kwargs)
 
@@ -2049,7 +2237,7 @@ class RemoteProjectsBatchUpdateView(
                     get_display_name(PROJECT_TYPE_PROJECT)
                 ),
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         access_fields = {
             k: v for k, v in post_data.items() if k.startswith('remote_access')
@@ -2097,7 +2285,7 @@ class RemoteProjectsBatchUpdateView(
                         get_display_name(PROJECT_TYPE_PROJECT)
                     ),
                 )
-                return HttpResponseRedirect(redirect_url)
+                return redirect(redirect_url)
 
             context['modifying_access'] = modifying_access
 
@@ -2158,7 +2346,7 @@ class RemoteProjectsBatchUpdateView(
                 context['site'].name,
             ),
         )
-        return HttpResponseRedirect(redirect_url)
+        return redirect(redirect_url)
 
 
 class RemoteProjectsSyncView(
@@ -2185,6 +2373,11 @@ class RemoteProjectsSyncView(
 
     def get(self, request, *args, **kwargs):
         """Override get() for a confirmation view"""
+        from projectroles.views_api import (
+            CORE_API_MEDIA_TYPE,
+            CORE_API_DEFAULT_VERSION,
+        )
+
         remote_api = RemoteProjectAPI()
         redirect_url = reverse('projectroles:remote_sites')
 
@@ -2192,7 +2385,7 @@ class RemoteProjectsSyncView(
             messages.error(
                 request, 'Site in SOURCE mode, remote sync not allowed'
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
@@ -2224,7 +2417,7 @@ class RemoteProjectsSyncView(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True), ex_str
                 ),
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         # Sync data
         update_data = remote_api.sync_source_data(site, remote_data, request)
@@ -2248,7 +2441,7 @@ class RemoteProjectsSyncView(
                 request,
                 'No changes in remote site detected, nothing to synchronize',
             )
-            return HttpResponseRedirect(redirect_url)
+            return redirect(redirect_url)
 
         context['update_data'] = update_data
         context['user_count'] = user_count
@@ -2261,497 +2454,3 @@ class RemoteProjectsSyncView(
             ),
         )
         return super().render_to_response(context)
-
-
-# Base SODAR API Views ---------------------------------------------------------
-
-
-class SODARAPIVersioning(AcceptHeaderVersioning):
-    default_version = SODAR_API_DEFAULT_VERSION
-    allowed_versions = SODAR_API_ALLOWED_VERSIONS
-    version_param = 'version'
-
-
-class SODARAPIRenderer(JSONRenderer):
-    media_type = SODAR_API_MEDIA_TYPE
-
-
-class SODARAPIObjectInProjectPermissions(
-    ProjectAccessMixin, DjangoModelPermissions
-):
-    """
-    DRF ``Permissions`` implementation for objects in SODAR
-    ``projectroles.models.Project``s.
-
-    Permissions can only be checked on models having a ``project`` attribute or
-    a get_project() function. Access control is based on the convention action
-    names (``${app_label}.${action}_${model_name}``) but based on roles on the
-    containing ``Project``.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """Override to patch ``self.perms_map`` to set required permissions on
-        ``GET`` et al."""
-        super().__init__(*args, **kwargs)
-        patch = {
-            'GET': ['%(app_label)s.view_%(model_name)s'],
-            'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
-            'HEAD': ['%(app_label)s.view_%(model_name)s'],
-        }
-        self.perms_map = {**self.perms_map, **patch}
-
-    def has_permission(self, request, view):
-        """Override to base permission check on project only"""
-        if getattr(view, '_ignore_model_permissions', False):
-            return True
-
-        if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only
-        ):
-            return False
-
-        queryset = self._queryset(view)
-        perms = self.get_required_permissions(request.method, queryset.model)
-
-        return request.user.has_perms(perms, self.get_project())
-
-
-class SODARAPIBaseView(APIView):
-    """Base SODAR API View to be used by external SODAR Core based sites"""
-
-    versioning_class = SODARAPIVersioning
-    renderer_classes = [SODARAPIRenderer]
-
-
-class SODARCoreAPIBaseView(APIView):
-    """Base SODAR API View to be used by internal SODAR Core apps"""
-
-    class CoreAPIVersioning(AcceptHeaderVersioning):
-        default_version = CORE_API_DEFAULT_VERSION
-        allowed_versions = CORE_API_ALLOWED_VERSIONS
-        version_param = 'version'
-
-    class CoreAPIRenderer(JSONRenderer):
-        media_type = CORE_API_MEDIA_TYPE
-
-    versioning_class = CoreAPIVersioning
-    renderer_classes = [CoreAPIRenderer]
-
-
-# SODAR API Views --------------------------------------------------------------
-
-
-class RemoteProjectGetAPIView(SODARCoreAPIBaseView):
-    """API view for retrieving remote projects from a source site"""
-
-    # TODO: Create custom permission class for general API
-    permission_classes = (AllowAny,)  # We check the secret in get()/post()
-
-    def get(self, request, *args, **kwargs):
-        remote_api = RemoteProjectAPI()
-        secret = kwargs['secret']
-
-        try:
-            target_site = RemoteSite.objects.get(
-                mode=SITE_MODE_TARGET, secret=secret
-            )
-
-        except RemoteSite.DoesNotExist:
-            return Response('Remote site not found, unauthorized', status=401)
-
-        sync_data = remote_api.get_target_data(target_site)
-
-        # Update access date for target site remote projects
-        target_site.projects.all().update(date_access=timezone.now())
-
-        return Response(sync_data, status=200)
-
-
-# Ajax API Views ---------------------------------------------------------------
-
-
-class ProjectStarringAPIView(
-    LoginRequiredMixin, ProjectPermissionMixin, APIPermissionMixin, APIView
-):
-    """View to handle starring and unstarring a project via AJAX"""
-
-    permission_required = 'projectroles.view_project'
-
-    def post(self, request, *args, **kwargs):
-        project = self.get_permission_object()
-        user = request.user
-        timeline = get_backend_api('timeline_backend')
-
-        tag_state = get_tag_state(project, user)
-        action_str = '{}star'.format('un' if tag_state else '')
-
-        set_tag_state(project, user, PROJECT_TAG_STARRED)
-
-        # Add event in Timeline
-        if timeline:
-            timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=user,
-                event_name='project_{}'.format(action_str),
-                description='{} project'.format(action_str),
-                classified=True,
-                status_type='INFO',
-            )
-
-        return Response(0 if tag_state else 1, status=200)
-
-
-class UserAutocompleteAPIView(autocomplete.Select2QuerySetView):
-    """ User autocompletion widget view"""
-
-    def get_queryset(self):
-        """
-        Get a User queryset for SODARUserAutocompleteWidget.
-
-        Optional values in self.forwarded:
-        - "project": project UUID
-        - "scope": string for expected scope (all/project/project_exclude)
-        - "exclude": list of explicit User.sodar_uuid to exclude from queryset
-
-        """
-        if not self.request.user.is_authenticated():
-            return User.objects.none()
-
-        current_user = self.request.user
-        project_uuid = self.forwarded.get('project', None)
-        exclude_uuids = self.forwarded.get('exclude', None)
-        scope = self.forwarded.get('scope', 'all')
-
-        # If project UUID is given, only show users that are in the project
-        if scope in ['project', 'project_exclude'] and project_uuid not in [
-            '',
-            None,
-        ]:
-            project = Project.objects.filter(sodar_uuid=project_uuid).first()
-
-            # If user has no permission for the project, return None
-            if not self.request.user.has_perm(
-                'projectroles.view_project', project
-            ):
-                return User.objects.none()
-
-            project_users = (
-                RoleAssignment.objects.filter(project=project)
-                .values_list('user')
-                .distinct()
-            )
-
-            if scope == 'project':  # Limit choices to current project users
-                qs = User.objects.filter(pk__in=project_users)
-
-            elif scope == 'project_exclude':  # Exclude project users
-                qs = User.objects.exclude(pk__in=project_users)
-
-        # Else include all users
-        else:
-            qs = User.objects.all()
-
-        # Exclude users in the system group unless local users are allowed
-        allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
-
-        if not allow_local and not current_user.is_superuser:
-            qs = qs.exclude(groups__name='system').exclude(groups__isnull=True)
-
-        # Exclude UUIDs explicitly given
-        if exclude_uuids:
-            qs = qs.exclude(sodar_uuid__in=exclude_uuids)
-
-        # Finally, filter by query
-        if self.q:
-            qs = qs.filter(
-                Q(username__icontains=self.q)
-                | Q(first_name__icontains=self.q)
-                | Q(last_name__icontains=self.q)
-                | Q(name__icontains=self.q)
-                | Q(email__icontains=self.q)
-            )
-
-        return qs.order_by('name')
-
-    def get_result_label(self, user):
-        """Display options with name, username and email address"""
-        display = '{}{}{}'.format(
-            user.name if user.name else '',
-            ' ({})'.format(user.username) if user.name else user.username,
-            ' <{}>'.format(user.email) if user.email else '',
-        )
-        return display
-
-    def get_result_value(self, user):
-        """Use sodar_uuid in the User model instead of pk"""
-        return str(user.sodar_uuid)
-
-
-class UserAutocompleteRedirectAPIView(UserAutocompleteAPIView):
-    """ SODARUserRedirectWidget view (user autocompletion) redirecting to
-    the 'create invite' page"""
-
-    def get_create_option(self, context, q):
-        """Form the correct email invite option to append to results."""
-        create_option = []
-        validator = EmailValidator()
-        display_create_option = False
-
-        if self.create_field and q:
-            page_obj = context.get('page_obj', None)
-
-            if page_obj is None or page_obj.number == 1:
-
-                # Don't offer to send an invite if the entered text is not an
-                # email address
-                try:
-                    validator(q)
-                    display_create_option = True
-
-                except ValidationError:
-                    display_create_option = False
-
-                # Don't offer to send an invite if a
-                # case-insensitive) identical one already exists
-                existing_options = (
-                    self.get_result_label(result).lower()
-                    for result in context['object_list']
-                )
-
-                if q.lower() in existing_options:
-                    display_create_option = False
-
-        if display_create_option and self.has_add_permission(self.request):
-            create_option = [
-                {
-                    'id': q,
-                    'text': ('Send an invite to "%(new_value)s"')
-                    % {'new_value': q},
-                    'create_id': True,
-                }
-            ]
-        return create_option
-
-    def post(self, request):
-        """Send the invite form url to which the forwarded values will be
-        send"""
-        project_uuid = self.request.POST.get('project', None)
-        project = Project.objects.filter(sodar_uuid=project_uuid).first()
-        # create JSON with address to redirect to
-        redirect_url = reverse(
-            'projectroles:invite_create', kwargs={'project': project.sodar_uuid}
-        )
-        return JsonResponse({'success': True, 'redirect_url': redirect_url})
-
-
-# Taskflow API Views -----------------------------------------------------------
-
-
-# TODO: Integrate Taskflow API functionality with general SODAR API (see #47)
-
-
-class TaskflowAPIAuthentication(BaseAuthentication):
-    """Taskflow API authentication handling"""
-
-    def authenticate(self, request):
-        taskflow_secret = None
-
-        if request.method == 'POST' and 'sodar_secret' in request.POST:
-            taskflow_secret = request.POST['sodar_secret']
-
-        elif request.method == 'GET':
-            taskflow_secret = request.GET.get('sodar_secret', None)
-
-        if (
-            not hasattr(settings, 'TASKFLOW_SODAR_SECRET')
-            or taskflow_secret != settings.TASKFLOW_SODAR_SECRET
-        ):
-            raise PermissionDenied('Not authorized')
-
-
-class TaskflowAPIPermission(BasePermission):
-    """Taskflow API permission handling"""
-
-    def has_permission(self, request, view):
-        # Only allow accessing Taskflow API views if Taskflow is used
-        return True if 'taskflow' in settings.ENABLED_BACKEND_PLUGINS else False
-
-
-class BaseTaskflowAPIView(APIView):
-    """Base Taskflow API view"""
-
-    authentication_classes = [TaskflowAPIAuthentication]
-    permission_classes = [TaskflowAPIPermission]
-
-
-class TaskflowProjectGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting a project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid'],
-                submit_status=SUBMIT_STATUS_OK,
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        ret_data = {
-            'project_uuid': str(project.sodar_uuid),
-            'title': project.title,
-            'description': project.description,
-        }
-
-        return Response(ret_data, status=200)
-
-
-class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for updating a project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            project.title = request.data['title']
-            project.description = (
-                request.data['description']
-                if 'description' in request.data
-                else ''
-            )
-            project.readme.raw = request.data['readme']
-            project.save()
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        return Response('ok', status=200)
-
-
-class TaskflowRoleAssignmentGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting a role assignment for user and project"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-
-        except (Project.DoesNotExist, User.DoesNotExist) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            ret_data = {
-                'assignment_uuid': str(role_as.sodar_uuid),
-                'project_uuid': str(role_as.project.sodar_uuid),
-                'user_uuid': str(role_as.user.sodar_uuid),
-                'role_pk': role_as.role.pk,
-                'role_name': role_as.role.name,
-            }
-            return Response(ret_data, status=200)
-
-        except RoleAssignment.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-
-class TaskflowRoleAssignmentSetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for creating or updating a role assignment"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-            role = Role.objects.get(pk=request.data['role_pk'])
-
-        except (
-            Project.DoesNotExist,
-            User.DoesNotExist,
-            Role.DoesNotExist,
-        ) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            role_as.role = role
-            role_as.save()
-
-        except RoleAssignment.DoesNotExist:
-            role_as = RoleAssignment(project=project, user=user, role=role)
-            role_as.save()
-
-        return Response('ok', status=200)
-
-
-class TaskflowRoleAssignmentDeleteAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for deleting a role assignment"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-            user = User.objects.get(sodar_uuid=request.data['user_uuid'])
-
-        except (Project.DoesNotExist, User.DoesNotExist) as ex:
-            return Response(str(ex), status=404)
-
-        try:
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-            role_as.delete()
-
-        except RoleAssignment.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        return Response('ok', status=200)
-
-
-class TaskflowProjectSettingsGetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for getting project settings"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        project_settings = app_settings.get_all_settings(project)
-
-        for k, v in project_settings.items():
-            if isinstance(v, dict):
-                project_settings[k] = json.dumps(v)
-
-        ret_data = {
-            'project_uuid': project.sodar_uuid,
-            'settings': project_settings,
-        }
-
-        return Response(ret_data, status=200)
-
-
-class TaskflowProjectSettingsSetAPIView(BaseTaskflowAPIView):
-    """Taskflow API view for updating project settings"""
-
-    def post(self, request):
-        try:
-            project = Project.objects.get(
-                sodar_uuid=request.data['project_uuid']
-            )
-
-        except Project.DoesNotExist as ex:
-            return Response(str(ex), status=404)
-
-        for k, v in json.loads(request.data['settings']).items():
-            app_settings.set_app_setting(
-                k.split('.')[1], k.split('.')[2], v, project
-            )
-
-        return Response('ok', status=200)

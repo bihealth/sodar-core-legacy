@@ -2,7 +2,7 @@ import uuid
 
 from django.apps import apps
 from django.conf import settings
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth.signals import user_logged_in
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
@@ -14,8 +14,7 @@ from django.utils.translation import ugettext_lazy as _
 from djangoplugins.models import Plugin
 from markupfield.fields import MarkupField
 
-from .constants import get_sodar_constants
-from .utils import set_user_group
+from projectroles.constants import get_sodar_constants
 
 
 # Access Django user model
@@ -49,6 +48,7 @@ class ProjectManager(models.Manager):
         Return projects with a partial match in full title or, including titles
         of parent Project objects, or the description of the current object.
         Restrict to project type if project_type is set.
+
         :param search_term: Search term (string)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
@@ -192,8 +192,29 @@ class Project(models.Model):
         )
 
     # Custom row-level functions
-    def get_children(self):
-        """Return child objects for the Project sorted by title"""
+
+    def get_children(self, flat=False):
+        """
+        Return child objects for the Project sorted by title.
+
+        :param flat: Return all children recursively as a flat list (bool)
+        :return: Iterable of Project
+        """
+        if flat:
+
+            def _get(obj, ret=None):
+                if ret is None:
+                    ret = []
+
+                ret += list(obj.get_children())
+
+                for child in obj.get_children():
+                    ret = _get(child, ret)
+
+                return ret
+
+            return _get(self)
+
         return self.children.filter(
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
@@ -210,7 +231,10 @@ class Project(models.Model):
         return ret
 
     def get_owner(self):
-        """Return RoleAssignment for owner or None if not set"""
+        """
+        Return RoleAssignment for owner (without inherited owners) or None if
+        not set.
+        """
         try:
             return self.roles.get(
                 role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -219,6 +243,41 @@ class Project(models.Model):
         except RoleAssignment.DoesNotExist:
             return None
 
+    def get_owners(self, inherited_only=False):
+        """
+        Return RoleAssignments for project owner as well as possible inherited
+        owners from parent projects.
+
+        :param inherited_only: Only show inherited owners if True (bool)
+        :return: List
+        """
+        owners = []
+        owner_as = self.get_owner()
+
+        if owner_as and not inherited_only:
+            owners.append(owner_as)
+
+        parent = self.parent
+
+        while parent:
+            parent_owner_as = parent.get_owner()
+
+            if parent_owner_as and parent_owner_as.user not in [
+                a.user for a in owners
+            ]:
+                owners.append(parent_owner_as)
+
+            parent = parent.parent
+
+        return owners
+
+    def is_owner(self, user):
+        """
+        Return True if user is owner in this project or inherits ownership from
+        a parent category.
+        """
+        return True if user in [a.user for a in self.get_owners()] else False
+
     def get_delegates(self):
         """Return RoleAssignments for delegates"""
         return self.roles.filter(
@@ -226,17 +285,33 @@ class Project(models.Model):
         )
 
     def get_members(self):
-        """Return RoleAssignments for members of project excluding owner and
-        delegates"""
+        """
+        Return RoleAssignments for members of project excluding owner and
+        delegates.
+        """
         return self.roles.filter(
             ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'])
             & ~Q(role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE'])
         )
 
+    def get_all_roles(self, inherited=True):
+        """
+        Return all RoleAssignments for the project, including inherited owner
+        rights from parent categories.
+
+        :param inherited: Include inherited owners (bool, default=True)
+        :return: List
+        """
+        owners = self.get_owners() if inherited else [self.get_owner()]
+        return owners + list(self.get_delegates()) + list(self.get_members())
+
     def has_role(self, user, include_children=False):
-        """Return whether user has roles in Project. If include_children is
-        True, return True if user has roles in ANY child project"""
-        if self.roles.filter(user=user).count() > 0:
+        """
+        Return whether user has roles in Project. If include_children is
+        True, return True if user has roles in ANY child project. Also return
+        True if user inherits owner permissions from a parent category.
+        """
+        if self.is_owner(user) or self.roles.filter(user=user).count() > 0:
             return True
 
         if include_children:
@@ -407,7 +482,6 @@ class RoleAssignment(models.Model):
         self._validate_user()
         self._validate_owner()
         self._validate_delegate()
-        self._validate_category()
         super().save(*args, **kwargs)
 
     def _validate_user(self):
@@ -458,17 +532,6 @@ class RoleAssignment(models.Model):
                             'The limit ({}) of delegates for this project has '
                             'already been reached.'.format(delegate_limit)
                         )
-
-    def _validate_category(self):
-        """Validate project and role types to ensure roles other than project
-        owner are not set for category-type projects"""
-        if (
-            self.project.type == SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
-            and self.role.name != SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-        ):
-            raise ValidationError(
-                'Only the role of project owner is allowed for categories'
-            )
 
 
 # AppSetting ---------------------------------------------------------------
@@ -943,11 +1006,11 @@ class RemoteProject(models.Model):
 # Abstract User Model ----------------------------------------------------------
 
 
-# TODO: Use/extend this in your projectroles-based project
-
-
 class SODARUser(AbstractUser):
-    """SODAR compatible abstract user model"""
+    """
+    SODAR compatible abstract user model. Use this on your SODAR Core based
+    site.
+    """
 
     # First Name and Last Name do not cover name patterns
     # around the globe.
@@ -960,9 +1023,14 @@ class SODARUser(AbstractUser):
 
     class Meta:
         abstract = True
+        ordering = ['name', 'username']
 
     def __str__(self):
         return self.username
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        self.set_group()
 
     def get_full_name(self):
         """Return full name or username if not set"""
@@ -974,6 +1042,21 @@ class SODARUser(AbstractUser):
             return '{} {}'.format(self.first_name, self.last_name)
 
         return self.username
+
+    def set_group(self):
+        """Set user group based on user name."""
+
+        if self.username.find('@') != -1:
+            group_name = self.username.split('@')[1].lower()
+
+        else:
+            group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
+
+        group, created = Group.objects.get_or_create(name=group_name)
+
+        if group not in self.groups.all():
+            group.user_set.add(self)
+            return group_name
 
 
 # User signals -----------------------------------------------------------------
@@ -1004,7 +1087,7 @@ def handle_ldap_login(sender, user, **kwargs):
 
 def assign_user_group(sender, user, **kwargs):
     """Signal for user group assignment"""
-    set_user_group(user)
+    user.set_group()
 
 
 user_logged_in.connect(handle_ldap_login)

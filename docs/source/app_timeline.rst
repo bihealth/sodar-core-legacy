@@ -15,9 +15,10 @@ Django database, but can concern any user-triggered activity.
 The events can also have multiple temporal status states in case of e.g. events
 requiring async requests.
 
-The app provides front-end views to list project timeline events, as well as a
-backend API for saving desired activity as timeline events. For details on how
-to use these, see the :ref:`timeline usage documentation <app_timeline_usage>`.
+The app provides front-end views to list timeline events for projects,
+categories and objects. Also included is a backend API for saving desired
+activity as timeline events. For details on how to use these, see the
+:ref:`timeline usage documentation <app_timeline_usage>`.
 
 .. toctree::
    :maxdepth: 3
@@ -25,4 +26,4 @@ to use these, see the :ref:`timeline usage documentation <app_timeline_usage>`.
 
    Installation <app_timeline_install>
    Usage <app_timeline_usage>
-   API Documentation <app_timeline_api>
+   Django API Documentation <app_timeline_api_django>

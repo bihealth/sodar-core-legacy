@@ -1,15 +1,17 @@
 import json
+import logging
 
 from django import forms
 from django.conf import settings
 from django.contrib import auth
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 from django.utils import timezone
 
 from pagedown.widgets import PagedownWidget
 from dal import autocomplete, forward as dal_forward
 
-from .models import (
+from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
@@ -19,9 +21,14 @@ from .models import (
     APP_SETTING_VAL_MAXLENGTH,
 )
 
-from .plugins import get_active_plugins
-from .utils import get_display_name, get_user_display_name, build_secret
-from .app_settings import AppSettingAPI
+from projectroles.plugins import get_active_plugins
+from projectroles.utils import (
+    get_display_name,
+    get_user_display_name,
+    build_secret,
+)
+from projectroles.app_settings import AppSettingAPI
+
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -51,6 +58,46 @@ DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
 
 User = auth.get_user_model()
+
+
+# Base Classes and Mixins ------------------------------------------------------
+
+
+class SODARFormMixin:
+    """General mixin for SODAR form setup and helpers"""
+
+    def __init__(self, *args, **kwargs):
+        self.logger = logging.getLogger(__name__)
+        super().__init__(*args, **kwargs)
+
+    def add_error(self, field, error):
+        """
+        Add error to form along with error logging.
+
+        :param field: Name of field (string)
+        :param error: Error message(s) (list)
+        """
+        if isinstance(error, ValidationError):
+            log_err = ';'.join(error.messages)
+
+        else:
+            log_err = error
+
+        log_msg = 'Field "{}": {}'.format(field, log_err)
+
+        if self.current_user:
+            log_msg += ' (user={})'.format(self.current_user.username)
+
+        self.logger.error(log_msg)
+        super().add_error(field, error)  # Call the error method in Django forms
+
+
+class SODARForm(SODARFormMixin, forms.Form):
+    """Override of Django base form with SODAR Core specific helpers."""
+
+
+class SODARModelForm(SODARFormMixin, forms.ModelForm):
+    """Override of Django model form with SODAR Core specific helpers."""
 
 
 # User autocompletion ----------------------------------------------------------
@@ -94,7 +141,7 @@ def get_user_widget(
     :param widget_class: Widget class override (optional)
     :return: SODARUserAutocompleteWidget or an overridden widget class
     """
-    url = url or 'projectroles:autocomplete_user'
+    url = url or 'projectroles:ajax_autocomplete_user'
     wg = {'url': url, 'forward': [dal_forward.Const(scope, 'scope')]}
 
     if project:
@@ -169,7 +216,7 @@ class SODARUserChoiceField(forms.ModelChoiceField):
 # Project form -----------------------------------------------------------------
 
 
-class ProjectForm(forms.ModelForm):
+class ProjectForm(SODARModelForm):
     """Form for Project creation/updating"""
 
     # Set up owner field
@@ -179,20 +226,71 @@ class ProjectForm(forms.ModelForm):
         model = Project
         fields = ['title', 'type', 'parent', 'owner', 'description', 'readme']
 
-    def __init__(self, project=None, current_user=None, *args, **kwargs):
-        """Override for form initialization"""
-        super().__init__(*args, **kwargs)
+    def _get_parent_choices(self, instance, user):
+        """
+        Return valid choices of parent categories for moving a project.
 
-        # Get current user for checking permissions for form items
-        if current_user:
-            self.current_user = current_user
+        :param instance: Project instance being updated
+        :param user: Request user
+        :return: List of tuples
+        """
+        ret = []
 
-        # Set up setting query kwargs
-        self.p_kwargs = (
-            {'user_modifiable': True} if not current_user.is_superuser else {}
+        # Add empty choice (root) in cases where valid
+        if (
+            user.is_superuser
+            or not instance.parent
+            or (
+                instance.type == PROJECT_TYPE_PROJECT
+                and settings.PROJECTROLES_DISABLE_CATEGORIES
+            )
+        ):
+            ret.append((None, '--------'))
+
+        categories = Project.objects.filter(type=PROJECT_TYPE_CATEGORY).exclude(
+            pk=instance.pk
         )
 
-        # Add settings fields
+        if not user.is_superuser:
+            categories = categories.filter(
+                roles__in=RoleAssignment.objects.filter(
+                    user=user,
+                    role__name__in=[
+                        'project owner',
+                        'project delegate',
+                        'project contributor',
+                    ],
+                )
+            )
+
+            # Add categories with inherited ownership
+            other_categories = Project.objects.filter(
+                type=PROJECT_TYPE_CATEGORY
+            ).exclude(pk__in=categories)
+            categories = list(categories)
+
+            for c in other_categories:
+                if c.is_owner(user):
+                    categories.append(c)
+
+        # If instance is category, exclude children
+        if instance.type == PROJECT_TYPE_CATEGORY:
+            categories = [
+                c
+                for c in categories
+                if c not in instance.get_children(flat=True)
+            ]
+
+        ret += [(c.sodar_uuid, c.get_full_title()) for c in categories]
+        return sorted(ret, key=lambda x: x[1])
+
+    def _init_app_settings(self):
+        # Set up setting query kwargs
+        self.p_kwargs = (
+            {'user_modifiable': True}
+            if not self.current_user.is_superuser
+            else {}
+        )
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
@@ -282,14 +380,22 @@ class ProjectForm(forms.ModelForm):
                     self.fields[s_field].label += ' [HIDDEN]'
                     self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
 
+    def __init__(self, project=None, current_user=None, *args, **kwargs):
+        """Override for form initialization"""
+        super().__init__(*args, **kwargs)
+
+        # Get current user for checking permissions for form items
+        if current_user:
+            self.current_user = current_user
+
+        # Add settings fields
+        self._init_app_settings()
+
         # Access parent project if present
         parent_project = None
 
         if project:
             parent_project = Project.objects.filter(sodar_uuid=project).first()
-
-        # Do not allow transfer under another parent
-        self.fields['parent'].disabled = True
 
         # Update help texts to match DISPLAY_NAMES
         self.fields['title'].help_text = 'Title'
@@ -314,9 +420,6 @@ class ProjectForm(forms.ModelForm):
         # Set readme widget with preview
         self.fields['readme'].widget = PagedownWidget(show_preview=True)
 
-        # Hide parent selection
-        self.fields['parent'].widget = forms.HiddenInput()
-
         # Updating an existing project
         if self.instance.pk:
             # Set readme value as raw markdown
@@ -331,30 +434,49 @@ class ProjectForm(forms.ModelForm):
             # Set owner value
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
 
-            # Hide owner widget if a project (changed in member modification UI)
-            if self.initial['type'] == PROJECT_TYPE_PROJECT:
-                self.fields['owner'].widget = forms.HiddenInput()
+            # Hide owner widget if updating (changed in member modification UI)
+            self.fields['owner'].widget = forms.HiddenInput()
 
-            # Set initial value for parent
-            if parent_project:
-                self.initial['parent'] = parent_project.sodar_uuid
+            # Set valid choices for parent
+            if not settings.PROJECTROLES_DISABLE_CATEGORIES:
+                self.fields['parent'].choices = self._get_parent_choices(
+                    self.instance, self.current_user
+                )
 
-            else:
-                self.initial['parent'] = None
+                # Hide widget if no valid choices are available
+                if len(self.fields['parent'].choices) == 0:
+                    self.fields['parent'].widget = forms.HiddenInput()
+
+                # Set initial value for parent
+                if self.instance.parent:
+                    self.initial['parent'] = self.instance.parent.sodar_uuid
+
+            else:  # Categories disabled
+                # Hide parent selection
+                self.fields['parent'].widget = forms.HiddenInput()
 
         # Project creation
         else:
             # Set hidden project field for autocomplete
             self.initial['project'] = None
 
+            # Hide parent selection
+            self.fields['parent'].widget = forms.HiddenInput()
+
             # Creating a subproject
             if parent_project:
                 # Parent must be current parent
                 self.initial['parent'] = parent_project.sodar_uuid
 
-                # Set parent owner as initial value
-                parent_owner = parent_project.get_owner().user
-                self.initial['owner'] = parent_owner.sodar_uuid
+                # Set current user as initial value
+                self.initial['owner'] = self.current_user.sodar_uuid
+
+                # If current user is not parent owner, disable owner select
+                if (
+                    not self.current_user.is_superuser
+                    and self.current_user != parent_project.get_owner().user
+                ):
+                    self.fields['owner'].widget = forms.HiddenInput()
 
             # Creating a top level project
             else:
@@ -373,23 +495,30 @@ class ProjectForm(forms.ModelForm):
 
     def clean(self):
         """Function for custom form validation and cleanup"""
+        instance_owner_as = self.instance.get_owner() if self.instance else None
 
-        # Ensure the title is unique within parent
-        try:
-            existing_project = Project.objects.get(
-                parent=self.cleaned_data.get('parent'),
-                title=self.cleaned_data.get('title'),
-            )
-
-            if not self.instance or existing_project.pk != self.instance.pk:
-                self.add_error('title', 'Title must be unique within parent')
-
-        except Project.DoesNotExist:
-            pass
-
-        # Ensure title is not equal to parent
         parent = self.cleaned_data.get('parent')
 
+        # Check for category/project being placed in root
+        if not parent and (not self.instance or self.instance.parent):
+            if (
+                self.cleaned_data.get('type') == PROJECT_TYPE_CATEGORY
+                and not self.current_user.is_superuser
+            ):
+                self.add_error(
+                    'parent',
+                    'You do not have permission to place a category under root',
+                )
+
+            elif (
+                self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
+                and not settings.PROJECTROLES_DISABLE_CATEGORIES
+            ):
+                self.add_error(
+                    'parent', 'Projects can not be placed under root'
+                )
+
+        # Ensure title does not match parent
         if parent and parent.title == self.cleaned_data.get('title'):
             self.add_error(
                 'title',
@@ -398,6 +527,17 @@ class ProjectForm(forms.ModelForm):
                 ),
             )
 
+        # Ensure title is unique within parent
+        existing_project = Project.objects.filter(
+            parent=self.cleaned_data.get('parent'),
+            title=self.cleaned_data.get('title'),
+        ).first()
+
+        if existing_project and (
+            not self.instance or existing_project.pk != self.instance.pk
+        ):
+            self.add_error('title', 'Title must be unique within parent')
+
         # Ensure owner has been set
         if not self.cleaned_data.get('owner'):
             self.add_error(
@@ -405,6 +545,17 @@ class ProjectForm(forms.ModelForm):
                 'Owner must be set for {}'.format(
                     get_display_name(self.cleaned_data.get('type'))
                 ),
+            )
+
+        # Ensure owner is not changed on update (must use ownership transfer)
+        if (
+            instance_owner_as
+            and self.cleaned_data.get('owner') != instance_owner_as.user
+        ):
+            self.add_error(
+                'owner',
+                'Owner update is not allowed in this form, use Ownership '
+                'Transfer instead',
             )
 
         # Verify settings fields
@@ -447,7 +598,7 @@ class ProjectForm(forms.ModelForm):
 # RoleAssignment form ----------------------------------------------------------
 
 
-class RoleAssignmentForm(forms.ModelForm):
+class RoleAssignmentForm(SODARModelForm):
     """Form for editing Project role assignments"""
 
     class Meta:
@@ -483,7 +634,7 @@ class RoleAssignmentForm(forms.ModelForm):
             scope='project_exclude',
             project=self.project,
             forward=['role'],
-            url=reverse('projectroles:autocomplete_user_redirect'),
+            url=reverse('projectroles:ajax_autocomplete_user_redirect'),
             widget_class=SODARUserRedirectWidget,
         )
 
@@ -568,7 +719,7 @@ class RoleAssignmentForm(forms.ModelForm):
 # Owner transfer form ----------------------------------------------------------
 
 
-class RoleAssignmentOwnerTransferForm(forms.Form):
+class RoleAssignmentOwnerTransferForm(SODARForm):
     """Form for transferring owner role assignment between users"""
 
     def __init__(self, project, current_user, current_owner, *args, **kwargs):
@@ -593,7 +744,7 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
         self.selectable_roles = get_role_choices(
             self.project, self.current_user
         )
-        self.fields['ex_owner_role'] = forms.ChoiceField(
+        self.fields['old_owner_role'] = forms.ChoiceField(
             label='New role for {}'.format(self.current_owner.username),
             help_text='New role for the current owner. Select "Remove" in the '
             'member list to remove the user\'s membership.',
@@ -604,22 +755,15 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
             widget=forms.HiddenInput(), initial=self.project.sodar_uuid
         )
 
-    def clean_ex_owner_role(self):
-        try:
-            role = int(self.cleaned_data['ex_owner_role'])
-
-        except ValueError:
-            raise forms.ValidationError(
-                'Selection couldn\'t be converted to an integer'
-            )
-
+    def clean_old_owner_role(self):
         role = next(
-            (choice for choice in self.selectable_roles if choice[0] == role),
+            (
+                choice
+                for choice in self.selectable_roles
+                if choice[0] == int(self.cleaned_data['old_owner_role'])
+            ),
             None,
         )
-
-        if not role:
-            raise forms.ValidationError('Unknown role has been choosen')
 
         try:
             role = Role.objects.get(name=role[1])
@@ -638,14 +782,20 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
 
             # Ensure user can't attempt to add another delegate if limit is
             # reached
-            delegates = self.project.get_delegates()
+            new_owner_role = RoleAssignment.objects.filter(
+                project=self.project, user=self.cleaned_data.get('new_owner')
+            ).first()
 
-            if DELEGATE_LIMIT != 0:
-                if len(delegates) >= DELEGATE_LIMIT:
-                    raise forms.ValidationError(
-                        'The limit ({}) of delegates for this project has '
-                        'already been reached.'.format(DELEGATE_LIMIT)
-                    )
+            if (
+                DELEGATE_LIMIT != 0
+                and new_owner_role
+                and new_owner_role.role.name != PROJECT_ROLE_DELEGATE
+                and self.project.get_delegates().count() >= DELEGATE_LIMIT
+            ):
+                raise forms.ValidationError(
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(DELEGATE_LIMIT)
+                )
 
         return role
 
@@ -656,9 +806,10 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
             raise forms.ValidationError(
                 'The new owner shouldn\'t be the current owner'
             )
-        ra = RoleAssignment.objects.get_assignment(user, self.project)
 
-        if ra.project != self.project:
+        role_as = RoleAssignment.objects.get_assignment(user, self.project)
+
+        if role_as.project != self.project:
             raise forms.ValidationError(
                 'The new owner should be from this project'
             )
@@ -669,7 +820,7 @@ class RoleAssignmentOwnerTransferForm(forms.Form):
 # ProjectInvite form -----------------------------------------------------------
 
 
-class ProjectInviteForm(forms.ModelForm):
+class ProjectInviteForm(SODARModelForm):
     """Form for ProjectInvite modification"""
 
     class Meta:
@@ -791,7 +942,7 @@ class ProjectInviteForm(forms.ModelForm):
 # RemoteSite form --------------------------------------------------------------
 
 
-class RemoteSiteForm(forms.ModelForm):
+class RemoteSiteForm(SODARModelForm):
     """Form for RemoteSite creation/updating"""
 
     class Meta:
@@ -875,17 +1026,3 @@ def get_role_choices(
         (role.pk, role.name)
         for role in Role.objects.exclude(name__in=role_excludes)
     ]
-
-
-# TODO: TBD: Needed by other apps than projectroles? Move e.g. to utils?
-def get_selectable_users(current_user):
-    """
-    Return selectable users according to current user level: only show
-    non-system users for non-superusers
-    :param current_user: User object
-    :return: QuerySet
-    """
-    if not current_user.is_superuser:
-        return User.objects.exclude(groups__name='system')
-
-    return User.objects.all()

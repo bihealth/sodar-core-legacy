@@ -92,41 +92,6 @@
       </div>
     </div>
 
-    {# App Plugin Cards #}
-
-    {% if object.type != PROJECT_TYPE_CATEGORY %}
-      {% for plugin in app_plugins %}
-        {% has_perm plugin.app_permission request.user object as can_view_app %}
-        {% if can_view_app %}
-          <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
-            <div class="card-header">
-              <h4>
-                <i class="fa fa-{{ plugin.icon }}"></i>
-                {% if plugin.details_title %}
-                  {{ plugin.details_title }}
-                {% else %}
-                  {{ plugin.title }}
-                {% endif %}
-                <span class="pull-right">
-                  {% get_info_link plugin.description as info_link %}
-                  {{ info_link | safe }}
-                </span>
-              </h4>
-            </div>
-            {% if plugin.details_template %}
-              <div class="card-body p-0">
-                {% include plugin.details_template %}
-              </div>
-            {% else %}
-              <div class="card-body text-center">
-                <p class="text-danger"><em>No app card template found</em></p>
-              </div>
-            {% endif %}
-          </div>
-        {% endif %}
-      {% endfor %}
-    {% endif %}
-
     {# Subprojects #}
 
     {% if object.type == 'CATEGORY' %}
@@ -160,6 +125,39 @@
         </div>
       {% endif %}
     {% endif %}
+
+    {# App Plugin Cards #}
+
+      {% for plugin in app_plugins %}
+        {% has_perm plugin.app_permission request.user object as can_view_app %}
+        {% if can_view_app and object.type == 'PROJECT' or plugin.category_enable %}
+          <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
+            <div class="card-header">
+              <h4>
+                <i class="fa fa-{{ plugin.icon }}"></i>
+                {% if plugin.details_title %}
+                  {{ plugin.details_title }}
+                {% else %}
+                  {{ plugin.title }}
+                {% endif %}
+                <span class="pull-right">
+                  {% get_info_link plugin.description as info_link %}
+                  {{ info_link | safe }}
+                </span>
+              </h4>
+            </div>
+            {% if plugin.details_template %}
+              <div class="card-body p-0">
+                {% include plugin.details_template %}
+              </div>
+            {% else %}
+              <div class="card-body text-center">
+                <p class="text-danger"><em>No app card template found</em></p>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
 
   </div>
 

@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.http import HttpResponseRedirect
+from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import TemplateView, ListView
 
@@ -96,7 +96,7 @@ class BackgroundJobClearViewBase(
                 self.request, 'Unable to remove background jobs: {}'.format(ex)
             )
 
-        return HttpResponseRedirect(
+        return redirect(
             reverse('bgjobs:list', kwargs={'project': project.sodar_uuid})
         )
 

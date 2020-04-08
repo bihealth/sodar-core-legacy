@@ -19,6 +19,14 @@ Glossary
         to other SODAR Core apps. Does not have its own GUI entry point. Common
         use cases include APIs to external services or other apps.
 
+    Backend API
+        Django API provided by a backend app, to be dynamically imported and
+        used by other SODAR Core based Django apps.
+
+    Django API
+        Application programming interface offered by an app, to be used by other
+        apps within the Django site.
+
     Django App
         Application built for the Django web framework, including (but not
         limited to) SODAR Core based apps.

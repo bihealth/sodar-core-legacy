@@ -18,9 +18,10 @@ and app structure.
    :maxdepth: 3
    :caption: Contents:
 
-   Basics <app_projectroles_basics>
-   Integration <app_projectroles_integration>
-   Settings <app_projectroles_settings>
-   Usage <app_projectroles_usage>
-   Customization <app_projectroles_custom>
-   API Documentation <app_projectroles_api>
+    Basics <app_projectroles_basics>
+    Integration <app_projectroles_integration>
+    Settings <app_projectroles_settings>
+    Usage <app_projectroles_usage>
+    Customization <app_projectroles_custom>
+    REST API Documentation <app_projectroles_api_rest>
+    Django API Documentation <app_projectroles_api_django>

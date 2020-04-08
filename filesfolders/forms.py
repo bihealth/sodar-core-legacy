@@ -8,6 +8,7 @@ from db_file_storage.form_widgets import DBClearableFileInput
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
+from projectroles.forms import SODARModelForm
 from projectroles.models import Project
 from projectroles.utils import build_secret
 
@@ -25,7 +26,7 @@ APP_NAME = 'filesfolders'
 app_settings = AppSettingAPI()
 
 
-class FilesfoldersItemForm(forms.ModelForm):
+class FilesfoldersItemForm(SODARModelForm):
     """Base form for Filesfolders item creation/updating"""
 
     def __init__(

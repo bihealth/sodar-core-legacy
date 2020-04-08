@@ -98,8 +98,9 @@ Category and Project Management
 
 In SODAR based sites, data is split into **categories** and **projects**.
 Categories may be freely nested and are used as containers of projects. They
-may contain a description and readme, but project apps and user roles beyond
-owner are disabled for categories. Projects can not be nested within each other.
+may contain a description and readme, but project apps are disabled for
+categories unless explicitly enabled. Projects can not be nested within each
+other.
 
 Creating a Top Level Category
 -----------------------------
@@ -139,12 +140,20 @@ adding a project or a nested category under the current category. The form is
 identical to top level category creation, except that you can also choose
 between creating a project or a category.
 
+Users with the role of *project contributor* or higher in a category are allowed
+to create a project within that category.
+
+
 Updating Projects
 -----------------
 
 An existing project or category can be updated from the
 **Update Project/Category** link in the side bar. Again, a similar form as
-before will be presented to the user.
+before will be presented to the user. The owner can not be changed here, but
+must be modified in the *Members* view instead. It is possible to move the
+current category or project under another category by altering the ``parent``
+field. The user who does the updating must have a sufficient role in the
+target category or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_project_update.png
     :align: center
@@ -184,9 +193,9 @@ specific UIs for this functionality if manual user selection is needed.
 Member Management
 =================
 
-Project member roles can be viewed and modified through the **Project Members**
-link on the sidebar. Modification requires a sufficient role in the project
-(owner or delegate) or superuser status.
+Project member roles can be viewed and modified through the **Members**
+link on the sidebar. Modification requires a sufficient role in the project or
+category (owner or delegate) or superuser status.
 
 .. figure:: _static/app_projectroles/sodar_role_list.png
     :align: center
@@ -194,10 +203,22 @@ link on the sidebar. Modification requires a sufficient role in the project
 
     Project member list view
 
+.. note::
+
+    Owners of categories automatically inherit owner rights to projects
+    placed under those categories, starting in SODAR Core v0.8.0. Adding
+    separate roles for those users in the inherited projects is not allowed.
+
+.. note::
+
+    At this time, category memberships are not automatically propagated to
+    projects created under the category. An inheritance functionality may be
+    implemented at a later date.
+
 Adding Members
 --------------
 
-There are two ways to add new members to a project:
+There are two ways to add new members to a project or a category:
 
 - **Add Member** is used to add member roles to system users.
 - **Invite Member** is used to send email invites to users not yet registered
@@ -217,8 +238,9 @@ Modifying Members
 -----------------
 
 Changing or removing user roles can be done from links next to each role on the
-member list. Project ownership can be transferred to another owner from the
-dropdown next to the owner role.
+member list. Category or project ownership can be transferred to another user
+who currently has a role in the project by using the dropdown next to the owner
+role.
 
 Invites
 -------
@@ -364,3 +386,11 @@ name and/or description.
 
     Multiple search terms, complex search strings, full-text search and
     additional keywords/operators will be defined in the future.
+
+
+REST API
+========
+
+Several SODAR Core functionalities are also available via a HTTP REST API
+starting in version 0.8. See :ref:`app_projectroles_api_rest` for instructions
+on REST API usage.

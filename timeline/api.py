@@ -311,3 +311,12 @@ class TimelineAPI:
             '<i class="fa fa-clock-o"></i>'
             '</a>'.format(TimelineAPI.get_object_url(project_uuid, obj))
         )
+
+    @staticmethod
+    def get_models():
+        """
+        Return project event model classes for custom/advanced queries.
+
+        :return: ProjectEvent, ProjectEventObjectRef
+        """
+        return ProjectEvent, ProjectEventObjectRef

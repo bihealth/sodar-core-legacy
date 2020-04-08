@@ -376,53 +376,22 @@ class RemoteProjectAPI:
                 role_user = User.objects.get(username=r['user'])
 
             # Update RoleAssignment if it exists and is changed
-            as_updated = False
-            role_query = {'project__sodar_uuid': project.sodar_uuid}
+            old_as = RoleAssignment.objects.filter(
+                project=project, user=role_user
+            ).first()
 
+            # Delete existing owner role
             if r['role'] == PROJECT_ROLE_OWNER:
-                role_query['role__name'] = PROJECT_ROLE_OWNER
+                old_owner_as = project.get_owner()
 
-            else:
-                role_query['user'] = role_user
+                if old_owner_as and old_owner_as.user != role_user:
+                    old_owner_as.delete()
+                    logger.debug(
+                        'Deleted existing owner role from '
+                        'user "{}"'.format(old_owner_as.user.username)
+                    )
 
-            old_as = RoleAssignment.objects.filter(**role_query).first()
-
-            # Owner updating
-            if old_as and r['role'] == PROJECT_ROLE_OWNER:
-                # Update user or local admin user
-                if ('@' in r['user'] and old_as.user != role_user) or (
-                    role_user == self.default_owner
-                    and project.get_owner().user != self.default_owner
-                ):
-                    as_updated = True
-
-                    # Delete existing role of the new owner if it exists
-                    try:
-                        RoleAssignment.objects.get(
-                            project__sodar_uuid=project.sodar_uuid,
-                            user=role_user,
-                        ).delete()
-                        logger.debug(
-                            'Deleted existing role from '
-                            'user "{}"'.format(role_user.username)
-                        )
-
-                    except RoleAssignment.DoesNotExist:
-                        logger.debug(
-                            'No existing role found for user "{}"'.format(
-                                role_user.username
-                            )
-                        )
-
-            # Updating of other roles
-            elif (
-                old_as
-                and r['role'] != PROJECT_ROLE_OWNER
-                and old_as.role != role
-            ):
-                as_updated = True
-
-            if as_updated:
+            if old_as and old_as.role != role:
                 old_as.role = role
                 old_as.user = role_user
                 old_as.save()
@@ -710,11 +679,12 @@ class RemoteProjectAPI:
                 project_uuid=uuid, site__mode=SITE_MODE_PEER
             ).delete()
 
-        logger.debug(
-            'Removed peer project(s) for the following sites: {}'.format(
-                ', '.join(removed_sites)
+        if len(removed_sites) > 0:
+            logger.debug(
+                'Removed peer project(s) for the following sites: {}'.format(
+                    ', '.join(removed_sites)
+                )
             )
-        )
 
     # API functions ------------------------------------------------------------
 
