@@ -1,7 +1,7 @@
 """REST API view tests for the filesfolders app"""
 import json
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 from test_plus.test import APITestCase
 
 # Projectroles dependency

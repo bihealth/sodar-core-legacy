@@ -24,6 +24,9 @@ from filesfolders.views import (
 )
 
 
+# Base Classes and Mixins ------------------------------------------------------
+
+
 class ListCreateAPITimelineMixin(FilesfoldersTimelineMixin):
     """
     Mixin that ties ListCreateAPIView:s to the SODAR timeline for filesfolders.
@@ -129,13 +132,30 @@ class RetrieveUpdateDestroyPermissionMixin:
                 return 'filesfolders.update_data_all'
 
 
+# API Views --------------------------------------------------------------------
+
+
 class FolderListCreateAPIView(
     ListCreateAPITimelineMixin,
     ListCreatePermissionMixin,
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
-    """DRF list-create API view the Folder model."""
+    """
+    List folders or create a folder.
+
+    **URL:** ``/files/api/folder/list-create/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``, ``POST``
+
+    **Parameters for POST:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    """
 
     serializer_class = FolderSerializer
 
@@ -146,7 +166,21 @@ class FolderRetrieveUpdateDestroyAPIView(
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
-    """DRF retrieve-update-destroy API view for the Folder model."""
+    """
+    Retrieve, update or destroy a folder.
+
+    **URL:** ``/files/api/folder/retrieve-update-destroy/{Folder.sodar_uuid}``
+
+    **Methods:** ``GET``, ``PUT``, ``PATCH``, ``DELETE``
+
+    **Parameters for PUT and PATCH:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    """
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'folder'
@@ -159,7 +193,24 @@ class FileListCreateAPIView(
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
-    """DRF list-create API view the File model."""
+    """
+    List files or upload a file. For uploads, the request must be made in the
+    ``multipart`` format.
+
+    **URL:** ``/files/api/file/list-create/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``, ``POST``
+
+    **Parameters for POST:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    - ``public_url``: Allow creation of a publicly viewable URL (bool)
+    - ``file``: File to be uploaded
+    """
 
     serializer_class = FileSerializer
 
@@ -170,7 +221,23 @@ class FileRetrieveUpdateDestroyAPIView(
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
-    """DRF retrieve-update-destroy API view for the File model."""
+    """
+    Retrieve, update or destroy a file.
+
+    **URL:** ``/files/api/file/retrieve-update-destroy/{File.sodar_uuid}``
+
+    **Methods:** ``GET``, ``PUT``, ``PATCH``, ``DELETE``
+
+    **Parameters for PUT and PATCH:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    - ``public_url``: Allow creation of a publicly viewable URL (bool)
+    - ``file``: File to be uploaded
+    """
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
@@ -180,7 +247,13 @@ class FileRetrieveUpdateDestroyAPIView(
 class FileServeAPIView(
     CoreAPIGenericProjectMixin, FileServeMixin, GenericAPIView
 ):
-    """Serve the file content."""
+    """
+    Serve the file content.
+
+    **URL:** ``/files/api/file/serve/{File.sodar_uuid}``
+
+    **Methods:** ``GET``
+    """
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
@@ -193,7 +266,22 @@ class HyperLinkListCreateAPIView(
     CoreAPIGenericProjectMixin,
     ListCreateAPIView,
 ):
-    """DRF list-create API view the HyperLink model."""
+    """
+    List hyperlinks or create a hyperlink.
+
+    **URL:** ``/files/api/hyperlink/list-create/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``, ``POST``
+
+    **Parameters for POST:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    - ``url``: URL for the link (string)
+    """
 
     serializer_class = HyperLinkSerializer
 
@@ -204,7 +292,22 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
     CoreAPIGenericProjectMixin,
     RetrieveUpdateDestroyAPIView,
 ):
-    """DRF retrieve-update-destroy API view for the HyperLink model."""
+    """
+    Retrieve, update or destroy a hyperlink.
+
+    **URL:** ``/files/api/hyperlink/retrieve-update-destroy/{HyperLink.sodar_uuid}``
+
+    **Methods:** ``GET``, ``PUT``, ``PATCH``, ``DELETE``
+
+    **Parameters for PUT and PATCH:**
+
+    - ``name``: Folder name (string)
+    - ``folder``: Parent folder UUID (string)
+    - ``owner``: User UUID of folder owner (string)
+    - ``flag``: Folder flag (string, optional)
+    - ``description``: Folder description (string, optional)
+    - ``url``: URL for the link (string)
+    """
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'hyperlink'

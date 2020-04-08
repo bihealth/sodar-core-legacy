@@ -37,8 +37,8 @@ class SODARBaseAjaxView(APIView):
     """
     Base Ajax view with Django session authentication.
 
-    NOTE: No permission classes or mixins used, you will have to supply your
-          own if using this class directly.
+    No permission classes or mixins used, you will have to supply your own if
+    using this class directly.
     """
 
     authentication_classes = [SessionAuthentication]
@@ -51,7 +51,7 @@ class SODARBasePermissionAjaxView(PermissionRequiredMixin, SODARBaseAjaxView):
     Base Ajax view with permission checks, to be used e.g. in site apps with no
     project context.
 
-    NOTE: User-based perms such as is_superuser can be used with this class.
+    User-based perms such as is_superuser can be used with this class.
     """
 
     def handle_no_permission(self):
@@ -99,7 +99,7 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
 
 
 class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
-    """ User autocompletion widget view"""
+    """User autocompletion widget view"""
 
     def get_queryset(self):
         """
@@ -186,11 +186,13 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
 
 
 class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
-    """ SODARUserRedirectWidget view (user autocompletion) redirecting to
-    the 'create invite' page"""
+    """
+    SODARUserRedirectWidget view (user autocompletion) redirecting to
+    the create invite page.
+    """
 
     def get_create_option(self, context, q):
-        """Form the correct email invite option to append to results."""
+        """Form the correct email invite option to append to results"""
         create_option = []
         validator = EmailValidator()
         display_create_option = False
@@ -200,8 +202,7 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
 
             if page_obj is None or page_obj.number == 1:
 
-                # Don't offer to send an invite if the entered text is not an
-                # email address
+                # Only create invite if the email address is valid
                 try:
                     validator(q)
                     display_create_option = True
@@ -209,8 +210,7 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
                 except ValidationError:
                     display_create_option = False
 
-                # Don't offer to send an invite if a
-                # case-insensitive) identical one already exists
+                # Prevent sending a duplicate invite
                 existing_options = (
                     self.get_result_label(result).lower()
                     for result in context['object_list']

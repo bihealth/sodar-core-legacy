@@ -2,7 +2,7 @@
 
 import uuid
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
 from projectroles.tests.test_permissions import TestProjectPermissionBase
@@ -31,7 +31,6 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         media_type=None,
         version=None,
         knox=False,
-        cleanup_data=None,
         cleanup_method=None,
     ):
         """
@@ -48,14 +47,9 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param media_type: String (default = cls.media_type)
         :param version: String (default = cls.api_version)
         :param knox: Use Knox token auth instead of Django login (boolean)
-        :param cleanup_data: Dict or list of dicts for cleaning up the database
-               after each successful request, with members "class" and "kwargs"
         :param cleanup_method: Callable method to clean up data after a
                successful request
         """
-        if cleanup_data and not isinstance(cleanup_data, (list, tuple)):
-            cleanup_data = [cleanup_data]
-
         if cleanup_method and not callable(cleanup_method):
             raise ValueError('cleanup_method is not callable')
 
@@ -96,12 +90,6 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
 
             msg = 'user={}; content="{}"'.format(user, response.content)
             self.assertEqual(response.status_code, status_code, msg=msg)
-
-            if cleanup_data:
-                for cleanup_item in cleanup_data:
-                    cleanup_item['class'].objects.filter(
-                        **cleanup_item['kwargs']
-                    ).delete()
 
             if cleanup_method:
                 cleanup_method()
@@ -178,10 +166,6 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'readme': 'readme',
             'owner': str(self.owner_as.user.sodar_uuid),
         }
-        cleanup_data = {
-            'class': Project,
-            'kwargs': {'title': NEW_PROJECT_TITLE},
-        }
         good_users = [self.superuser]
         bad_users = [
             self.owner_as_cat.user,
@@ -192,13 +176,18 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_no_roles,
         ]
 
+        def _cleanup():
+            p = Project.objects.filter(title=NEW_PROJECT_TITLE).first()
+            if p:
+                p.delete()
+
         self.assert_response_api(
             url,
             good_users,
             201,
             method='POST',
             data=post_data,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data
@@ -214,7 +203,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             method='POST',
             data=post_data,
             knox=True,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
@@ -330,15 +319,6 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             'role': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
             'user': str(assign_user.sodar_uuid),
         }
-        cleanup_data = {
-            'class': RoleAssignment,
-            'kwargs': {
-                'project': self.project,
-                'role__name': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
-                'user': assign_user,
-            },
-        }
-
         good_users = [
             self.owner_as_cat.user,
             self.owner_as.user,
@@ -350,13 +330,22 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.user_no_roles,
         ]
 
+        def _cleanup():
+            role_as = RoleAssignment.objects.filter(
+                project=self.project,
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
+                user=assign_user,
+            ).first()
+            if role_as:
+                role_as.delete()
+
         self.assert_response_api(
             url,
             good_users,
             201,
             method='POST',
             data=post_data,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data
@@ -372,7 +361,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             method='POST',
             data=post_data,
             knox=True,
-            cleanup_data=cleanup_data,
+            cleanup_method=_cleanup,
         )
         self.assert_response_api(
             url, bad_users, 403, method='POST', data=post_data, knox=True
@@ -430,7 +419,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         assign_user = self.make_user('assign_user')
         role_uuid = uuid.uuid4()  # Ensure fixed uuid
 
-        def _make_as():
+        def _cleanup():
             update_as = self._make_assignment(
                 self.project, assign_user, self.role_contributor
             )
@@ -451,10 +440,10 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             self.guest_as.user,
             self.user_no_roles,
         ]
-        _make_as()
+        _cleanup()
 
         self.assert_response_api(
-            url, good_users, 204, method='DELETE', cleanup_method=_make_as
+            url, good_users, 204, method='DELETE', cleanup_method=_cleanup
         )
         self.assert_response_api(url, bad_users, 403, method='DELETE')
         self.assert_response_api(url, self.anonymous, 401, method='DELETE')
@@ -464,7 +453,7 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             good_users,
             204,
             method='DELETE',
-            cleanup_method=_make_as,
+            cleanup_method=_cleanup,
             knox=True,
         )
         self.assert_response_api(

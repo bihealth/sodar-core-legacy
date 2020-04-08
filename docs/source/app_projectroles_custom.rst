@@ -143,7 +143,8 @@ To print out these values in your views or templates, call the
 through ``projectroles_common_tags.py`` and a general utility function in
 ``utils.py``. Capitalization and pluralization are handled by the function
 according to arguments.
-See the :ref:`API documentation <app_projectroles_api>` for details.
+See the :ref:`Django API documentation <app_projectroles_api_django>` for
+details.
 
 .. note::
 

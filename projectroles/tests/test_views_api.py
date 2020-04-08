@@ -143,25 +143,6 @@ class SODARAPIViewTestMixin:
         """
         return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
 
-    # TODO: TBD: Do we need this for anything?
-    def login_knox(self, user, password):
-        """
-        Login with Knox.
-
-        :param user: User object
-        :param password: Password (string)
-        :return: Token returned by Knox on successful login
-        """
-        response = self.client.post(
-            reverse('login_knox'),
-            HTTP_AUTHORIZATION=self._get_basic_auth_header(
-                user.username, password
-            ),
-            format='json',
-        )
-        self.assertEqual(response.status_code, 200)
-        return response.data['token']
-
     def request_knox(
         self,
         url,
@@ -1652,6 +1633,46 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
+class TestAPIVersioning(TestCoreAPIViewsBase):
+    """Tests for REST API view versioning using ProjectRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+
+        self.url = reverse(
+            'projectroles:api_project_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+
+    def test_api_versioning(self):
+        """Test SODAR API Access with correct version headers"""
+        response = self.request_knox(
+            self.url,
+            media_type=views_api.CORE_API_MEDIA_TYPE,
+            version=views_api.CORE_API_DEFAULT_VERSION,
+        )
+        self.assertEqual(response.status_code, 200)
+
+    def test_api_versioning_invalid_version(self):
+        """Test SODAR API Access with unsupported version (should fail)"""
+        response = self.request_knox(
+            self.url,
+            media_type=views_api.CORE_API_MEDIA_TYPE,
+            version=CORE_API_VERSION_INVALID,
+        )
+        self.assertEqual(response.status_code, 406)
+
+    def test_api_versioning_invalid_media_type(self):
+        """Test SODAR API Access with unsupported media type (should fail)"""
+        response = self.request_knox(
+            self.url,
+            media_type=CORE_API_MEDIA_TYPE_INVALID,
+            version=views_api.CORE_API_MEDIA_TYPE,
+        )
+        self.assertEqual(response.status_code, 406)
+
+
+# TODO: To be updated once the legacy API view is redone for SODAR Core v0.9
 class TestRemoteProjectGetAPIView(
     ProjectMixin,
     RoleAssignmentMixin,
@@ -1728,45 +1749,3 @@ class TestRemoteProjectGetAPIView(
         )
 
         self.assertEqual(response.status_code, 401)
-
-    def test_api_versioning(self):
-        """Test SODAR API Access with correct version headers"""
-        # TODO: Test with a more simple SODAR API view once implemented
-
-        response = self.client.get(
-            reverse(
-                'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET},
-            ),
-            **self.get_accept_header(),
-        )
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_api_versioning_invalid_version(self):
-        """Test SODAR API Access with unsupported version (should fail)"""
-        # TODO: Test with a more simple SODAR API view once implemented
-
-        response = self.client.get(
-            reverse(
-                'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET},
-            ),
-            **self.get_accept_header(version=CORE_API_VERSION_INVALID),
-        )
-
-        self.assertEqual(response.status_code, 406)
-
-    def test_api_versioning_invalid_media_type(self):
-        """Test SODAR API Access with unsupported media type (should fail)"""
-        # TODO: Test with a more simple SODAR API view once implemented
-
-        response = self.client.get(
-            reverse(
-                'projectroles:api_remote_get',
-                kwargs={'secret': REMOTE_SITE_SECRET},
-            ),
-            **self.get_accept_header(media_type=CORE_API_MEDIA_TYPE_INVALID),
-        )
-
-        self.assertEqual(response.status_code, 406)

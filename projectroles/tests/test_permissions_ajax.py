@@ -1,7 +1,7 @@
 """Ajax API view permission tests for the projectroles app"""
 
-from django.core.urlresolvers import reverse
 from django.test import override_settings
+from django.urls import reverse
 
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_permissions import TestProjectPermissionBase

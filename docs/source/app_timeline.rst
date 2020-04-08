@@ -26,4 +26,4 @@ activity as timeline events. For details on how to use these, see the
 
    Installation <app_timeline_install>
    Usage <app_timeline_usage>
-   API Documentation <app_timeline_api>
+   Django API Documentation <app_timeline_api_django>

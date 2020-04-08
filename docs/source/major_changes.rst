@@ -124,6 +124,16 @@ SODAR Taskflow v0.4.0 Required
 If using SODAR Taskflow, this release requires release v0.4.0 or higher due to
 required support for the ``role_update_irods_batch`` flow.
 
+Known Issues
+============
+
+- Category roles beyond owner are not synchronized to target sites in remote
+  project sync. This was omitted to maintain compatibility in existing APIs in
+  this release. The feature is intended to be implemented in SODAR Core v0.9.
+- Project/user app settings cannot be set or updated in the project REST API. A
+  separate API for this will be developed. Currently the only way to modify
+  app settings is via the GUI.
+
 
 v0.7.2 (2020-01-31)
 *******************
@@ -214,7 +224,7 @@ app plugins to return data for extra project list columns has changed. The
 ``user`` argument which provides the current user has been added. If using this
 feature, please make sure to update your implementation(s) of the method.
 
-See :ref:`app_projectroles_api` to review the API changes.
+See :ref:`app_projectroles_api_django` to review the API changes.
 
 
 v0.7.0 (2019-10-09)
@@ -270,8 +280,8 @@ AppSettingAPI get_setting_defs() Signature Changed
 The ``get_settings_defs()`` function in the app settings API now accepts either
 a project app plugin or simply the name of the plugin as string. Due to this
 change, the signature of the API function including argument order has changed.
-Please see the :ref:`API documentation<app_projectroles_api>` for more details
-and update your function calls accordingly.
+Please see the :ref:`API documentation<app_projectroles_api_django>` for more
+details and update your function calls accordingly.
 
 Default Footer Styling Changed
 ------------------------------

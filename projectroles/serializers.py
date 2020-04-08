@@ -126,15 +126,15 @@ class SODARNestedListSerializer(SODARModelSerializer):
         return representation
 
 
-# Projectroles Serializers -----------------------------------------------------
-
-
 class SODARUserSerializer(SODARModelSerializer):
-    """Serializer for the user model used in the SODAR Core based site"""
+    """Serializer for the user model used in SODAR Core based sites"""
 
     class Meta:
         model = User
         fields = ['username', 'name', 'email', 'sodar_uuid']
+
+
+# Projectroles Serializers -----------------------------------------------------
 
 
 class RoleAssignmentSerializer(

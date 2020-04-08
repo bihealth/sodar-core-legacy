@@ -386,3 +386,11 @@ name and/or description.
 
     Multiple search terms, complex search strings, full-text search and
     additional keywords/operators will be defined in the future.
+
+
+REST API
+========
+
+Several SODAR Core functionalities are also available via a HTTP REST API
+starting in version 0.8. See :ref:`app_projectroles_api_rest` for instructions
+on REST API usage.

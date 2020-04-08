@@ -110,9 +110,10 @@ Before you submit a pull request, check that it meets these guidelines:
 4. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in ``CHANGELOG.rst``.
-5. The pull request should work for Python 3.6, 3.7 and 3.8. Check
+5. The pull request should work for Python 3.6 and preferably for 3.7. Check
    https://travis-ci.org/bihealth/sodar_core/pull_requests
-   and make sure that the tests pass for all supported Python versions.
+   and make sure that the tests pass for supported Python versions.
+   The 1.11 branch of Django does not currently support Python 3.8.
 
 Deploying
 =========

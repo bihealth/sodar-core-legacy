@@ -56,6 +56,7 @@ Changed
     - Reorganize view classes and URL patterns (#480)
     - Refactor Ajax views (#465, #475)
     - Update ``CONTRIBUTING.rst``
+    - Use ``SODARForm`` and ``SODARModelForm`` base classes in forms
 - **Projectroles**
     - Suppress peer site removal logging if nothing was removed (#478)
     - Refactor ``SODARCoreAPIBaseView`` into ``SODARCoreAPIBaseMixin`` (#461)

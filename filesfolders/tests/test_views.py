@@ -2,8 +2,8 @@
 import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.core.urlresolvers import reverse
 from django.test import RequestFactory
+from django.urls import reverse
 
 from test_plus.test import TestCase
 

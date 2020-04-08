@@ -744,7 +744,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
         self.selectable_roles = get_role_choices(
             self.project, self.current_user
         )
-        self.fields['ex_owner_role'] = forms.ChoiceField(
+        self.fields['old_owner_role'] = forms.ChoiceField(
             label='New role for {}'.format(self.current_owner.username),
             help_text='New role for the current owner. Select "Remove" in the '
             'member list to remove the user\'s membership.',
@@ -755,12 +755,12 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             widget=forms.HiddenInput(), initial=self.project.sodar_uuid
         )
 
-    def clean_ex_owner_role(self):
+    def clean_old_owner_role(self):
         role = next(
             (
                 choice
                 for choice in self.selectable_roles
-                if choice[0] == int(self.cleaned_data['ex_owner_role'])
+                if choice[0] == int(self.cleaned_data['old_owner_role'])
             ),
             None,
         )

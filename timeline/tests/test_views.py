@@ -1,6 +1,6 @@
 """Tests for views in the timeline app"""
 
-from django.core.urlresolvers import reverse
+from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import Role, SODAR_CONSTANTS

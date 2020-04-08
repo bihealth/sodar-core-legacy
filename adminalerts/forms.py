@@ -3,10 +3,13 @@ from django.utils import timezone
 
 from pagedown.widgets import PagedownWidget
 
-from .models import AdminAlert
+# Projectroles dependency
+from projectroles.forms import SODARModelForm
+
+from adminalerts.models import AdminAlert
 
 
-class AdminAlertForm(forms.ModelForm):
+class AdminAlertForm(SODARModelForm):
     """Form for AdminAlert creation/updating"""
 
     class Meta:

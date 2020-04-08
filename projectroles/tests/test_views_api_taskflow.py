@@ -95,7 +95,7 @@ class TestTaskflowAPIBase(
         project = Project.objects.get(title=title)
         return project, project.get_owner()
 
-    def _make_assignment_taskflow(self, project, role, user):
+    def _make_assignment_taskflow(self, project, user, role):
         """Make RoleAssignment with taskflow for API view tests."""
         url = reverse(
             'projectroles:api_role_create',
@@ -490,8 +490,8 @@ class TestRoleAssignmentUpdateAPIView(TestCoreTaskflowAPIBase):
         # Make extra assignment with Taskflow
         self.update_as = self._make_assignment_taskflow(
             project=self.project,
-            role=self.role_contributor,
             user=self.assign_user,
+            role=self.role_contributor,
         )
 
     def test_put_role(self):
@@ -558,8 +558,8 @@ class TestRoleAssignmentDestroyAPIView(TestCoreTaskflowAPIBase):
         # Make extra assignment with Taskflow
         self.update_as = self._make_assignment_taskflow(
             project=self.project,
-            role=self.role_contributor,
             user=self.assign_user,
+            role=self.role_contributor,
         )
 
     def test_delete_role(self):

@@ -72,7 +72,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.8.0']
+CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0']
 
 
 # Access Django user model
@@ -91,8 +91,8 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
     This must be used in the permission_classes attribute in order for token
     authentication to work.
 
-    NOTE: Requires implementing either permission_required or
-          get_permission_required() in the view
+    Requires implementing either permission_required or
+    get_permission_required() in the view.
     """
 
     def has_permission(self, request, view):
@@ -132,18 +132,19 @@ class SODARAPIObjectInProjectPermissions(
     ProjectAccessMixin, DjangoModelPermissions
 ):
     """
-    DRF ``Permissions`` implementation for objects in SODAR
-    ``projectroles.models.Project``s.
+    DRF Permissions implementation for the Project model.
 
-    Permissions can only be checked on models having a ``project`` attribute or
+    Permissions can only be checked on models having a "project" field or
     a get_project() function. Access control is based on the convention action
-    names (``${app_label}.${action}_${model_name}``) but based on roles on the
-    containing ``Project``.
+    names (${app_label}.${action}_${model_name}) but based on roles on the
+    containing project.
     """
 
     def __init__(self, *args, **kwargs):
-        """Override to patch ``self.perms_map`` to set required permissions on
-        ``GET`` et al."""
+        """
+        Override to patch self.perms_map to set required permissions on
+        GET et al.
+        """
         super().__init__(*args, **kwargs)
         patch = {
             'GET': ['%(app_label)s.view_%(model_name)s'],
@@ -169,16 +170,23 @@ class SODARAPIObjectInProjectPermissions(
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
+    """Accept header versioning class for SODAR API views"""
+
     allowed_versions = SODAR_API_ALLOWED_VERSIONS
     default_version = SODAR_API_DEFAULT_VERSION
     version_param = 'version'
 
 
 class SODARAPIRenderer(JSONRenderer):
+    """
+    SODAR API JSON renderer with a site-specific media type retrieved from
+    Django settings
+    """
+
     media_type = SODAR_API_MEDIA_TYPE
 
 
-# Base API Mixins and Views ----------------------------------------------------
+# Base API View Mixins ---------------------------------------------------------
 
 
 class SODARAPIBaseMixin:
@@ -221,14 +229,14 @@ class SODARAPIGenericProjectMixin(
     API view mixin for generic DRF API views with serializers, SODAR
     project context and permission checkin.
 
-    NOTE: Unless overriding permission_classes with their own implementation,
-          the user MUST supply a permission_required attribute.
+    Unless overriding permission_classes with their own implementation,
+    the user MUST supply a permission_required attribute.
 
-    NOTE: Replace lookup_url_kwarg with your view's url kwarg (SODAR project
-          compatible model name in lowercase)
+    Replace lookup_url_kwarg with your view's url kwarg (SODAR project
+    compatible model name in lowercase)
 
-    NOTE: If the lookup is done via the project object, change lookup_field into
-          "sodar_uuid"
+    If the lookup is done via the project object, change lookup_field into
+    "sodar_uuid"
     """
 
     lookup_field = 'sodar_uuid'  # Use project__sodar_uuid for lists
@@ -316,9 +324,11 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 
 class ProjectListAPIView(ListAPIView):
     """
-    API view for listing projects for which the user has access.
+    List all projects and categories for which the requesting user has access.
 
-    NOTE: Not using base mixins as there is no project context.
+    **URL:** ``/project/api/list``
+
+    **Methods:** ``GET``
     """
 
     permission_classes = [IsAuthenticated]
@@ -344,7 +354,13 @@ class ProjectListAPIView(ListAPIView):
 class ProjectRetrieveAPIView(
     ProjectQuerysetMixin, CoreAPIGenericProjectMixin, RetrieveAPIView
 ):
-    """API view for retrieving a project by UUID."""
+    """
+    Retrieve a project or category by its UUID.
+
+    **URL:** ``/project/api/retrieve/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``
+    """
 
     permission_required = 'projectroles.view_project'
     serializer_class = ProjectSerializer
@@ -352,9 +368,20 @@ class ProjectRetrieveAPIView(
 
 class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     """
-    API view for creating a category or a project.
+    Create a project or a category.
 
-    NOTE: Not using base mixins as there is no project context.
+    **URL:** ``/project/api/create``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``title``: Project title (string)
+    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
+    - ``parent``: Parent category UUID (string)
+    - ``description``: Projcet description (string, optional)
+    - ``readme``: Project readme (string, optional, supports markdown)
+    - ``owner``: User UUID of the project owner (string)
     """
 
     permission_classes = [ProjectCreatePermission]
@@ -367,7 +394,26 @@ class ProjectUpdateAPIView(
     ProjectQuerysetMixin, CoreAPIGenericProjectMixin, UpdateAPIView
 ):
     """
-    API view for updating a project.
+    Update the metadata of a project or a category.
+
+    Note that the project owner can not be updated here. Instead, use the
+    dedicated API view ``RoleAssignmentOwnerTransferAPIView``.
+
+    The project type can not be updated once a project has been created. The
+    parameter is still required for non-partial updates via the ``PUT`` method.
+
+    **URL:** ``/project/api/update/{Project.sodar_uuid}``
+
+    **Methods:** ``PUT``, ``PATCH``
+
+    **Parameters:**
+
+    - ``title``: Project title (string)
+    - ``type``: Project type (string, can not be modified)
+    - ``parent``: Parent category UUID (string)
+    - ``description``: Projcet description (string, optional)
+    - ``readme``: Project readme (string, optional, supports markdown)
+    - ``owner``: User UUID of the project owner (string)
     """
 
     permission_required = 'projectroles.update_project'
@@ -384,7 +430,16 @@ class ProjectUpdateAPIView(
 
 class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
     """
-    API view for creating a role assignment in a project.
+    Create a role assignment in a project.
+
+    **URL:** ``/project/api/roles/create/{Project.sodar_uuid}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``role``: Desired role for user (string, e.g. "project contributor")
+    - ``user``: User UUID (string)
     """
 
     permission_required = 'projectroles.update_project_members'
@@ -393,7 +448,18 @@ class RoleAssignmentCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
 
 class RoleAssignmentUpdateAPIView(CoreAPIGenericProjectMixin, UpdateAPIView):
     """
-    API view for updating the role assignment for a user in a project.
+    Update the role assignment for a user in a project.
+
+    The user can not be changed in this API view.
+
+    **URL:** ``/project/api/roles/update/{RoleAssignment.sodar_uuid}``
+
+    **Methods:** ``PUT``, ``PATCH``
+
+    **Parameters:**
+
+    - ``role``: Desired role for user (string, e.g. "project contributor")
+    - ``user``: User UUID (string)
     """
 
     lookup_url_kwarg = 'roleassignment'
@@ -405,7 +471,13 @@ class RoleAssignmentDestroyAPIView(
     RoleAssignmentDeleteMixin, CoreAPIGenericProjectMixin, DestroyAPIView
 ):
     """
-    API view for destroying a role assignment.
+    Destroy a role assignment.
+
+    The owner role can not be destroyed using this view.
+
+    **URL:** ``/project/api/roles/destroy/{RoleAssignment.sodar_uuid}``
+
+    **Methods:** ``DELETE``
     """
 
     lookup_url_kwarg = 'roleassignment'
@@ -441,8 +513,19 @@ class RoleAssignmentOwnerTransferAPIView(
     RoleAssignmentOwnerTransferMixin, CoreAPIBaseProjectMixin, APIView
 ):
     """
-    API view for transferring project ownership to another user with a role in
-    the project. Also reassigns a different role to the previous owner.
+    Trensfer project ownership to another user with a role in
+    the project. Reassign a different role to the previous owner.
+
+    The new owner must already have a role assigned in the project.
+
+    **URL:** ``/project/api/roles/owner-transfer/{Project.sodar_uuid}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``new_owner`` User UUID for new owner (string)
+    - ``old_owner_role`` Role for old owner (string. e.g. "project delegate")
     """
 
     permission_required = 'projectroles.update_project_owner'
@@ -511,9 +594,11 @@ class RoleAssignmentOwnerTransferAPIView(
 
 class UserListAPIView(ListAPIView):
     """
-    API view for listing users in the system.
+    List users in the system.
 
-    NOTE: Not using base mixins as there is no project context
+    **URL:** ``/project/api/users/list``
+
+    **Methods:** ``GET``
     """
 
     lookup_field = 'project__sodar_uuid'

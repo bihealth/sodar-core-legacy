@@ -4,9 +4,9 @@ from importlib import import_module
 import mistune
 import uuid
 
-from django.core.urlresolvers import reverse
 from django.conf import settings
 from django.test import override_settings, RequestFactory
+from django.urls import reverse
 
 from test_plus.test import TestCase
 

@@ -2,8 +2,8 @@
 
 from urllib.parse import urlencode
 
-from django.core.urlresolvers import reverse
 from django.test import override_settings
+from django.urls import reverse
 
 from test_plus.test import TestCase
 

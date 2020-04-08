@@ -4,10 +4,10 @@ import json
 from urllib.parse import urlencode
 
 from django.core import mail
-from django.core.urlresolvers import reverse
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
 from django.test import RequestFactory, override_settings
+from django.urls import reverse
 from django.utils import timezone
 
 from test_plus.test import TestCase
@@ -1338,7 +1338,7 @@ class TestRoleAssignmentOwnerTransferView(
                 ),
                 data={
                     'project': self.project.sodar_uuid,
-                    'ex_owner_role': self.role_guest.pk,
+                    'old_owner_role': self.role_guest.pk,
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )

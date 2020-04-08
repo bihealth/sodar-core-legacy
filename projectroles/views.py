@@ -1,4 +1,4 @@
-"""UI views for the samplesheets app"""
+"""UI views for the projectroles app"""
 
 import json
 import re
@@ -8,13 +8,12 @@ import urllib.request
 from django.apps import apps
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import resolve
 from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.db import transaction
 from django.shortcuts import redirect
-from django.urls import reverse
+from django.urls import resolve, reverse
 from django.utils import timezone
 from django.views.generic import (
     TemplateView,
@@ -1580,7 +1579,7 @@ class RoleAssignmentOwnerTransferView(
         old_owner = form.current_owner
         old_owner_as = project.get_owner()
         new_owner = form.cleaned_data['new_owner']
-        old_owner_role = form.cleaned_data['ex_owner_role']
+        old_owner_role = form.cleaned_data['old_owner_role']
         redirect_url = reverse(
             'projectroles:roles', kwargs={'project': project.sodar_uuid}
         )

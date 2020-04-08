@@ -1,10 +1,10 @@
-.. _app_sodarcache_api:
+.. _app_sodarcache_api_django:
 
 
 Sodarcache Backend API Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This document contains API documentation for the backend plugin in the
+This document contains Django API documentation for the backend plugin in the
 ``sodarcache`` app. Included are functionalities and classes intended to be used
 by other applications.
 

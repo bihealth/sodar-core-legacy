@@ -109,8 +109,8 @@ the following management command:
     ./manage.py synctaskflow
 
 
-API Documentation
-=================
+Django API Documentation
+========================
 
 The ``TaskflowAPI`` class contains the SODAR Taskflow backend API. It should be
 initialized using the ``Projectroles.plugins.get_backend_api()`` function.

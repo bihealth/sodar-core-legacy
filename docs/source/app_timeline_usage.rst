@@ -37,8 +37,8 @@ normal users.
 Backend API for Event Logging
 =============================
 
-The API for logging events is located in ``timeline.api``. For the full API
-documentation, see `here <app_timeline_api>`_.
+The Django backend API for logging events is located in ``timeline.api``. For
+the full documentation, see `here <app_timeline_api_django>`_.
 
 Invoking the API
 ----------------

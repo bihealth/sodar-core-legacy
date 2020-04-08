@@ -913,7 +913,7 @@ class TestRoleAssignmentOwnerTransferView(TestTaskflowBase):
                 ),
                 data={
                     'project': self.project.sodar_uuid,
-                    'ex_owner_role': self.role_guest.pk,
+                    'old_owner_role': self.role_guest.pk,
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )

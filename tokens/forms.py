@@ -1,7 +1,10 @@
 from django import forms
 
+# Projectroles dependency
+from projectroles.forms import SODARForm
 
-class UserTokenCreateForm(forms.Form):
+
+class UserTokenCreateForm(SODARForm):
     """This form allows token creation"""
 
     #: Time to live in hours
