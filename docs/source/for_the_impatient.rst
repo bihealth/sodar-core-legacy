@@ -65,7 +65,7 @@ See :ref:`app_projectroles_integration` on other ways to get started with SODAR 
 
 .. code-block:: bash
 
-    $ git clone git@github.com:bihealth/sodar_django_site.git sodar_django_site
+    $ git clone https://github.com/bihealth/sodar_django_site.git  sodar_django_site
     $ cd sodar_django_site
 
 From here on, we assume that you are located (a) within the ``sodar_django_site`` directory and (b) have done ``source ~/miniconda3/bin/activate`` such that ``which python`` shows ``~/miniconda3/bin/python``.
