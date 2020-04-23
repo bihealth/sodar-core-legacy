@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Fixed
+-----
+
+- **Projectroles**
+    - CSS padding issue with ``sodar-list-btn`` and Chrome (#529, sodar#844)
+
 Removed
 -------
 

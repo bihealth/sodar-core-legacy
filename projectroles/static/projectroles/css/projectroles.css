@@ -398,7 +398,7 @@ dl dd {
 
 .sodar-list-btn {
   white-space: nowrap !important;
-  padding-top: 0.5px;
+  padding-top: 1px;
   padding-left: 5px;
   padding-right: 5px;
   height: 1.65em;
