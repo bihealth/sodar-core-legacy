@@ -73,10 +73,6 @@ Permissions / Versioning / Rendering
     :members:
     :show-inheritance:
 
-.. autoclass:: SODARAPIObjectInProjectPermissions
-    :members:
-    :show-inheritance:
-
 .. autoclass:: SODARAPIVersioning
     :members:
     :show-inheritance:

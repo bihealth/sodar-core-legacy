@@ -18,7 +18,6 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import (
     BasePermission,
-    DjangoModelPermissions,
     AllowAny,
     IsAuthenticated,
 )
@@ -126,47 +125,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         return request.user.has_perm(
             perm, self.get_project(request=request, kwargs=view.kwargs)
         )
-
-
-class SODARAPIObjectInProjectPermissions(
-    ProjectAccessMixin, DjangoModelPermissions
-):
-    """
-    DRF Permissions implementation for the Project model.
-
-    Permissions can only be checked on models having a "project" field or
-    a get_project() function. Access control is based on the convention action
-    names (${app_label}.${action}_${model_name}) but based on roles on the
-    containing project.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        Override to patch self.perms_map to set required permissions on
-        GET et al.
-        """
-        super().__init__(*args, **kwargs)
-        patch = {
-            'GET': ['%(app_label)s.view_%(model_name)s'],
-            'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
-            'HEAD': ['%(app_label)s.view_%(model_name)s'],
-        }
-        self.perms_map = {**self.perms_map, **patch}
-
-    def has_permission(self, request, view):
-        """Override to base permission check on project only"""
-        if getattr(view, '_ignore_model_permissions', False):
-            return True
-
-        if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only
-        ):
-            return False
-
-        queryset = self._queryset(view)
-        perms = self.get_required_permissions(request.method, queryset.model)
-
-        return request.user.has_perms(perms, self.get_project())
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
