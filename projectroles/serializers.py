@@ -271,6 +271,10 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         read_only_fields = ['submit_status']
 
     def validate(self, attrs):
+        disable_categories = getattr(
+            settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
+        )
+
         current_user = self.context['request'].user
 
         # Validate parent
@@ -306,7 +310,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'parent' in attrs
             and not parent
             and attrs.get('type') == PROJECT_TYPE_PROJECT
-            and not settings.PROJECTROLES_DISABLE_CATEGORIES
+            and not disable_categories
         ):
             raise serializers.ValidationError(
                 'Project must be placed under a category'

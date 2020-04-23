@@ -15,6 +15,7 @@ Fixed
 
 - **Projectroles**
     - CSS padding issue with ``sodar-list-btn`` and Chrome (#529, sodar#844)
+    - Crash from missing optional setting ``PROJECTROLES_DISABLE_CATEGORIES`` (#524)
 
 Removed
 -------
