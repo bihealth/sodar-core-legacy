@@ -33,6 +33,7 @@ from projectroles.tests.test_views import (
     PROJECT_ROLE_GUEST,
     REMOTE_SITE_NAME,
     REMOTE_SITE_URL,
+    SITE_MODE_SOURCE,
     SITE_MODE_TARGET,
     REMOTE_SITE_DESC,
     REMOTE_SITE_SECRET,
@@ -691,8 +692,57 @@ class TestProjectCreateAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_project_target_enabled(self):
+        """Test creating a project as TARGET with target creation allowed"""
 
-class TestProjectUpdateAPIView(TestCoreAPIViewsBase):
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(Project.objects.count(), 3)
+
+    @override_settings(
+        PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
+        PROJECTROLES_TARGET_CREATE=False,
+    )
+    def test_create_project_target_disabled(self):
+        """Test creating a project as TARGET with target creation disallowed (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(Project.objects.count(), 2)
+
+
+class TestProjectUpdateAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
     """Tests for ProjectUpdateAPIView"""
 
     def test_put_category(self):
@@ -1060,8 +1110,43 @@ class TestProjectUpdateAPIView(TestCoreAPIViewsBase):
         # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_patch_project_remote(self):
+        """Test patch() for updating remote project metadata (should fail)"""
 
-class TestRoleAssignmentCreateAPIView(TestCoreAPIViewsBase):
+        # Create source site and remote project
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        patch_data = {
+            'title': UPDATED_TITLE,
+            'description': UPDATED_DESC,
+            'readme': UPDATED_README,
+        }
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestRoleAssignmentCreateAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
     """Tests for RoleAssignmentCreateAPIView"""
 
     def setUp(self):
@@ -1086,7 +1171,7 @@ class TestRoleAssignmentCreateAPIView(TestCoreAPIViewsBase):
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
@@ -1238,7 +1323,7 @@ class TestRoleAssignmentCreateAPIView(TestCoreAPIViewsBase):
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
@@ -1257,8 +1342,50 @@ class TestRoleAssignmentCreateAPIView(TestCoreAPIViewsBase):
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
 
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_remote(self):
+        """Test creating a role for a remote project (should fail)"""
 
-class TestRoleAssignmentUpdateAPIView(TestCoreAPIViewsBase):
+        # Create source site and remote project
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Assert preconditions
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and role status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 1
+        )
+
+
+class TestRoleAssignmentUpdateAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
     """Tests for RoleAssignmentUpdateAPIView"""
 
     def setUp(self):
@@ -1284,7 +1411,7 @@ class TestRoleAssignmentUpdateAPIView(TestCoreAPIViewsBase):
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -1390,7 +1517,7 @@ class TestRoleAssignmentUpdateAPIView(TestCoreAPIViewsBase):
         patch_data = {'role': PROJECT_ROLE_GUEST}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -1429,8 +1556,39 @@ class TestRoleAssignmentUpdateAPIView(TestCoreAPIViewsBase):
         # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_patch_role_remote(self):
+        """Test patch() for updating a role in a remote project (should fail)"""
 
-class TestRoleAssignmentDestroyAPIView(TestCoreAPIViewsBase):
+        # Create source site and remote project
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        url = reverse(
+            'projectroles:api_role_update',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        patch_data = {'role': PROJECT_ROLE_GUEST}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        # Assert response and role status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+
+class TestRoleAssignmentDestroyAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
     """Tests for RoleAssignmentDestroyAPIView"""
 
     def setUp(self):
@@ -1453,7 +1611,7 @@ class TestRoleAssignmentDestroyAPIView(TestCoreAPIViewsBase):
         )
         response = self.request_knox(url, method='DELETE')
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 204, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 2)
         self.assertEqual(
@@ -1481,7 +1639,7 @@ class TestRoleAssignmentDestroyAPIView(TestCoreAPIViewsBase):
         token = self.get_token(self.assign_user)
         response = self.request_knox(url, method='DELETE', token=token)
 
-        # Assert response and project status
+        # Assert response and role status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 4)
 
@@ -1498,6 +1656,38 @@ class TestRoleAssignmentDestroyAPIView(TestCoreAPIViewsBase):
         response = self.request_knox(url, method='DELETE')
 
         # Assert response and project status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_delete_remote(self):
+        """Test delete for a remote project (should fail)"""
+
+        # Create source site and remote project
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Assert preconditions
+        self.assertEqual(RoleAssignment.objects.count(), 3)
+
+        url = reverse(
+            'projectroles:api_role_destroy',
+            kwargs={'roleassignment': self.update_as.sodar_uuid},
+        )
+        response = self.request_knox(url, method='DELETE')
+
+        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 

@@ -22,6 +22,10 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+REMOTE_MODIFY_MSG = (
+    'Modification of remote projects is not allowed, modify on '
+    'the SOURCE site instead'
+)
 
 User = get_user_model()
 
@@ -157,6 +161,10 @@ class RoleAssignmentSerializer(
         project = self.context['project']
         current_user = self.context['request'].user
 
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
         # Do not allow updating user
         if (
             self.instance
@@ -271,11 +279,29 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         read_only_fields = ['submit_status']
 
     def validate(self, attrs):
+        site_mode = getattr(
+            settings,
+            'PROJECTROLES_SITE_MODE',
+            SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+        )
+        target_create = getattr(settings, 'PROJECTROLES_TARGET_CREATE', True)
         disable_categories = getattr(
             settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
         )
-
         current_user = self.context['request'].user
+
+        # Validation for remote sites and projects
+        if self.instance and self.instance.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
+        elif (
+            not self.instance
+            and site_mode == SODAR_CONSTANTS['SITE_MODE_TARGET']
+            and not target_create
+        ):
+            raise serializers.ValidationError(
+                'Creation of local projects not allowed on this target site'
+            )
 
         # Validate parent
         parent = attrs.get('parent')

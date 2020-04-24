@@ -39,6 +39,7 @@ from projectroles.serializers import (
     ProjectSerializer,
     RoleAssignmentSerializer,
     SODARUserSerializer,
+    REMOTE_MODIFY_MSG,
 )
 from projectroles.views import (
     ProjectAccessMixin,
@@ -448,6 +449,10 @@ class RoleAssignmentDestroyAPIView(
         without SODAR Taskflow.
         """
         project = self.get_project()
+
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
 
         # Do not allow editing owner here
         if instance.role.name == PROJECT_ROLE_OWNER:
