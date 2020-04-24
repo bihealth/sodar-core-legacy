@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - CSS class ``sodar-pr-project-list-custom`` for custom project list items (#525)
+
 Fixed
 -----
 
