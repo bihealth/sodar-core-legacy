@@ -1,4 +1,4 @@
-"""API view model serializers for the projectroles app"""
+"""REST API view model serializers for the projectroles app"""
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -65,6 +65,7 @@ class SODARModelSerializer(serializers.ModelSerializer):
         """
         Function to call at the end of a custom save() method. Ensures the
         returning of sodar_uuid in object creation POST responses.
+
         :param obj: Object created in save()
         :return: obj
         """
@@ -75,10 +76,12 @@ class SODARModelSerializer(serializers.ModelSerializer):
 
 
 class SODARProjectModelSerializer(SODARModelSerializer):
-    """Base serializer for SODAR models with a project relation"""
+    """
+    Base serializer for SODAR models with a project relation.
 
-    # The project field is read only because we get it from the URL
-    # project = serializers.ReadOnlyField(source='project.sodar_uuid')
+    The project field is read only because it is retrieved through the object
+    reference in the URL.
+    """
 
     project = serializers.SlugRelatedField(
         slug_field='sodar_uuid', read_only=True
@@ -422,9 +425,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
 
     def to_representation(self, instance):
-        """
-        Override to make sure fields are correctly returned.
-        """
+        """Override to make sure fields are correctly returned."""
         representation = super().to_representation(instance)
         parent = representation.get('parent')
         project = Project.objects.get(
