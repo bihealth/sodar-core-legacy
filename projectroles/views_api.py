@@ -509,6 +509,11 @@ class RoleAssignmentOwnerTransferAPIView(
     def post(self, request, *args, **kwargs):
         """Handle ownership transfer in a POST request"""
         project = self.get_project()
+
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
         new_owner = User.objects.filter(
             username=request.data.get('new_owner')
         ).first()
