@@ -10,13 +10,14 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.8.1 (WIP)
-************
+v0.8.1 (2020-04-24)
+*******************
 
 Release Highlights
 ==================
 
-This is a maintenance and bug fix release.
+- Fix checking for remote project status in projectroles REST API views
+- Miscellaneous bug fixes
 
 Breaking Changes
 ================
