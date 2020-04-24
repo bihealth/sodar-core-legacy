@@ -288,6 +288,8 @@ class ProjectListAPIView(ListAPIView):
     **URL:** ``/project/api/list``
 
     **Methods:** ``GET``
+
+    **Returns:** List of project details (see ``ProjectRetrieveAPIView``)
     """
 
     permission_classes = [IsAuthenticated]
@@ -319,6 +321,17 @@ class ProjectRetrieveAPIView(
     **URL:** ``/project/api/retrieve/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``description``: Project description (string)
+    - ``parent``: Parent category UUID (string or null)
+    - ``readme``: Project readme (string, supports markdown)
+    - ``roles``: Project role assignments (dict, assignment UUID as key)
+    - ``sodar_uuid``: Project UUID (string)
+    - ``submit_status``: Project creation status (string)
+    - ``title``: Project title (string)
+    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
     """
 
     permission_required = 'projectroles.view_project'
@@ -562,6 +575,15 @@ class UserListAPIView(ListAPIView):
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
+
+    **Returns**:
+
+    For each user:
+
+    - ``email``: Email address of the user (string)
+    - ``name``: Full name of the user (string)
+    - ``sodar_uuid``: User UUID (string)
+    - ``username``: Username of the user (string)
     """
 
     lookup_field = 'project__sodar_uuid'
