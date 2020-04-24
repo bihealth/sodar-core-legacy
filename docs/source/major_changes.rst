@@ -10,6 +10,26 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.1 (2020-04-24)
+*******************
+
+Release Highlights
+==================
+
+- Fix checking for remote project status in projectroles REST API views
+- Miscellaneous bug fixes
+
+Breaking Changes
+================
+
+SODARAPIObjectInProjectPermissions Removed
+------------------------------------------
+
+The deprecated ``SODARAPIObjectInProjectPermissions`` base class has been
+removed from ``projectroles.views_api``. Please base your REST API views to one
+of the remaining base classes instead.
+
+
 v0.8.0 (2020-04-08)
 *******************
 

@@ -50,7 +50,7 @@ INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
 SECRET = 'rsd886hi8276nypuvw066sbvv0rb2a6x'
 EXAMPLE_APP_NAME = 'example_project_app'
 REMOTE_SITE_NAME = 'Test site'
-REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_URL = 'https://sodar.example.org'
 REMOTE_SITE_SECRET = build_secret()
 REMOTE_SITE_USER_DISPLAY = True
 

@@ -1,4 +1,4 @@
-"""API view model serializers for the projectroles app"""
+"""REST API view model serializers for the projectroles app"""
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -22,6 +22,10 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+REMOTE_MODIFY_MSG = (
+    'Modification of remote projects is not allowed, modify on '
+    'the SOURCE site instead'
+)
 
 User = get_user_model()
 
@@ -61,6 +65,7 @@ class SODARModelSerializer(serializers.ModelSerializer):
         """
         Function to call at the end of a custom save() method. Ensures the
         returning of sodar_uuid in object creation POST responses.
+
         :param obj: Object created in save()
         :return: obj
         """
@@ -71,10 +76,12 @@ class SODARModelSerializer(serializers.ModelSerializer):
 
 
 class SODARProjectModelSerializer(SODARModelSerializer):
-    """Base serializer for SODAR models with a project relation"""
+    """
+    Base serializer for SODAR models with a project relation.
 
-    # The project field is read only because we get it from the URL
-    # project = serializers.ReadOnlyField(source='project.sodar_uuid')
+    The project field is read only because it is retrieved through the object
+    reference in the URL.
+    """
 
     project = serializers.SlugRelatedField(
         slug_field='sodar_uuid', read_only=True
@@ -156,6 +163,10 @@ class RoleAssignmentSerializer(
     def validate(self, attrs):
         project = self.context['project']
         current_user = self.context['request'].user
+
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
 
         # Do not allow updating user
         if (
@@ -271,7 +282,29 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         read_only_fields = ['submit_status']
 
     def validate(self, attrs):
+        site_mode = getattr(
+            settings,
+            'PROJECTROLES_SITE_MODE',
+            SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+        )
+        target_create = getattr(settings, 'PROJECTROLES_TARGET_CREATE', True)
+        disable_categories = getattr(
+            settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
+        )
         current_user = self.context['request'].user
+
+        # Validation for remote sites and projects
+        if self.instance and self.instance.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
+        elif (
+            not self.instance
+            and site_mode == SODAR_CONSTANTS['SITE_MODE_TARGET']
+            and not target_create
+        ):
+            raise serializers.ValidationError(
+                'Creation of local projects not allowed on this target site'
+            )
 
         # Validate parent
         parent = attrs.get('parent')
@@ -306,7 +339,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'parent' in attrs
             and not parent
             and attrs.get('type') == PROJECT_TYPE_PROJECT
-            and not settings.PROJECTROLES_DISABLE_CATEGORIES
+            and not disable_categories
         ):
             raise serializers.ValidationError(
                 'Project must be placed under a category'
@@ -392,9 +425,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         )
 
     def to_representation(self, instance):
-        """
-        Override to make sure fields are correctly returned.
-        """
+        """Override to make sure fields are correctly returned."""
         representation = super().to_representation(instance)
         parent = representation.get('parent')
         project = Project.objects.get(

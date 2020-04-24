@@ -24,11 +24,11 @@ logging in using your SODAR username and password. Tokens are the recommended
 method for security purposes.
 
 For token access, first retrieve your token using the :ref:`app_tokens`. Add
-the token in the ``HTTP_AUTHORIZATION`` header of your HTTP request as follows:
+the token in the ``Authorization`` header of your HTTP request as follows:
 
 .. code-block:: console
 
-    token 90c2483172515bc8f6d52fd608e5031db3fcdc06d5a83b24bec1688f39b72bcd
+    Authorization: token 90c2483172515bc8f6d52fd608e5031db3fcdc06d5a83b24bec1688f39b72bcd
 
 Versioning
 ----------
@@ -38,13 +38,13 @@ desired API version in your HTTP requests is optional, it is
 **strongly recommended**. This ensures you will get the appropriate return data
 and avoid running into unexpected incompatibility issues.
 
-To enable versioning, add the ``HTTP_ACCEPT`` header to your request with the
+To enable versioning, add the ``Accept`` header to your request with the
 following media type and version syntax. Replace the version number with your
 expected version.
 
 .. code-block:: console
 
-    application/vnd.bihealth.sodar-core+json; version=0.8.0
+    Accept: application/vnd.bihealth.sodar-core+json; version=0.8.1
 
 .. note::
 
@@ -68,6 +68,19 @@ refers to the ``sodar_uuid`` field of each model unless otherwise noted.
 
 For permissions the API uses the same rules which are in effect in the SODAR Core
 GUI. That means you need to have appropriate project access for each operation.
+
+Return Data
+-----------
+
+The return data for each request will be a JSON document unless otherwise
+specified.
+
+If return data is not specified in the documentation of an API view, it will
+return the appropriate HTTP status code along with an optional ``detail`` JSON
+field upon a successfully processed request.
+
+For creation views, the ``sodar_uuid`` of the created object is returned
+along with other object fields.
 
 
 API Views

@@ -7,6 +7,30 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.8.1 (2020-04-24)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - CSS class ``sodar-pr-project-list-custom`` for custom project list items (#525)
+
+Fixed
+-----
+
+- **Projectroles**
+    - CSS padding issue with ``sodar-list-btn`` and Chrome (#529, sodar#844)
+    - Crash from missing optional setting ``PROJECTROLES_DISABLE_CATEGORIES`` (#524)
+    - Remote project editing not prevented in REST API views (#523)
+
+Removed
+-------
+
+- **Projectroles**
+    - Deprecated ``SODARAPIObjectInProjectPermissions`` base class (#527)
+
+
 v0.8.0 (2020-04-08)
 ===================
 

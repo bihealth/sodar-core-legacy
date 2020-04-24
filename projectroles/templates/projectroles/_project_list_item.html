@@ -39,7 +39,7 @@
     {% if col.active %}
      {% if p.type == 'PROJECT' %}
        {% get_project_list_value col.app_plugin col.key p request.user as cell_value %}
-       <td class="text-{{ col.align }}"
+       <td class="sodar-pr-project-list-custom text-{{ col.align }}"
            {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}>
           {{ cell_value | safe }}
         </td>

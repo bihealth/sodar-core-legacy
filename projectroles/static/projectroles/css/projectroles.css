@@ -364,8 +364,7 @@ dl dd {
 
 /* HACK for autocomplete widget to look similar to the rest of the form */
 
-.select2-container--default
-.select2-selection--single{
+.select2-container--default .select2-selection--single {
   width: 100%;
   border: 1px solid #ced4da;
   height: calc(2.25rem + 2px);
@@ -373,7 +372,7 @@ dl dd {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
-  background-color: #fff;
+  background-color: #ffffff;
   background-clip: padding-box;
   border-radius: .25rem;
 }
@@ -398,7 +397,7 @@ dl dd {
 
 .sodar-list-btn {
   white-space: nowrap !important;
-  padding-top: 0.5px;
+  padding-top: 1px;
   padding-left: 5px;
   padding-right: 5px;
   height: 1.65em;

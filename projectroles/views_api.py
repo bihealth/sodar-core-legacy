@@ -18,7 +18,6 @@ from rest_framework.generics import (
 )
 from rest_framework.permissions import (
     BasePermission,
-    DjangoModelPermissions,
     AllowAny,
     IsAuthenticated,
 )
@@ -40,6 +39,7 @@ from projectroles.serializers import (
     ProjectSerializer,
     RoleAssignmentSerializer,
     SODARUserSerializer,
+    REMOTE_MODIFY_MSG,
 )
 from projectroles.views import (
     ProjectAccessMixin,
@@ -72,7 +72,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0']
+CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1']
 
 
 # Access Django user model
@@ -126,47 +126,6 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         return request.user.has_perm(
             perm, self.get_project(request=request, kwargs=view.kwargs)
         )
-
-
-class SODARAPIObjectInProjectPermissions(
-    ProjectAccessMixin, DjangoModelPermissions
-):
-    """
-    DRF Permissions implementation for the Project model.
-
-    Permissions can only be checked on models having a "project" field or
-    a get_project() function. Access control is based on the convention action
-    names (${app_label}.${action}_${model_name}) but based on roles on the
-    containing project.
-    """
-
-    def __init__(self, *args, **kwargs):
-        """
-        Override to patch self.perms_map to set required permissions on
-        GET et al.
-        """
-        super().__init__(*args, **kwargs)
-        patch = {
-            'GET': ['%(app_label)s.view_%(model_name)s'],
-            'OPTIONS': ['%(app_label)s.view_%(model_name)s'],
-            'HEAD': ['%(app_label)s.view_%(model_name)s'],
-        }
-        self.perms_map = {**self.perms_map, **patch}
-
-    def has_permission(self, request, view):
-        """Override to base permission check on project only"""
-        if getattr(view, '_ignore_model_permissions', False):
-            return True
-
-        if not request.user or (
-            not request.user.is_authenticated and self.authenticated_users_only
-        ):
-            return False
-
-        queryset = self._queryset(view)
-        perms = self.get_required_permissions(request.method, queryset.model)
-
-        return request.user.has_perms(perms, self.get_project())
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
@@ -329,6 +288,8 @@ class ProjectListAPIView(ListAPIView):
     **URL:** ``/project/api/list``
 
     **Methods:** ``GET``
+
+    **Returns:** List of project details (see ``ProjectRetrieveAPIView``)
     """
 
     permission_classes = [IsAuthenticated]
@@ -360,6 +321,17 @@ class ProjectRetrieveAPIView(
     **URL:** ``/project/api/retrieve/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
+
+    **Returns:**
+
+    - ``description``: Project description (string)
+    - ``parent``: Parent category UUID (string or null)
+    - ``readme``: Project readme (string, supports markdown)
+    - ``roles``: Project role assignments (dict, assignment UUID as key)
+    - ``sodar_uuid``: Project UUID (string)
+    - ``submit_status``: Project creation status (string)
+    - ``title``: Project title (string)
+    - ``type``: Project type (string, options: ``PROJECT`` or ``CATEGORY``)
     """
 
     permission_required = 'projectroles.view_project'
@@ -491,6 +463,10 @@ class RoleAssignmentDestroyAPIView(
         """
         project = self.get_project()
 
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
         # Do not allow editing owner here
         if instance.role.name == PROJECT_ROLE_OWNER:
             raise serializers.ValidationError(
@@ -533,6 +509,11 @@ class RoleAssignmentOwnerTransferAPIView(
     def post(self, request, *args, **kwargs):
         """Handle ownership transfer in a POST request"""
         project = self.get_project()
+
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
         new_owner = User.objects.filter(
             username=request.data.get('new_owner')
         ).first()
@@ -599,6 +580,15 @@ class UserListAPIView(ListAPIView):
     **URL:** ``/project/api/users/list``
 
     **Methods:** ``GET``
+
+    **Returns**:
+
+    For each user:
+
+    - ``email``: Email address of the user (string)
+    - ``name``: Full name of the user (string)
+    - ``sodar_uuid``: User UUID (string)
+    - ``username``: Username of the user (string)
     """
 
     lookup_field = 'project__sodar_uuid'
