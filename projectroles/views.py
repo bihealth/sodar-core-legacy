@@ -1499,8 +1499,24 @@ class RoleAssignmentOwnerTransferMixin:
         old_owner_as.save()
 
         role_as = RoleAssignment.objects.get_assignment(new_owner, project)
-        role_as.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
-        role_as.save()
+        role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+
+        if role_as:
+            role_as.role = role_owner
+            role_as.save()
+
+        elif new_owner in [
+            a.user for a in project.get_owners(inherited_only=True)
+        ]:
+            RoleAssignment.objects.create(
+                project=project, user=new_owner, role=role_owner
+            )
+
+        else:
+            # We should already catch this earlier, but just in case..
+            raise Exception(
+                'New owner must have direct or inherited role in project'
+            )
 
         return True
 
@@ -1512,7 +1528,7 @@ class RoleAssignmentOwnerTransferMixin:
         :param project: Project object
         :param new_owner: User object
         :param old_owner_as: RoleAssignment object
-        :param old_owner_role: Role object
+        :param old_owner_role: Role object for the previous owner's new role
         :return:
         """
         old_owner = old_owner_as.user

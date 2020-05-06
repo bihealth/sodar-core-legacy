@@ -806,10 +806,15 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             )
 
         role_as = RoleAssignment.objects.get_assignment(user, self.project)
+        inh_owners = [
+            a.user for a in self.project.get_owners(inherited_only=True)
+        ]
 
-        if role_as.project != self.project:
+        if (role_as and role_as.project != self.project) or (
+            not role_as and user not in inh_owners
+        ):
             raise forms.ValidationError(
-                'The new owner should be from this project'
+                'The new owner has no roles in the project'
             )
 
         return user

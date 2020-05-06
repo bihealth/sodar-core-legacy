@@ -72,7 +72,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1']
+CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2']
 
 
 # Access Django user model
@@ -500,8 +500,8 @@ class RoleAssignmentOwnerTransferAPIView(
 
     **Parameters:**
 
-    - ``new_owner`` User UUID for new owner (string)
-    - ``old_owner_role`` Role for old owner (string. e.g. "project delegate")
+    - ``new_owner``: User name of new owner (string)
+    - ``old_owner_role``: Role for old owner (string. e.g. "project delegate")
     """
 
     permission_required = 'projectroles.update_project_owner'

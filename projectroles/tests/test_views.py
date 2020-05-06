@@ -1311,11 +1311,20 @@ class TestRoleAssignmentOwnerTransferView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         # Create guest user and role
@@ -1327,11 +1336,8 @@ class TestRoleAssignmentOwnerTransferView(
     def test_transfer_ownership(self):
         """Test ownership transfer"""
 
-        # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         with self.login(self.user):
-            self.client.post(
+            response = self.client.post(
                 reverse(
                     'projectroles:role_transfer_owner',
                     kwargs={'project': self.project.sodar_uuid},
@@ -1342,11 +1348,41 @@ class TestRoleAssignmentOwnerTransferView(
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )
-        self.role_as.refresh_from_db()
-        self.owner_as.refresh_from_db()
 
-        self.assertEqual(self.role_as.role, self.role_owner)
-        self.assertEqual(self.owner_as.role, self.role_guest)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_transfer_ownership_inherited(self):
+        """Test ownership transfer to an inherited owner"""
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_transfer_owner',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                    'new_owner': self.user_owner_cat.sodar_uuid,
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
         self.assertEqual(len(mail.outbox), 2)
 
 

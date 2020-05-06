@@ -1751,6 +1751,43 @@ class TestRoleAssignmentOwnerTransferAPIView(
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.category.get_owner().user, self.assign_user)
 
+    def test_transfer_owner_inherit(self):
+        """Test transferring ownership to an inherited owner"""
+
+        # Assign role to new user
+        self._make_assignment(
+            self.project, self.assign_user, self.role_contributor
+        )
+
+        # Set alt owner to current project, make self.user inherited owner
+        alt_owner = self.make_user('alt_owner')
+        self.owner_as.user = alt_owner
+        self.owner_as.save()
+
+        # Assert preconditions
+        self.assertEqual(self.project.get_owner().user, alt_owner)
+        self.assertEqual(
+            self.project.get_owners(inherited_only=True)[0].user, self.user
+        )
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.user.username,
+            'old_owner_role': self.role_contributor.name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user)
+        old_owner_as = RoleAssignment.objects.get(
+            project=self.project, user=alt_owner
+        )
+        self.assertEqual(old_owner_as.role, self.role_contributor)
+
     def test_transfer_owner_no_roles(self):
         """Test transferring ownership to user with no existing roles (should fail)"""
 
