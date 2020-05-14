@@ -15,6 +15,7 @@ Fixed
 
 - **Projectroles**
     - Transferring project ownership to inherited owner not allowed (#534)
+    - Uniqueness constraint in ``AppSetting`` incompatible with ``PROJECT_USER`` scope settings (#542)
 
 
 v0.8.1 (2020-04-24)
