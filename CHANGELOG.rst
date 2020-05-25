@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Projectroles**
+    - Upgrade to Chromedriver v83 (#543)
+
 Fixed
 -----
 
