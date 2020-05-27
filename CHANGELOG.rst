@@ -10,6 +10,13 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Bgjobs**
+    - Enable site-wide background jobs (#544)
+    - Site app plugin for site-wide background jobs (#544)
+
 Changed
 -------
 
