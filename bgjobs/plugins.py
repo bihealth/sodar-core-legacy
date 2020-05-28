@@ -64,7 +64,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     name = 'sitebgjobs'
 
     #: Title (used in templates)
-    title = 'Global Background Jobs'
+    title = 'Site Background Jobs'
 
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
@@ -73,7 +73,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     icon = 'tasks'
 
     #: Description string
-    description = 'Global background jobs'
+    description = 'Site-wide background jobs'
 
     #: Entry point URL ID
     entry_point_url_id = 'bgjobs:site_list'
