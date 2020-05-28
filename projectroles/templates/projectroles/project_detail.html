@@ -129,8 +129,8 @@
     {# App Plugin Cards #}
 
       {% for plugin in app_plugins %}
-        {% has_perm plugin.app_permission request.user object as can_view_app %}
-        {% if can_view_app and object.type == 'PROJECT' or plugin.category_enable %}
+        {% is_app_visible plugin project request.user as app_visible %}
+        {% if app_visible %}
           <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
             <div class="card-header">
               <h4>

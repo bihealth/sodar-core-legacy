@@ -33,7 +33,7 @@
 
       {# App plugins #}
       {% for plugin in app_plugins %}
-        {% is_app_link_visible plugin project request.user as app_link_visible %}
+        {% is_app_visible plugin project request.user as app_link_visible %}
         {% if app_link_visible %}
           <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
              href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"

@@ -22,6 +22,7 @@ Changed
 
 - **Projectroles**
     - Upgrade to Chromedriver v83 (#543)
+    - Rename ``is_app_link_visible()`` template tag into ``is_app_visible()`` (#546)
 
 Fixed
 -----
@@ -30,6 +31,7 @@ Fixed
     - Transferring project ownership to inherited owner not allowed (#534)
     - Uniqueness constraint in ``AppSetting`` incompatible with ``PROJECT_USER`` scope settings (#542)
     - Inherited owner email address not displayed in project member list (#541)
+    - App visibility check broken in ``project_detail.html`` (#546)
 
 
 v0.8.1 (2020-04-24)

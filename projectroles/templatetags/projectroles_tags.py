@@ -109,8 +109,8 @@ def allow_project_creation():
 
 
 @register.simple_tag
-def is_app_link_visible(plugin, project, user):
-    """Check if app link should be visible for user in a specific project"""
+def is_app_visible(plugin, project, user):
+    """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
 
