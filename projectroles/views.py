@@ -1867,8 +1867,8 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 ),
             )
 
-        # Submit with taskflow
-        if taskflow:
+        # Submit with taskflow (only for projects)
+        if taskflow and invite.project.type == PROJECT_TYPE_PROJECT:
             if tl_event:
                 tl_event.set_status('SUBMIT')
 

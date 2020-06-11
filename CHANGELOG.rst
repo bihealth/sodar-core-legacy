@@ -32,6 +32,7 @@ Fixed
     - Uniqueness constraint in ``AppSetting`` incompatible with ``PROJECT_USER`` scope settings (#542)
     - Inherited owner email address not displayed in project member list (#541)
     - App visibility check broken in ``project_detail.html`` (#546)
+    - Invite accept for a category invoking Taskflow and causing a crash (#552)
 
 
 v0.8.1 (2020-04-24)
