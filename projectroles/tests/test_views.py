@@ -252,11 +252,11 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_CATEGORY, None
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.category, self.user, self.role_owner
         )
 
         # Create another user to enable checking for owner selection
@@ -266,7 +266,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid},
+                    kwargs={'project': self.category.sodar_uuid},
                 )
             )
 
@@ -516,6 +516,37 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
+
+    def test_render_parent(self):
+        """Test rendering to make sure current parent is selectable without parent role"""
+
+        # Create new user and project, make new user the owner
+        user_new = self.make_user('newuser')
+        self.owner_as.user = user_new
+        self.owner_as.save()
+
+        # Create another category with new user as owner
+        category2 = self._make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category2, user_new, self.role_owner)
+
+        with self.login(user_new):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        # Ensure self.category (with no user_new rights) is initial
+        self.assertEqual(form.initial['parent'], self.category.sodar_uuid)
+        self.assertEqual(len(form.fields['parent'].choices), 2)
 
     def test_update_project(self):
         """Test Project updating"""

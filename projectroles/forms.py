@@ -279,6 +279,15 @@ class ProjectForm(SODARModelForm):
                 if c not in instance.get_children(flat=True)
             ]
 
+        # FIX for #558: Ensure current parent is in choices
+        if (
+            categories
+            and not user.is_superuser
+            and instance.parent
+            and instance.parent not in categories
+        ):
+            categories.append(instance.parent)
+
         ret += [(c.sodar_uuid, c.get_full_title()) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
