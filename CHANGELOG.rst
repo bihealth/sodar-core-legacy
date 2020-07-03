@@ -17,7 +17,8 @@ Added
     - Enable site-wide background jobs (#544)
     - Site app plugin for site-wide background jobs (#544)
 - **Projectroles**
-    - `sodar-header-button` CSS class (#550)
+    - ``sodar-header-button`` CSS class (#550)
+    - Logging for ``AppSettingAPI`` (#559)
 
 Changed
 -------
@@ -36,6 +37,8 @@ Fixed
     - App visibility check broken in ``project_detail.html`` (#546)
     - Invite accept for a category invoking Taskflow and causing a crash (#552)
     - Project form ``parent`` forced to wrong value if user lacks role in parent category (#558)
+    - Invalid ``app_name`` not handled in ``AppSettingAPI.get_default_setting()`` (#560)
+    - Empty JSON and false boolean app settings not set in project form (#557)
 
 
 v0.8.1 (2020-04-24)

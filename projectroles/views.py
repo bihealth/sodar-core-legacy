@@ -584,15 +584,18 @@ class ProjectModifyMixin:
                 s_name = 'settings.{}.{}'.format(plugin.name, s_key)
                 s_data = data.get(s_name)
 
-                if not s_data and not instance:
+                if s_data is None and not instance:
                     s_data = app_settings.get_default_setting(
                         plugin.name, s_key
                     )
 
-                if s_data and s_val['type'] == 'JSON':
+                if s_val['type'] == 'JSON':
+                    if s_data is None:
+                        s_data = {}
+
                     project_settings[s_name] = json.dumps(s_data)
 
-                elif s_data:
+                elif s_data is not None:
                     project_settings[s_name] = s_data
 
         return project_settings

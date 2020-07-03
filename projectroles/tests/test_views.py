@@ -551,6 +551,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     def test_update_project(self):
         """Test Project updating"""
         timeline = get_backend_api('timeline_backend')
+        app_settings = AppSettingAPI()
 
         new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self._make_assignment(new_category, self.user, self.role_owner)
@@ -565,9 +566,13 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(
-            app_settings.get_all_settings(project=self.project, post_safe=True)
-        )
+        ps = app_settings.get_all_settings(project=self.project, post_safe=True)
+        # Edit settings to non-default values
+        ps['settings.example_project_app.project_int_setting'] = 1
+        ps['settings.example_project_app.project_str_setting'] = 'test'
+        ps['settings.example_project_app.project_bool_setting'] = True
+        ps['settings.example_project_app.project_json_setting'] = '{}'
+        values.update(ps)
 
         with self.login(self.user):
             response = self.client.post(
@@ -599,7 +604,28 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        # TODO: Assert settings
+        # Assert settings
+        for k, v in ps.items():
+            v_json = None
+
+            try:
+                v_json = json.loads(v)
+
+            except Exception:
+                pass
+
+            s = app_settings.get_app_setting(
+                k.split('.')[1],
+                k.split('.')[2],
+                project=self.project,
+                post_safe=True,
+            )
+
+            if isinstance(v_json, dict):
+                self.assertEqual(json.loads(s), v_json)
+
+            else:
+                self.assertEqual(s, v)
 
         # Assert redirect
         with self.login(self.user):

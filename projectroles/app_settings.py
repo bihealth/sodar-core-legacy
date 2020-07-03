@@ -1,5 +1,6 @@
 """Project and user settings API"""
 import json
+import logging
 
 from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
@@ -18,6 +19,9 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
 ]
+
+
+logger = logging.getLogger(__name__)
 
 
 class AppSettingAPI:
@@ -121,14 +125,17 @@ class AppSettingAPI:
         """
         Get default setting value from an app plugin.
 
-        :param app_name: App name (string, must correspond to "name" in app
-                         plugin)
+        :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: Setting value (string, integer or boolean)
+        :raise: ValueError if app plugin is not found
         :raise: KeyError if nothing is found with setting_name
         """
         app_plugin = get_app_plugin(app_name)
+
+        if not app_plugin:
+            raise ValueError('App plugin not found: "{}"'.format(app_name))
 
         if setting_name in app_plugin.app_settings:
             if app_plugin.app_settings[setting_name]['type'] == 'JSON':
@@ -156,11 +163,10 @@ class AppSettingAPI:
         Return app setting value for a project or an user. If not set, return
         default.
 
-        :param app_name: App name (string, must correspond to "name" in app
-                         plugin)
+        :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
-        :param project: Project object (can be None)
-        :param user: User object (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether a POST safe value should be returned (bool)
         :return: String or None
         :raise: KeyError if nothing is found with setting_name
@@ -185,8 +191,8 @@ class AppSettingAPI:
         Return all setting values. If the value is not found, return
         the default.
 
-        :param project: Project object (can be None)
-        :param user: User object (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param post_safe: Whether POST safe values should be returned (bool)
         :return: Dict
         :raise: ValueError if neither project nor user are set
@@ -249,12 +255,11 @@ class AppSettingAPI:
         Set value of an existing project or user settings. Creates the object if
         not found.
 
-        :param app_name: App name (string, must correspond to "name" in app
-                         plugin)
+        :param app_name: App name (string, must equal "name" in app plugin)
         :param setting_name: Setting name (string)
         :param value: Value to be set
-        :param project: Project object (can be None)
-        :param user: User object (can be None)
+        :param project: Project object (optional)
+        :param user: User object (optional)
         :param validate: Validate value (bool, default=True)
         :return: True if changed, False if not changed
         :raise: ValueError if validating and value is not accepted for setting
@@ -262,6 +267,24 @@ class AppSettingAPI:
         :raise: ValueError if neither project nor user are set
         :raise: KeyError if setting name is not found in plugin specification
         """
+
+        def _log_debug(action, app_name, setting_name, value, project, user):
+            extra_data = []
+
+            if project:
+                extra_data.append('project={}'.format(project.sodar_uuid))
+            if user:
+                extra_data.append('user={}'.format(user.username))
+
+            logger.debug(
+                '{} app setting: {}.{} = "{}"{}'.format(
+                    action,
+                    app_name,
+                    setting_name,
+                    value,
+                    ' ({})'.format('; '.join(extra_data)) if extra_data else '',
+                )
+            )
 
         if not project and not user:
             raise ValueError('Project and user are both unset')
@@ -287,6 +310,7 @@ class AppSettingAPI:
                 setting.value = value
 
             setting.save()
+            _log_debug('Set', app_name, setting_name, value, project, user)
             return True
 
         except AppSetting.DoesNotExist:
@@ -330,6 +354,7 @@ class AppSettingAPI:
                 s_vals['value'] = value
 
             AppSetting.objects.create(**s_vals)
+            _log_debug('Create', app_name, setting_name, value, project, user)
             return True
 
     @classmethod
