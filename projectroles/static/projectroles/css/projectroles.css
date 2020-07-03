@@ -517,11 +517,8 @@ a.sodar-nav-link-last {
   max-width: 300px;
 }
 
-.sodar-header-input-group button {
-  height: 32px;
-  padding-top: 3px;
-}
-
+.sodar-header-button,
+.sodar-header-input-group button,
 .sodar-header-input-group a {
   height: 32px;
   padding-top: 3px;

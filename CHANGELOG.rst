@@ -16,6 +16,8 @@ Added
 - **Bgjobs**
     - Enable site-wide background jobs (#544)
     - Site app plugin for site-wide background jobs (#544)
+- **Projectroles**
+    - `sodar-header-button` CSS class (#550)
 
 Changed
 -------
