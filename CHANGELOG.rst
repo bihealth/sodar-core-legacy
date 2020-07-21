@@ -39,6 +39,7 @@ Fixed
     - Project form ``parent`` forced to wrong value if user lacks role in parent category (#558)
     - Invalid ``app_name`` not handled in ``AppSettingAPI.get_default_setting()`` (#560)
     - Empty JSON and false boolean app settings not set in project form (#557)
+    - Minor Javascript errors thrown by ``projectroles.js`` (#536)
 
 
 v0.8.1 (2020-04-24)
