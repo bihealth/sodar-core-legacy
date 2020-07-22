@@ -670,6 +670,13 @@ pre {
   font-size: 85%;
 }
 
+pre#sodar-email-body {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  word-wrap: break-word;
+}
+
 .sodar-code-input {
   font-family: monospace;
   font-size: 85%;

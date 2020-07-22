@@ -41,6 +41,7 @@ Fixed
     - Invalid ``app_name`` not handled in ``AppSettingAPI.get_default_setting()`` (#560)
     - Empty JSON and false boolean app settings not set in project form (#557)
     - Minor Javascript errors thrown by ``projectroles.js`` (#536)
+    - Long lines breaking email preview layout (#564)
 
 
 v0.8.1 (2020-04-24)
