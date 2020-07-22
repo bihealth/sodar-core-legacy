@@ -229,25 +229,6 @@ def get_project_column_value(col, project):
     return col['data'].get(str(project.sodar_uuid))
 
 
-@register.simple_tag
-def get_project_column_count(app_plugins):
-    """Return the amount of columns shown in project listings"""
-
-    def get_active_list_columns(app_plugin):
-        return len(
-            [
-                column
-                for column, attrs in app_plugin.project_list_columns.items()
-                if attrs['active']
-            ]
-        )
-
-    return 2 + max(
-        [get_active_list_columns(app_plugin) for app_plugin in app_plugins],
-        default=0,
-    )
-
-
 # TODO: Update tests
 @register.simple_tag
 def get_user_role_html(project, user):

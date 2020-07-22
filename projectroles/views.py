@@ -81,6 +81,7 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants
 APP_NAME = 'projectroles'
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
+PROJECT_COLUMN_COUNT = 2  # Default columns
 
 
 # API constants for internal SODAR Core apps
@@ -467,6 +468,9 @@ class ProjectListContextMixin:
         )
         context['project_custom_cols'] = self._get_custom_cols(
             self.request.user, context['project_list']
+        )
+        context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
+            context['project_custom_cols']
         )
         return context
 

@@ -503,13 +503,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_not_found_alert()
 
-    def test_get_project_column_count(self):
-        """Test get_project_column_count()"""
-        app_plugins = get_active_plugins()
-
-        self.assertEqual(tags.get_project_column_count(app_plugins), 4)
-        self.assertEqual(tags.get_project_column_count([]), 2)
-
     def test_get_user_role_html(self):
         """Test get_user_role_html()"""
         superuser = self.make_user('superuser')

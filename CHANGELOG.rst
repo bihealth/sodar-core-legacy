@@ -26,7 +26,7 @@ Changed
 - **Projectroles**
     - Upgrade to Chromedriver v83 (#543)
     - Rename ``is_app_link_visible()`` template tag into ``is_app_visible()`` (#546)
-    - Refactor project list to reduce database queries (#551)
+    - Refactor project list to reduce queries and template tag use (#551, #567)
 
 Fixed
 -----

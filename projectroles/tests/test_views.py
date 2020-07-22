@@ -141,6 +141,9 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             custom_cols[0]['data'][str(self.project.sodar_uuid)], 0
         )
 
+        # Assert project column count
+        self.assertEqual(response.context['project_col_count'], 4)
+
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search view"""
