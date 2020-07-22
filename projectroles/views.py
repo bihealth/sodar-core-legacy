@@ -378,6 +378,99 @@ class ProjectContextMixin(
         return context
 
 
+class ProjectListContextMixin:
+    """Mixin for adding context data for displaying the project list."""
+
+    @classmethod
+    def _get_project_list(cls, user, parent=None):
+        """
+        Return a flat list of projects.
+
+        :param user: User for which the projects are visible
+        :param parent: Project object or None
+        """
+        project_list = []
+        flat_list = []
+
+        if user.is_superuser:
+            project_list = Project.objects.filter(
+                parent=parent, submit_status='OK'
+            ).order_by('title')
+
+        elif not user.is_anonymous():
+            project_list = [
+                p
+                for p in Project.objects.filter(
+                    parent=parent, submit_status='OK'
+                ).order_by('title')
+                if p.has_role(user, include_children=True)
+            ]
+
+        def _append_projects(project):
+            lst = [project]
+
+            for c in project.get_children():
+                if user.is_superuser or c.has_role(user, include_children=True):
+                    lst += _append_projects(c)
+
+            return lst
+
+        for p in project_list:
+            flat_list += _append_projects(p)
+
+        return flat_list
+
+    def _get_custom_cols(self, user, project_list):
+        """
+        Return list of custom columns for projects including project data.
+
+        :param user: User object
+        :param project_list: Flat list of Project objects
+        """
+        i = 0
+        cols = []
+
+        for app_plugin in [
+            ap
+            for ap in get_active_plugins(plugin_type='project_app')
+            if ap.project_list_columns
+        ]:
+            for k, v in app_plugin.project_list_columns.items():
+                v['app_plugin'] = app_plugin
+                v['key'] = k
+                v['ordering'] = v.get('ordering') or i
+                v['data'] = {}
+
+                for p in [
+                    p for p in project_list if p.type == PROJECT_TYPE_PROJECT
+                ]:
+                    try:
+                        v['data'][
+                            str(p.sodar_uuid)
+                        ] = app_plugin.get_project_list_value(
+                            k, p, self.request.user
+                        )
+
+                    except Exception:
+                        pass  # TODO: Logging
+
+                cols.append(v)
+                i += 1
+
+        return sorted(cols, key=lambda x: x['ordering'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        parent = context.get('project')
+        context['project_list'] = self._get_project_list(
+            self.request.user, parent
+        )
+        context['project_custom_cols'] = self._get_custom_cols(
+            self.request.user, context['project_list']
+        )
+        return context
+
+
 class CurrentUserFormMixin:
     """Mixin for passing current user to form as current_user"""
 
@@ -405,7 +498,12 @@ class LoginRequiredMixin(AccessMixin):
 # Base Project Views -----------------------------------------------------------
 
 
-class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
+class HomeView(
+    LoginRequiredMixin,
+    PluginContextMixin,
+    ProjectListContextMixin,
+    TemplateView,
+):
     """Home view"""
 
     template_name = 'projectroles/home.html'
@@ -415,6 +513,7 @@ class ProjectDetailView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectPermissionMixin,
+    ProjectListContextMixin,
     ProjectContextMixin,
     DetailView,
 ):
@@ -436,19 +535,17 @@ class ProjectDetailView(
                 role_as = RoleAssignment.objects.get(
                     user=self.request.user, project=self.object
                 )
-
                 context['role'] = role_as.role
 
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
-            # TODO: See issue #197
             context['target_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).order_by('site__name')
+
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
-            # TODO: See issue #197
             context['peer_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')

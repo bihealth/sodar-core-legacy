@@ -503,24 +503,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_not_found_alert()
 
-    def test_get_project_list_value(self):
-        """Test get_project_list_value()"""
-        app_plugin = get_app_plugin('filesfolders')
-        # TODO: Refactor column system so that function returns link URL as
-        # TODO: second return value instead of HTML
-        self.assertEqual(
-            tags.get_project_list_value(
-                app_plugin, 'files', self.project, self.user
-            ),
-            0,
-        )
-
-    def test_get_project_list_column(self):
-        """Test get_project_list_columns()"""
-        cols = tags.get_project_list_columns()
-        self.assertEqual(len(cols), 2)
-        self.assertEqual(cols[0]['key'], 'links')  # Assert ordering
-
     def test_get_project_column_count(self):
         """Test get_project_column_count()"""
         app_plugins = get_active_plugins()

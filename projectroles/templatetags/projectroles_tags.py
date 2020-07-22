@@ -137,6 +137,7 @@ def is_app_visible(plugin, project, user):
 @register.simple_tag
 def get_project_list(user, parent=None):
     """Return flat project list for displaying in templates"""
+    # TODO: Remove once reimplementing custom column retrieval
     project_list = []
 
     if user.is_superuser:
@@ -223,30 +224,9 @@ def get_not_found_alert(project_results, app_search_data, search_type):
 
 
 @register.simple_tag
-def get_project_list_columns():
-    """Return custom project list columns as a sorted list"""
-    cols = []
-    i = 0
-
-    for app_plugin in [
-        ap
-        for ap in get_active_plugins(plugin_type='project_app')
-        if ap.project_list_columns
-    ]:
-        for k, v in app_plugin.project_list_columns.items():
-            v['app_plugin'] = app_plugin
-            v['key'] = k
-            v['ordering'] = v.get('ordering') or i
-            cols.append(v)
-            i += 1
-
-    return sorted(cols, key=lambda x: x['ordering'])
-
-
-@register.simple_tag
-def get_project_list_value(app_plugin, column_id, project, user):
-    ret = app_plugin.get_project_list_value(column_id, project, user)
-    return ret if ret is not None else ''
+def get_project_column_value(col, project):
+    """Return value of a custom project list column for a project"""
+    return col['data'].get(str(project.sodar_uuid))
 
 
 @register.simple_tag
@@ -257,8 +237,8 @@ def get_project_column_count(app_plugins):
         return len(
             [
                 column
-                for column, attributes in app_plugin.project_list_columns.items()
-                if attributes['active']
+                for column, attrs in app_plugin.project_list_columns.items()
+                if attrs['active']
             ]
         )
 

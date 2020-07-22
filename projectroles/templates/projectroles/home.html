@@ -31,9 +31,6 @@
 
 <div class="container-fluid sodar-page-container">
 
-  {# Project List #}
-  {% get_project_list_columns as custom_cols %}
-
   <div class="card" id="sodar-pr-project-list">
     <div class="card-header">
       <h4><i class="fa fa-globe"></i> Available {% get_display_name 'PROJECT' title=True plural=True %}
@@ -55,7 +52,6 @@
          {% include 'projectroles/_project_list_header.html' %}
        </thead>
        <tbody>
-         {% get_project_list user=request.user parent=None as project_list %}
          {% if project_list|length > 0 %}
            {% for p in project_list %}
              {# Actual project list #}

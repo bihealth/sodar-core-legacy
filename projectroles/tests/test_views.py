@@ -127,10 +127,18 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
 
-        # Assert the project list is provided by context processors
+        # Assert the project list is provided in the view context
         self.assertIsNotNone(response.context['project_list'])
         self.assertEqual(
             response.context['project_list'][1].pk, self.project.pk
+        )
+
+        # Assert the custom project list column is provided
+        custom_cols = response.context['project_custom_cols']
+        self.assertEqual(len(custom_cols), 2)
+        self.assertEqual(custom_cols[0]['key'], 'links')  # Assert ordering
+        self.assertEqual(
+            custom_cols[0]['data'][str(self.project.sodar_uuid)], 0
         )
 
 
