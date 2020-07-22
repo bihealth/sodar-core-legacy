@@ -21,13 +21,13 @@
       {{ project_star|safe }}
     </div>
   </td>
-  {% for col in custom_cols %}
+  {% for col in project_custom_cols %}
     {% if col.active %}
      {% if p.type == 'PROJECT' %}
-       {% get_project_list_value col.app_plugin col.key p request.user as cell_value %}
-       <td class="text-{{ col.align }}"
-           {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}>
-          {{ cell_value | safe }}
+        <td class="sodar-pr-project-list-custom text-{{ col.align }}"
+            {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}>
+          {% get_project_column_value col p as col_val %}
+          {{ col_val | safe }}
         </td>
       {% else %}
         <td></td>

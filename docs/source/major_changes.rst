@@ -10,6 +10,22 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.2 (2020-07-22)
+*******************
+
+Release Highlights
+==================
+
+- Enable site-wide background jobs
+- Critical bug fixes for project member management
+- Minor fixes and updates
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.8.1 (2020-04-24)
 *******************
 

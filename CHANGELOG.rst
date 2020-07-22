@@ -7,6 +7,43 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.8.2 (2020-07-22)
+===================
+
+Added
+-----
+
+- **Bgjobs**
+    - Enable site-wide background jobs (#544)
+    - Site app plugin for site-wide background jobs (#544)
+- **Projectroles**
+    - ``sodar-header-button`` CSS class (#550)
+    - Logging for ``AppSettingAPI`` (#559)
+
+Changed
+-------
+
+- **Projectroles**
+    - Upgrade to Chromedriver v83 (#543)
+    - Rename ``is_app_link_visible()`` template tag into ``is_app_visible()`` (#546)
+    - Refactor project list to reduce queries and template tag use (#551, #567)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Transferring project ownership to inherited owner not allowed (#534)
+    - Uniqueness constraint in ``AppSetting`` incompatible with ``PROJECT_USER`` scope settings (#542)
+    - Inherited owner email address not displayed in project member list (#541)
+    - App visibility check broken in ``project_detail.html`` (#546)
+    - Invite accept for a category invoking Taskflow and causing a crash (#552)
+    - Project form ``parent`` forced to wrong value if user lacks role in parent category (#558)
+    - Invalid ``app_name`` not handled in ``AppSettingAPI.get_default_setting()`` (#560)
+    - Empty JSON and false boolean app settings not set in project form (#557)
+    - Minor Javascript errors thrown by ``projectroles.js`` (#536)
+    - Long lines breaking email preview layout (#564)
+
+
 v0.8.1 (2020-04-24)
 ===================
 

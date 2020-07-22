@@ -279,6 +279,15 @@ class ProjectForm(SODARModelForm):
                 if c not in instance.get_children(flat=True)
             ]
 
+        # FIX for #558: Ensure current parent is in choices
+        if (
+            categories
+            and not user.is_superuser
+            and instance.parent
+            and instance.parent not in categories
+        ):
+            categories.append(instance.parent)
+
         ret += [(c.sodar_uuid, c.get_full_title()) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
@@ -806,10 +815,15 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             )
 
         role_as = RoleAssignment.objects.get_assignment(user, self.project)
+        inh_owners = [
+            a.user for a in self.project.get_owners(inherited_only=True)
+        ]
 
-        if role_as.project != self.project:
+        if (role_as and role_as.project != self.project) or (
+            not role_as and user not in inh_owners
+        ):
             raise forms.ValidationError(
-                'The new owner should be from this project'
+                'The new owner has no roles in the project'
             )
 
         return user

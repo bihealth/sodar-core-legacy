@@ -34,7 +34,7 @@
 
   {# App plugins #}
   {% for plugin in app_plugins %}
-    {% is_app_link_visible plugin project request.user as app_link_visible %}
+    {% is_app_visible plugin project request.user as app_link_visible %}
     {% if app_link_visible %}
       {% get_sidebar_app_legend plugin.title as app_legend %}
       <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"

@@ -81,6 +81,7 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants
 APP_NAME = 'projectroles'
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
+PROJECT_COLUMN_COUNT = 2  # Default columns
 
 
 # API constants for internal SODAR Core apps
@@ -378,6 +379,102 @@ class ProjectContextMixin(
         return context
 
 
+class ProjectListContextMixin:
+    """Mixin for adding context data for displaying the project list."""
+
+    @classmethod
+    def _get_project_list(cls, user, parent=None):
+        """
+        Return a flat list of projects.
+
+        :param user: User for which the projects are visible
+        :param parent: Project object or None
+        """
+        project_list = []
+        flat_list = []
+
+        if user.is_superuser:
+            project_list = Project.objects.filter(
+                parent=parent, submit_status='OK'
+            ).order_by('title')
+
+        elif not user.is_anonymous():
+            project_list = [
+                p
+                for p in Project.objects.filter(
+                    parent=parent, submit_status='OK'
+                ).order_by('title')
+                if p.has_role(user, include_children=True)
+            ]
+
+        def _append_projects(project):
+            lst = [project]
+
+            for c in project.get_children():
+                if user.is_superuser or c.has_role(user, include_children=True):
+                    lst += _append_projects(c)
+
+            return lst
+
+        for p in project_list:
+            flat_list += _append_projects(p)
+
+        return flat_list
+
+    def _get_custom_cols(self, user, project_list):
+        """
+        Return list of custom columns for projects including project data.
+
+        :param user: User object
+        :param project_list: Flat list of Project objects
+        """
+        i = 0
+        cols = []
+
+        for app_plugin in [
+            ap
+            for ap in get_active_plugins(plugin_type='project_app')
+            if ap.project_list_columns
+        ]:
+            for k, v in app_plugin.project_list_columns.items():
+                v['app_plugin'] = app_plugin
+                v['key'] = k
+                v['ordering'] = v.get('ordering') or i
+                v['data'] = {}
+
+                for p in [
+                    p for p in project_list if p.type == PROJECT_TYPE_PROJECT
+                ]:
+                    try:
+                        v['data'][
+                            str(p.sodar_uuid)
+                        ] = app_plugin.get_project_list_value(
+                            k, p, self.request.user
+                        )
+
+                    except Exception:
+                        pass  # TODO: Logging
+
+                cols.append(v)
+                i += 1
+
+        return sorted(cols, key=lambda x: x['ordering'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        parent = context.get('project')
+        context['project_list'] = self._get_project_list(
+            self.request.user, parent
+        )
+        context['project_custom_cols'] = self._get_custom_cols(
+            self.request.user, context['project_list']
+        )
+        context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
+            context['project_custom_cols']
+        )
+        return context
+
+
 class CurrentUserFormMixin:
     """Mixin for passing current user to form as current_user"""
 
@@ -405,7 +502,12 @@ class LoginRequiredMixin(AccessMixin):
 # Base Project Views -----------------------------------------------------------
 
 
-class HomeView(LoginRequiredMixin, PluginContextMixin, TemplateView):
+class HomeView(
+    LoginRequiredMixin,
+    PluginContextMixin,
+    ProjectListContextMixin,
+    TemplateView,
+):
     """Home view"""
 
     template_name = 'projectroles/home.html'
@@ -415,6 +517,7 @@ class ProjectDetailView(
     LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectPermissionMixin,
+    ProjectListContextMixin,
     ProjectContextMixin,
     DetailView,
 ):
@@ -436,19 +539,17 @@ class ProjectDetailView(
                 role_as = RoleAssignment.objects.get(
                     user=self.request.user, project=self.object
                 )
-
                 context['role'] = role_as.role
 
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
-            # TODO: See issue #197
             context['target_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).order_by('site__name')
+
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
-            # TODO: See issue #197
             context['peer_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
             ).order_by('site__name')
@@ -584,15 +685,18 @@ class ProjectModifyMixin:
                 s_name = 'settings.{}.{}'.format(plugin.name, s_key)
                 s_data = data.get(s_name)
 
-                if not s_data and not instance:
+                if s_data is None and not instance:
                     s_data = app_settings.get_default_setting(
                         plugin.name, s_key
                     )
 
-                if s_data and s_val['type'] == 'JSON':
+                if s_val['type'] == 'JSON':
+                    if s_data is None:
+                        s_data = {}
+
                     project_settings[s_name] = json.dumps(s_data)
 
-                elif s_data:
+                elif s_data is not None:
                     project_settings[s_name] = s_data
 
         return project_settings
@@ -1499,8 +1603,24 @@ class RoleAssignmentOwnerTransferMixin:
         old_owner_as.save()
 
         role_as = RoleAssignment.objects.get_assignment(new_owner, project)
-        role_as.role = Role.objects.get(name=PROJECT_ROLE_OWNER)
-        role_as.save()
+        role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
+
+        if role_as:
+            role_as.role = role_owner
+            role_as.save()
+
+        elif new_owner in [
+            a.user for a in project.get_owners(inherited_only=True)
+        ]:
+            RoleAssignment.objects.create(
+                project=project, user=new_owner, role=role_owner
+            )
+
+        else:
+            # We should already catch this earlier, but just in case..
+            raise Exception(
+                'New owner must have direct or inherited role in project'
+            )
 
         return True
 
@@ -1512,7 +1632,7 @@ class RoleAssignmentOwnerTransferMixin:
         :param project: Project object
         :param new_owner: User object
         :param old_owner_as: RoleAssignment object
-        :param old_owner_role: Role object
+        :param old_owner_role: Role object for the previous owner's new role
         :return:
         """
         old_owner = old_owner_as.user
@@ -1851,8 +1971,8 @@ class ProjectInviteAcceptView(LoginRequiredMixin, View):
                 ),
             )
 
-        # Submit with taskflow
-        if taskflow:
+        # Submit with taskflow (only for projects)
+        if taskflow and invite.project.type == PROJECT_TYPE_PROJECT:
             if tl_event:
                 tl_event.set_status('SUBMIT')
 

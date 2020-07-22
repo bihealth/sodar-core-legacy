@@ -104,16 +104,20 @@ function modifySearch() {
 }
 
 $(document).ready(function () {
-    if ($('#sodar-nav-search-input').val().length === 0) {
-      $('#sodar-nav-search-submit').attr('disabled', true);
-    } else {
-      $('#sodar-nav-search-submit').attr('disabled', false);
+    var searchInput = $('#sodar-nav-search-input');
+
+    if (searchInput) {
+        if (!searchInput.val() || searchInput.val().length === 0) {
+            $('#sodar-nav-search-submit').attr('disabled', true);
+        } else {
+            $('#sodar-nav-search-submit').attr('disabled', false);
+        }
+        searchInput.keyup(function () {
+            modifySearch();
+        }).on('input', function () {
+            modifySearch();
+        });
     }
-    $('#sodar-nav-search-input').keyup(function () {
-        modifySearch();
-    }).on('input', function () {
-        modifySearch();
-    });
 });
 
 
@@ -416,12 +420,14 @@ $(document).ready(function () {
 
 
 function toggleSidebar() {
-    if (!window.sidebar.is(':visible')) {
-        if (window.sidebarMinWindowHeight < window.innerHeight && window.innerWidth > 1000) {
+    if (window.sidebar && !window.sidebar.is(':visible')) {
+        if (window.sidebarMinWindowHeight < window.innerHeight &&
+                window.innerWidth > 1000) {
             window.sidebar.show();
             window.sidebar_alt_btn.hide();
         }
-    } else if (window.sidebarMinWindowHeight > window.innerHeight || window.innerWidth < 1000) {
+    } else if (window.sidebarMinWindowHeight > window.innerHeight ||
+            window.innerWidth < 1000) {
         window.sidebar_alt_btn.show();
         window.sidebar.hide();
     }

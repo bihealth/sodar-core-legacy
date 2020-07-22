@@ -429,7 +429,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     def test_get_site_apps(self):
         """Test get_site_apps()"""
-        self.assertEqual(len(tags.get_site_apps()), 6)
+        self.assertEqual(len(tags.get_site_apps()), 7)
 
     # TODO: Test get_site_app_messages() (set up admin alert)
 
@@ -455,40 +455,39 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         """Test allow_project_creation() in target mode"""
         self.assertEqual(tags.allow_project_creation(), False)
 
-    def test_is_app_link_visible(self):
-        """Test is_app_link_visible()"""
+    def test_is_app_visible(self):
+        """Test is_app_visible()"""
         app_plugin = get_app_plugin('filesfolders')
         self.assertEqual(
-            tags.is_app_link_visible(app_plugin, self.project, self.user), True
+            tags.is_app_visible(app_plugin, self.project, self.user), True
         )
 
-    def test_is_app_link_visible_category(self):
-        """Test is_app_link_visible() with a category"""
+    def test_is_app_visible_category(self):
+        """Test is_app_visible() with a category"""
         app_plugin = get_app_plugin('filesfolders')
         self.assertEqual(
-            tags.is_app_link_visible(app_plugin, self.category, self.user),
-            False,
+            tags.is_app_visible(app_plugin, self.category, self.user), False,
         )
 
-    def test_is_app_link_visible_category_enabled(self):
-        """Test is_app_link_visible() with category_enable=True"""
+    def test_is_app_visible_category_enabled(self):
+        """Test is_app_visible() with category_enable=True"""
         app_plugin = get_app_plugin('timeline')
         self.assertEqual(
-            tags.is_app_link_visible(app_plugin, self.category, self.user), True
+            tags.is_app_visible(app_plugin, self.category, self.user), True
         )
 
     @override_settings(PROJECTROLES_HIDE_APP_LINKS=['filesfolders'])
-    def test_is_app_link_visible_hide(self):
-        """Test is_app_link_visible() with a hidden app and normal/superuser"""
+    def test_is_app_visible_hide(self):
+        """Test is_app_visible() with a hidden app and normal/superuser"""
         app_plugin = get_app_plugin('filesfolders')
         superuser = self.make_user('superuser')
         superuser.is_superuser = True
         superuser.save()
         self.assertEqual(
-            tags.is_app_link_visible(app_plugin, self.project, self.user), False
+            tags.is_app_visible(app_plugin, self.project, self.user), False
         )
         self.assertEqual(
-            tags.is_app_link_visible(app_plugin, self.project, superuser), True
+            tags.is_app_visible(app_plugin, self.project, superuser), True
         )
 
     def test_get_project_list(self):
@@ -503,31 +502,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
     # TODO: Refactor and test get_project_list_indent()
 
     # TODO: Test get_not_found_alert()
-
-    def test_get_project_list_value(self):
-        """Test get_project_list_value()"""
-        app_plugin = get_app_plugin('filesfolders')
-        # TODO: Refactor column system so that function returns link URL as
-        # TODO: second return value instead of HTML
-        self.assertEqual(
-            tags.get_project_list_value(
-                app_plugin, 'files', self.project, self.user
-            ),
-            0,
-        )
-
-    def test_get_project_list_column(self):
-        """Test get_project_list_columns()"""
-        cols = tags.get_project_list_columns()
-        self.assertEqual(len(cols), 2)
-        self.assertEqual(cols[0]['key'], 'links')  # Assert ordering
-
-    def test_get_project_column_count(self):
-        """Test get_project_column_count()"""
-        app_plugins = get_active_plugins()
-
-        self.assertEqual(tags.get_project_column_count(app_plugins), 4)
-        self.assertEqual(tags.get_project_column_count([]), 2)
 
     def test_get_user_role_html(self):
         """Test get_user_role_html()"""

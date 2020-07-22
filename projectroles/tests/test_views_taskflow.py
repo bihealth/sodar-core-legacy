@@ -997,17 +997,17 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
         # Create guest user and role
         self.user_new = self.make_user('newuser')
 
+    def test_accept_invite(self):
+        """Test user accepting an invite with taskflow"""
+
         # Init invite
-        self.invite = self._make_invite(
+        invite = self._make_invite(
             email=INVITE_EMAIL,
             project=self.project,
             role=self.role_contributor,
             issuer=self.user,
             message='',
         )
-
-    def test_accept_invite(self):
-        """Test user accepting an invite with taskflow"""
 
         # Assert preconditions
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
@@ -1025,7 +1025,7 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
             response = self.client.get(
                 reverse(
                     'projectroles:invite_accept',
-                    kwargs={'secret': self.invite.secret},
+                    kwargs={'secret': invite.secret},
                 ),
                 self.request_data,
             )
@@ -1046,6 +1046,61 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
             self.assertEqual(
                 RoleAssignment.objects.filter(
                     project=self.project,
+                    user=self.user_new,
+                    role=self.role_contributor,
+                ).count(),
+                1,
+            )
+
+    def test_accept_invite_category(self):
+        """Test user accepting an invite with taskflow for a category"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.category,
+                user=self.user_new,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+        with self.login(self.user_new):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                ),
+                self.request_data,
+            )
+
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+            )
+
+            # Assert postconditions
+            self.assertEqual(
+                ProjectInvite.objects.filter(active=True).count(), 0
+            )
+
+            self.assertEqual(
+                RoleAssignment.objects.filter(
+                    project=self.category,
                     user=self.user_new,
                     role=self.role_contributor,
                 ).count(),

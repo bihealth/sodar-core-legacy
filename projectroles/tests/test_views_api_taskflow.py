@@ -589,11 +589,12 @@ class TestRoleAssignmentOwnerTransferAPIView(TestCoreTaskflowAPIBase):
         super().setUp()
 
         # Make project with owner in Taskflow and Django
+        self.user_owner = self.make_user('user_owner')
         self.project, self.owner_as = self._make_project_taskflow(
             title='TestProject',
             type=PROJECT_TYPE_PROJECT,
             parent=self.category,
-            owner=self.user,
+            owner=self.user_owner,
             description='description',
         )
 
@@ -611,7 +612,7 @@ class TestRoleAssignmentOwnerTransferAPIView(TestCoreTaskflowAPIBase):
         )
 
         # Assert preconditions
-        self.assertEqual(self.project.get_owner().user, self.user)
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
 
         url = reverse(
             'projectroles:api_role_owner_transfer',
@@ -626,6 +627,12 @@ class TestRoleAssignmentOwnerTransferAPIView(TestCoreTaskflowAPIBase):
         # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.assign_user)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_contributor,
+        )
 
     def test_transfer_owner_category(self):
         """Test transferring ownership for a category"""
@@ -652,3 +659,36 @@ class TestRoleAssignmentOwnerTransferAPIView(TestCoreTaskflowAPIBase):
         # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.category.get_owner().user, self.assign_user)
+
+    def test_transfer_owner_inherit(self):
+        """Test transferring ownership to an inherited owner"""
+
+        # Make extra assignment with Taskflow
+        self._make_assignment_taskflow(
+            project=self.project,
+            user=self.assign_user,
+            role=self.role_contributor,
+        )
+
+        # Assert preconditions
+        self.assertEqual(self.project.get_owner().user, self.user_owner)
+
+        url = reverse(
+            'projectroles:api_role_owner_transfer',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'new_owner': self.user.username,  # self.user = category owner
+            'old_owner_role': self.role_contributor.name,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(self.project.get_owner().user, self.user)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_contributor,
+        )

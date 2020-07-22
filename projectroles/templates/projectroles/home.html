@@ -31,9 +31,6 @@
 
 <div class="container-fluid sodar-page-container">
 
-  {# Project List #}
-  {% get_project_list_columns as custom_cols %}
-
   <div class="card" id="sodar-pr-project-list">
     <div class="card-header">
       <h4><i class="fa fa-globe"></i> Available {% get_display_name 'PROJECT' title=True plural=True %}
@@ -44,7 +41,8 @@
                     filter-mode="0"><i class="fa fa-star-o"></i> Starred</button>
           </div>
           <input class="form-control"
-                 type="text" placeholder="Filter" aria-label="Filter {% get_display_name 'PROJECT' title=False plural=True %}"
+                 type="text" placeholder="Filter"
+                 aria-label="Filter {% get_display_name 'PROJECT' title=False plural=True %}"
                  id="sodar-pr-project-list-filter">
         </div>
       </h4>
@@ -55,7 +53,6 @@
          {% include 'projectroles/_project_list_header.html' %}
        </thead>
        <tbody>
-         {% get_project_list user=request.user parent=None as project_list %}
          {% if project_list|length > 0 %}
            {% for p in project_list %}
              {# Actual project list #}
@@ -65,24 +62,28 @@
            {% endfor %}
            {# Not found message for filtering #}
            <tr class="sodar-pr-home-display-notfound">
-             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+             <td class="bg-faded font-italic text-center text-danger"
+                 colspan="{{ project_col_count }}">
                No {% get_display_name 'PROJECT' title=False plural=True %} found matching current filter
              </td>
            </tr>
            <tr class="sodar-pr-home-display-nostars">
-             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+             <td class="bg-faded font-italic text-center text-danger"
+                 colspan="{{ project_col_count }}">
                No starred {% get_display_name 'PROJECT' title=False plural=True %} found
              </td>
            </tr>
         {% elif request.user.is_superuser %}
            <tr>
-             <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+             <td class="bg-faded font-italic text-center text-danger"
+                 colspan="{{ project_col_count }}">
                No {% get_display_name 'PROJECT' title=False plural=True %} created
               </td>
            </tr>
         {% else %}
           <tr>
-            <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+            <td class="bg-faded font-italic text-center text-danger"
+                colspan="{{ project_col_count }}">
               No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
             </td>
           </tr>

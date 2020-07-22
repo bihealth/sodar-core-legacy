@@ -246,6 +246,30 @@ class TestAppSettingAPI(
                 project=self.project,
             )
 
+    def test_set_multi_project_user_settings(self):
+        """Test set_app_setting() with multiple instances of a project-user setting"""
+
+        # Set up second user
+        new_user = self.make_user('new_user')
+
+        ret = app_settings.set_app_setting(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_user_string_hidden_setting',
+            project=self.project,
+            user=self.user,
+            value=True,
+        )
+        self.assertEqual(ret, True)
+
+        ret = app_settings.set_app_setting(
+            app_name=EXAMPLE_APP_NAME,
+            setting_name='project_user_string_hidden_setting',
+            project=self.project,
+            user=new_user,
+            value=True,
+        )
+        self.assertEqual(ret, True)
+
     def test_validator(self):
         """Test validate_setting() with type BOOLEAN"""
         for setting in self.settings:

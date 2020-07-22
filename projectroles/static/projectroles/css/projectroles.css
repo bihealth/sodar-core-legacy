@@ -517,11 +517,8 @@ a.sodar-nav-link-last {
   max-width: 300px;
 }
 
-.sodar-header-input-group button {
-  height: 32px;
-  padding-top: 3px;
-}
-
+.sodar-header-button,
+.sodar-header-input-group button,
 .sodar-header-input-group a {
   height: 32px;
   padding-top: 3px;
@@ -671,6 +668,13 @@ div#sodar-modal div.modal-dialog{
 
 pre {
   font-size: 85%;
+}
+
+pre#sodar-email-body {
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  word-wrap: break-word;
 }
 
 .sodar-code-input {

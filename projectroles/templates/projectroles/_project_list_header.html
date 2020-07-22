@@ -4,7 +4,7 @@
 
 <tr class="sodar-pr-project-list-header">
   <th id="sodar-pr-project-list-header-project">{% get_display_name 'PROJECT' title=True %}</th>
-  {% for col in custom_cols %}
+  {% for col in project_custom_cols %}
     {% if col.active %}
       <th id="sodar-pr-project-list-header-{{ col.app_plugin.name }}-{{ col.key }}"
           class="text-nowrap {% if col.align %}text-{{ col.align }}{% endif %}"

@@ -646,7 +646,7 @@ class AppSetting(models.Model):
 
     class Meta:
         ordering = ['project__title', 'app_plugin__name', 'name']
-        unique_together = ('project', 'app_plugin', 'name')
+        unique_together = ['project', 'user', 'app_plugin', 'name']
 
     def __str__(self):
         if self.project:

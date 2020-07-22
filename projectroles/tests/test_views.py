@@ -127,11 +127,22 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
 
-        # Assert the project list is provided by context processors
+        # Assert the project list is provided in the view context
         self.assertIsNotNone(response.context['project_list'])
         self.assertEqual(
             response.context['project_list'][1].pk, self.project.pk
         )
+
+        # Assert the custom project list column is provided
+        custom_cols = response.context['project_custom_cols']
+        self.assertEqual(len(custom_cols), 2)
+        self.assertEqual(custom_cols[0]['key'], 'links')  # Assert ordering
+        self.assertEqual(
+            custom_cols[0]['data'][str(self.project.sodar_uuid)], 0
+        )
+
+        # Assert project column count
+        self.assertEqual(response.context['project_col_count'], 4)
 
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
@@ -252,11 +263,11 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_CATEGORY, None
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.category, self.user, self.role_owner
         )
 
         # Create another user to enable checking for owner selection
@@ -266,7 +277,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid},
+                    kwargs={'project': self.category.sodar_uuid},
                 )
             )
 
@@ -517,9 +528,41 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertNotIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertIsInstance(form.fields['owner'].widget, HiddenInput)
 
+    def test_render_parent(self):
+        """Test rendering to make sure current parent is selectable without parent role"""
+
+        # Create new user and project, make new user the owner
+        user_new = self.make_user('newuser')
+        self.owner_as.user = user_new
+        self.owner_as.save()
+
+        # Create another category with new user as owner
+        category2 = self._make_project(
+            'TestCategory2', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category2, user_new, self.role_owner)
+
+        with self.login(user_new):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Assert form field values
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        # Ensure self.category (with no user_new rights) is initial
+        self.assertEqual(form.initial['parent'], self.category.sodar_uuid)
+        self.assertEqual(len(form.fields['parent'].choices), 2)
+
     def test_update_project(self):
         """Test Project updating"""
         timeline = get_backend_api('timeline_backend')
+        app_settings = AppSettingAPI()
 
         new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self._make_assignment(new_category, self.user, self.role_owner)
@@ -534,9 +577,13 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
 
         # Add settings values
-        values.update(
-            app_settings.get_all_settings(project=self.project, post_safe=True)
-        )
+        ps = app_settings.get_all_settings(project=self.project, post_safe=True)
+        # Edit settings to non-default values
+        ps['settings.example_project_app.project_int_setting'] = 1
+        ps['settings.example_project_app.project_str_setting'] = 'test'
+        ps['settings.example_project_app.project_bool_setting'] = True
+        ps['settings.example_project_app.project_json_setting'] = '{}'
+        values.update(ps)
 
         with self.login(self.user):
             response = self.client.post(
@@ -568,7 +615,28 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        # TODO: Assert settings
+        # Assert settings
+        for k, v in ps.items():
+            v_json = None
+
+            try:
+                v_json = json.loads(v)
+
+            except Exception:
+                pass
+
+            s = app_settings.get_app_setting(
+                k.split('.')[1],
+                k.split('.')[2],
+                project=self.project,
+                post_safe=True,
+            )
+
+            if isinstance(v_json, dict):
+                self.assertEqual(json.loads(s), v_json)
+
+            else:
+                self.assertEqual(s, v)
 
         # Assert redirect
         with self.login(self.user):
@@ -1311,11 +1379,20 @@ class TestRoleAssignmentOwnerTransferView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         # Create guest user and role
@@ -1327,11 +1404,8 @@ class TestRoleAssignmentOwnerTransferView(
     def test_transfer_ownership(self):
         """Test ownership transfer"""
 
-        # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         with self.login(self.user):
-            self.client.post(
+            response = self.client.post(
                 reverse(
                     'projectroles:role_transfer_owner',
                     kwargs={'project': self.project.sodar_uuid},
@@ -1342,11 +1416,41 @@ class TestRoleAssignmentOwnerTransferView(
                     'new_owner': self.user_new.sodar_uuid,
                 },
             )
-        self.role_as.refresh_from_db()
-        self.owner_as.refresh_from_db()
 
-        self.assertEqual(self.role_as.role, self.role_owner)
-        self.assertEqual(self.owner_as.role, self.role_guest)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_transfer_ownership_inherited(self):
+        """Test ownership transfer to an inherited owner"""
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_transfer_owner',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                    'new_owner': self.user_owner_cat.sodar_uuid,
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_owner_cat)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
         self.assertEqual(len(mail.outbox), 2)
 
 

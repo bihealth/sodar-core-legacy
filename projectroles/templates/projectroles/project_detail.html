@@ -95,9 +95,7 @@
     {# Subprojects #}
 
     {% if object.type == 'CATEGORY' %}
-      {% get_project_list user=request.user parent=object as subproject_list %}
-      {% if subproject_list|length > 0 %}
-        {% get_project_list_columns as custom_cols %}
+      {% if project_list|length > 0 %}
         <div class="card">
           <div class="card-header">
             <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
@@ -108,13 +106,14 @@
                {% include 'projectroles/_project_list_header.html' %}
              </thead>
              <tbody>
-               {% if subproject_list|length > 0 %}
-                 {% for p in subproject_list %}
+               {% if project_list|length > 0 %}
+                 {% for p in project_list %}
                    {% include 'projectroles/_project_list_item.html' with list_parent=object %}
                  {% endfor %}
                {% else %}
                  <tr>
-                   <td class="bg-faded font-italic text-center text-danger" colspan={% get_project_column_count app_plugins %}>
+                   <td class="bg-faded font-italic text-center text-danger"
+                       colspan="{{ project_col_count }}">
                      No {% get_display_name 'CATEGORY' title=False count=2 %}
                      or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
                  </tr>
@@ -128,36 +127,36 @@
 
     {# App Plugin Cards #}
 
-      {% for plugin in app_plugins %}
-        {% has_perm plugin.app_permission request.user object as can_view_app %}
-        {% if can_view_app and object.type == 'PROJECT' or plugin.category_enable %}
-          <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
-            <div class="card-header">
-              <h4>
-                <i class="fa fa-{{ plugin.icon }}"></i>
-                {% if plugin.details_title %}
-                  {{ plugin.details_title }}
-                {% else %}
-                  {{ plugin.title }}
-                {% endif %}
-                <span class="pull-right">
-                  {% get_info_link plugin.description as info_link %}
-                  {{ info_link | safe }}
-                </span>
-              </h4>
-            </div>
-            {% if plugin.details_template %}
-              <div class="card-body p-0">
-                {% include plugin.details_template %}
-              </div>
-            {% else %}
-              <div class="card-body text-center">
-                <p class="text-danger"><em>No app card template found</em></p>
-              </div>
-            {% endif %}
+    {% for plugin in app_plugins %}
+      {% is_app_visible plugin project request.user as app_visible %}
+      {% if app_visible %}
+        <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
+          <div class="card-header">
+            <h4>
+              <i class="fa fa-{{ plugin.icon }}"></i>
+              {% if plugin.details_title %}
+                {{ plugin.details_title }}
+              {% else %}
+                {{ plugin.title }}
+              {% endif %}
+              <span class="pull-right">
+                {% get_info_link plugin.description as info_link %}
+                {{ info_link | safe }}
+              </span>
+            </h4>
           </div>
-        {% endif %}
-      {% endfor %}
+          {% if plugin.details_template %}
+            <div class="card-body p-0">
+              {% include plugin.details_template %}
+            </div>
+          {% else %}
+            <div class="card-body text-center">
+              <p class="text-danger"><em>No app card template found</em></p>
+            </div>
+          {% endif %}
+        </div>
+      {% endif %}
+    {% endfor %}
 
   </div>
 
