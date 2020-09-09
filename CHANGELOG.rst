@@ -15,6 +15,14 @@ Changed
 
 - **General**
     - Upgrade to Chromedriver v85 (#569)
+- **Siteinfo**
+    - Refactor app plugin statistics retrieval (#573)
+
+Fixed
+-----
+
+- **Siteinfo**
+    - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
 
 
 v0.8.2 (2020-07-22)
