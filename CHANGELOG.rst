@@ -15,6 +15,8 @@ Changed
 
 - **General**
     - Upgrade to Chromedriver v85 (#569)
+- **Projectroles**
+    - Improve project list header legend (#571)
 - **Siteinfo**
     - Refactor app plugin statistics retrieval (#573)
 

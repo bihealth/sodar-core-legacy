@@ -1,9 +1,15 @@
 {# Project list header #}
 {# Expects to have custom_cols set #}
 {% load projectroles_common_tags %}
+{% get_django_setting 'PROJECTROLES_DISABLE_CATEGORIES' as disable_categories %}
 
 <tr class="sodar-pr-project-list-header">
-  <th id="sodar-pr-project-list-header-project">{% get_display_name 'PROJECT' title=True %}</th>
+  <th id="sodar-pr-project-list-header-project">
+    {% get_display_name 'PROJECT' title=True %}
+    {% if not disable_categories %}
+      / {% get_display_name 'CATEGORY' title=True %}
+    {% endif %}
+  </th>
   {% for col in project_custom_cols %}
     {% if col.active %}
       <th id="sodar-pr-project-list-header-{{ col.app_plugin.name }}-{{ col.key }}"
