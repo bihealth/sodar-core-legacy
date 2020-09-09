@@ -24,6 +24,12 @@ Fixed
 - **Siteinfo**
     - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
 
+Removed
+-------
+
+- **General**
+    - Unused ``Pillow`` dependency (#575)
+
 
 v0.8.2 (2020-07-22)
 ===================
