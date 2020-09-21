@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - Missing migration for the ``SODARUser`` model (#581)
+
 Changed
 -------
 
@@ -23,6 +29,8 @@ Changed
 Fixed
 -----
 
+- **General**
+    - Invalid statement in ``setup_database.sh`` (#580)
 - **Siteinfo**
     - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
 
