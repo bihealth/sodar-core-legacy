@@ -46,7 +46,7 @@ then
     echo ""
     choice=-1
     # Choice has to be in range and an integer
-    while (( $choice < 0 )) || (( $choice > ${#user_array[@] - 1} )) || ! [ "$choice" -eq "$choice" ]
+    while (( $choice < 0 )) || (( $choice > ${#user_array[@]} - 1 ))
     do
         echo "Choose an existing user"
         idx=0
