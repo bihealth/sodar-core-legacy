@@ -878,8 +878,14 @@ class TestTargetProjectViews(
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
-    def test_create_sub(self):
-        """Test permissions for subproject creation as target"""
+    # TODO: Add separate tests for local/remote creation
+    # TODO: Remote creation should fail
+    def test_create_sub_local(self):
+        """Test permissions for subproject creation as target under a local category"""
+
+        # Make category local
+        self.remote_category.delete()
+
         url = reverse(
             'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
@@ -893,6 +899,23 @@ class TestTargetProjectViews(
             self.user_no_roles,
         ]
         self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+
+    def test_create_sub_remote(self):
+        """Test permissions for subproject creation as target under a local category"""
+        url = reverse(
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
+        )
+        bad_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.anonymous,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
         self.assert_response(url, bad_users, 302)
 
     @override_settings(PROJECTROLES_TARGET_CREATE=False)

@@ -792,6 +792,36 @@ class TestSyncSourceData(
         project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         self.assertEqual(project_obj.get_owner().user, self.admin_user)
 
+    def test_create_category_conflict(self):
+        """Test sync with conflict in local categories (should fail)"""
+
+        # Set up local category
+        self._make_project(
+            title=SOURCE_CATEGORY_TITLE,
+            type=PROJECT_TYPE_CATEGORY,
+            parent=None,
+        )
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
+        remote_data = self.default_data
+
+        # Do sync, assert an exception is raised
+        with self.assertRaises(ValueError):
+            self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+
     def test_update(self):
         """Test sync with existing project data and READ_ROLE access"""
 

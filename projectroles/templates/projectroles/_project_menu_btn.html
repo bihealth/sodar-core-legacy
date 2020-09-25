@@ -68,7 +68,7 @@
 
     {% if project and project.type == 'CATEGORY' %}
       {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-      {% if allow_creation and can_create_project %}
+      {% if allow_creation and can_create_project and not project.is_remote %}
          <a class="dropdown-item"
             href="{% url 'projectroles:create' project=project.sodar_uuid %}"
             id="sodar-pr-alt-link-project-create">

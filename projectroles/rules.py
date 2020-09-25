@@ -93,11 +93,10 @@ def is_modifiable_project(user, obj):
 
 
 @rules.predicate
-def can_create_projects():
+def can_create_projects(user, obj):
     """Whether or not new projects can be generated on the site"""
-    if (
-        settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
-        and not settings.PROJECTROLES_TARGET_CREATE
+    if settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET and (
+        not settings.PROJECTROLES_TARGET_CREATE or (obj and obj.is_remote())
     ):
         return False
 

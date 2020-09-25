@@ -355,9 +355,9 @@ Alternatively, the following management command can be used:
 
 .. note::
 
-    If categories or projects with the same name within the same parent exist
-    under a different UUID, they or their child projects will **not** be
-    synchronized.
+    Creating local projects under a category synchronized from a remote source
+    site is **not** allowed from v0.8.3 onwards. For having local projects on a
+    target site, you should create and use a local root category.
 
 .. note::
 

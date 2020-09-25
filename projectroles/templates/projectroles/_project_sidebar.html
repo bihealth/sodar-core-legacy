@@ -75,7 +75,7 @@
 {# Project and Category Creation #}
 {% if project and project.type == 'CATEGORY' %}
   {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
-  {% if allow_creation and can_create_project %}
+  {% if allow_creation and can_create_project and not project.is_remote %}
     <li id="sodar-pr-nav-project-create"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"

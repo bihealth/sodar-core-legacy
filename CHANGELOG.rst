@@ -23,6 +23,8 @@ Changed
     - Upgrade to Chromedriver v85 (#569)
 - **Projectroles**
     - Improve project list header legend (#571)
+    - Make ``sync_source_data()`` atomic
+    - Prevent creation of local projects under remote categories (#583)
 - **Siteinfo**
     - Refactor app plugin statistics retrieval (#573)
 
@@ -31,6 +33,9 @@ Fixed
 
 - **General**
     - Invalid statement in ``setup_database.sh`` (#580)
+- **Projectroles**
+    - Missing exception handling for ``sync_source_data()`` calls (#582)
+    - Crash from conflicting local category structure (#582)
 - **Siteinfo**
     - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
 

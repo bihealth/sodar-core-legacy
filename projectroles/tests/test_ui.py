@@ -1365,11 +1365,33 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_create_link_target(self):
-        """Test visibility of create link as target"""
+    def test_create_link_target_remote(self):
+        """Test visibility of create link as target under a remote category"""
 
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
+
+        expected_false = [
+            self.superuser,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
+        )
+
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-nav-project-create', False
+        )
+        self.assert_element_exists(
+            expected_false, url, 'sodar-pr-alt-link-project-create', False
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_link_target_local(self):
+        """Test visibility of create link as target under a local category"""
 
         expected_true = [self.superuser, self.owner_as.user]
         expected_false = [
