@@ -57,17 +57,13 @@
   </div>
 
   {# Project App Statistics #}
-  {% for plugin in project_plugins %}
-    {% if plugin.get_statistics %}
-      {% include 'siteinfo/_app_stats.html' %}
-    {% endif %}
+  {% for plugin, pl_data in project_plugins.items %}
+    {% include 'siteinfo/_app_stats.html' %}
   {% endfor %}
 
   {# Backend Statistics #}
-  {% for plugin in backend_plugins %}
-    {% if plugin.get_statistics %}
-      {% include 'siteinfo/_app_stats.html' %}
-    {% endif %}
+  {% for plugin, pl_data in backend_plugins.items %}
+    {% include 'siteinfo/_app_stats.html' %}
   {% endfor %}
 
   {# Basic Site Info #}
@@ -115,7 +111,7 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        {% for plugin in project_plugins %}
+        {% for plugin in project_plugins.keys %}
         <dt class="col-md-3">
           <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
           {{ plugin.title }}
@@ -151,7 +147,7 @@
     </div>
     <div class="card-body">
       <dl class="row">
-        {% for plugin in backend_plugins %}
+        {% for plugin in backend_plugins.keys %}
         <dt class="col-md-3">
           <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
           {{ plugin.title }}

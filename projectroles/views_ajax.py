@@ -179,7 +179,7 @@ class UserAutocompleteAjaxView(autocomplete.Select2QuerySetView):
         return str(user.sodar_uuid)
 
     def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated():
+        if not request.user.is_authenticated:
             return HttpResponseForbidden()
 
         return super().get(request, *args, **kwargs)

@@ -10,6 +10,33 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.3 (2020-09-28)
+*******************
+
+Release Highlights
+==================
+
+- Fix issues in remote project synchronization
+- Fix crashes in ``siteinfo`` app from exceptions raised by plugins
+
+Breaking Changes
+================
+
+Remote Project Sync and Local Categories
+----------------------------------------
+
+When working on a ``TARGET`` site, creating local projects under categories
+synchronized from a ``SOURCE`` site is no longer allowed. This is done to avoid
+synchronization clashes. If you want to enable local projects on your site in
+addition to remote ones, you will need to create a local root category for them.
+
+API Changes
+-----------
+
+``ProjectCreateAPIView`` now returns status ``403`` if called on a target site
+with disabled local projects, instead of ``400`` as before.
+
+
 v0.8.2 (2020-07-22)
 *******************
 

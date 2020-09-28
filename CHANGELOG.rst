@@ -7,6 +7,47 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.8.3 (2020-09-28)
+===================
+
+Added
+-----
+
+- **General**
+    - Missing migration for the ``SODARUser`` model (#581)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Chromedriver v85 (#569)
+- **Projectroles**
+    - Improve project list header legend (#571)
+    - Make ``sync_source_data()`` atomic
+    - Prevent creation of local projects under remote categories (#583)
+- **Siteinfo**
+    - Refactor app plugin statistics retrieval (#573)
+
+Fixed
+-----
+
+- **General**
+    - Invalid statement in ``setup_database.sh`` (#580)
+- **Projectroles**
+    - Missing exception handling for ``sync_source_data()`` calls (#582)
+    - Crash from conflicting local category structure (#582)
+- **Siteinfo**
+    - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
+- **Timeline**
+    - CSS for ``sodar-tl-link-detail`` links (#578)
+
+Removed
+-------
+
+- **General**
+    - Unused ``Pillow`` dependency (#575)
+
+
 v0.8.2 (2020-07-22)
 ===================
 

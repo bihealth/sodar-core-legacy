@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib import auth
 from django.views.generic import TemplateView
@@ -15,8 +17,12 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
+
 # Access Django user model
 User = auth.get_user_model()
+
+
+logger = logging.getLogger(__name__)
 
 
 class SiteInfoView(LoggedInPermissionMixin, TemplateView):
@@ -27,11 +33,6 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
-        # App plugins
-        context['project_plugins'] = get_active_plugins('project_app')
-        context['site_plugins'] = get_active_plugins('site_app')
-        context['backend_plugins'] = get_active_plugins('backend')
 
         # Project statistics
         context['project_count'] = Project.objects.filter(
@@ -52,6 +53,29 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         context['user_admin_count'] = User.objects.filter(
             is_superuser=True
         ).count()
+
+        # App plugins
+        project_plugins = get_active_plugins('project_app')
+        backend_plugins = get_active_plugins('backend')
+        context['site_plugins'] = get_active_plugins('site_app')
+
+        # Plugin statistics
+        def _get_plugin_stats(p_list):
+            p_stats = {}
+            for p in p_list:
+                try:
+                    p_stats[p] = {'stats': p.get_statistics()}
+                except Exception as ex:
+                    p_stats[p] = {'error': str(ex)}
+                    logger.error(
+                        'Exception in {}.get_statistics(): {}'.format(
+                            p.name, ex
+                        )
+                    )
+            return p_stats
+
+        context['project_plugins'] = _get_plugin_stats(project_plugins)
+        context['backend_plugins'] = _get_plugin_stats(backend_plugins)
 
         # Basic site info
         context['site_title'] = settings.SITE_TITLE

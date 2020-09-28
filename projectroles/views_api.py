@@ -72,7 +72,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2']
+CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2', '0.8.3']
 
 
 # Access Django user model
@@ -262,17 +262,21 @@ class ProjectCreatePermission(ProjectAccessMixin, BasePermission):
 
     def has_permission(self, request, view):
         """Override has_permission() to check for project creation permission"""
-        if request.user.is_superuser:
-            return True
-
         parent_uuid = request.data.get('parent')
+        parent = (
+            Project.objects.filter(sodar_uuid=parent_uuid).first()
+            if parent_uuid
+            else None
+        )
 
-        if not parent_uuid:
+        if (
+            parent
+            and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+            and (not settings.PROJECTROLES_TARGET_CREATE or parent.is_remote())
+        ):
             return False
 
-        parent = Project.objects.filter(sodar_uuid=parent_uuid).first()
-
-        if not parent or parent.type != PROJECT_TYPE_CATEGORY:
+        if not parent and not request.user.is_superuser:
             return False
 
         return request.user.has_perm('projectroles.create_project', parent)

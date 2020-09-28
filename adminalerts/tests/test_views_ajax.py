@@ -21,7 +21,7 @@ class TestAdminAlertActiveToggleAjaxView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 ),
             )
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
 
             data = json.loads(response.content)
             self.alert.refresh_from_db()
@@ -40,7 +40,7 @@ class TestAdminAlertActiveToggleAjaxView(TestViewsBase):
                     kwargs={'adminalert': self.alert.sodar_uuid},
                 ),
             )
-            self.assertEquals(response.status_code, 200)
+            self.assertEqual(response.status_code, 200)
 
             data = json.loads(response.content)
             self.alert.refresh_from_db()

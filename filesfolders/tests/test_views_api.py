@@ -63,7 +63,7 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 'sodar_uuid': str(self.folder.sodar_uuid),
             }
         ]
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_root(self):
         """Test creation of new folder in root"""
@@ -90,7 +90,7 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'date_modified': self.get_drf_datetime(new_folder.date_modified),
             'sodar_uuid': str(new_folder.sodar_uuid),
         }
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_folder(self):
         """Test creation of new folder below other"""
@@ -120,7 +120,7 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'date_modified': self.get_drf_datetime(new_folder.date_modified),
             'sodar_uuid': str(new_folder.sodar_uuid),
         }
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
 
 class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -240,7 +240,7 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 'sodar_uuid': str(self.file.sodar_uuid),
             }
         ]
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_root(self):
         """Test creation of new file in root"""
@@ -272,7 +272,7 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(new_file.sodar_uuid),
         }
         expected.pop('file')
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_folder(self):
         """Test creation of a file inside a folder"""
@@ -305,7 +305,7 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(new_file.sodar_uuid),
         }
         expected.pop('file')
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
 
 class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -462,7 +462,7 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 'sodar_uuid': str(self.hyperlink.sodar_uuid),
             }
         ]
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_root(self):
         """Test creation of new hyperlink in root"""
@@ -489,7 +489,7 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'date_modified': self.get_drf_datetime(new_link.date_modified),
             'sodar_uuid': str(new_link.sodar_uuid),
         }
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
     def test_create_in_folder(self):
         """Test creation of new hyperlink below another"""
@@ -520,7 +520,7 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'date_modified': self.get_drf_datetime(new_link.date_modified),
             'sodar_uuid': str(new_link.sodar_uuid),
         }
-        self.assertEquals(json.loads(response.content), expected)
+        self.assertEqual(json.loads(response.content), expected)
 
 
 class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):

@@ -5,6 +5,7 @@ import logging
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import Group
+from django.db import transaction
 from django.utils import timezone
 
 from projectroles.models import (
@@ -77,6 +78,34 @@ class RemoteProjectAPI:
 
         obj.save()
         return obj
+
+    def _check_local_conflicts(self, c_uuid):
+        """
+        Check for local category name conflicts on a target site.
+
+        :param c_uuid: Category UUID (string)
+        :return: True if conflict was found (bool)
+        """
+        c_data = self.remote_data['projects'][c_uuid]
+        local_cat = (
+            Project.objects.filter(
+                type=PROJECT_TYPE_CATEGORY, title=c_data['title']
+            )
+            .exclude(sodar_uuid=c_uuid)
+            .first()
+        )
+
+        if local_cat and not local_cat.parent and not c_data['parent_uuid']:
+            return True
+        elif (
+            local_cat
+            and local_cat.parent
+            and local_cat.parent.title
+            == self.remote_data['projects'][c_data['parent_uuid']]['title']
+        ):
+            return self._check_local_conflicts(c_data['parent_uuid'])
+
+        return False
 
     def _sync_user(self, uuid, u_data):
         """Synchronize LDAP user based on source site data"""
@@ -821,6 +850,7 @@ class RemoteProjectAPI:
 
         return sync_data
 
+    @transaction.atomic
     def sync_source_data(self, site, remote_data, request=None):
         """
         Synchronize remote user and project data into the local Django database
@@ -849,6 +879,20 @@ class RemoteProjectAPI:
             )
             logger.error(error_msg)
             raise ValueError(error_msg)
+
+        # Check for name conflicts in local categories
+        for k, v in self.remote_data['projects'].items():
+            if (
+                v['type'] == PROJECT_TYPE_PROJECT
+                and v['parent_uuid']
+                and self._check_local_conflicts(v['parent_uuid'])
+            ):
+                error_msg = (
+                    'Remote sync cancelled: Existing local category '
+                    'structure on target site'
+                )
+                logger.error(error_msg)
+                raise ValueError(error_msg)
 
         # Set up timeline user
         if self.timeline:

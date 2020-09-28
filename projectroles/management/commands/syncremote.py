@@ -79,5 +79,12 @@ class Command(BaseCommand):
             return
 
         remote_api = RemoteProjectAPI()
-        remote_api.sync_source_data(site, remote_data)
+
+        try:
+            remote_api.sync_source_data(site, remote_data)
+
+        except Exception as ex:
+            logger.error('Remote sync cancelled with exception: {}'.format(ex))
+            return
+
         logger.info('Syncremote command OK')

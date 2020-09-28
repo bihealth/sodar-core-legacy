@@ -8,7 +8,7 @@ from adminalerts.models import AdminAlert
 from adminalerts.tests.test_models import AdminAlertMixin
 
 
-class TestViewsBase(TestCase, AdminAlertMixin):
+class TestViewsBase(AdminAlertMixin, TestCase):
     """Base class for view testing"""
 
     def setUp(self):

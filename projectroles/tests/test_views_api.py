@@ -394,7 +394,9 @@ class TestProjectRetrieveAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
-class TestProjectCreateAPIView(TestCoreAPIViewsBase):
+class TestProjectCreateAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
     """Tests for ProjectCreateAPIView"""
 
     def test_create_category(self):
@@ -714,6 +716,45 @@ class TestProjectCreateAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_project_target_remote(self):
+        """Test creating a project as TARGET under a remote category (should fail)"""
+
+        # Create source site
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+
+        # Make category remote
+        self._make_remote_project(
+            project_uuid=self.category.sodar_uuid,
+            project=self.category,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.count(), 2)
+
+        url = reverse('projectroles:api_project_create')
+        post_data = {
+            'title': NEW_PROJECT_TITLE,
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': str(self.category.sodar_uuid),
+            'description': 'description',
+            'readme': 'readme',
+            'owner': str(self.user.sodar_uuid),
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.assertEqual(Project.objects.count(), 2)
+
     @override_settings(
         PROJECTROLES_SITE_MODE=SITE_MODE_TARGET,
         PROJECTROLES_TARGET_CREATE=False,
@@ -736,7 +777,7 @@ class TestProjectCreateAPIView(TestCoreAPIViewsBase):
         response = self.request_knox(url, method='POST', data=post_data)
 
         # Assert response and project status
-        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
 

@@ -189,7 +189,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             messages.error(
                 self.request, 'User not authorized for requested action'
             )
@@ -273,7 +273,7 @@ class ProjectModifyPermissionMixin(
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             messages.error(
                 self.request,
                 'Modifications are not allowed for remote {}'.format(
@@ -1119,6 +1119,20 @@ class ProjectCreateView(
     permission_required = 'projectroles.create_project'
     model = Project
     form_class = ProjectForm
+
+    def has_permission(self):
+        """Override has_permission() to ensure even superuser can't create
+        project under a remote category as target"""
+        if (
+            settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
+            and self.kwargs.get('project')
+        ):
+            parent = Project.objects.filter(
+                sodar_uuid=self.kwargs['project']
+            ).first()
+            if parent and parent.is_remote():
+                return False
+        return super().has_permission()
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -2540,7 +2554,18 @@ class RemoteProjectsSyncView(
             return redirect(redirect_url)
 
         # Sync data
-        update_data = remote_api.sync_source_data(site, remote_data, request)
+        try:
+            update_data = remote_api.sync_source_data(
+                site, remote_data, request
+            )
+
+        except Exception as ex:
+            messages.error(
+                request, 'Remote sync cancelled with exception: {}'.format(ex)
+            )
+            if settings.DEBUG:
+                raise ex
+            return redirect(redirect_url)
 
         # Check for updates
         user_count = len(

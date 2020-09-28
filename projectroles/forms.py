@@ -970,7 +970,7 @@ class RemoteSiteForm(SODARModelForm):
         # Default field modifications
         self.fields['description'].required = False
         self.fields['secret'].widget = forms.TextInput(
-            attrs={'class': "sodar-code-input"}
+            attrs={'class': 'sodar-code-input'}
         )
         self.fields['description'].widget.attrs['rows'] = 4
 
