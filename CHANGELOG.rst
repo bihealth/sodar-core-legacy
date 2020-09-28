@@ -38,6 +38,8 @@ Fixed
     - Crash from conflicting local category structure (#582)
 - **Siteinfo**
     - Crash from exceptions raised by app plugin ``get_statistics()`` (#572)
+- **Timeline**
+    - CSS for ``sodar-tl-link-detail`` links (#578)
 
 Removed
 -------
