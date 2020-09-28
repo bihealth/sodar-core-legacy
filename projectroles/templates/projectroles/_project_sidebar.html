@@ -59,7 +59,7 @@
       </a>
     </li>
   {% endif %}
-  {% if not project.is_remote and can_update_project %}
+  {% if can_update_project %}
     <li id="sodar-pr-nav-project-update"
         class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}">
       <a class="nav-link"

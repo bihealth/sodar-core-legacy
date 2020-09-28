@@ -850,16 +850,19 @@ class TestTargetProjectViews(
         url = reverse(
             'projectroles:update', kwargs={'project': self.project.sodar_uuid}
         )
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
+        ]
         bad_users = [
             self.anonymous,
-            self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
             self.contributor_as.user,
             self.guest_as.user,
             self.user_no_roles,
         ]
+        self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
     def test_create_top_allowed(self):

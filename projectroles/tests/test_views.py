@@ -35,6 +35,7 @@ from projectroles.tests.test_models import (
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
+    RemoteTargetMixin,
 )
 from projectroles.utils import get_user_display_name
 
@@ -491,7 +492,9 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
-class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectUpdateView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, TestViewsBase
+):
     """Tests for Project updating view"""
 
     def setUp(self):
@@ -737,6 +740,76 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     kwargs={'project': self.category.sodar_uuid},
                 ),
             )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_render_remote(self):
+        self._set_up_as_target(projects=[self.category, self.project])
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+            form = response.context['form']
+            self.assertIsNotNone(form)
+            self.assertIsInstance(form.fields['title'].widget, HiddenInput)
+            self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+            self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+            self.assertIsInstance(
+                form.fields['description'].widget, HiddenInput
+            )
+            self.assertIsInstance(form.fields['readme'].widget, HiddenInput)
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_str_setting'
+                ].widget,
+                HiddenInput,
+            )
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_int_setting'
+                ].widget,
+                HiddenInput,
+            )
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_bool_setting'
+                ].widget,
+                HiddenInput,
+            )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_update_remote(self):
+        self._set_up_as_target(projects=[self.category, self.project])
+
+        values = model_to_dict(self.project)
+        values['owner'] = self.user.sodar_uuid
+        values['parent'] = self.category.sodar_uuid
+        values['settings.example_project_app.project_int_setting'] = 0
+        values['settings.example_project_app.project_str_setting'] = 'test'
+        values['settings.example_project_app.project_bool_setting'] = True
+
+        # Assert precondition
+        self.assertEqual(Project.objects.all().count(), 2)
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+            # Assert response
+            self.assertEqual(response.status_code, 302)
+
+            # Assert category state after update
+            self.assertEqual(Project.objects.all().count(), 2)
 
 
 class TestProjectSettingsForm(

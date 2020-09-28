@@ -10,18 +10,18 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.8.4 (2020-11-12)
-*******************
+v0.9.0 (WIP)
+************
 
 Release Highlights
 ==================
 
-This release updates documentation for JOSS submission.
+- Enable modifying local app settings in project update form on target sites
 
 Breaking Changes
 ================
 
-N/A
+TBD
 
 
 v0.8.3 (2020-09-28)

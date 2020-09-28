@@ -269,7 +269,14 @@ class ProjectModifyPermissionMixin(
         """Override has_permission() to check remote project status"""
         perm = super().has_permission()
         project = self.get_project()
-        return False if project.is_remote() else perm
+        return (
+            False
+            if project.is_remote() and not self._get_allow_remote_edit()
+            else perm
+        )
+
+    def _get_allow_remote_edit(self):
+        return getattr(self, 'allow_remote_edit', False)
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
@@ -1201,6 +1208,7 @@ class ProjectUpdateView(
     form_class = ProjectForm
     slug_url_kwarg = 'project'
     slug_field = 'sodar_uuid'
+    allow_remote_edit = True
 
 
 # RoleAssignment Views ---------------------------------------------------------

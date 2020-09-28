@@ -1294,19 +1294,24 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
-        expected_false = [
+        expected_true = [
             self.superuser,
             self.owner_as.user,
             self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
         ]
+        expected_false = [self.contributor_as.user, self.guest_as.user]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
 
         self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-update', True
+        )
+        self.assert_element_exists(
             expected_false, url, 'sodar-pr-nav-project-update', False
+        )
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-update', True
         )
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-alt-link-project-update', False

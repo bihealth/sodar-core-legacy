@@ -500,6 +500,13 @@ class ProjectForm(SODARModelForm):
                 # Set up parent field
                 self.initial['parent'] = None
 
+        if self.instance.is_remote():
+            self.fields['title'].widget = forms.HiddenInput()
+            self.fields['type'].widget = forms.HiddenInput()
+            self.fields['parent'].widget = forms.HiddenInput()
+            self.fields['description'].widget = forms.HiddenInput()
+            self.fields['readme'].widget = forms.HiddenInput()
+
     def clean(self):
         """Function for custom form validation and cleanup"""
         instance_owner_as = self.instance.get_owner() if self.instance else None

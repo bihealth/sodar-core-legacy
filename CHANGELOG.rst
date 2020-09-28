@@ -7,14 +7,14 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-v0.8.4 (2020-11-12)
-===================
+Unreleased
+==========
 
 Changed
 -------
 
-- **General**
-    - Documentation updates for JOSS submission
+- **Projectroles**
+    - Allow updating local app settings on a ``TARGET`` site (#545)
 
 
 v0.8.3 (2020-09-28)

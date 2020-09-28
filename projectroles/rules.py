@@ -134,8 +134,7 @@ rules.add_perm(
 
 # Allow project updating
 rules.add_perm(
-    'projectroles.update_project',
-    is_project_update_user & is_modifiable_project,
+    'projectroles.update_project', is_project_update_user,
 )
 
 # Allow creation of projects

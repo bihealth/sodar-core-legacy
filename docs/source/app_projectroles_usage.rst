@@ -161,6 +161,11 @@ target category or superuser status.
 
     Category/project updating form
 
+.. note::
+
+    For remote project synchronized from another SODAR Core based site, you can
+    only edit local application settings in this view.
+
 App Settings
 ------------
 
