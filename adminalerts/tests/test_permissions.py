@@ -9,7 +9,7 @@ from adminalerts.tests.test_models import AdminAlertMixin
 
 
 class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
-    """Tests for AdminAlert views"""
+    """Tests for AdminAlert permissions"""
 
     def setUp(self):
         # Create users

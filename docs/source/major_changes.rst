@@ -10,14 +10,14 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.8.3 (WIP)
-************
+v0.8.3 (2020-09-28)
+*******************
 
 Release Highlights
 ==================
 
 - Fix issues in remote project synchronization
-- Fix potential crashes in ``siteinfo`` app from exceptions raised by plugins
+- Fix crashes in ``siteinfo`` app from exceptions raised by plugins
 
 Breaking Changes
 ================

@@ -189,7 +189,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             messages.error(
                 self.request, 'User not authorized for requested action'
             )
@@ -273,7 +273,7 @@ class ProjectModifyPermissionMixin(
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated():
+        if self.request.user.is_authenticated:
             messages.error(
                 self.request,
                 'Modifications are not allowed for remote {}'.format(

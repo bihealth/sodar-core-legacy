@@ -72,7 +72,7 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2']
+CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2', '0.8.3']
 
 
 # Access Django user model

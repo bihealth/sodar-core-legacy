@@ -83,7 +83,7 @@ the environment, install Python requirements for the project:
 
 .. code-block:: console
 
-    $ git clone git+https://github.com/bihealth/sodar_core.git
+    $ git clone https://github.com/bihealth/sodar_core.git
     $ cd sodar_core
     $ pip install virtualenv
     $ virtualenv -p python3.6 .venv
@@ -177,3 +177,39 @@ can use the supplied shortcut script:
 .. code-block:: console
 
     $ ./test_taskflow.sh
+
+
+Remote Site Development
+=======================
+
+For developing remote site features, you will want to run two or more SODAR Core
+example sites concurrently: one ``SOURCE`` site and one or more ``TARGET``
+sites.
+
+For running a single ``TARGET`` site in addition to the main site, the fastest
+way to get started is the following:
+
+First, set up a second database called ``sodar_core_target`` using
+``utility/setup_database.sh``.
+
+Next, migrate the new database and create a superuser using
+``./manage_target.sh``. It is recommended to use a different admin user name
+than on your ``SOURCE`` site, to help debugging.
+
+.. code-block:: console
+
+    $ ./manage_target.sh migrate
+    $ ./manage_target.sh createsuperuser
+
+Launch your site with ``./run_target.sh``. By default, you can access the site
+at Port ``8001`` on localhost. Management commands to the target site can be
+issued with the ``manage_target.sh`` shortcut script.
+
+Due to how cookies are set by Django, you currently may have to relogin when
+switching to a different site on your browser. As a workaround you can launch
+one of the sites in a private/incognito window or use different browsers.
+
+If you need to create multiple target sites for testing ``PEER`` synchronization
+features, make sure that you have a separate SODAR Core database for each site
+and launch each site on a different port on localhost. The configuration
+``local_target2.py`` is included for developing with multiple ``TARGET`` sites.

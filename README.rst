@@ -79,7 +79,7 @@ installation is forthcoming.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.8.2#egg=django-sodar-core
+    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.8.3#egg=django-sodar-core
 
 Please note that This package installs a collection Django apps to
 be used in a Django web site project. See
