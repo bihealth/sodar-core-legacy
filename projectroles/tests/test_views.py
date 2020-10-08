@@ -565,7 +565,6 @@ class TestProjectUpdateView(
     def test_update_project(self):
         """Test Project updating"""
         timeline = get_backend_api('timeline_backend')
-        app_settings = AppSettingAPI()
 
         new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self._make_assignment(new_category, self.user, self.role_owner)
@@ -586,6 +585,8 @@ class TestProjectUpdateView(
         ps['settings.example_project_app.project_str_setting'] = 'test'
         ps['settings.example_project_app.project_bool_setting'] = True
         ps['settings.example_project_app.project_json_setting'] = '{}'
+        ps['settings.projectroles.ip_restrict'] = True
+        ps['settings.projectroles.ip_allowlist'] = "192.168.1.1"
         values.update(ps)
 
         with self.login(self.user):
@@ -782,6 +783,14 @@ class TestProjectUpdateView(
                 ].widget,
                 HiddenInput,
             )
+            self.assertNotIsInstance(
+                form.fields['settings.projectroles.ip_restrict'].widget,
+                HiddenInput,
+            )
+            self.assertNotIsInstance(
+                form.fields['settings.projectroles.ip_allowlist'].widget,
+                HiddenInput,
+            )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update_remote(self):
@@ -793,6 +802,8 @@ class TestProjectUpdateView(
         values['settings.example_project_app.project_int_setting'] = 0
         values['settings.example_project_app.project_str_setting'] = 'test'
         values['settings.example_project_app.project_bool_setting'] = True
+        values['settings.projectroles.ip_restrict'] = True
+        values['settings.projectroles.ip_allowlist'] = '192.168.1.1'
 
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 2)
@@ -869,6 +880,24 @@ class TestProjectSettingsForm(
             project=self.project,
         )
 
+        # Init IP restrict setting
+        self.setting_ip_restrict = self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self.setting_ip_allowlist = self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
     def test_get(self):
         """Test rendering the settings values"""
         with self.login(self.user):
@@ -900,6 +929,16 @@ class TestProjectSettingsForm(
                 'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
             )
         )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_restrict'
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_allowlist'
+            )
+        )
 
     def test_post(self):
         """Test modifying the settings values"""
@@ -927,6 +966,18 @@ class TestProjectSettingsForm(
             ),
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '',
+        )
 
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
@@ -934,6 +985,8 @@ class TestProjectSettingsForm(
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.ip_restrict': True,
+            'settings.projectroles.ip_allowlist': '192.168.1.1',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -982,6 +1035,524 @@ class TestProjectSettingsForm(
                 EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
             ),
             {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '192.168.1.1',
+        )
+
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+class TestProjectSettingsFormTarget(
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    AppSettingMixin,
+    TestViewsBase,
+    ProjectMixin,
+    RoleAssignmentMixin,
+):
+    """Tests for project settings in the project create/update view on target site"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=self.site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Init string setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value='0',
+            project=self.project,
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            project=self.project,
+        )
+
+        # Init IP restrict setting
+        self.setting_ip_restrict = self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self.setting_ip_allowlist = self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+    def test_get(self):
+        """Test rendering the settings values"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_restrict'
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_allowlist'
+            )
+        )
+
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '',
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.ip_restrict': True,
+            'settings.projectroles.ip_allowlist': '192.168.1.1',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '192.168.1.1',
+        )
+
+
+PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
+    'ip_restrict': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'IP Restrict',  # Optional, defaults to name/key
+        'description': 'Activate IP restriction',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': True,
+    },
+    'ip_allowlist': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+        'default': '',
+        'label': 'IP Allow List',  # Optional, defaults to name/key
+        'placeholder': '192.168.1.1; 192.168.1.2',  # Optional
+        'description': 'Define list of allowed IPs',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': True,
+    },
+}
+
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+@override_settings(
+    PROJECTROLES_APP_SETTINGS_TEST=PROJECTROLES_APP_SETTINGS_TEST_LOCAL
+)
+class TestProjectSettingsFormTargetLocal(
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    AppSettingMixin,
+    TestViewsBase,
+    ProjectMixin,
+    RoleAssignmentMixin,
+):
+    """Tests for project settings in the project create/update view on target site"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=self.site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Init string setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value='0',
+            project=self.project,
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            project=self.project,
+        )
+
+    def test_get(self):
+        """Test rendering the settings values"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_restrict'
+            )
+        )
+        self.assertIsNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_allowlist'
+            )
+        )
+
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '',
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.ip_restrict': True,
+            'settings.projectroles.ip_allowlist': '192.168.1.1',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            '',
         )
 
 

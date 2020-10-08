@@ -148,6 +148,43 @@ media type and versioning for these views are **hardcoded** and should not be
 changed, except version information upon a new release of SODAR Core.
 
 
+Projectroles App Development
+============================
+
+This section details issues regarding updates to the ``projectroles`` app.
+
+.. warning::
+
+    As all other apps in SODAR Core as well as sites implementing SODAR Core
+    are based on projectroles, changes to this app need to be implemented and
+    tested with extra care. Also make sure to provide detailed documentation for
+    all breaking changes.
+
+Projectroles App Settings
+-------------------------
+
+Projectroles defines its own app settings in ``projectroles/app_settings.py``.
+These are not expected to be altered by SODAR Core based sites. These settings
+add the ``local`` attribute, which allows/disallows editing the value on a
+``TARGET`` site.
+
+To alter projectroles app settings when developing the app, update the
+``PROJECTROLES_APP_SETTINGS`` dictionary as follows:
+
+.. code-block:: python
+
+     'example_setting': {
+         'scope': 'PROJECT',  # PROJECT/USER
+         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+         'default': 'example',
+         'label': 'Project setting',  # Optional, defaults to name/key
+         'placeholder': 'Enter example setting here',  # Optional
+         'description': 'Example project setting',  # Optional
+         'user_modifiable': True,  # Optional, show/hide in forms
+         'local': False,  # Optional, show/hide in target site forms
+     }
+
+
 Testing
 =======
 

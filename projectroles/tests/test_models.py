@@ -127,7 +127,9 @@ class AppSettingMixin:
     ):
         """Make and save a AppSetting"""
         values = {
-            'app_plugin': get_app_plugin(app_name).get_model(),
+            'app_plugin': None
+            if app_name == 'projectroles'
+            else get_app_plugin(app_name).get_model(),
             'project': project,
             'name': name,
             'type': setting_type,

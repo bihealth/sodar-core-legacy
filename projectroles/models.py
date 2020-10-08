@@ -557,16 +557,14 @@ class AppSettingManager(models.Manager):
         """
         if (project is None) and (user is None):
             raise ValueError('Project and user unset.')
-        setting = (
-            super()
-            .get_queryset()
-            .get(
-                app_plugin__name=app_name,
-                name=setting_name,
-                project=project,
-                user=user,
-            )
-        )
+        query_parameters = {
+            'name': setting_name,
+            'project': project,
+            'user': user,
+        }
+        if not app_name == 'projectroles':
+            query_parameters['app_plugin__name'] = app_name
+        setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
 
 
@@ -583,7 +581,7 @@ class AppSetting(models.Model):
     #: App to which the setting belongs
     app_plugin = models.ForeignKey(
         Plugin,
-        null=False,
+        null=True,
         unique=False,
         related_name='settings',
         help_text='App to which the setting belongs',
@@ -649,17 +647,20 @@ class AppSetting(models.Model):
         unique_together = ['project', 'user', 'app_plugin', 'name']
 
     def __str__(self):
+        plugin_name = (
+            self.app_plugin.name if self.app_plugin else 'projectroles'
+        )
         if self.project:
             label = self.project.title
         else:
             label = self.user.username
-        return '{}: {} / {}'.format(label, self.app_plugin.name, self.name)
+        return '{}: {} / {}'.format(label, plugin_name, self.name)
 
     def __repr__(self):
         values = (
             self.project.title if self.project else None,
             self.user.username if self.user else None,
-            self.app_plugin.name,
+            self.app_plugin.name if self.app_plugin else 'projectroles',
             self.name,
         )
         return 'AppSetting({})'.format(', '.join(repr(v) for v in values))

@@ -34,19 +34,25 @@ class UserSettingsForm(SODARForm):
         self.user_plugins = get_active_plugins(plugin_type='site_app')
         self.app_plugins = self.app_plugins + self.user_plugins
 
-        for plugin in self.app_plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-            )
+        for plugin in self.app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
                 s_widget_attrs = s_val.get('widget_attrs') or {}
                 s_widget_attrs['placeholder'] = s_val.get('placeholder')
                 setting_kwargs = {
                     'required': False,
-                    'label': s_val.get('label')
-                    or '{}.{}'.format(plugin.name, s_key),
+                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'help_text': s_val.get('description'),
                 }
 
@@ -81,28 +87,33 @@ class UserSettingsForm(SODARForm):
                     self.fields[s_field].widget.attrs.update(s_widget_attrs)
 
                     self.initial[s_field] = app_settings.get_app_setting(
-                        app_name=plugin.name, setting_name=s_key, user=self.user
+                        app_name=name, setting_name=s_key, user=self.user
                     )
 
                 else:
                     self.initial[s_field] = json.dumps(
                         app_settings.get_app_setting(
-                            app_name=plugin.name,
-                            setting_name=s_key,
-                            user=self.user,
+                            app_name=name, setting_name=s_key, user=self.user,
                         )
                     )
 
     def clean(self):
         """Function for custom form validation and cleanup"""
 
-        for plugin in self.app_plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-            )
+        for plugin in self.app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
                 if s_val['type'] == 'JSON':
                     try:
                         self.cleaned_data[s_field] = json.loads(

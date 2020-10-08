@@ -683,19 +683,24 @@ class ProjectModifyMixin:
         app_plugins = [p for p in get_active_plugins() if p.app_settings]
         project_settings = {}
 
-        for plugin in app_plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin
-            )
+        for plugin in app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name
+                )
 
             for s_key, s_val in p_settings.items():
-                s_name = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
 
                 if s_data is None and not instance:
-                    s_data = app_settings.get_default_setting(
-                        plugin.name, s_key
-                    )
+                    s_data = app_settings.get_default_setting(name, s_key)
 
                 if s_val['type'] == 'JSON':
                     if s_data is None:

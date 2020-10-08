@@ -2,6 +2,8 @@
 import json
 import logging
 
+from django.conf import settings
+
 from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
 
@@ -19,6 +21,43 @@ VALID_SCOPES = [
     APP_SETTING_SCOPE_USER,
     APP_SETTING_SCOPE_PROJECT_USER,
 ]
+
+# Define App Settings for projectroles app
+PROJECTROLES_APP_SETTINGS = {
+    #: App settings definition
+    #:
+    #: Example ::
+    #:
+    #:         'example_setting': {
+    #:             'scope': 'PROJECT',  # PROJECT/USER
+    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:             'default': 'example',
+    #:             'label': 'Project setting',  # Optional, defaults to name/key
+    #:             'placeholder': 'Enter example setting here',  # Optional
+    #:             'description': 'Example project setting',  # Optional
+    #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:             'local': False,  # Optional, show/hide in target site forms
+    #:         }
+    'ip_restrict': {
+        'scope': 'PROJECT',
+        'type': 'BOOLEAN',
+        'default': False,
+        'label': 'IP Restrict',
+        'description': 'Restrict project access by an allowed IP list',
+        'user_modifiable': True,
+        'local': False,
+    },
+    'ip_allowlist': {
+        'scope': 'PROJECT',
+        'type': 'STRING',
+        'default': '',
+        'label': 'IP Allow List',
+        'placeholder': '192.168.1.1;192.168.1.2',
+        'description': 'List of allowed IPs for project access',
+        'user_modifiable': True,
+        'local': False,
+    },
+}
 
 
 logger = logging.getLogger(__name__)
@@ -103,6 +142,22 @@ class AppSettingAPI:
             raise ValueError('Value is not valid JSON: {}'.format(value))
 
     @classmethod
+    def _get_projectroles_settings(cls):
+        """
+        Return projectroles settings. If it exists, get value from
+        settings.PROJECTROLES_APP_SETTINGS_TEST for testing modifications.
+
+        :return: Dict
+        """
+        try:
+            return (
+                settings.PROJECTROLES_APP_SETTINGS_TEST
+                or PROJECTROLES_APP_SETTINGS
+            )
+        except AttributeError:
+            return PROJECTROLES_APP_SETTINGS
+
+    @classmethod
     def _compare_value(cls, setting_obj, input_value):
         """
         Compare input value to value in an AppSetting object
@@ -132,22 +187,27 @@ class AppSettingAPI:
         :raise: ValueError if app plugin is not found
         :raise: KeyError if nothing is found with setting_name
         """
-        app_plugin = get_app_plugin(app_name)
 
-        if not app_plugin:
-            raise ValueError('App plugin not found: "{}"'.format(app_name))
+        if app_name == 'projectroles':
+            app_settings = cls._get_projectroles_settings()
 
-        if setting_name in app_plugin.app_settings:
-            if app_plugin.app_settings[setting_name]['type'] == 'JSON':
-                if not app_plugin.app_settings[setting_name].get('default'):
+        else:
+            app_plugin = get_app_plugin(app_name)
+
+            if not app_plugin:
+                raise ValueError('App plugin not found: "{}"'.format(app_name))
+
+            app_settings = app_plugin.app_settings
+
+        if setting_name in app_settings:
+            if app_settings[setting_name]['type'] == 'JSON':
+                if not app_settings[setting_name].get('default'):
                     return {}
 
                 if post_safe:
-                    return json.dumps(
-                        app_plugin.app_settings[setting_name]['default']
-                    )
+                    return json.dumps(app_settings[setting_name]['default'])
 
-            return app_plugin.app_settings[setting_name]['default']
+            return app_settings[setting_name]['default']
 
         raise KeyError(
             'Setting "{}" not found in app plugin "{}"'.format(
@@ -215,6 +275,14 @@ class AppSettingAPI:
                     plugin.name, s_key, project, user, post_safe
                 )
 
+        p_settings = cls.get_setting_defs(
+            APP_SETTING_SCOPE_PROJECT, app_name='projectroles'
+        )
+        for s_key in p_settings:
+            ret[
+                'settings.{}.{}'.format('projectroles', s_key)
+            ] = cls.get_app_setting('projectroles', s_key, post_safe)
+
         return ret
 
     @classmethod
@@ -239,6 +307,11 @@ class AppSettingAPI:
                     'settings.{}.{}'.format(plugin.name, s_key)
                 ] = cls.get_default_setting(plugin.name, s_key, post_safe)
 
+        p_settings = cls.get_setting_defs(scope, app_name='projectroles')
+        for s_key in p_settings:
+            ret[
+                'settings.{}.{}'.format('projectroles', s_key)
+            ] = cls.get_default_setting('projectroles', s_key, post_safe)
         return ret
 
     @classmethod
@@ -290,12 +363,16 @@ class AppSettingAPI:
             raise ValueError('Project and user are both unset')
 
         try:
-            setting = AppSetting.objects.get(
-                app_plugin__name=app_name,
-                name=setting_name,
-                project=project,
-                user=user,
-            )
+            query_parameters = {
+                'name': setting_name,
+                'project': project,
+                'user': user,
+            }
+
+            if not app_name == 'projectroles':
+                query_parameters['app_plugin__name'] = app_name
+
+            setting = AppSetting.objects.get(**query_parameters)
 
             if cls._compare_value(setting, value):
                 return False
@@ -314,16 +391,22 @@ class AppSettingAPI:
             return True
 
         except AppSetting.DoesNotExist:
-            app_plugin = get_app_plugin(app_name)
+            if app_name == 'projectroles':
+                app_settings = cls._get_projectroles_settings()
+                app_plugin_model = None
+            else:
+                app_plugin = get_app_plugin(app_name)
+                app_settings = app_plugin.app_settings
+                app_plugin_model = app_plugin.get_model()
 
-            if setting_name not in app_plugin.app_settings:
+            if setting_name not in app_settings:
                 raise KeyError(
                     'Setting "{}" not found in app plugin "{}"'.format(
                         setting_name, app_name
                     )
                 )
 
-            s_def = app_plugin.app_settings[setting_name]
+            s_def = app_settings[setting_name]
             s_type = s_def['type']
             s_mod = (
                 bool(s_def['user_modifiable'])
@@ -339,7 +422,7 @@ class AppSettingAPI:
                 cls.validate_setting(s_type, v)
 
             s_vals = {
-                'app_plugin': app_plugin.get_model(),
+                'app_plugin': app_plugin_model,
                 'project': project,
                 'user': user,
                 'name': setting_name,
@@ -413,29 +496,39 @@ class AppSettingAPI:
         if not plugin and not app_name:
             raise ValueError('Plugin and app name both unset')
 
-        elif not plugin:
-            plugin = get_app_plugin(app_name)
+        if app_name == 'projectroles':
+            app_settings = cls._get_projectroles_settings()
 
+        else:
             if not plugin:
-                raise ValueError(
-                    'Plugin not found with app name "{}"'.format(app_name)
-                )
+                plugin = get_app_plugin(app_name)
 
-        if name not in plugin.app_settings:
+                if not plugin:
+                    raise ValueError(
+                        'Plugin not found with app name "{}"'.format(app_name)
+                    )
+            app_settings = plugin.app_settings
+
+        if name not in app_settings:
             raise ValueError(
                 'App setting not found in app "{}" with name "{}"'.format(
-                    plugin.name, name
+                    app_name or plugin.name, name
                 )
             )
 
-        setting_def = plugin.app_settings[name]
+        setting_def = app_settings[name]
         cls._check_type(setting_def['type'])
 
         return setting_def
 
     @classmethod
     def get_setting_defs(
-        cls, scope, plugin=False, app_name=False, user_modifiable=False
+        cls,
+        scope,
+        plugin=False,
+        app_name=False,
+        user_modifiable=False,
+        is_remote=False,
     ):
         """
         Return app setting definitions of a specific scope from a plugin.
@@ -452,18 +545,23 @@ class AppSettingAPI:
         if not plugin and not app_name:
             raise ValueError('Plugin and app name both unset')
 
-        if not plugin:
-            plugin = get_app_plugin(app_name)
+        if app_name == 'projectroles':
+            app_settings = cls._get_projectroles_settings()
 
+        else:
             if not plugin:
-                raise ValueError(
-                    'Plugin not found with app name "{}"'.format(app_name)
-                )
+                plugin = get_app_plugin(app_name)
+
+                if not plugin:
+                    raise ValueError(
+                        'Plugin not found with app name "{}"'.format(app_name)
+                    )
+            app_settings = plugin.app_settings
 
         cls._check_scope(scope)
         setting_defs = {
             k: v
-            for k, v in plugin.app_settings.items()
+            for k, v in app_settings.items()
             if (
                 'scope' in v
                 and v['scope'] == scope
@@ -474,6 +572,7 @@ class AppSettingAPI:
                         or v['user_modifiable'] is True
                     )
                 )
+                and not (is_remote and v.get('local'))
             )
         }
 

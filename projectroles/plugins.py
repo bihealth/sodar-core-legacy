@@ -39,6 +39,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
     #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
@@ -289,6 +290,7 @@ class SiteAppPluginPoint(PluginPoint):
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example user setting',  # Optional
     #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }
     #:     }
     # TODO: Define user specific settings in your app plugin, example above

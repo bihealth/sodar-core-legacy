@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Projectroles app settings (#532)
+
 Changed
 -------
 

@@ -37,16 +37,22 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
         plugins = get_active_plugins(
             plugin_type='project_app'
         ) + get_active_plugins(plugin_type='site_app')
-        for plugin in plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-            )
+        for plugin in plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                )
             for s_key, s_val in p_settings.items():
                 yield {
-                    'label': s_val.get('label')
-                    or '{}.{}'.format(plugin.name, s_key),
+                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'value': app_settings.get_app_setting(
-                        plugin.name, s_key, user=self.request.user
+                        name, s_key, user=self.request.user
                     ),
                     'description': s_val.get('description'),
                 }

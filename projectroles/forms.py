@@ -293,27 +293,32 @@ class ProjectForm(SODARModelForm):
 
     def _init_app_settings(self):
         # Set up setting query kwargs
-        self.p_kwargs = (
-            {'user_modifiable': True}
-            if not self.current_user.is_superuser
-            else {}
-        )
+        self.p_kwargs = {'is_remote': self.instance.is_remote()}
+        if not self.current_user.is_superuser:
+            self.p_kwargs['user_modifiable'] = True
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
-        for plugin in self.app_plugins:
+        # plugin == 'None' refers to projectroles app
+        for plugin in self.app_plugins + [None]:
             # Show non-modifiable settings to superusers
-            p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-            )
+            if plugin:
+                name = plugin.name
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
                 s_widget_attrs = s_val.get('widget_attrs') or {}
                 setting_kwargs = {
                     'required': False,
-                    'label': s_val.get('label')
-                    or '{}.{}'.format(plugin.name, s_key),
+                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'help_text': s_val['description'],
                 }
 
@@ -332,7 +337,7 @@ class ProjectForm(SODARModelForm):
                     if self.instance.pk:
                         self.initial[s_field] = json.dumps(
                             self.app_settings.get_app_setting(
-                                app_name=plugin.name,
+                                app_name=name,
                                 setting_name=s_key,
                                 project=self.instance,
                             )
@@ -341,7 +346,7 @@ class ProjectForm(SODARModelForm):
                     else:
                         self.initial[s_field] = json.dumps(
                             self.app_settings.get_default_setting(
-                                app_name=plugin.name, setting_name=s_key
+                                app_name=name, setting_name=s_key
                             )
                         )
                 else:
@@ -370,7 +375,7 @@ class ProjectForm(SODARModelForm):
                         self.initial[
                             s_field
                         ] = self.app_settings.get_app_setting(
-                            app_name=plugin.name,
+                            app_name=name,
                             setting_name=s_key,
                             project=self.instance,
                         )
@@ -379,13 +384,19 @@ class ProjectForm(SODARModelForm):
                         self.initial[
                             s_field
                         ] = self.app_settings.get_default_setting(
-                            app_name=plugin.name, setting_name=s_key
+                            app_name=name, setting_name=s_key
                         )
 
                 # Add hidden note
                 if s_val.get('user_modifiable') is False:
                     self.fields[s_field].label += ' [HIDDEN]'
                     self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
+
+                if s_val.get('local'):
+                    self.fields[s_field].label += ' [HIDDEN]'
+                    self.fields[s_field].help_text += ' [HIDDEN ON TARGET SITE]'
+                    if self.instance.is_remote():
+                        self.fields[s_field].widget = forms.HiddenInput()
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -573,13 +584,20 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        for plugin in self.app_plugins:
-            p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-            )
+        for plugin in self.app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
 
                 if s_val['type'] == 'JSON':
                     # for some reason, there is a distinct possiblity, that the
