@@ -36,7 +36,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
     #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in target site forms
+    #:             'local': False,  # Allow editing in target site forms if True
     #:         }
     'ip_restrict': {
         'scope': 'PROJECT',
@@ -58,6 +58,9 @@ PROJECTROLES_APP_SETTINGS = {
         'local': False,
     },
 }
+
+# Default setting for the ``local`` flag in app settings
+APP_SETTING_LOCAL_DEFAULT = True
 
 
 logger = logging.getLogger(__name__)
@@ -150,12 +153,22 @@ class AppSettingAPI:
         :return: Dict
         """
         try:
-            return (
+            app_settings = (
                 settings.PROJECTROLES_APP_SETTINGS_TEST
                 or PROJECTROLES_APP_SETTINGS
             )
         except AttributeError:
-            return PROJECTROLES_APP_SETTINGS
+            app_settings = PROJECTROLES_APP_SETTINGS
+
+        for k, v in app_settings.items():
+            if 'local' not in v:
+                raise ValueError(
+                    '`local` attribute is missing in `{}` project roles app setting'.format(
+                        k
+                    )
+                )
+
+        return app_settings
 
     @classmethod
     def _compare_value(cls, setting_obj, input_value):
@@ -572,7 +585,6 @@ class AppSettingAPI:
                         or v['user_modifiable'] is True
                     )
                 )
-                and not (is_remote and v.get('local'))
             )
         }
 

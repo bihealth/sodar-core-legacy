@@ -15,6 +15,7 @@ Added
 
 - **Projectroles**
     - Projectroles app settings (#532)
+    - Remote sync for projectroles app setting (#533)
 
 Changed
 -------

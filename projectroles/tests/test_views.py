@@ -783,13 +783,11 @@ class TestProjectUpdateView(
                 ].widget,
                 HiddenInput,
             )
-            self.assertNotIsInstance(
-                form.fields['settings.projectroles.ip_restrict'].widget,
-                HiddenInput,
+            self.assertTrue(
+                form.fields['settings.projectroles.ip_restrict'].disabled
             )
-            self.assertNotIsInstance(
-                form.fields['settings.projectroles.ip_allowlist'].widget,
-                HiddenInput,
+            self.assertTrue(
+                form.fields['settings.projectroles.ip_allowlist'].disabled
             )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
@@ -1129,24 +1127,6 @@ class TestProjectSettingsFormTarget(
             project=self.project,
         )
 
-        # Init IP restrict setting
-        self.setting_ip_restrict = self._make_setting(
-            app_name='projectroles',
-            name='ip_restrict',
-            setting_type='BOOLEAN',
-            value=False,
-            project=self.project,
-        )
-
-        # Init IP allowlist setting
-        self.setting_ip_allowlist = self._make_setting(
-            app_name='projectroles',
-            name='ip_allowlist',
-            setting_type='STRING',
-            value='',
-            project=self.project,
-        )
-
     def test_get(self):
         """Test rendering the settings values"""
         with self.login(self.user):
@@ -1183,10 +1163,20 @@ class TestProjectSettingsFormTarget(
                 'settings.projectroles.ip_restrict'
             )
         )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.ip_restrict')
+            .disabled
+        )
         self.assertIsNotNone(
             response.context['form'].fields.get(
                 'settings.projectroles.ip_allowlist'
             )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.ip_allowlist')
+            .disabled
         )
 
     def test_post(self):
@@ -1215,18 +1205,6 @@ class TestProjectSettingsFormTarget(
             ),
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
-        self.assertEqual(
-            app_settings.get_app_setting(
-                'projectroles', 'ip_restrict', project=self.project
-            ),
-            False,
-        )
-        self.assertEqual(
-            app_settings.get_app_setting(
-                'projectroles', 'ip_allowlist', project=self.project
-            ),
-            '',
-        )
 
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
@@ -1234,8 +1212,6 @@ class TestProjectSettingsFormTarget(
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.projectroles.ip_restrict': True,
-            'settings.projectroles.ip_allowlist': '192.168.1.1',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -1285,37 +1261,24 @@ class TestProjectSettingsFormTarget(
             ),
             {'Test': 'Updated'},
         )
-        self.assertEqual(
-            app_settings.get_app_setting(
-                'projectroles', 'ip_restrict', project=self.project
-            ),
-            True,
-        )
-        self.assertEqual(
-            app_settings.get_app_setting(
-                'projectroles', 'ip_allowlist', project=self.project
-            ),
-            '192.168.1.1',
-        )
 
 
 PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
-    'ip_restrict': {
+    'test_setting': {
         'scope': 'PROJECT',  # PROJECT/USER
         'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
         'default': False,
-        'label': 'IP Restrict',  # Optional, defaults to name/key
-        'description': 'Activate IP restriction',  # Optional
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
-        'local': True,
+        'local': False,
     },
-    'ip_allowlist': {
+    'test_setting_local': {
         'scope': 'PROJECT',  # PROJECT/USER
-        'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-        'default': '',
-        'label': 'IP Allow List',  # Optional, defaults to name/key
-        'placeholder': '192.168.1.1; 192.168.1.2',  # Optional
-        'description': 'Define list of allowed IPs',  # Optional
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
         'user_modifiable': True,  # Optional, show/hide in forms
         'local': True,
     },
@@ -1435,15 +1398,25 @@ class TestProjectSettingsFormTargetLocal(
                 'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
             )
         )
-        self.assertIsNone(
+        self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.projectroles.ip_restrict'
+                'settings.projectroles.test_setting_local'
             )
         )
-        self.assertIsNone(
+        self.assertFalse(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting_local')
+            .disabled
+        )
+        self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.projectroles.ip_allowlist'
+                'settings.projectroles.test_setting'
             )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting')
+            .disabled
         )
 
     def test_post(self):
@@ -1474,15 +1447,9 @@ class TestProjectSettingsFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get_app_setting(
-                'projectroles', 'ip_restrict', project=self.project
+                'projectroles', 'test_setting', project=self.project
             ),
             False,
-        )
-        self.assertEqual(
-            app_settings.get_app_setting(
-                'projectroles', 'ip_allowlist', project=self.project
-            ),
-            '',
         )
 
         values = {
@@ -1491,8 +1458,7 @@ class TestProjectSettingsFormTargetLocal(
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
-            'settings.projectroles.ip_restrict': True,
-            'settings.projectroles.ip_allowlist': '192.168.1.1',
+            'settings.projectroles.test_setting_local': True,
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -1544,15 +1510,15 @@ class TestProjectSettingsFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get_app_setting(
-                'projectroles', 'ip_restrict', project=self.project
+                'projectroles', 'test_setting_local', project=self.project
             ),
-            False,
+            True,
         )
         self.assertEqual(
             app_settings.get_app_setting(
-                'projectroles', 'ip_allowlist', project=self.project
+                'projectroles', 'test_setting', project=self.project
             ),
-            '',
+            False,
         )
 
 

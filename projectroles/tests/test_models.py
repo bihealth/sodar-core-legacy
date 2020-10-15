@@ -124,6 +124,7 @@ class AppSettingMixin:
         user_modifiable=True,
         project=None,
         user=None,
+        sodar_uuid=None,
     ):
         """Make and save a AppSetting"""
         values = {
@@ -138,6 +139,8 @@ class AppSettingMixin:
             'user_modifiable': user_modifiable,
             'user': user,
         }
+        if sodar_uuid:
+            values['sodar_uuid'] = sodar_uuid
         setting = AppSetting(**values)
         setting.save()
         return setting

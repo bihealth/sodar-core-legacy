@@ -17,6 +17,8 @@ Release Highlights
 ==================
 
 - Enable modifying local app settings in project update form on target sites
+- Add projectroles app settings
+- Add remote sync for global projectroles app settings
 
 Breaking Changes
 ================

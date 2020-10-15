@@ -27,8 +27,7 @@ from projectroles.utils import (
     get_user_display_name,
     build_secret,
 )
-from projectroles.app_settings import AppSettingAPI
-
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -392,11 +391,17 @@ class ProjectForm(SODARModelForm):
                     self.fields[s_field].label += ' [HIDDEN]'
                     self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
 
-                if s_val.get('local'):
-                    self.fields[s_field].label += ' [HIDDEN]'
-                    self.fields[s_field].help_text += ' [HIDDEN ON TARGET SITE]'
+                if s_val.get('local', APP_SETTING_LOCAL_DEFAULT) is False:
                     if self.instance.is_remote():
-                        self.fields[s_field].widget = forms.HiddenInput()
+                        self.fields[s_field].label += ' [DISABLED]'
+                        self.fields[
+                            s_field
+                        ].help_text += ' [Only editable on source site]'
+                        self.fields[s_field].disabled = True
+                    else:
+                        self.fields[
+                            s_field
+                        ].help_text += ' [Not editable on target sites]'
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""

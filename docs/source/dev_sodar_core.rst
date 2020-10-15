@@ -181,7 +181,7 @@ To alter projectroles app settings when developing the app, update the
          'placeholder': 'Enter example setting here',  # Optional
          'description': 'Example project setting',  # Optional
          'user_modifiable': True,  # Optional, show/hide in forms
-         'local': False,  # Optional, show/hide in target site forms
+         'local': False,  # Allow editing in target site forms if True
      }
 
 
