@@ -1,7 +1,7 @@
 """REST API views for the samplesheets app"""
 
 import re
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 
 from django.conf import settings
 from django.contrib import auth
@@ -129,13 +129,16 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             else:  # Can't fetch client ip address
                 return False
 
-            allow_list = map(
-                ip_address,
-                app_settings.get_app_setting(
-                    'projectroles', 'ip_allowlist', project
-                ),
-            )
-            if not (allow_list and client_address in allow_list):
+            for record in app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project
+            ):
+                if '/' in record:
+                    if client_address in ip_network(record):
+                        break
+                else:
+                    if client_address == ip_address(record):
+                        break
+            else:
                 return False
 
         if not hasattr(view, 'permission_required') and (

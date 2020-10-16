@@ -536,6 +536,77 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.assert_response(url, good_users, 200, header=header)
         self.assert_response(url, bad_users, 302, header=header)
 
+    def test_project_details_ip_allowing_remote_addr_allow_network(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.2'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_network(
+        self,
+    ):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.2.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
     def test_update(self):
         """Test permissions for project updating"""
         url = reverse(
@@ -1272,6 +1343,77 @@ class TestTargetProjectViews(
         bad_users = [
             self.anonymous,
             self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_allow_network(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.2'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_network(
+        self,
+    ):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.2.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
         ]
         header = {'REMOTE_ADDR': '192.168.1.1'}
         self.assert_response(url, good_users, 200, header=header)

@@ -654,6 +654,23 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
             'guest', 'REMOTE_ADDR', ['192.168.1.1'], blocked=False
         )
 
+    def test_get_ip_allowing_remote_addr_allow_network_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'REMOTE_ADDR', ['192.168.1.0/24'], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_block_not_in_allowlist_ip_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'REMOTE_ADDR', ['192.168.1.2'], blocked=True
+        )
+
+    def test_get_ip_allowing_remote_addr_block_not_in_allowlist_network_guest(
+        self,
+    ):
+        self._get_project_ip_allowing(
+            'guest', 'REMOTE_ADDR', ['192.168.2.0/24'], blocked=True
+        )
+
 
 class TestProjectCreateAPIView(
     RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
