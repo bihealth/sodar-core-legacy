@@ -545,9 +545,9 @@ class TestSyncSourceData(
                 },
                 PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID: {
                     'name': 'ip_allowlist',
-                    'type': 'STRING',
+                    'type': 'JSON',
                     'value': '',
-                    'value_json': {},
+                    'value_json': [],
                     'app_plugin_id': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
                     'user_id': None,
@@ -714,9 +714,9 @@ class TestSyncSourceData(
         }
         expected_ip_allowlist = {
             'name': 'ip_allowlist',
-            'type': 'STRING',
+            'type': 'JSON',
             'value': '',
-            'value_json': {},
+            'value_json': [],
             'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
@@ -1015,8 +1015,9 @@ class TestSyncSourceData(
         self._make_setting(
             app_name='projectroles',
             name='ip_allowlist',
-            setting_type='STRING',
-            value='',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
             project=project_obj,
             sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
         )
@@ -1065,8 +1066,8 @@ class TestSyncSourceData(
             'value'
         ] = True
         remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+            'value_json'
+        ] = ['192.168.1.1']
 
         # Do sync
         self.remote_api.sync_source_data(self.source_site, remote_data)
@@ -1222,9 +1223,9 @@ class TestSyncSourceData(
         }
         expected_ip_allowlist = {
             'name': 'ip_allowlist',
-            'type': 'STRING',
-            'value': '192.168.1.1',
-            'value_json': {},
+            'type': 'JSON',
+            'value': '',
+            'value_json': ['192.168.1.1'],
             'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
@@ -1256,8 +1257,8 @@ class TestSyncSourceData(
             'value'
         ] = True
         expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+            'value_json'
+        ] = ['192.168.1.1']
 
         self.assertEqual(remote_data, expected)
 
@@ -1339,8 +1340,9 @@ class TestSyncSourceData(
         self._make_setting(
             app_name='projectroles',
             name='ip_allowlist',
-            setting_type='STRING',
-            value='',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
             project=project_obj,
             sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
         )
@@ -1367,8 +1369,8 @@ class TestSyncSourceData(
             'value'
         ] = True
         remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value'
-        ] = '192.168.1.1'
+            'value_json'
+        ] = ['192.168.1.1']
 
         original_data = deepcopy(remote_data)
 
@@ -1395,9 +1397,9 @@ class TestSyncSourceData(
         }
         expected_ip_allowlist = {
             'name': 'ip_allowlist',
-            'type': 'STRING',
-            'value': '',
-            'value_json': {},
+            'type': 'JSON',
+            'value': None,
+            'value_json': [],
             'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
@@ -1421,12 +1423,6 @@ class TestSyncSourceData(
         expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'value'
-        ] = '0'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value'
-        ] = ''
 
         self.assertEqual(remote_data, expected)
 

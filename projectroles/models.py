@@ -278,6 +278,19 @@ class Project(models.Model):
         """
         return True if user in [a.user for a in self.get_owners()] else False
 
+    def is_delegate(self, user):
+        """
+        Return True if user is delegate in this project.
+        """
+        return True if user in [a.user for a in self.get_delegates()] else False
+
+    def is_owner_or_delegate(self, user):
+        """
+        Return True if user is either an owner or a delegate in this project.
+        Includes inherited owner relationships.
+        """
+        return self.is_owner(user) or self.is_delegate(user)
+
     def get_delegates(self):
         """Return RoleAssignments for delegates"""
         return self.roles.filter(

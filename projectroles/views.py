@@ -2,6 +2,8 @@
 
 import json
 import re
+from ipaddress import ip_address
+
 import requests
 import urllib.request
 
@@ -210,6 +212,37 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         """Overrides for project permission access"""
         project = self.get_project()
 
+        # Override permissions for superuser, owner or delegate
+        perm_override = (
+            self.request.user.is_superuser
+            or project.is_owner_or_delegate(self.request.user)
+        )
+
+        if not perm_override and app_settings.get_app_setting(
+            'projectroles', 'ip_restrict', project
+        ):
+            for k in (
+                'HTTP_X_FORWARDED_FOR',
+                'X_FORWARDED_FOR',
+                'FORWARDED',
+                'REMOTE_ADDR',
+            ):
+                v = self.request.META.get(k)
+                if v:
+                    client_address = ip_address(v.split(',')[0])
+                    break
+            else:  # Can't fetch client ip address
+                return False
+
+            allow_list = map(
+                ip_address,
+                app_settings.get_app_setting(
+                    'projectroles', 'ip_allowlist', project
+                ),
+            )
+            if not (allow_list and client_address in allow_list):
+                return False
+
         # Disable project app access for categories unless specifically enabled
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
@@ -223,16 +256,8 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked
-        if project and project.is_revoked():
-            role_as = RoleAssignment.objects.filter(
-                project=project, user=self.request.user
-            ).first()
-
-            if role_as and role_as.role.name not in [
-                PROJECT_ROLE_OWNER,
-                PROJECT_ROLE_DELEGATE,
-            ]:
-                return False
+        if project and project.is_revoked() and not perm_override:
+            return False
 
         return super().has_permission()
 

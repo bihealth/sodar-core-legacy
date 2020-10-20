@@ -49,10 +49,9 @@ PROJECTROLES_APP_SETTINGS = {
     },
     'ip_allowlist': {
         'scope': 'PROJECT',
-        'type': 'STRING',
-        'default': '',
+        'type': 'JSON',
+        'default': [],
         'label': 'IP Allow List',
-        'placeholder': '192.168.1.1;192.168.1.2',
         'description': 'List of allowed IPs for project access',
         'user_modifiable': True,
         'local': False,
@@ -214,7 +213,12 @@ class AppSettingAPI:
 
         if setting_name in app_settings:
             if app_settings[setting_name]['type'] == 'JSON':
-                if not app_settings[setting_name].get('default'):
+                json_default = app_settings[setting_name].get('default')
+                if not json_default:
+                    if isinstance(json_default, dict):
+                        return {}
+                    elif isinstance(json_default, list):
+                        return []
                     return {}
 
                 if post_safe:
@@ -253,7 +257,7 @@ class AppSettingAPI:
             val = cls.get_default_setting(app_name, setting_name, post_safe)
 
         # Handle post_safe for dict values (JSON)
-        if post_safe and isinstance(val, dict):
+        if post_safe and isinstance(val, (dict, list),):
             return json.dumps(val)
 
         return val
@@ -536,12 +540,7 @@ class AppSettingAPI:
 
     @classmethod
     def get_setting_defs(
-        cls,
-        scope,
-        plugin=False,
-        app_name=False,
-        user_modifiable=False,
-        is_remote=False,
+        cls, scope, plugin=False, app_name=False, user_modifiable=False,
     ):
         """
         Return app setting definitions of a specific scope from a plugin.

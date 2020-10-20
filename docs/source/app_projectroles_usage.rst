@@ -183,7 +183,6 @@ used e.g. in cases where a project app provides its own UI or updates some
 "hidden" setting due to user actions. Superusers will still see these hidden
 settings in the Update Project view.
 
-
 Settings with the scope of user within a project do not currently have a
 separate UI of their own. Instead, project apps can produce their own user
 specific UIs for this functionality if manual user selection is needed.
@@ -193,6 +192,12 @@ specific UIs for this functionality if manual user selection is needed.
     Currently, project specific app settings are also enabled for categories but
     do not actually do anything. The behaviour regarding this (remove settings /
     inherit by nested projects / etc) is TBD.
+
+The projectroles app provides the following built-in app settings with the
+project scope:
+
+- ``ip_restrict``: Restict project access by an allowed IP list if enabled.
+- ``ip_allowlist``: List of allowed IP addresses for project access.
 
 
 Member Management

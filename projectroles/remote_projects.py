@@ -955,7 +955,6 @@ class RemoteProjectAPI:
                 logger.info(
                     'Keeping local setting {}'.format(str(app_setting_obj))
                 )
-                app_setting['value'] = app_setting_obj.value
                 return
             action_str = 'Updating'
             app_setting_obj.delete()

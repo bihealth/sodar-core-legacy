@@ -1,6 +1,7 @@
 """REST API views for the samplesheets app"""
 
 import re
+from ipaddress import ip_address
 
 from django.conf import settings
 from django.contrib import auth
@@ -27,6 +28,7 @@ from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
 from projectroles import __version__ as core_version
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
@@ -79,6 +81,10 @@ CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2', '0.8.3']
 User = auth.get_user_model()
 
 
+# App Settings
+app_settings = AppSettingAPI()
+
+
 # Permission / Versioning / Renderer Classes -----------------------------------
 
 
@@ -102,6 +108,36 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
 
+        project = self.get_project(request=request, kwargs=view.kwargs)
+        owner_or_delegate = project.is_owner_or_delegate(request.user)
+
+        if not (
+            request.user.is_superuser or owner_or_delegate
+        ) and app_settings.get_app_setting(
+            'projectroles', 'ip_restrict', project
+        ):
+            for k in (
+                'HTTP_X_FORWARDED_FOR',
+                'X_FORWARDED_FOR',
+                'FORWARDED',
+                'REMOTE_ADDR',
+            ):
+                v = request.META.get(k)
+                if v:
+                    client_address = ip_address(v.split(',')[0])
+                    break
+            else:  # Can't fetch client ip address
+                return False
+
+            allow_list = map(
+                ip_address,
+                app_settings.get_app_setting(
+                    'projectroles', 'ip_allowlist', project
+                ),
+            )
+            if not (allow_list and client_address in allow_list):
+                return False
+
         if not hasattr(view, 'permission_required') and (
             not hasattr(view, 'get_permission_required')
             or not callable(getattr(view, 'get_permission_required', None))
@@ -123,9 +159,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             # TODO: TBD: Raise exception / log warning if given multiple perms?
             perm = perm[0]
 
-        return request.user.has_perm(
-            perm, self.get_project(request=request, kwargs=view.kwargs)
-        )
+        return request.user.has_perm(perm, project)
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):

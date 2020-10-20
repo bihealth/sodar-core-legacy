@@ -586,7 +586,7 @@ class TestProjectUpdateView(
         ps['settings.example_project_app.project_bool_setting'] = True
         ps['settings.example_project_app.project_json_setting'] = '{}'
         ps['settings.projectroles.ip_restrict'] = True
-        ps['settings.projectroles.ip_allowlist'] = "192.168.1.1"
+        ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         values.update(ps)
 
         with self.login(self.user):
@@ -636,7 +636,7 @@ class TestProjectUpdateView(
                 post_safe=True,
             )
 
-            if isinstance(v_json, dict):
+            if isinstance(v_json, (dict, list,)):
                 self.assertEqual(json.loads(s), v_json)
 
             else:
@@ -801,7 +801,7 @@ class TestProjectUpdateView(
         values['settings.example_project_app.project_str_setting'] = 'test'
         values['settings.example_project_app.project_bool_setting'] = True
         values['settings.projectroles.ip_restrict'] = True
-        values['settings.projectroles.ip_allowlist'] = '192.168.1.1'
+        values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
 
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 2)
@@ -891,8 +891,9 @@ class TestProjectSettingsForm(
         self.setting_ip_allowlist = self._make_setting(
             app_name='projectroles',
             name='ip_allowlist',
-            setting_type='STRING',
-            value='',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
             project=self.project,
         )
 
@@ -974,7 +975,7 @@ class TestProjectSettingsForm(
             app_settings.get_app_setting(
                 'projectroles', 'ip_allowlist', project=self.project
             ),
-            '',
+            [],
         )
 
         values = {
@@ -984,7 +985,7 @@ class TestProjectSettingsForm(
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
             'settings.projectroles.ip_restrict': True,
-            'settings.projectroles.ip_allowlist': '192.168.1.1',
+            'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
             'owner': self.user.sodar_uuid,
             'title': 'TestProject',
             'type': PROJECT_TYPE_PROJECT,
@@ -1044,7 +1045,7 @@ class TestProjectSettingsForm(
             app_settings.get_app_setting(
                 'projectroles', 'ip_allowlist', project=self.project
             ),
-            '192.168.1.1',
+            ['192.168.1.1'],
         )
 
 

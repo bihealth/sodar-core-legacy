@@ -22,6 +22,7 @@ from projectroles.tests.test_models import (
     RoleAssignmentMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    AppSettingMixin,
 )
 from projectroles.tests.test_views import (
     TestViewsBase,
@@ -153,6 +154,7 @@ class SODARAPIViewTestMixin:
         token=None,
         media_type=None,
         version=None,
+        header=None,
     ):
         """
         Perform a HTTP request with Knox token auth.
@@ -178,6 +180,9 @@ class SODARAPIViewTestMixin:
         if data:
             req_kwargs['data'] = data
 
+        if header:
+            req_kwargs.update(header)
+
         req_method = getattr(self.client, method.lower(), None)
 
         if not req_method:
@@ -192,6 +197,8 @@ class TestAPIViewsBase(
     """Base API test view with knox authentication"""
 
     def setUp(self):
+        # Show complete diff in case of failure
+        self.maxDiff = None
         # Force disabling of taskflow plugin if it's available
         if get_backend_api('taskflow'):
             change_plugin_status(
@@ -324,7 +331,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(len(response_data), 1)
 
 
-class TestProjectRetrieveAPIView(TestCoreAPIViewsBase):
+class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
     """Tests for ProjectRetrieveAPIView"""
 
     def test_get_category(self):
@@ -392,6 +399,260 @@ class TestProjectRetrieveAPIView(TestCoreAPIViewsBase):
             'sodar_uuid': str(self.project.sodar_uuid),
         }
         self.assertEqual(response_data, expected)
+
+    def _setup_ip_allowing(self, ip_list, role_suffix):
+        # Create new user
+        user = self.make_user(role_suffix)
+        # Remove previously assigned owner role for superuser.
+        superuser_as_owner_role = RoleAssignment.objects.get(
+            project=self.project, user=self.user, role=self.role_owner
+        )
+        superuser_as_owner_role.delete()
+        # Assign requested role to user
+        user_as = self._make_assignment(
+            self.project, user, getattr(self, 'role_' + role_suffix)
+        )
+
+        user_cat_as = RoleAssignment.objects.get(
+            project=self.category, user=self.user, role=self.role_owner
+        )
+        if role_suffix == 'owner':
+            user_cat_as.delete()
+            user_cat_as = self._make_assignment(
+                self.category, user, getattr(self, 'role_' + role_suffix)
+            )
+
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=ip_list,
+            project=self.project,
+        )
+
+        return user, user_as, user_cat_as
+
+    def _get_project_ip_allowing(
+        self, username, http_attribute, ip_list, blocked=None
+    ):
+        """Test ProjectListAPIView get() as project owner"""
+
+        if blocked is None:
+            raise Exception("Please set `blocked` argument (True/False)")
+
+        user, user_as, user_cat_as = self._setup_ip_allowing(ip_list, username)
+        url = reverse(
+            'projectroles:api_project_retrieve',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        header = {http_attribute: '192.168.1.1'}
+        response = self.request_knox(
+            url, token=self.get_token(user), header=header
+        )
+
+        if username == 'owner':
+            projectrole = PROJECT_ROLE_OWNER
+        elif username == 'delegate':
+            projectrole = PROJECT_ROLE_DELEGATE
+        elif username == 'contributor':
+            projectrole = PROJECT_ROLE_CONTRIBUTOR
+        else:
+            projectrole = PROJECT_ROLE_GUEST
+
+        if blocked:
+            self.assertEqual(response.status_code, 403)
+        else:
+            expected = {
+                'title': self.project.title,
+                'type': self.project.type,
+                'parent': str(self.category.sodar_uuid),
+                'description': self.project.description,
+                'readme': '',
+                'submit_status': self.project.submit_status,
+                'roles': {
+                    str(user_as.sodar_uuid): {
+                        'user': {
+                            'username': user.username,
+                            'name': user.name,
+                            'email': user.email,
+                            'sodar_uuid': str(user.sodar_uuid),
+                        },
+                        'role': projectrole,
+                    }
+                },
+                'sodar_uuid': str(self.project.sodar_uuid),
+            }
+
+            # Assert response
+            self.assertEqual(response.status_code, 200)
+            response_data = json.loads(response.content)
+            self.assertEqual(response_data, expected)
+
+    def test_get_ip_allowing_http_x_forwarded_for_block_all_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'HTTP_X_FORWARDED_FOR', [], blocked=False
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_allow_ip_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'HTTP_X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_block_all_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'HTTP_X_FORWARDED_FOR', [], blocked=False
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_allow_ip_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'HTTP_X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_block_all_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'HTTP_X_FORWARDED_FOR', [], blocked=True
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_allow_ip_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor',
+            'HTTP_X_FORWARDED_FOR',
+            ['192.168.1.1'],
+            blocked=False,
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_block_all_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'HTTP_X_FORWARDED_FOR', [], blocked=True
+        )
+
+    def test_get_ip_allowing_http_x_forwarded_for_allow_ip_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'HTTP_X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_block_all_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'X_FORWARDED_FOR', [], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_allow_ip_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_block_all_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'X_FORWARDED_FOR', [], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_allow_ip_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_block_all_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'X_FORWARDED_FOR', [], blocked=True
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_allow_ip_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_block_all_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'X_FORWARDED_FOR', [], blocked=True
+        )
+
+    def test_get_ip_allowing_x_forwarded_for_allow_ip_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'X_FORWARDED_FOR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_forwarded_block_all_owner(self):
+        self._get_project_ip_allowing('owner', 'FORWARDED', [], blocked=False)
+
+    def test_get_ip_allowing_forwarded_allow_ip_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'FORWARDED', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_forwarded_block_all_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'FORWARDED', [], blocked=False
+        )
+
+    def test_get_ip_allowing_forwarded_allow_ip_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'FORWARDED', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_forwarded_block_all_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'FORWARDED', [], blocked=True
+        )
+
+    def test_get_ip_allowing_forwarded_allow_ip_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'FORWARDED', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_forwarded_block_all_guest(self):
+        self._get_project_ip_allowing('guest', 'FORWARDED', [], blocked=True)
+
+    def test_get_ip_allowing_forwarded_allow_ip_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'FORWARDED', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_block_all_owner(self):
+        self._get_project_ip_allowing('owner', 'REMOTE_ADDR', [], blocked=False)
+
+    def test_get_ip_allowing_remote_addr_allow_ip_owner(self):
+        self._get_project_ip_allowing(
+            'owner', 'REMOTE_ADDR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_block_all_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'REMOTE_ADDR', [], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_allow_ip_delegate(self):
+        self._get_project_ip_allowing(
+            'delegate', 'REMOTE_ADDR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_block_all_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'REMOTE_ADDR', [], blocked=True
+        )
+
+    def test_get_ip_allowing_remote_addr_allow_ip_contributor(self):
+        self._get_project_ip_allowing(
+            'contributor', 'REMOTE_ADDR', ['192.168.1.1'], blocked=False
+        )
+
+    def test_get_ip_allowing_remote_addr_block_all_guest(self):
+        self._get_project_ip_allowing('guest', 'REMOTE_ADDR', [], blocked=True)
+
+    def test_get_ip_allowing_remote_addr_allow_ip_guest(self):
+        self._get_project_ip_allowing(
+            'guest', 'REMOTE_ADDR', ['192.168.1.1'], blocked=False
+        )
 
 
 class TestProjectCreateAPIView(

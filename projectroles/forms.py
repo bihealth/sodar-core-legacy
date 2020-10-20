@@ -292,7 +292,7 @@ class ProjectForm(SODARModelForm):
 
     def _init_app_settings(self):
         # Set up setting query kwargs
-        self.p_kwargs = {'is_remote': self.instance.is_remote()}
+        self.p_kwargs = {}
         if not self.current_user.is_superuser:
             self.p_kwargs['user_modifiable'] = True
         self.app_settings = AppSettingAPI()
