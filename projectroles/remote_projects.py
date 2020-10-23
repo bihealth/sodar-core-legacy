@@ -1013,14 +1013,15 @@ def _add_parent_categories(sync_data, category, project_level):
         }
 
         if project_level == REMOTE_LEVEL_READ_ROLES:
-            cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-            role_as = category.get_owner()
             cat_data['roles'] = {}
-            cat_data['roles'][str(role_as.sodar_uuid)] = {
-                'user': role_as.user.username,
-                'role': role_as.role.name,
-            }
-            sync_data = _add_user(sync_data, role_as.user)
+            cat_data['level'] = REMOTE_LEVEL_READ_ROLES
+
+            for role_as in category.roles.all():
+                cat_data['roles'][str(role_as.sodar_uuid)] = {
+                    'user': role_as.user.username,
+                    'role': role_as.role.name,
+                }
+                sync_data = _add_user(sync_data, role_as.user)
 
         else:
             cat_data['level'] = REMOTE_LEVEL_READ_INFO

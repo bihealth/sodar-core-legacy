@@ -66,6 +66,33 @@ SOURCE_USER_LAST_NAME = SOURCE_USER_NAME.split(' ')[1]
 SOURCE_USER_EMAIL = SOURCE_USER_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER_UUID = str(uuid.uuid4())
 
+SOURCE_USER2_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER2_USERNAME = 'source_user2@' + SOURCE_USER_DOMAIN
+SOURCE_USER2_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER2_NAME = 'Firstname2 Lastname2'
+SOURCE_USER2_FIRST_NAME = SOURCE_USER2_NAME.split(' ')[0]
+SOURCE_USER2_LAST_NAME = SOURCE_USER2_NAME.split(' ')[1]
+SOURCE_USER2_EMAIL = SOURCE_USER2_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER2_UUID = str(uuid.uuid4())
+
+SOURCE_USER3_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER3_USERNAME = 'source_user3@' + SOURCE_USER_DOMAIN
+SOURCE_USER3_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER3_NAME = 'Firstname3 Lastname3'
+SOURCE_USER3_FIRST_NAME = SOURCE_USER3_NAME.split(' ')[0]
+SOURCE_USER3_LAST_NAME = SOURCE_USER3_NAME.split(' ')[1]
+SOURCE_USER3_EMAIL = SOURCE_USER3_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER3_UUID = str(uuid.uuid4())
+
+SOURCE_USER4_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER4_USERNAME = 'source_user4@' + SOURCE_USER_DOMAIN
+SOURCE_USER4_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER4_NAME = 'Firstname4 Lastname4'
+SOURCE_USER4_FIRST_NAME = SOURCE_USER4_NAME.split(' ')[0]
+SOURCE_USER4_LAST_NAME = SOURCE_USER4_NAME.split(' ')[1]
+SOURCE_USER4_EMAIL = SOURCE_USER4_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER4_UUID = str(uuid.uuid4())
+
 SOURCE_CATEGORY_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_TITLE = 'TestCategory'
 SOURCE_PROJECT_UUID = str(uuid.uuid4())
@@ -73,7 +100,13 @@ SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
 SOURCE_CATEGORY_ROLE_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE2_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE3_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE4_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_ROLE_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE2_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE3_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE4_UUID = str(uuid.uuid4())
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -491,7 +524,7 @@ class TestSyncSourceData(
                     'last_name': SOURCE_USER_LAST_NAME,
                     'email': SOURCE_USER_EMAIL,
                     'groups': [SOURCE_USER_GROUP],
-                }
+                },
             },
             'projects': {
                 SOURCE_CATEGORY_UUID: {
@@ -505,7 +538,7 @@ class TestSyncSourceData(
                         SOURCE_CATEGORY_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name,
-                        }
+                        },
                     },
                 },
                 SOURCE_PROJECT_UUID: {
@@ -519,7 +552,7 @@ class TestSyncSourceData(
                         SOURCE_PROJECT_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name,
-                        }
+                        },
                     },
                     'remote_sites': [PEER_SITE_UUID],
                 },
@@ -566,21 +599,86 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
-        remote_data = self.default_data
-        original_data = deepcopy(remote_data)
+        self.default_data['users'].update(
+            {
+                SOURCE_USER2_UUID: {
+                    'sodar_uuid': SOURCE_USER2_UUID,
+                    'username': SOURCE_USER2_USERNAME,
+                    'name': SOURCE_USER2_NAME,
+                    'first_name': SOURCE_USER2_FIRST_NAME,
+                    'last_name': SOURCE_USER2_LAST_NAME,
+                    'email': SOURCE_USER2_EMAIL,
+                    'groups': [SOURCE_USER2_GROUP],
+                },
+                SOURCE_USER3_UUID: {
+                    'sodar_uuid': SOURCE_USER3_UUID,
+                    'username': SOURCE_USER3_USERNAME,
+                    'name': SOURCE_USER3_NAME,
+                    'first_name': SOURCE_USER3_FIRST_NAME,
+                    'last_name': SOURCE_USER3_LAST_NAME,
+                    'email': SOURCE_USER3_EMAIL,
+                    'groups': [SOURCE_USER3_GROUP],
+                },
+                SOURCE_USER4_UUID: {
+                    'sodar_uuid': SOURCE_USER4_UUID,
+                    'username': SOURCE_USER4_USERNAME,
+                    'name': SOURCE_USER4_NAME,
+                    'first_name': SOURCE_USER4_FIRST_NAME,
+                    'last_name': SOURCE_USER4_LAST_NAME,
+                    'email': SOURCE_USER4_EMAIL,
+                    'groups': [SOURCE_USER4_GROUP],
+                },
+            }
+        )
+        self.default_data['projects'][SOURCE_CATEGORY_UUID]['roles'].update(
+            {
+                SOURCE_CATEGORY_ROLE2_UUID: {
+                    'user': SOURCE_USER2_USERNAME,
+                    'role': self.role_delegate.name,
+                },
+                SOURCE_CATEGORY_ROLE3_UUID: {
+                    'user': SOURCE_USER3_USERNAME,
+                    'role': self.role_contributor.name,
+                },
+                SOURCE_CATEGORY_ROLE4_UUID: {
+                    'user': SOURCE_USER4_USERNAME,
+                    'role': self.role_guest.name,
+                },
+            }
+        )
+        self.default_data['projects'][SOURCE_PROJECT_UUID]['roles'].update(
+            {
+                SOURCE_PROJECT_ROLE2_UUID: {
+                    'user': SOURCE_USER2_USERNAME,
+                    'role': self.role_delegate.name,
+                },
+                SOURCE_PROJECT_ROLE3_UUID: {
+                    'user': SOURCE_USER3_USERNAME,
+                    'role': self.role_contributor.name,
+                },
+                SOURCE_PROJECT_ROLE4_UUID: {
+                    'user': SOURCE_USER4_USERNAME,
+                    'role': self.role_guest.name,
+                },
+            }
+        )
+        original_data = deepcopy(self.default_data)
 
         # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_source_data(self.source_site, self.default_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 8)
+        self.assertEqual(User.objects.all().count(), 5)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
         self.assertEqual(AppSetting.objects.count(), 2)
 
         new_user = User.objects.get(username=SOURCE_USER_USERNAME)
+        new_user2 = User.objects.get(username=SOURCE_USER2_USERNAME)
+        new_user3 = User.objects.get(username=SOURCE_USER3_USERNAME)
+        new_user4 = User.objects.get(username=SOURCE_USER4_USERNAME)
 
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         expected = {
@@ -599,6 +697,16 @@ class TestSyncSourceData(
         c_owner_obj = RoleAssignment.objects.get(
             sodar_uuid=SOURCE_CATEGORY_ROLE_UUID
         )
+        c_delegate_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE2_UUID
+        )
+        c_contributor_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE3_UUID
+        )
+        c_guest_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE4_UUID
+        )
+
         expected = {
             'id': c_owner_obj.pk,
             'project': category_obj.pk,
@@ -607,6 +715,30 @@ class TestSyncSourceData(
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE_UUID),
         }
         self.assertEqual(model_to_dict(c_owner_obj), expected)
+        expected = {
+            'id': c_delegate_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user2.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE2_UUID),
+        }
+        self.assertEqual(model_to_dict(c_delegate_obj), expected)
+        expected = {
+            'id': c_contributor_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user3.pk,
+            'role': self.role_contributor.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE3_UUID),
+        }
+        self.assertEqual(model_to_dict(c_contributor_obj), expected)
+        expected = {
+            'id': c_guest_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user4.pk,
+            'role': self.role_guest.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE4_UUID),
+        }
+        self.assertEqual(model_to_dict(c_guest_obj), expected)
 
         project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         expected = {
@@ -625,6 +757,16 @@ class TestSyncSourceData(
         p_owner_obj = RoleAssignment.objects.get(
             sodar_uuid=SOURCE_PROJECT_ROLE_UUID
         )
+        p_delegate_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE2_UUID
+        )
+        p_contributor_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE3_UUID
+        )
+        p_guest_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE4_UUID
+        )
+
         expected = {
             'id': p_owner_obj.pk,
             'project': project_obj.pk,
@@ -633,6 +775,30 @@ class TestSyncSourceData(
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE_UUID),
         }
         self.assertEqual(model_to_dict(p_owner_obj), expected)
+        expected = {
+            'id': p_delegate_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user2.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE2_UUID),
+        }
+        self.assertEqual(model_to_dict(p_delegate_obj), expected)
+        expected = {
+            'id': p_contributor_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user3.pk,
+            'role': self.role_contributor.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE3_UUID),
+        }
+        self.assertEqual(model_to_dict(p_contributor_obj), expected)
+        expected = {
+            'id': p_guest_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user4.pk,
+            'role': self.role_guest.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE4_UUID),
+        }
+        self.assertEqual(model_to_dict(p_guest_obj), expected)
 
         remote_cat_obj = RemoteProject.objects.get(
             site=self.source_site, project_uuid=category_obj.sodar_uuid
@@ -738,16 +904,37 @@ class TestSyncSourceData(
         # Assert remote_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER2_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER3_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER4_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
             SOURCE_CATEGORY_ROLE_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE2_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE3_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE4_UUID
         ]['status'] = 'created'
         expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'created'
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID
         ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE2_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE3_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE4_UUID
+        ]['status'] = 'created'
 
-        self.assertEqual(remote_data, expected)
+        self.assertEqual(self.default_data, expected)
 
     def test_create_app_setting_local(self):
         remote_data = self.default_data
