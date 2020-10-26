@@ -933,6 +933,12 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE4_UUID
         ]['status'] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
 
         self.assertEqual(self.default_data, expected)
 
@@ -961,6 +967,12 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID
         ]['status'] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1047,6 +1059,12 @@ class TestSyncSourceData(
         ]['status'] = 'created'
         expected['projects'][new_project_uuid]['status'] = 'created'
         expected['projects'][new_project_uuid]['roles'][new_role_uuid][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
             'status'
         ] = 'created'
 
@@ -1446,6 +1464,12 @@ class TestSyncSourceData(
         expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
             'value_json'
         ] = ['192.168.1.1']
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'updated'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'updated'
 
         self.assertEqual(remote_data, expected)
 
@@ -1835,6 +1859,12 @@ class TestSyncSourceData(
             'role': PROJECT_ROLE_CONTRIBUTOR,
             'status': 'deleted',
         }
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1886,6 +1916,27 @@ class TestSyncSourceData(
             project=project_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES,
+        )
+
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
         )
 
         # Set up Peer Objects
@@ -2037,6 +2088,13 @@ class TestSyncSourceData(
         self.assertEqual(peer_project_dict, expected)
 
         # Assert no changes between update_data and remote_data
+        # Except global app settings, they are always updated.
+        original_data['app_settings'][
+            PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID
+        ]['status'] = 'updated'
+        original_data['app_settings'][
+            PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID
+        ]['status'] = 'updated'
         self.assertEqual(original_data, remote_data)
 
     def test_create_no_access(self):

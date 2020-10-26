@@ -15,7 +15,7 @@ Added
 
 - **Projectroles**
     - Projectroles app settings (#532)
-    - Remote sync for projectroles app setting (#533)
+    - Remote sync for projectroles app setting (#533, #586)
     - IP address based access restriction for projects (#531)
     - ``is_delegate()`` and ``is_owner_or_delegate()`` helpers for ``Project`` model
     - Remote sync for non-owner category members (#502)

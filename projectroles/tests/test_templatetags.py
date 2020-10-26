@@ -11,6 +11,7 @@ from django.urls import reverse
 from test_plus.test import TestCase
 
 import projectroles
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Role,
     SODAR_CONSTANTS,
@@ -18,6 +19,7 @@ from projectroles.models import (
     Project,
     RemoteProject,
     RemoteSite,
+    AppSetting,
 )
 from projectroles.plugins import get_app_plugin, get_active_plugins
 from projectroles.project_tags import set_tag_state
@@ -54,6 +56,10 @@ TEMPLATE_PATH = 'projectroles/home.html'
 site = import_module(settings.SITE_PACKAGE)
 
 
+# App settings API
+app_settings = AppSettingAPI()
+
+
 class TestTemplateTagsBase(
     ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
 ):
@@ -84,6 +90,19 @@ class TestTemplateTagsBase(
         )
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
+        )
+
+        # Init app_setting
+        app_settings.set_app_setting(
+            'filesfolders', 'allow_public_links', True, project=self.project
+        )
+        app_settings.set_app_setting(
+            'projectroles', 'ip_restrict', True, project=self.project
+        )
+        self.setting_filesfolders = AppSetting.objects.get(
+            project=self.project,
+            app_plugin__name='filesfolders',
+            name='allow_public_links',
         )
 
 
@@ -118,6 +137,19 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
             c_tags.get_user_by_username(self.user.username), self.user
         )
         self.assertEqual(c_tags.get_user_by_username('NON_EXISTING_USER'), None)
+
+    def test_get_plugin_name_by_id(self):
+        """Test get_plugin_name_by_id()"""
+        self.assertEqual(
+            c_tags.get_plugin_name_by_id(
+                self.setting_filesfolders.app_plugin_id
+            ),
+            'filesfolders',
+        )
+
+    def test_get_plugin_name_by_id_no_id(self):
+        """Test get_plugin_name_by_id()"""
+        self.assertEqual(c_tags.get_plugin_name_by_id(None), 'projectroles')
 
     def test_get_django_setting(self):
         """Test get_django_setting()"""

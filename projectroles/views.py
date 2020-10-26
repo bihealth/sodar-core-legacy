@@ -2608,12 +2608,17 @@ class RemoteProjectsSyncView(
                 raise ex
             return redirect(redirect_url)
 
+        # import ipdb; ipdb.set_trace()
+
         # Check for updates
         user_count = len(
             [v for v in update_data['users'].values() if 'status' in v]
         )
         project_count = len(
             [v for v in update_data['projects'].values() if 'status' in v]
+        )
+        app_settings_count = len(
+            [v for v in update_data['app_settings'].values() if 'status' in v]
         )
         role_count = 0
 
@@ -2622,7 +2627,12 @@ class RemoteProjectsSyncView(
                 role_count += 1
 
         # Redirect if no changes were detected
-        if user_count == 0 and project_count == 0 and role_count == 0:
+        if (
+            user_count == 0
+            and project_count == 0
+            and role_count == 0
+            and app_settings_count == 0
+        ):
             messages.warning(
                 request,
                 'No changes in remote site detected, nothing to synchronize',
@@ -2633,6 +2643,7 @@ class RemoteProjectsSyncView(
         context['user_count'] = user_count
         context['project_count'] = project_count
         context['role_count'] = role_count
+        context['app_settings_count'] = app_settings_count
         messages.success(
             request,
             '{} data updated according to source site'.format(

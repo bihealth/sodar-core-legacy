@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.urls import reverse
+from djangoplugins.models import Plugin
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
@@ -73,6 +74,18 @@ def get_user_by_username(username):
 
     except User.DoesNotExist:
         return None
+
+
+@register.simple_tag
+def get_plugin_name_by_id(plugin_id):
+    """Return Plugin by id"""
+    if plugin_id:
+        try:
+            return Plugin.objects.get(id=plugin_id).name
+        except Plugin.DoesNotExist:
+            return None
+    else:
+        return 'projectroles'
 
 
 # Django helpers ---------------------------------------------------------------

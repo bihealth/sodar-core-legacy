@@ -972,6 +972,7 @@ class RemoteProjectAPI:
         app_setting_draft = AppSetting(**_app_setting, sodar_uuid=sodar_uuid)
         logger.info('{} setting {}'.format(action_str, str(app_setting_draft)))
         app_setting_draft.save()
+        app_setting['status'] = action_str.lower().replace('ing', 'ed')
 
 
 def _add_user(sync_data, user):
@@ -1054,8 +1055,8 @@ def _add_app_setting(sync_data, app_setting):
             else None,
             'project_uuid': app_setting.project.sodar_uuid,
             'user_id': app_setting.user.id if app_setting.user else None,
-            'local': AppSettingAPI._get_projectroles_settings().get(
-                'local', APP_SETTING_LOCAL_DEFAULT
-            ),
+            'local': AppSettingAPI._get_projectroles_settings()
+            .get(app_setting.name, {})
+            .get('local', APP_SETTING_LOCAL_DEFAULT),
         }
     return sync_data
