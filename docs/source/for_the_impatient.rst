@@ -6,6 +6,32 @@ For the Impatient
 This section will give you the essential steps to setup a new SODAR Core based project.
 We will link to the parts of the manual where they were taken from such that you can read more in depth there.
 
+.. _for_the_impatient_see_it_in_action:
+
+See It In Action
+================
+
+We have developed the following data management and analysis web applications using SODAR-core.
+Although there only is a public demo available for VarFish at this time, the source code of the applications demonstrate how to use SODAR-core in complex web applications.
+
+  `VarFish <https://github.com/bihealth/varfish-server>`__
+    is a web-based tool for the analysis of variants.
+    It showcases how to build a complex data warehousing and data analysis web appliction using SODAR-Core.
+    More details are described in the `NAR Web Server Issue publication (doi:10.1093/nar/gkaa241) <https://doi.org/10.1093/nar/gkaa241>`__.
+    The source code can be found on `github.com/bihealth/varfish-server <https://github.com/bihealth/varfish-server>`__.
+    A demo is available at `varfish-demo.bihealth.org <https://varfish-demo.bihealth.org/login/>`__.
+
+  `DigestiFlow <https://github.com/bihealth/digestiflow-server>`__
+    is a web-based data system for the management and demultiplexing of Illumina Flow Cells.
+    It further implements various tools for sanity checking Illumina sample sheets and quality control (e.g., comparing barcode adapter sequence and actual sequence present in the sequencer output).
+    You can find out more in our publication in `Bioinformatics (doi:10.1093/bioinformatics/btz850) <https://doi.org/10.1093/bioinformatics/btz850>`__.
+    The source code can be found on `github.com/bihealth/digestiflow-server <https://github.com/bihealth/digestiflow-server>`__.
+    There currently is no public demo instance yet.
+
+  `Kiosc <https://github.com/bihealth/kiosc>`__
+    is a web application that allows to build scheduler Docker containers for "data science" apps and dashboards.
+    There currently is no public demo instance yet.
+
 Prerequisites
 =============
 
@@ -19,6 +45,16 @@ PostgreSQL
 Development Essentials
     We assume that you have ``git``, Python 3.6, and other essential tools installed.
     If you are using a mainstream Unix-like distribution (Mac qualifies) then you should be good to go.
+
+.. info:
+
+    In the case that you get an error as follows when installing the dependencies, make sure that you have the development libraries of postgres installed.
+    E.g., on Debian-based systems install ``postgresql-dev``, for Red Hat and CentOS install ``postgresql-devel``.
+
+    ::
+
+        Error: pg_config executable not found.
+
 
 Isolate Python Environment
 ==========================
@@ -210,14 +246,6 @@ Going on From Here
 ==================
 
 - You can now start exploring your ``sodar_django_site`` and play around with it.
+- You can read the :ref`user_stories` section to learn how SODAR Core based applications are built.
 - Continue reading :ref:`getting_started` for a more comprehensive documentation and walk-through of SODAR Core and its apps.
-- Have a look at the following web apps developed by us that are using SODAR Core:
-
-  `VarFish <https://github.com/bihealth/varfish-server>`_
-    VarFish - Collaborative and Comprehensive Variant Analysis for Diagnosis and Research (`doi <https://doi.org/10.1101/2020.01.27.921965>`__).
-
-  `DigestiFlow <https://github.com/bihealth/digestiflow-server>`_
-    Management of Illumina Flow Cells and demultiplexing thereof (`doi <https://doi.org/10.1093/bioinformatics/btz850>`__).
-
-  `Kiosc <https://github.com/bihealth/kiosc>`_
-    Scheduling of Docker containers for providing "data science" apps and dashboards.
+- Have a look at the web apps developed by us that are using SODAR Core as shown in the :ref:`for_the_impatient_see_it_in_action` section.

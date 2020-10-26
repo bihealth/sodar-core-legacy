@@ -40,7 +40,7 @@ In order to prevent duplication of work, we have extracted the commonly useful c
 It is used in our actively developed applications and also proved useful in internal web app prototypes.
 
 Examples for using SODAR Core in the development of scientific data management web apps is Digestiflow [@Holtgrewe:2019] and the Filesfolders module shipping with SODAR Core.
-An example for using SODAR Core in the development of scientific data analysis web apps is VarFish [@Holtgrewe:2020]. 
+An example for using SODAR Core in the development of scientific data analysis web apps is VarFish [@Holtgrewe:2020].
 
 # Features
 
@@ -50,7 +50,7 @@ This section lists the main applications at the time of writing and summarises t
 ## Projects and project-based access control
 
 All SODAR Core features are grouped around projects that can be arranged in a tree structure.
-Users can be assigned to projects with certain roles that can be used for controlling authorization.
+Users can be assigned to projects and have different permission sets in each projects.
 This feature is provided in the `projectroles` app.
 Further, SODAR Core allows for easy integration of more than one external LDAP authentication source.
 
@@ -84,7 +84,7 @@ This allows the web app to render HTML documents to the client's browser indepen
 ## Caching Infrastructure
 
 In many cases, data management and analysis applications will use data stored in external services that might take a longer time to query.
-For this use case, the `sodarcache` app provides features for caching query results. 
+For this use case, the `sodarcache` app provides features for caching query results.
 
 ## Miscellaneous Functionality
 

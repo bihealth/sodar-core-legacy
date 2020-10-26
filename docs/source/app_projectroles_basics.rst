@@ -11,18 +11,22 @@ in this document.
 Projects
 ========
 
-The projectroles app groups project-specific data, user access roles and other
-features into **projects** and **categories**. These can be nested in a tree
-structure with the *category* type working as a container for sub-projects with
-limited content of its own.
+The projectroles app allows grouping of data into **projects**.
+Here, a **project** is a data container object that other objects can be linked to (typically through a 1:n foreign key relationship).
+A special type of project is a **category** which is allowed to contain other categories and projects but no other data type.
+
+Using categories and projects, data can be organized in a tree structure of category and project "containers".
+Users can be granted access to projects using roles as described in the next section.
 
 
 User Roles in Projects
 ======================
 
-User access to projects is granted by per-project assigning of roles. In each
-project, a user can have one role at a time. New types of roles can be defined
-by extending the default model's database table.
+A **role** is a data type that has a string identifier in it score (e.g., "guest").
+Roles are assigned to individual users in the context of individual projects (a n:m relation from user to project with the string identifier).
+For example, user "paul" might be assigned the "guest" role in one project and another (or no) role in a second project.
+Users can only have one role in a given project at any given time.
+New types of roles can be defined by extending the default model's database table of the projectroles app.
 
 The default setup of role types used in SODAR sites:
 
