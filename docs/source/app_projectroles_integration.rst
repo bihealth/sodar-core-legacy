@@ -303,11 +303,11 @@ All Done!
 
 After following all the instructions above, you should have a working SODAR Core
 based Django site with support for projectroles features and SODAR Core apps. To
-test the site locally execute the supplied shortcut script:
+test the site locally execute the supplied make command:
 
 .. code-block:: console
 
-    $ ./run.sh
+    $ make serve
 
 Or, run the standard Django ``runserver`` command:
 

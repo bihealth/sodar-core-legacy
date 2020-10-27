@@ -23,6 +23,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Replaced management scripts (``(run*|test*|manage_target|black).sh``) with ``Makefile`` (#135)
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
 

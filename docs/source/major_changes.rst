@@ -24,8 +24,11 @@ Release Highlights
 Breaking Changes
 ================
 
-TBD
+Management Scripts
+------------------
 
+Management scripts (``.sh``) have been replaced by a ``Makefile``.
+Get an overview of the available commands via ``make usage``.
 
 v0.8.3 (2020-09-28)
 *******************
