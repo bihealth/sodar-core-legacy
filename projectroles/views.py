@@ -2,6 +2,7 @@
 
 import json
 import re
+import ssl
 from ipaddress import ip_address, ip_network
 
 import requests
@@ -2583,6 +2584,13 @@ class RemoteProjectsSyncView(
         except Exception as ex:
             ex_str = str(ex)
 
+            if (
+                isinstance(ex, urllib.error.URLError)
+                and isinstance(ex.reason, ssl.SSLError)
+                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
+            ):
+                ex_str = 'Most likely server cannot handle HTTPS requests.'
+
             if len(ex_str) >= 255:
                 ex_str = ex_str[:255]
 
@@ -2607,8 +2615,6 @@ class RemoteProjectsSyncView(
             if settings.DEBUG:
                 raise ex
             return redirect(redirect_url)
-
-        # import ipdb; ipdb.set_trace()
 
         # Check for updates
         user_count = len(
