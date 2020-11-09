@@ -24,11 +24,20 @@ Release Highlights
 Breaking Changes
 ================
 
-Management Scripts
-------------------
+Development Helper Scripts
+--------------------------
 
-Management scripts (``.sh``) have been replaced by a ``Makefile``.
+Development helper scripts (``.sh``) have been replaced by a ``Makefile``.
 Get an overview of the available commands via ``make usage``.
+
+System Prerequisites
+--------------------
+
+The following third party JS/CSS requirements have been updated:
+
+- JQuery v3.5.1
+- Bootstrap v4.5.3
+
 
 v0.8.3 (2020-09-28)
 *******************
