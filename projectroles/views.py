@@ -6,6 +6,7 @@ import ssl
 from ipaddress import ip_address, ip_network
 
 import requests
+from urllib.parse import unquote_plus
 import urllib.request
 
 from django.apps import apps
@@ -1909,15 +1910,15 @@ class ProjectInviteCreateView(
         return context
 
     def get_form_kwargs(self):
-        """Pass current user (and possibly mail address and role pk) to form"""
+        """Pass current user and optional email/role to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
 
-        mail = self.request.GET.get('forwarded-email', None)
-        role = self.request.GET.get('forwarded-role', None)
+        email = self.request.GET.get('e', None)
+        role_pk = self.request.GET.get('r', None)
 
-        kwargs.update({'mail': mail})
-        kwargs.update({'role': role})
+        kwargs.update({'mail': unquote_plus(email) if email else None})
+        kwargs.update({'role': role_pk})
 
         return kwargs
 

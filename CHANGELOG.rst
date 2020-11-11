@@ -29,6 +29,12 @@ Changed
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Invite redirect not working in Add Member view (#589)
+
 
 v0.8.3 (2020-09-28)
 ===================

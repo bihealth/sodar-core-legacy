@@ -2110,8 +2110,8 @@ class TestProjectInviteCreateView(
         from the RoleAssignment Form"""
 
         values = {
-            'forwarded-email': 'test@example.com',
-            'forwarded-role': self.role_contributor.pk,
+            'e': 'test@example.com',
+            'r': self.role_contributor.pk,
         }
 
         with self.login(self.owner_as.user):

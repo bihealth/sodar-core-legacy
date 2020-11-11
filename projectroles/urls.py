@@ -63,7 +63,7 @@ urls_ui = [
         name='invites',
     ),
     url(
-        regex=r'^invites/create/(?P<project>[0-9a-f-]+)$',
+        regex=r'^invites/create/(?P<project>[0-9a-f-]+)',
         view=views.ProjectInviteCreateView.as_view(),
         name='invite_create',
     ),

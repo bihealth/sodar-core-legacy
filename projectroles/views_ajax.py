@@ -219,7 +219,7 @@ class UserAutocompleteRedirectAjaxView(UserAutocompleteAjaxView):
                 if q.lower() in existing_options:
                     display_create_option = False
 
-        if display_create_option and self.has_add_permission(self.request):
+        if display_create_option:
             create_option = [
                 {
                     'id': q,
