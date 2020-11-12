@@ -105,7 +105,7 @@ We believe that other people will find the components useful in their projects a
 
 SODAR Core is distributed under the MIT license and available from Github at https://github.com/bihealth/sodar_core.
 Each release is also stored to Zenodo.
-The current version 0.6.2 is available with the DOI 10.5281/zenodo.3251782.
+The current version 0.8.4 is available with the DOI 10.5281/zenodo.4269347.
 An example Django site is contained in the SODAR Core Git repository and up-to date documentation is available at https://sodar-core.readthedocs.org.
 
 # References
