@@ -36,6 +36,16 @@ Fixed
     - Invite redirect not working in Add Member view (#589)
 
 
+v0.8.4 (2020-11-12)
+===================
+
+Changed
+-------
+
+- **General**
+    - Documentation updates for JOSS submission
+
+
 v0.8.3 (2020-09-28)
 ===================
 

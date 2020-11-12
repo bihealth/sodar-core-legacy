@@ -39,6 +39,20 @@ The following third party JS/CSS requirements have been updated:
 - Bootstrap v4.5.3
 
 
+v0.8.4 (2020-11-12)
+*******************
+
+Release Highlights
+==================
+
+This release updates documentation for JOSS submission.
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.8.3 (2020-09-28)
 *******************
 
