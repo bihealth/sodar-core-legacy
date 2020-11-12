@@ -90,7 +90,7 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install -e git+https://github.com/bihealth/sodar_core.git@v0.8.3#egg=django-sodar-core
+    $ pip install -e git+https://github.com/bihealth/sodar_core.git@v0.8.4#egg=django-sodar-core
 
 Download Example Site
 =====================

@@ -10,6 +10,20 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.8.4 (2020-11-12)
+*******************
+
+Release Highlights
+==================
+
+This release updates documentation for JOSS submission.
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.8.3 (2020-09-28)
 *******************
 
