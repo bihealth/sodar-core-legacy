@@ -6,7 +6,7 @@ python:
   - "3.6"
 
 env:
-  - CHROME_DRIVER_VERSION="85.0.4183.83"
+  - CHROME_DRIVER_VERSION="87.0.4280.20"
 
 before_install:
   - sudo apt-get update -qq

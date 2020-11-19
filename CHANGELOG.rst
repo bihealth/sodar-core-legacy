@@ -26,6 +26,7 @@ Changed
 - **General**
     - Replace development helper scripts with ``Makefile`` (#135)
     - Upgrade to Bootstrap v4.5.3 and jQuery v3.5.1 (#563)
+    - Upgrade to Chromedriver v87
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
 
