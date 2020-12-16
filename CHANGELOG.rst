@@ -19,6 +19,7 @@ Added
     - IP address based access restriction for projects (#531)
     - ``is_delegate()`` and ``is_owner_or_delegate()`` helpers for ``Project`` model
     - Remote sync for non-owner category members (#502)
+    - Added ``setting_delete()`` function to ``AppSettingAPI`` (#538)
 
 Changed
 -------
