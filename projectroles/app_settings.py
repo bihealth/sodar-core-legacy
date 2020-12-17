@@ -458,6 +458,41 @@ class AppSettingAPI:
             return True
 
     @classmethod
+    def delete_setting(cls, app_name, setting_name, project=None, user=None):
+        """Delete app setting.
+
+        :param app_name: App name (string, must equal "name" in app plugin)
+        :param setting_name: Setting name (string)
+        :param project: Project object to delete setting from (optional)
+        :param user: User object to delete setting from (optional)
+        """
+
+        setting_def = cls.get_setting_def(setting_name, app_name=app_name)
+        scope = setting_def.get('scope')
+        query_parameters = {'name': setting_name}
+
+        if scope == 'USER' and project:
+            raise ValueError('App setting scope is USER but project is set.')
+        elif scope == 'PROJECT' and user:
+            raise ValueError('App setting scope is PROJECT but user is set.')
+
+        if user:
+            query_parameters['user'] = user
+        if project:
+            query_parameters['project'] = project
+
+        logger.debug(
+            'Request to delete app setting: {}.{} with query parameters {}'.format(
+                app_name, setting_name, query_parameters,
+            )
+        )
+
+        app_settings = AppSetting.objects.filter(**query_parameters)
+        logger.debug('Deleting {} app setting(s)'.format(app_settings.count()))
+        # TODO: once sodar_core issue #119 is implemented, add timeline logging.
+        app_settings.delete()
+
+    @classmethod
     def validate_setting(cls, setting_type, setting_value):
         """
         Validate setting value according to its type.
