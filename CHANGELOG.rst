@@ -38,6 +38,7 @@ Fixed
 
 - **Projectroles**
     - Invite redirect not working in Add Member view (#589)
+    - Wrong role label displayed for category owner/delegate in member list (#593)
 
 Removed
 -------

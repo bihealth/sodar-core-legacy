@@ -82,7 +82,7 @@
             <td>{{ owner.user.username }}</td>
             <td>{{ owner.user.name }}</td>
             <td><a href="mailto:{{ owner.user.email }}">{{ owner.user.email }}</a></td>
-            <td><strong>{% get_display_name 'PROJECT' title=True %} Owner <i class="fa fa-star" aria-hidden="true"></i></strong></td>
+            <td><strong>{% get_display_name project.type title=True %} Owner <i class="fa fa-star" aria-hidden="true"></i></strong></td>
             <td>
               {% if not project.is_remote and can_update_owner %}
                 {% include 'projectroles/_project_roles_buttons_owner.html' with user=owner.user assignment_id=owner.sodar_uuid %}
@@ -94,7 +94,7 @@
               <td>{{ delegate.user.username }}</td>
               <td>{{ delegate.user.name }}</td>
               <td><a href="mailto:{{ delegate.user.email }}">{{ delegate.user.email }}</a></td>
-              <td><strong>{% get_display_name 'PROJECT' title=True %} Delegate <i class="fa fa-star-half-o" aria-hidden="true"></i></strong></td>
+              <td><strong>{% get_display_name project.type title=True %} Delegate <i class="fa fa-star-half-o" aria-hidden="true"></i></strong></td>
               <td>
                 {% if not project.is_remote and can_update_delegate %}
                   {% include 'projectroles/_project_roles_buttons.html' with user=delegate.user assignment_id=delegate.sodar_uuid %}
