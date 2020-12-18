@@ -5,34 +5,30 @@
 {% load projectroles_common_tags %}
 
 {% has_perm 'projectroles.view_project' request.user p as can_view_project %}
-
 {% has_star p request.user as is_starred %}
+{% get_project_list_indent p list_parent as project_indent %}
+{% get_star p request.user as project_star %}
 
-<tr class="sodar-pr-project-list-item sodar-pr-home-display-default {% if not is_starred %}sodar-pr-home-unstarred{% endif %}"
-    id="sodar-pr-project-list-item-{{ p.sodar_uuid }}">
+<tr class="sodar-pr-project-list-item"
+    id="sodar-pr-project-list-item-{{ p.sodar_uuid }}"
+    data-title="{{ p.title }}"
+    data-full-title="{{ p.get_full_title }}"
+    data-starred="{% if is_starred %}1{% else %}0{% endif %}">
   <td>
     <div class="sodar-overflow-container">
-      {% get_project_list_indent p list_parent as project_indent %}
-      <span style="padding-left: {{ project_indent }}px;"></span>
-      {% if p.type == 'CATEGORY' %}
-        <i class="fa fa-fw fa-cubes"></i>
-      {% else %}
-        <i class="fa fa-fw fa-cube"></i>
-      {% endif %}
-      {% if p.type == 'CATEGORY' %}
-        <u>
-      {% endif %}
-      {% if can_view_project %}
-        {% get_project_link project=p full_title=False request=request as project_link %}
-        {{ project_link|safe }}
-        {% get_star p request.user as project_star %}
+      <span class="sodar-pr-project-indent"
+            style="padding-left: {{ project_indent }}px;"></span>
+      <i class="fa fa-fw {% if p.type == 'CATEGORY' %}fa-cubes{% else %}fa-cube{% endif %}"></i>
+      <span class="sodar-pr-project-title
+                   {% if p.type == 'CATEGORY' %}text-underline{% endif %}
+                   {% if not can_view_project %}text-muted{% endif %}">
+        {% if can_view_project %}
+          <a class="sodar-pr-project-link" href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a>
+        {% else %}
+          {{ p.title }}
+        {% endif %}
         {{ project_star|safe }}
-      {% else %}
-        <span class="text-muted">{{ p.title }}</span>
-      {% endif %}
-      {% if p.type == 'CATEGORY' %}
-        </u>
-      {% endif %}
+      </span>
     </div>
   </td>
   {% for col in project_custom_cols %}

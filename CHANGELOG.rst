@@ -30,12 +30,21 @@ Changed
     - Upgrade to Chromedriver v87
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
+    - Refactor project list filtering (#566)
+    - Move project list javascript to ``project_list.js`` (#566)
 
 Fixed
 -----
 
 - **Projectroles**
     - Invite redirect not working in Add Member view (#589)
+
+Removed
+-------
+
+- **Projectroles**
+    - Template ``_project_filter_item.html`` (#566)
+    - Template tag ``get_project_list()`` (#566)
 
 
 v0.8.4 (2020-11-12)

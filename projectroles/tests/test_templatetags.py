@@ -522,15 +522,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.project, superuser), True
         )
 
-    def test_get_project_list(self):
-        """Test get_project_list()"""
-        user_no_roles = self.make_user('user_no_roles')
-        self.assertEqual(len(tags.get_project_list(self.user)), 2)
-        self.assertEqual(
-            len(tags.get_project_list(self.user, parent=self.category)), 1
-        )
-        self.assertEqual(len(tags.get_project_list(user_no_roles)), 0)
-
     # TODO: Refactor and test get_project_list_indent()
 
     # TODO: Test get_not_found_alert()

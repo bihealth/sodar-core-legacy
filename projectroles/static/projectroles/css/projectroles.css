@@ -594,6 +594,9 @@ span.select2-selection__rendered {
   padding-top: 1.15em !important;
 }
 
+.text-underline {
+  text-decoration: underline;
+}
 
 /* Misc --------------------------------------------------------------------- */
 
