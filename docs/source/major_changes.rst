@@ -20,6 +20,7 @@ Release Highlights
 - Add projectroles app settings
 - Add remote sync for global projectroles app settings
 - Add IP address based access restriction for projects
+- Add SSO support via SAML
 
 Breaking Changes
 ================
