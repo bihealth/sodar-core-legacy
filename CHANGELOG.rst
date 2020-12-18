@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Added SAML SSO authentication support (#588)
 - **Projectroles**
     - Projectroles app settings (#532)
     - Remote sync for projectroles app setting (#533, #586)
