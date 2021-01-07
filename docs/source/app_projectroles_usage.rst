@@ -199,6 +199,14 @@ project scope:
 - ``ip_restrict``: Restict project access by an allowed IP list if enabled.
 - ``ip_allowlist``: List of allowed IP addresses for project access.
 
+To clean up settings which have been stored in the database but have since
+been removed from the plugin app settings definitions, run the following
+management command:
+
+.. code::
+
+    $ ./manage.py cleanappsettings
+
 
 Member Management
 =================

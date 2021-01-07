@@ -3,7 +3,6 @@ import logging
 import ssl
 import urllib.request
 
-from django.contrib import auth
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.urls import reverse
@@ -12,7 +11,6 @@ from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
-User = auth.get_user_model()
 logger = logging.getLogger(__name__)
 
 
