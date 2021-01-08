@@ -21,7 +21,6 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 
 # Local constants
-DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 REMOTE_MODIFY_MSG = (
     'Modification of remote projects is not allowed, modify on '
     'the SOURCE site instead'
@@ -163,6 +162,7 @@ class RoleAssignmentSerializer(
     def validate(self, attrs):
         project = self.context['project']
         current_user = self.context['request'].user
+        del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
 
         # Validation for remote sites and projects
         if project.is_remote():
@@ -199,11 +199,12 @@ class RoleAssignmentSerializer(
         if (
             attrs['role'].name == PROJECT_ROLE_DELEGATE
             and settings.PROJECTROLES_DELEGATE_LIMIT != 0
-            and len(project.get_delegates()) >= DELEGATE_LIMIT
+            and project.get_delegates(exclude_inherited=True).count()
+            >= del_limit
         ):
             raise serializers.ValidationError(
                 'Project delegate limit of {} has been reached'.format(
-                    DELEGATE_LIMIT
+                    del_limit
                 )
             )
 

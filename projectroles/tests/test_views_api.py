@@ -1608,6 +1608,35 @@ class TestRoleAssignmentCreateAPIView(
         # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
+    def test_create_delegate_limit_inherit(self):
+        """Test creating a delegate role existing role for inherited owner"""
+
+        # Set up category owner
+        new_user = self.make_user('new_user')
+        self.cat_owner_as.user = new_user
+
+        url = reverse(
+            'projectroles:api_role_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'role': PROJECT_ROLE_DELEGATE,
+            'user': str(self.assign_user.sodar_uuid),
+        }
+        # NOTE: Post as owner
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and project status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            RoleAssignment.objects.filter(project=self.project).count(), 2
+        )
+        # Assert object
+        role_as = RoleAssignment.objects.filter(
+            project=self.project, role=self.role_delegate, user=self.assign_user
+        ).first()
+        self.assertIsNotNone(role_as)
+
     def test_create_delegate_category(self):
         """Test creating a non-owner role for category"""
 

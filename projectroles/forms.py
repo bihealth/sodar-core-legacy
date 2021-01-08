@@ -53,7 +53,6 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 DISABLE_CATEGORIES = getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
 
 
@@ -730,6 +729,8 @@ class RoleAssignmentForm(SODARModelForm):
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -738,17 +739,17 @@ class RoleAssignmentForm(SODARModelForm):
                     'role', 'Insufficient permissions for altering delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
-            delegates = self.project.get_delegates()
-
-            if DELEGATE_LIMIT != 0:
-                if len(delegates) >= DELEGATE_LIMIT:
-                    self.add_error(
-                        'role',
-                        'The limit ({}) of delegates for this project has '
-                        'already been reached.'.format(DELEGATE_LIMIT),
-                    )
+            # Ensure delegate limit is not exceeded
+            if (
+                del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+            ):
+                self.add_error(
+                    'role',
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit),
+                )
 
         return self.cleaned_data
 
@@ -809,6 +810,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             raise forms.ValidationError('Selected role does not exist')
 
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -817,21 +820,21 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                     'Insufficient permissions for assigning a delegate role'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
+            # Ensure delegate limit is not exceeded
             new_owner_role = RoleAssignment.objects.filter(
                 project=self.project, user=self.cleaned_data.get('new_owner')
             ).first()
 
             if (
-                DELEGATE_LIMIT != 0
+                del_limit != 0
                 and new_owner_role
                 and new_owner_role.role.name != PROJECT_ROLE_DELEGATE
-                and self.project.get_delegates().count() >= DELEGATE_LIMIT
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
             ):
                 raise forms.ValidationError(
                     'The limit ({}) of delegates for this project has '
-                    'already been reached.'.format(DELEGATE_LIMIT)
+                    'already been reached.'.format(del_limit)
                 )
 
         return role
@@ -944,6 +947,8 @@ class ProjectInviteForm(SODARModelForm):
         # Delegate checks
         role = self.cleaned_data.get('role')
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to invite delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -952,17 +957,17 @@ class ProjectInviteForm(SODARModelForm):
                     'role', 'Insufficient permissions for inviting delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
-            delegates = self.project.get_delegates()
-
-            if DELEGATE_LIMIT != 0:
-                if len(delegates) >= DELEGATE_LIMIT:
-                    self.add_error(
-                        'role',
-                        'The limit ({}) of delegates for this project has '
-                        'already been reached.'.format(DELEGATE_LIMIT),
-                    )
+            # Ensure delegate limit is not exceeded
+            if (
+                del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+            ):
+                self.add_error(
+                    'role',
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit),
+                )
 
         return self.cleaned_data
 

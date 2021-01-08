@@ -1408,12 +1408,13 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         """Handle RoleAssignment updating if form is valid"""
         instance = form.instance if form.instance.pk else None
         action = 'update' if instance else 'create'
+        project = self.get_project()
 
         try:
             self.object = self.modify_assignment(
                 data=form.cleaned_data,
                 request=self.request,
-                project=self.get_project(),
+                project=project,
                 instance=form.instance if instance else None,
             )
             messages.success(
@@ -1432,8 +1433,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
         return redirect(
             reverse(
-                'projectroles:roles',
-                kwargs={'project': self.object.project.sodar_uuid},
+                'projectroles:roles', kwargs={'project': project.sodar_uuid},
             )
         )
 

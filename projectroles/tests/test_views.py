@@ -1607,11 +1607,20 @@ class TestRoleAssignmentCreateView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         self.user_new = self.make_user('guest')
@@ -1658,7 +1667,7 @@ class TestRoleAssignmentCreateView(
     def test_create_assignment(self):
         """Test RoleAssignment creation"""
         # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
         # Issue POST request
         values = {
@@ -1666,7 +1675,6 @@ class TestRoleAssignmentCreateView(
             'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1677,12 +1685,10 @@ class TestRoleAssignmentCreateView(
             )
 
         # Assert RoleAssignment state after creation
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
         )
-        self.assertIsNotNone(role_as)
-
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
@@ -1690,7 +1696,6 @@ class TestRoleAssignmentCreateView(
             'role': self.role_guest.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(role_as), expected)
 
         # Assert redirect
@@ -1702,6 +1707,140 @@ class TestRoleAssignmentCreateView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+    def test_create_delegate(self):
+        """Test RoleAssignment creation with project delegate role"""
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_new
+        )
+        expected = {
+            'id': role_as.pk,
+            'project': self.project.pk,
+            'user': self.user_new.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': role_as.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(role_as), expected)
+
+    def test_create_delegate_limit_reached(self):
+        """Test RoleAssignment creation with exceeded delegate limit"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
+    def test_create_delegate_limit_increased(self):
+        """Test RoleAssignment creation with delegate limit > 1"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertIsNotNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
+
+    def test_create_delegate_limit_inherited(self):
+        """Test creation with existing delegate role for inherited owner"""
+        self._make_assignment(
+            self.project, self.user_owner_cat, self.role_delegate
+        )
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        # NOTE: Limit should be reached, but inherited owner role is disregarded
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertIsNotNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
 
     def test_redirect_to_invite(self):
         """Test SODARUserRedirectWidget redirects to the ProjectInvite creation view"""
@@ -1787,11 +1926,20 @@ class TestRoleAssignmentUpdateView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         # Create guest user and role
@@ -1835,14 +1983,13 @@ class TestRoleAssignmentUpdateView(
         """Test RoleAssignment updating"""
 
         # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         values = {
             'project': self.role_as.project.sodar_uuid,
             'user': self.role_as.user.sodar_uuid,
             'role': self.role_contributor.pk,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1853,12 +2000,10 @@ class TestRoleAssignmentUpdateView(
             )
 
         # Assert RoleAssignment state after update
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
         )
-        self.assertIsNotNone(role_as)
-
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
@@ -1866,7 +2011,6 @@ class TestRoleAssignmentUpdateView(
             'role': self.role_contributor.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(role_as), expected)
 
         # Assert redirect
@@ -1878,6 +2022,153 @@ class TestRoleAssignmentUpdateView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+    def test_update_delegate(self):
+        """Test RoleAssignment updating to delegate"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        values = {
+            'project': self.role_as.project.sodar_uuid,
+            'user': self.role_as.user.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_new
+        )
+        expected = {
+            'id': role_as.pk,
+            'project': self.project.pk,
+            'user': self.user_new.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': role_as.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(role_as), expected)
+
+    def test_update_delegate_limit_reached(self):
+        """Test RoleAssignment updating with exceeded delegate limit"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            )
+            .first()
+            .role,
+            self.role_guest,
+        )
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
+    def test_update_delegate_limit_increased(self):
+        """Test RoleAssignment updating with delegate limit > 1"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            1,
+        )
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            2,
+        )
+
+    def test_update_delegate_limit_inherited(self):
+        """Test updating with existing delegate role for inherited owner"""
+        self._make_assignment(
+            self.project, self.user_owner_cat, self.role_delegate
+        )
+
+        # Assert precondition
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            1,
+        )
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        # NOTE: Limit should be reached, but inherited owner role is disregarded
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            2,
+        )
 
 
 class TestRoleAssignmentDeleteView(

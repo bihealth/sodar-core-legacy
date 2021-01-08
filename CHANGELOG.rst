@@ -23,6 +23,7 @@ Added
     - Remote sync for non-owner category members (#502)
     - ``setting_delete()`` function to ``AppSettingAPI`` (#538)
     - ``cleanappsettings`` management command (#374)
+    - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
 
 Changed
 -------
@@ -42,6 +43,8 @@ Fixed
 - **Projectroles**
     - Invite redirect not working in Add Member view (#589)
     - Wrong role label displayed for category owner/delegate in member list (#593)
+    - Django settings access in ``forms`` and ``serializers``
+    - Delegate limit check broken by existing delegate roles of inherited owners (#595)
 
 Removed
 -------

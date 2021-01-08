@@ -291,11 +291,16 @@ class Project(models.Model):
         """
         return self.is_owner(user) or self.is_delegate(user)
 
-    def get_delegates(self):
+    def get_delegates(self, exclude_inherited=False):
         """Return RoleAssignments for delegates"""
-        return self.roles.filter(
+        delegates = self.roles.filter(
             role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
         )
+        if exclude_inherited:
+            return delegates.exclude(
+                user__in=[a.user for a in self.get_owners(inherited_only=True)]
+            )
+        return delegates
 
     def get_members(self):
         """
@@ -531,20 +536,21 @@ class RoleAssignment(models.Model):
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
-            delegate_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
-
-            if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']:
-                delegates = self.project.get_delegates()
-
-                # No delegate limit if PROJECTROLES_DELEGATE_LIMIT is set to 0
-                if delegate_limit != 0:
-                    if len(delegates) >= delegate_limit and (
-                        not self.pk or (delegates.filter(pk=self.pk) is None)
-                    ):
-                        raise ValidationError(
-                            'The limit ({}) of delegates for this project has '
-                            'already been reached.'.format(delegate_limit)
-                        )
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            if (
+                self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+                and del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+                and (
+                    not self.pk
+                    or (self.project.get_delegates().filter(pk=self.pk) is None)
+                )
+            ):
+                raise ValidationError(
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit)
+                )
 
 
 # AppSetting ---------------------------------------------------------------
