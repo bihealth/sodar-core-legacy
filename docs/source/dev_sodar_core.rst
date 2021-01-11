@@ -177,6 +177,7 @@ To alter projectroles app settings when developing the app, update the
          'scope': 'PROJECT',  # PROJECT/USER
          'type': 'STRING',  # STRING/INTEGER/BOOLEAN
          'default': 'example',
+         'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
          'label': 'Project setting',  # Optional, defaults to name/key
          'placeholder': 'Enter example setting here',  # Optional
          'description': 'Example project setting',  # Optional

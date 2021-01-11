@@ -38,6 +38,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
+    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }
@@ -289,6 +290,7 @@ class SiteAppPluginPoint(PluginPoint):
     #:             'default': 'example',
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example user setting',  # Optional
+    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }

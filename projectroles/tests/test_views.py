@@ -798,7 +798,11 @@ class TestProjectUpdateView(
         values['owner'] = self.user.sodar_uuid
         values['parent'] = self.category.sodar_uuid
         values['settings.example_project_app.project_int_setting'] = 0
+        values['settings.example_project_app.project_int_setting_options'] = 0
         values['settings.example_project_app.project_str_setting'] = 'test'
+        values[
+            'settings.example_project_app.project_str_setting_options'
+        ] = 'string1'
         values['settings.example_project_app.project_bool_setting'] = True
         values['settings.projectroles.ip_restrict'] = True
         values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
@@ -838,7 +842,7 @@ class TestProjectSettingsForm(
         )
 
         # Init string setting
-        self.setting_bool = self._make_setting(
+        self.setting_str = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -846,12 +850,30 @@ class TestProjectSettingsForm(
             project=self.project,
         )
 
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
         # Init integer setting
-        self.setting_bool = self._make_setting(
+        self.setting_int = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
-            value='0',
+            value=0,
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
             project=self.project,
         )
 
@@ -920,6 +942,16 @@ class TestProjectSettingsForm(
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
                 'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
             )
         )
@@ -955,6 +987,22 @@ class TestProjectSettingsForm(
         )
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
             False,
@@ -981,6 +1029,9 @@ class TestProjectSettingsForm(
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
@@ -1022,6 +1073,22 @@ class TestProjectSettingsForm(
                 EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
             ),
             170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
         )
         self.assertEqual(
             app_settings.get_app_setting(
@@ -1088,7 +1155,7 @@ class TestProjectSettingsFormTarget(
         )
 
         # Init string setting
-        self.setting_bool = self._make_setting(
+        self.setting_str = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -1096,12 +1163,30 @@ class TestProjectSettingsFormTarget(
             project=self.project,
         )
 
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
         # Init integer setting
-        self.setting_bool = self._make_setting(
+        self.setting_int = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
             value='0',
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
             project=self.project,
         )
 
@@ -1151,6 +1236,16 @@ class TestProjectSettingsFormTarget(
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
                 'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
             )
         )
@@ -1196,6 +1291,22 @@ class TestProjectSettingsFormTarget(
         )
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
             False,
@@ -1210,6 +1321,9 @@ class TestProjectSettingsFormTarget(
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
@@ -1249,6 +1363,22 @@ class TestProjectSettingsFormTarget(
                 EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
             ),
             170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
         )
         self.assertEqual(
             app_settings.get_app_setting(
@@ -1328,7 +1458,7 @@ class TestProjectSettingsFormTargetLocal(
         )
 
         # Init string setting
-        self.setting_bool = self._make_setting(
+        self.setting_str = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -1336,12 +1466,30 @@ class TestProjectSettingsFormTargetLocal(
             project=self.project,
         )
 
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
         # Init integer setting
-        self.setting_bool = self._make_setting(
+        self.setting_int = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
             value='0',
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
             project=self.project,
         )
 
@@ -1391,6 +1539,16 @@ class TestProjectSettingsFormTargetLocal(
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
                 'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
             )
         )
@@ -1436,6 +1594,22 @@ class TestProjectSettingsFormTargetLocal(
         )
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
             False,
@@ -1456,6 +1630,9 @@ class TestProjectSettingsFormTargetLocal(
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
@@ -1496,6 +1673,22 @@ class TestProjectSettingsFormTargetLocal(
                 EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
             ),
             170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
         )
         self.assertEqual(
             app_settings.get_app_setting(

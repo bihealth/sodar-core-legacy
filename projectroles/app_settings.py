@@ -35,6 +35,7 @@ PROJECTROLES_APP_SETTINGS = {
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
+    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Allow editing in target site forms if True
     #:         }
@@ -117,6 +118,36 @@ class AppSettingAPI:
         """
         if setting_type not in APP_SETTING_TYPES:
             raise ValueError('Invalid setting type "{}"'.format(setting_type))
+
+    @classmethod
+    def _check_type_options(cls, setting_type, setting_options):
+        """
+        Ensure setting_type is allowed to have options.
+
+        :param setting_type: String
+        :param setting_options: List of options (Strings or Integers)
+        :raise: ValueError if type is not recognized
+        """
+        if setting_type not in ('INTEGER', 'STRING',) and setting_options:
+            raise ValueError(
+                'Options are only allowed for settings of type INTEGER and STRING'
+            )
+
+    @classmethod
+    def _check_value_in_options(cls, setting_value, setting_options):
+        """
+        Ensure setting_value is present in setting_options.
+
+        :param setting_value: String
+        :param setting_options: List of options (String or Integers)
+        :raise: ValueError if type is not recognized
+        """
+        if setting_options and setting_value not in setting_options:
+            raise ValueError(
+                'Choice "{}" not found in options ({})'.format(
+                    setting_value, ', '.join(map(str, setting_options))
+                )
+            )
 
     @classmethod
     def _get_json_value(cls, value):
@@ -395,7 +426,12 @@ class AppSettingAPI:
                 return False
 
             if validate:
-                cls.validate_setting(setting.type, value)
+                setting_def = cls.get_setting_def(
+                    name=setting_name, app_name=app_name
+                )
+                cls.validate_setting(
+                    setting.type, value, setting_def.get('options')
+                )
 
             if setting.type == 'JSON':
                 setting.value_json = cls._get_json_value(value)
@@ -436,7 +472,10 @@ class AppSettingAPI:
 
             if validate:
                 v = cls._get_json_value(value) if s_type == 'JSON' else value
-                cls.validate_setting(s_type, v)
+                setting_def = cls.get_setting_def(
+                    name=setting_name, app_name=app_name
+                )
+                cls.validate_setting(s_type, v, setting_def.get('options'))
 
             s_vals = {
                 'app_plugin': app_plugin_model,
@@ -493,15 +532,18 @@ class AppSettingAPI:
         app_settings.delete()
 
     @classmethod
-    def validate_setting(cls, setting_type, setting_value):
+    def validate_setting(cls, setting_type, setting_value, setting_options):
         """
         Validate setting value according to its type.
 
         :param setting_type: Setting type
         :param setting_value: Setting value
+        :param setting_options: Setting options (can be None)
         :raise: ValueError if setting_type or setting_value is invalid
         """
         cls._check_type(setting_type)
+        cls._check_type_options(setting_type, setting_options)
+        cls._check_value_in_options(setting_value, setting_options)
 
         if setting_type == 'BOOLEAN':
             if not isinstance(setting_value, bool):
@@ -570,6 +612,7 @@ class AppSettingAPI:
 
         setting_def = app_settings[name]
         cls._check_type(setting_def['type'])
+        cls._check_type_options(setting_def['type'], setting_def.get('options'))
 
         return setting_def
 
@@ -625,5 +668,6 @@ class AppSettingAPI:
         # Ensure type validity
         for k, v in setting_defs.items():
             cls._check_type(v['type'])
+            cls._check_type_options(v['type'], v.get('options'))
 
         return setting_defs
