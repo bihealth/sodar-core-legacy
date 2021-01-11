@@ -754,6 +754,9 @@ Base REST API classes without a project context can also be used in site apps.
 API documentation for each available base class and mixin for REST API views can
 be found in :ref:`app_projectroles_api_django`.
 
+An example "hello world" REST API view for SODAR apps is available in
+``example_project_app.views.HelloExampleProjectAPIView``.
+
 .. note::
 
     Internal SODAR Core REST API views, specifically ones used in apps provided

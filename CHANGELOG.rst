@@ -26,6 +26,7 @@ Added
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
     - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
     - Placeholder visible for app setting form fields fields of type ``STRING`` and ``INTEGER`` (#584)
+    - REST API example view ``HelloExampleProjectAPIView`` (#518)
 
 Changed
 -------
