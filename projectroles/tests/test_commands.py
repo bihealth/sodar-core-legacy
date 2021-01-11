@@ -159,6 +159,8 @@ class TestCleanAppSettings(
                 self.project: [
                     'settings.example_project_app.project_str_setting',
                     'settings.example_project_app.project_int_setting',
+                    'settings.example_project_app.project_str_setting_options',
+                    'settings.example_project_app.project_int_setting_options',
                     'settings.example_project_app.project_bool_setting',
                     'settings.example_project_app.project_json_setting',
                     'settings.example_project_app.project_hidden_setting',

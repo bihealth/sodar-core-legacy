@@ -24,6 +24,7 @@ Added
     - ``setting_delete()`` function to ``AppSettingAPI`` (#538)
     - ``cleanappsettings`` management command (#374)
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
+    - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
 
 Changed
 -------

@@ -349,15 +349,33 @@ class ProjectForm(SODARModelForm):
                         )
                 else:
                     if s_val['type'] == 'STRING':
-                        self.fields[s_field] = forms.CharField(
-                            max_length=APP_SETTING_VAL_MAXLENGTH,
-                            **setting_kwargs
-                        )
+                        if 'options' in s_val:
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (option, option)
+                                    for option in s_val.get('options')
+                                ],
+                                **setting_kwargs
+                            )
+                        else:
+                            self.fields[s_field] = forms.CharField(
+                                max_length=APP_SETTING_VAL_MAXLENGTH,
+                                **setting_kwargs
+                            )
 
                     elif s_val['type'] == 'INTEGER':
-                        self.fields[s_field] = forms.IntegerField(
-                            **setting_kwargs
-                        )
+                        if 'options' in s_val:
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (int(option), int(option))
+                                    for option in s_val.get('options')
+                                ],
+                                **setting_kwargs
+                            )
+                        else:
+                            self.fields[s_field] = forms.IntegerField(
+                                **setting_kwargs
+                            )
 
                     elif s_val['type'] == 'BOOLEAN':
                         self.fields[s_field] = forms.BooleanField(
@@ -622,9 +640,15 @@ class ProjectForm(SODARModelForm):
                             'Couldn\'t encode JSON\n' + str(err)
                         )
 
+                elif s_val['type'] == 'INTEGER':
+                    # when field is a select/dropdown, the information of the datatype gets lost.
+                    # we need to convert that here, otherwise subsequent checks will fail.
+                    self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
+
                 if not self.app_settings.validate_setting(
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
                 ):
                     self.add_error(s_field, 'Invalid value')
 
