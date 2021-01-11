@@ -39,6 +39,8 @@ Changed
     - Allow updating local app settings on a ``TARGET`` site (#545)
     - Refactor project list filtering (#566)
     - Move project list javascript to ``project_list.js`` (#566)
+- **Userprofile**
+    - Cosmetic updates for user detail template (#600)
 
 Fixed
 -----

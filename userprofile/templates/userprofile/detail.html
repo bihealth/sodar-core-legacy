@@ -58,12 +58,12 @@
             {{ setting.label }}
           {% if setting.description %}
             {% get_info_link setting.description as info_link %}
-            {{ info_link | safe }}
+            <span class="pull-right">{{ info_link | safe }}</span>
           {% endif %}
           </dt>
           <dd class="col-md-8">
-            {% if setting.value == None %}
-              <span class="text-muted font-italic">Not set</span>
+            {% if setting.value == None or setting.value == '' %}
+              <span class="text-muted">N/A</span>
             {% else %}
               {{ setting.value }}
             {% endif %}
