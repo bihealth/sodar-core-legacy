@@ -52,9 +52,9 @@ urls_ui = [
         name='role_delete',
     ),
     url(
-        regex=r'^members/transferowner/(?P<project>[0-9a-f-]+)$',
+        regex=r'^members/owner/transfer/(?P<project>[0-9a-f-]+)$',
         view=views.RoleAssignmentOwnerTransferView.as_view(),
-        name='role_transfer_owner',
+        name='role_owner_transfer',
     ),
     # Project invite views
     url(

@@ -1624,7 +1624,7 @@ class RoleAssignmentOwnerTransferMixin:
             project=project,
             app_name=APP_NAME,
             user=self.request.user,
-            event_name='role_transfer_owner',
+            event_name='role_owner_transfer',
             description=tl_desc,
             extra_data={
                 'prev_owner': old_owner.username,

@@ -2508,7 +2508,7 @@ class TestRoleAssignmentOwnerTransferView(
         with self.login(self.user):
             response = self.client.post(
                 reverse(
-                    'projectroles:role_transfer_owner',
+                    'projectroles:role_owner_transfer',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
                 data={
@@ -2534,7 +2534,7 @@ class TestRoleAssignmentOwnerTransferView(
         with self.login(self.user):
             response = self.client.post(
                 reverse(
-                    'projectroles:role_transfer_owner',
+                    'projectroles:role_owner_transfer',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
                 data={

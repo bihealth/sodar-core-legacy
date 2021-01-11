@@ -894,10 +894,10 @@ class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
-    def test_role_transfer_owner(self):
+    def test_role_owner_transfer(self):
         """Test permissions for owner role update: not allowed, should fail"""
         url = reverse(
-            'projectroles:role_transfer_owner',
+            'projectroles:role_owner_transfer',
             kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
