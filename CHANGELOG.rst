@@ -14,7 +14,8 @@ Added
 -----
 
 - **General**
-    - Added SAML SSO authentication support (#588)
+    - SAML SSO authentication support (#588)
+    - REST API example ``HelloExampleProjectAPIView`` in ``example_project_app`` (#518)
 - **Projectroles**
     - Projectroles app settings (#532)
     - Remote sync for projectroles app setting (#533, #586)
@@ -25,8 +26,7 @@ Added
     - ``cleanappsettings`` management command (#374)
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
     - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
-    - Placeholder visible for app setting form fields fields of type ``STRING`` and ``INTEGER`` (#584)
-    - REST API example view ``HelloExampleProjectAPIView`` (#518)
+    - Display placeholders for app setting form fields (#584)
 
 Changed
 -------
