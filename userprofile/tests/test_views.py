@@ -110,16 +110,16 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             response = self.client.get(reverse('userprofile:settings_update'))
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['form'])
-        self.assertIsNotNone(
-            response.context['form'].fields.get(
-                'settings.%s.user_str_setting' % EXAMPLE_APP_NAME
-            )
+        field = response.context['form'].fields.get(
+            'settings.%s.user_str_setting' % EXAMPLE_APP_NAME
         )
-        self.assertIsNotNone(
-            response.context['form'].fields.get(
-                'settings.%s.user_int_setting' % EXAMPLE_APP_NAME
-            )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 'Example string')
+        field = response.context['form'].fields.get(
+            'settings.%s.user_int_setting' % EXAMPLE_APP_NAME
         )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 0)
         self.assertIsNotNone(
             response.context['form'].fields.get(
                 'settings.%s.user_str_setting_options' % EXAMPLE_APP_NAME

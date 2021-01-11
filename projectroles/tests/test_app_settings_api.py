@@ -486,6 +486,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string project setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -501,6 +502,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string project setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -516,6 +518,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string user setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -548,6 +551,7 @@ class TestAppSettingAPI(
                 'label': 'String Setting',
                 'default': '',
                 'description': 'Example string project setting',
+                'placeholder': 'Example string',
                 'user_modifiable': True,
             },
             'project_int_setting': {
@@ -556,6 +560,7 @@ class TestAppSettingAPI(
                 'label': 'Integer Setting',
                 'default': 0,
                 'description': 'Example integer project setting',
+                'placeholder': 0,
                 'user_modifiable': True,
                 'widget_attrs': {'class': 'text-success'},
             },
@@ -627,6 +632,7 @@ class TestAppSettingAPI(
                 'label': 'String Setting',
                 'default': '',
                 'description': 'Example string user setting',
+                'placeholder': 'Example string',
                 'user_modifiable': True,
             },
             'user_int_setting': {
@@ -635,6 +641,7 @@ class TestAppSettingAPI(
                 'label': 'Integer Setting',
                 'default': 0,
                 'description': 'Example integer user setting',
+                'placeholder': 0,
                 'user_modifiable': True,
                 'widget_attrs': {'class': 'text-success'},
             },
