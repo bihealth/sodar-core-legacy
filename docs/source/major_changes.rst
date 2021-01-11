@@ -16,6 +16,7 @@ v0.9.0 (WIP)
 Release Highlights
 ==================
 
+- Last major update based on Django v1.11
 - Enable modifying local app settings in project update form on target sites
 - Add projectroles app settings
 - Add remote sync for global projectroles app settings
@@ -34,10 +35,19 @@ Get an overview of the available commands via ``make usage``.
 System Prerequisites
 --------------------
 
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
+
 The following third party JS/CSS requirements have been updated:
 
 - JQuery v3.5.1
 - Bootstrap v4.5.3
+
+.. note::
+
+    This is the last major update of SODAR Core based on and supporting Django
+    v1.11, which is now out of long term support. From v0.10 onwards, SODAR Core
+    based sites must be implemented on Django v3.x+.
 
 
 v0.8.4 (2020-11-12)

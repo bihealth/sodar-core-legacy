@@ -498,7 +498,8 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         """Test is_app_visible() with a category"""
         app_plugin = get_app_plugin('filesfolders')
         self.assertEqual(
-            tags.is_app_visible(app_plugin, self.category, self.user), False,
+            tags.is_app_visible(app_plugin, self.category, self.user),
+            False,
         )
 
     def test_is_app_visible_category_enabled(self):

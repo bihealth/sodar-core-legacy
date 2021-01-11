@@ -866,7 +866,7 @@ class TestFilePublicLinkView(TestViewsBase):
 
     def test_redirect_setting(self):
         """Test redirecting from the public link view if public linking is
-        disabled via settings """
+        disabled via settings"""
         app_settings.set_app_setting(
             APP_NAME, 'allow_public_links', False, project=self.project
         )

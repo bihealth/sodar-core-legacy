@@ -128,7 +128,14 @@ class AppSettingAPI:
         :param setting_options: List of options (Strings or Integers)
         :raise: ValueError if type is not recognized
         """
-        if setting_type not in ('INTEGER', 'STRING',) and setting_options:
+        if (
+            setting_type
+            not in (
+                'INTEGER',
+                'STRING',
+            )
+            and setting_options
+        ):
             raise ValueError(
                 'Options are only allowed for settings of type INTEGER and STRING'
             )
@@ -288,7 +295,10 @@ class AppSettingAPI:
             val = cls.get_default_setting(app_name, setting_name, post_safe)
 
         # Handle post_safe for dict values (JSON)
-        if post_safe and isinstance(val, (dict, list),):
+        if post_safe and isinstance(
+            val,
+            (dict, list),
+        ):
             return json.dumps(val)
 
         return val
@@ -522,7 +532,9 @@ class AppSettingAPI:
 
         logger.debug(
             'Request to delete app setting: {}.{} with query parameters {}'.format(
-                app_name, setting_name, query_parameters,
+                app_name,
+                setting_name,
+                query_parameters,
             )
         )
 
@@ -618,7 +630,11 @@ class AppSettingAPI:
 
     @classmethod
     def get_setting_defs(
-        cls, scope, plugin=False, app_name=False, user_modifiable=False,
+        cls,
+        scope,
+        plugin=False,
+        app_name=False,
+        user_modifiable=False,
     ):
         """
         Return app setting definitions of a specific scope from a plugin.

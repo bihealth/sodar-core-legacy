@@ -839,20 +839,25 @@ class TestAppSettingAPI(
     def test_delete_setting_scope_project_params_none(self):
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
-            EXAMPLE_APP_NAME, 'project_str_setting',
+            EXAMPLE_APP_NAME,
+            'project_str_setting',
         )
         self.assertEqual(AppSetting.objects.count(), 15)
 
     def test_delete_setting_scope_project_params_user(self):
         with self.assertRaises(ValueError):
             app_settings.delete_setting(
-                EXAMPLE_APP_NAME, 'project_str_setting', user=self.user,
+                EXAMPLE_APP_NAME,
+                'project_str_setting',
+                user=self.user,
             )
 
     def test_delete_setting_scope_project_params_project(self):
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
-            EXAMPLE_APP_NAME, 'project_str_setting', project=self.project,
+            EXAMPLE_APP_NAME,
+            'project_str_setting',
+            project=self.project,
         )
         self.assertEqual(AppSetting.objects.count(), 15)
 

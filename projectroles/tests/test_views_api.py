@@ -118,7 +118,9 @@ class SODARAPIViewTestMixin:
 
     @classmethod
     def get_accept_header(
-        cls, media_type=None, version=None,
+        cls,
+        media_type=None,
+        version=None,
     ):
         """
         Return version accept header based on the media type and version string.

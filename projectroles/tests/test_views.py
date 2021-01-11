@@ -636,7 +636,13 @@ class TestProjectUpdateView(
                 post_safe=True,
             )
 
-            if isinstance(v_json, (dict, list,)):
+            if isinstance(
+                v_json,
+                (
+                    dict,
+                    list,
+                ),
+            ):
                 self.assertEqual(json.loads(s), v_json)
 
             else:
@@ -2088,7 +2094,7 @@ class TestRoleAssignmentCreateView(
 
     def test_dont_create_option(self):
         """Test if new options are not being displayed by the SODARUserRedirectWidget if
-        they are nor valid email addresses """
+        they are nor valid email addresses"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,

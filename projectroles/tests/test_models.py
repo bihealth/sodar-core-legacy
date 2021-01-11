@@ -420,8 +420,7 @@ class TestRole(TestCase):
 
 
 class RoleAssignmentMixin:
-    """Helper mixin for RoleAssignment creation
-    """
+    """Helper mixin for RoleAssignment creation"""
 
     @classmethod
     def _make_assignment(cls, project, user, role):
@@ -912,8 +911,10 @@ class TestProjectSetting(
 
     def test__repr__(self):
         """Test AppSetting __repr__()"""
-        expected = "AppSetting('TestProject', None, '{}', 'str_setting')".format(
-            EXAMPLE_APP_NAME
+        expected = (
+            "AppSetting('TestProject', None, '{}', 'str_setting')".format(
+                EXAMPLE_APP_NAME
+            )
         )
         self.assertEqual(repr(self.setting_str), expected)
 
@@ -1299,7 +1300,7 @@ class TestRemoteProject(
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)
     def test_validate_remote_delegates(self):
         """Test delegate validation: can add delegate for remote project even if
-         there is a limit"""
+        there is a limit"""
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
 

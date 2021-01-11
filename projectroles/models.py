@@ -913,7 +913,7 @@ class RemoteSite(models.Model):
         unique_together = ['url', 'mode', 'secret']
 
     def __str__(self):
-        return '{} ({})'.format(self.name, self.mode, self.name)
+        return '{} ({})'.format(self.name, self.mode)
 
     def __repr__(self):
         values = (self.name, self.mode, self.url)

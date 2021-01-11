@@ -1081,7 +1081,11 @@ class ProjectModifyMixin:
             # Owner change notification
             if not instance or old_data['owner'] != owner:
                 email.send_role_change_mail(
-                    action, project, owner, owner_as.role, request,
+                    action,
+                    project,
+                    owner,
+                    owner_as.role,
+                    request,
                 )
 
             # Project creation/moving for parent category owner
@@ -1433,7 +1437,8 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
         return redirect(
             reverse(
-                'projectroles:roles', kwargs={'project': project.sodar_uuid},
+                'projectroles:roles',
+                kwargs={'project': project.sodar_uuid},
             )
         )
 
@@ -1612,11 +1617,9 @@ class RoleAssignmentOwnerTransferMixin:
         if not timeline:
             return None
 
-        tl_desc = (
-            'transfer ownership from {{prev_owner}} to '
-            '{{new_owner}}'.format(old_owner.username, new_owner.username)
+        tl_desc = 'transfer ownership from {{{}}} to {{{}}}'.format(
+            'prev_owner', 'new_owner'
         )
-
         tl_event = timeline.add_event(
             project=project,
             app_name=APP_NAME,
@@ -2494,9 +2497,8 @@ class RemoteProjectsBatchUpdateView(
             rp.save()
 
             if timeline and project:
-                tl_desc = 'update remote access for site {{{}}} to {}'.format(
+                tl_desc = 'update remote access for site {{{}}} to "{}"'.format(
                     'site',
-                    v,
                     SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
                 )
 

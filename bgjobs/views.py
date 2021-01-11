@@ -20,7 +20,8 @@ DEFAULT_PAGINATION = 15
 
 
 class GlobalBackgroundJobView(
-    LoggedInPermissionMixin, ListView,
+    LoggedInPermissionMixin,
+    ListView,
 ):
     permission_required = 'bgjobs.view_site_bgjobs'
     template_name = 'bgjobs/site_backgroundjobs.html'

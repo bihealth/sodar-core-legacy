@@ -114,7 +114,9 @@ class UserSettingsForm(SODARForm):
                 else:
                     self.initial[s_field] = json.dumps(
                         app_settings.get_app_setting(
-                            app_name=name, setting_name=s_key, user=self.user,
+                            app_name=name,
+                            setting_name=s_key,
+                            user=self.user,
                         )
                     )
 
