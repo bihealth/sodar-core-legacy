@@ -31,6 +31,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'label': 'String Setting',
             'default': '',
             'description': 'Example string project setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         },
         'project_int_setting': {
@@ -40,6 +41,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'default': 0,
             'description': 'Example integer project setting',
             'user_modifiable': True,
+            'placeholder': 0,
             'widget_attrs': {'class': 'text-success'},
         },
         'project_str_setting_options': {
@@ -101,6 +103,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'label': 'String Setting',
             'default': '',
             'description': 'Example string user setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         },
         'user_int_setting': {
@@ -109,6 +112,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'label': 'Integer Setting',
             'default': 0,
             'description': 'Example integer user setting',
+            'placeholder': 0,
             'user_modifiable': True,
             'widget_attrs': {'class': 'text-success'},
         },

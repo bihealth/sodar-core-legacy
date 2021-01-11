@@ -314,6 +314,8 @@ class ProjectForm(SODARModelForm):
             for s_key, s_val in p_settings.items():
                 s_field = 'settings.{}.{}'.format(name, s_key)
                 s_widget_attrs = s_val.get('widget_attrs') or {}
+                if 'placeholder' in s_val:
+                    s_widget_attrs['placeholder'] = s_val.get('placeholder')
                 setting_kwargs = {
                     'required': False,
                     'label': s_val.get('label') or '{}.{}'.format(name, s_key),
@@ -360,6 +362,7 @@ class ProjectForm(SODARModelForm):
                         else:
                             self.fields[s_field] = forms.CharField(
                                 max_length=APP_SETTING_VAL_MAXLENGTH,
+                                widget=forms.TextInput(attrs=s_widget_attrs),
                                 **setting_kwargs
                             )
 
@@ -374,6 +377,7 @@ class ProjectForm(SODARModelForm):
                             )
                         else:
                             self.fields[s_field] = forms.IntegerField(
+                                widget=forms.NumberInput(attrs=s_widget_attrs),
                                 **setting_kwargs
                             )
 
@@ -622,7 +626,7 @@ class ProjectForm(SODARModelForm):
                 s_field = 'settings.{}.{}'.format(name, s_key)
 
                 if s_val['type'] == 'JSON':
-                    # for some reason, there is a distinct possiblity, that the
+                    # for some reason, there is a distinct possibility, that the
                     # initial value has been discarded and we get '' as value.
                     # Seems to only happen in automated tests. Will catch that
                     # here.
