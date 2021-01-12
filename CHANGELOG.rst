@@ -37,6 +37,7 @@ Changed
     - Upgrade to Chromedriver v87
     - Upgrade general Python requirements (#576)
     - Migrate GitHub CI from Travis to GitHub actions (#577)
+    - Refactor example ``PROJECT_USER`` scope app settings (#599)
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
     - Refactor project list filtering (#566)

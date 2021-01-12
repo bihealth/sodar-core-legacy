@@ -196,7 +196,7 @@ class TestAppSettingAPI(
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
-            'name': 'project_user_string_hidden_setting',
+            'name': 'project_user_string_setting',
             'setting_type': 'STRING',
             'value': 'test',
             'update_value': 'better test',
@@ -206,7 +206,7 @@ class TestAppSettingAPI(
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
-            'name': 'project_user_int_hidden_setting',
+            'name': 'project_user_int_setting',
             'setting_type': 'INTEGER',
             'value': 0,
             'update_value': 170,
@@ -216,7 +216,7 @@ class TestAppSettingAPI(
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
-            'name': 'project_user_bool_hidden_setting',
+            'name': 'project_user_bool_setting',
             'setting_type': 'BOOLEAN',
             'value': False,
             'update_value': True,
@@ -226,7 +226,7 @@ class TestAppSettingAPI(
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
             'user': self.user,
-            'name': 'project_user_json_hidden_setting',
+            'name': 'project_user_json_setting',
             'setting_type': 'JSON',
             'value': {
                 'Example': 'Value',
@@ -423,7 +423,7 @@ class TestAppSettingAPI(
 
         ret = app_settings.set_app_setting(
             app_name=EXAMPLE_APP_NAME,
-            setting_name='project_user_string_hidden_setting',
+            setting_name='project_user_string_setting',
             project=self.project,
             user=self.user,
             value=True,
@@ -432,7 +432,7 @@ class TestAppSettingAPI(
 
         ret = app_settings.set_app_setting(
             app_name=EXAMPLE_APP_NAME,
-            setting_name='project_user_string_hidden_setting',
+            setting_name='project_user_string_setting',
             project=self.project,
             user=new_user,
             value=True,
@@ -701,33 +701,29 @@ class TestAppSettingAPI(
     def test_get_setting_defs_project_user(self):
         """Test get_setting_defs() with the PROJECT_USER scope"""
         expected = {
-            'project_user_string_hidden_setting': {
+            'project_user_string_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'STRING',
                 'default': '',
                 'description': 'Example string project user setting',
-                'user_modifiable': False,
             },
-            'project_user_int_hidden_setting': {
+            'project_user_int_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'INTEGER',
                 'default': '',
                 'description': 'Example int project user setting',
-                'user_modifiable': False,
             },
-            'project_user_bool_hidden_setting': {
+            'project_user_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'BOOLEAN',
                 'default': '',
                 'description': 'Example bool project user setting',
-                'user_modifiable': False,
             },
-            'project_user_json_hidden_setting': {
+            'project_user_json_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'JSON',
                 'default': '',
                 'description': 'Example json project user setting',
-                'user_modifiable': False,
             },
         }
         defs = app_settings.get_setting_defs(
@@ -809,7 +805,7 @@ class TestAppSettingAPI(
     def test_delete_setting_scope_project_user_params_none(self):
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
-            EXAMPLE_APP_NAME, 'project_user_string_hidden_setting'
+            EXAMPLE_APP_NAME, 'project_user_string_setting'
         )
         self.assertEqual(AppSetting.objects.count(), 15)
 
@@ -817,7 +813,7 @@ class TestAppSettingAPI(
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
             EXAMPLE_APP_NAME,
-            'project_user_string_hidden_setting',
+            'project_user_string_setting',
             project=self.project,
             user=self.user,
         )
@@ -827,7 +823,7 @@ class TestAppSettingAPI(
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
             EXAMPLE_APP_NAME,
-            'project_user_string_hidden_setting',
+            'project_user_string_setting',
             project=self.project,
             user=self.user,
         )
@@ -837,7 +833,7 @@ class TestAppSettingAPI(
         self.assertEqual(AppSetting.objects.count(), 16)
         app_settings.delete_setting(
             EXAMPLE_APP_NAME,
-            'project_user_string_hidden_setting',
+            'project_user_string_setting',
             project=self.project,
             user=self.user,
         )
