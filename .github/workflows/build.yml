@@ -1,0 +1,55 @@
+name: Build
+on: push
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-16.04
+    services:
+      postgres:
+        image: postgres:9.6
+        env:
+          POSTGRES_DB: sodar_core
+          POSTGRES_USER: sodar_core
+          POSTGRES_PASSWORD: sodar_core
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+        ports:
+          - 5432:5432
+    env:
+      POSTGRES_HOST: 0.0.0.0
+      POSTGRES_PORT: 5432
+      DATABASE_URL: 'postgres://sodar_core:sodar_core@0.0.0.0/sodar_core'
+    steps:
+      - name: Install server dependencies
+        run: |
+          sudo apt-get install -qq build-essential zlib1g-dev libtiff5-dev libjpeg8-dev libfreetype6-dev
+          sudo apt-get install -qq liblcms2-dev libwebp-dev libpq-dev graphviz-dev
+      - name: Install Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Install project Python dependencies
+        run: |
+          pip install wheel==0.34.2
+          pip install -r requirements/local.txt
+          pip install -r requirements/test.txt
+      - name: Run collectstatic
+        run: python manage.py collectstatic --noinput
+      - name: Run tests
+        run: |
+          coverage run --rcfile=.coveragerc manage.py test -v 2 --settings=config.settings.test
+          coverage xml
+      - name: Check linting
+        run: flake8 .
+      - name: Check formatting
+        run: make black arg=--check
+      - name: Run Codacy coverage reporter
+        uses: codacy/codacy-coverage-reporter-action@master
+        with:
+          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          coverage-reports: coverage.xml
