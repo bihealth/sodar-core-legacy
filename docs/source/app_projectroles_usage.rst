@@ -264,9 +264,11 @@ Invites
 -------
 
 Invites are accepted by the responding user clicking on a link supplied in their
-invite email and logging in to the site with their LDAP/AD credentials. Invites
-expire after a certain time and can be reissued or revoked on the
-**Project Invites** page.
+invite email and either logging in to the site with their LDAP/AD credentials or
+creating a local user. The latter is only allowed if local users are enabled in
+the site's Django settings and the user email domain is not associated with
+configured LDAP domains. Invites expire after a certain time and can be reissued
+or revoked on the **Project Invites** page.
 
 
 Remote Projects

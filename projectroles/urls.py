@@ -73,6 +73,16 @@ urls_ui = [
         name='invite_accept',
     ),
     url(
+        regex=r'^invites/process/ldap/(?P<secret>[\w\-]+)$',
+        view=views.ProjectInviteProcessLDAPView.as_view(),
+        name='invite_process_ldap',
+    ),
+    url(
+        regex=r'^invites/process/local/(?P<secret>[\w\-]+)$',
+        view=views.ProjectInviteProcessLocalView.as_view(),
+        name='invite_process_local',
+    ),
+    url(
         regex=r'^invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
         view=views.ProjectInviteResendView.as_view(),
         name='invite_resend',
