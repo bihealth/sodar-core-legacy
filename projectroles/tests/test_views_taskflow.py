@@ -1,4 +1,4 @@
-"""Taskflow view tests for the projectroles app"""
+"""Taskflow tests for management commands in the projectroles app"""
 
 # NOTE: You must supply 'sodar_url': self.live_server_url in taskflow requests!
 #       This is due to the Django 1.10.x feature described here:

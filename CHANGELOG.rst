@@ -28,6 +28,7 @@ Added
     - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
     - Display placeholders for app setting form fields (#584)
     - Support for non-LDAP user invites (#548)
+    - ``batchupdateroles`` management command (#15, #602)
 
 Changed
 -------
@@ -39,11 +40,13 @@ Changed
     - Upgrade general Python requirements (#576)
     - Migrate GitHub CI from Travis to GitHub actions (#577)
     - Refactor example ``PROJECT_USER`` scope app settings (#599)
+    - Set logging level in test configurations to ``CRITICAL`` (#604)
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
     - Refactor project list filtering (#566)
     - Move project list javascript to ``project_list.js`` (#566)
     - Rename owner role transfer URL pattern and timeline event (#590)
+    - Add ``sodar_url`` override to ``modify_assignment()``
 - **Userprofile**
     - Cosmetic updates for user detail template (#600)
 
@@ -55,6 +58,9 @@ Fixed
     - Wrong role label displayed for category owner/delegate in member list (#593)
     - Django settings access in ``forms`` and ``serializers``
     - Delegate limit check broken by existing delegate roles of inherited owners (#595)
+- **Taskflowbackend**
+    - Django settings access in ``api`` (#605)
+    - ``sodar_url`` override not working if ``request`` object is present (#605)
 
 Removed
 -------

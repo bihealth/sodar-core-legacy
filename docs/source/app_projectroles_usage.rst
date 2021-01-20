@@ -270,6 +270,14 @@ the site's Django settings and the user email domain is not associated with
 configured LDAP domains. Invites expire after a certain time and can be reissued
 or revoked on the **Project Invites** page.
 
+Batch Member Modifications
+--------------------------
+
+Batch member updates can be done either by using REST API views with appropriate
+project permissions, or by a site admin using the ``batchupdateroles``
+management command. The latter supports multiple projects in one batch. It is
+also able to send invites to users who have not yet signed up on the site.
+
 
 Remote Projects
 ===============

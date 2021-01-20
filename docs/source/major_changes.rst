@@ -23,6 +23,7 @@ Release Highlights
 - Add IP address based access restriction for projects
 - Add SSO support via SAML
 - Add support for local user invites and local user account creation
+- Batch invites and role updates via management command
 
 Breaking Changes
 ================

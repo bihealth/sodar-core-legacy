@@ -90,7 +90,7 @@ class ProjectInviteMixin:
 
     @classmethod
     def _make_invite(
-        cls, email, project, role, issuer, message, date_expire=None
+        cls, email, project, role, issuer, message='', date_expire=None
     ):
         """Make and save a ProjectInvite"""
         values = {

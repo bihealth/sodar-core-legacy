@@ -1300,7 +1300,9 @@ class ProjectRoleView(
 class RoleAssignmentModifyMixin:
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
-    def modify_assignment(self, data, request, project, instance=None):
+    def modify_assignment(
+        self, data, request, project, instance=None, sodar_url=None
+    ):
         """
         Create or update a RoleAssignment, either locally or using the SODAR
         Taskflow. This method should be called either in form_valid() in a
@@ -1309,7 +1311,8 @@ class RoleAssignmentModifyMixin:
         :param data: Cleaned data from a form or serializer
         :param request: Request initiating the action
         :param project: Project object
-        :param instance: Existing Project object or None
+        :param instance: Existing RoleAssignment object or None
+        :param sodar_url: SODAR callback URL for taskflow (string, optional)
         :raise: ConnectionError if unable to connect to SODAR Taskflow
         :raise: FlowSubmitException if SODAR Taskflow submission fails
         :return: Created or updated RoleAssignment object
@@ -1327,7 +1330,6 @@ class RoleAssignmentModifyMixin:
             tl_desc = '{} role {}"{}" for {{{}}}'.format(
                 action, 'to ' if action == 'update' else '', role.name, 'user'
             )
-
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
@@ -1341,7 +1343,6 @@ class RoleAssignmentModifyMixin:
         if use_taskflow:
             if tl_event:
                 tl_event.set_status('SUBMIT')
-
             flow_data = {
                 'username': user.username,
                 'user_uuid': str(user.sodar_uuid),
@@ -1354,12 +1355,11 @@ class RoleAssignmentModifyMixin:
                     flow_name='role_update',
                     flow_data=flow_data,
                     request=request,
+                    sodar_url=sodar_url,
                 )
-
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
-
                 raise ex
 
             # Get object
@@ -1374,13 +1374,10 @@ class RoleAssignmentModifyMixin:
             role_as.role = role
 
         role_as.save()
-
         if SEND_EMAIL:
             email.send_role_change_mail(action, project, user, role, request)
-
         if tl_event:
             tl_event.set_status('OK')
-
         return role_as
 
 
@@ -1799,12 +1796,14 @@ class ProjectInviteMixin:
     """General utilities for mixins"""
 
     @classmethod
-    def _handle_invite(cls, invite, request, resend=False):
+    def handle_invite(cls, invite, request, resend=False, add_message=True):
         """
-        Handle invite creation, email sending/resending and logging to timeline
+        Handle invite creation, email sending/resending and logging to timeline.
+
         :param invite: ProjectInvite object
         :param request: Django request object
         :param resend: Send or resend (bool)
+        :param add_message: Add Django message on success/failure (bool)
         """
         timeline = get_backend_api('timeline_backend')
         send_str = 'resend' if resend else 'send'
@@ -1813,11 +1812,9 @@ class ProjectInviteMixin:
 
         if SEND_EMAIL:
             sent_mail = email.send_invite_mail(invite, request)
-
             if sent_mail == 0:
                 status_type = 'FAILED'
                 status_desc = 'Email sending failed'
-
         else:
             status_type = 'FAILED'
             status_desc = 'PROJECTROLES_SEND_EMAIL not True'
@@ -1839,7 +1836,7 @@ class ProjectInviteMixin:
                 status_desc=status_desc,
             )
 
-        if status_type == 'OK':
+        if add_message and status_type == 'OK':
             messages.success(
                 request,
                 'Invite for "{}" role in {} sent to {}, expires on {}'.format(
@@ -1851,8 +1848,7 @@ class ProjectInviteMixin:
                     ),
                 ),
             )
-
-        elif not resend:  # NOTE: Delete invite if send fails
+        elif add_message and not resend:  # NOTE: Delete invite if send fails
             invite.delete()
             messages.error(request, status_desc)
 
@@ -1934,7 +1930,7 @@ class ProjectInviteCreateView(
         self.object = form.save()
 
         # Send mail and add to timeline
-        self._handle_invite(invite=self.object, request=self.request)
+        self.handle_invite(invite=self.object, request=self.request)
 
         return redirect(
             reverse(
@@ -2321,7 +2317,7 @@ class ProjectInviteResendView(
         invite.save()
 
         # Resend mail and add to timeline
-        self._handle_invite(invite=invite, request=self.request, resend=True)
+        self.handle_invite(invite=invite, request=self.request, resend=True)
 
         return redirect(
             reverse(
