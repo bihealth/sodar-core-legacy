@@ -22,6 +22,7 @@ Release Highlights
 - Add remote sync for global projectroles app settings
 - Add IP address based access restriction for projects
 - Add SSO support via SAML
+- Add support for local user invites and local user account creation
 
 Breaking Changes
 ================

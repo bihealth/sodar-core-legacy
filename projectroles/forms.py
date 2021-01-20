@@ -84,7 +84,7 @@ class SODARFormMixin:
 
         log_msg = 'Field "{}": {}'.format(field, log_err)
 
-        if self.current_user:
+        if hasattr(self, 'current_user') and self.current_user:
             log_msg += ' (user={})'.format(self.current_user.username)
 
         self.logger.error(log_msg)
@@ -1012,6 +1012,33 @@ class ProjectInviteForm(SODARModelForm):
 
         obj.save()
         return obj
+
+
+# ProjectUserCreate form -------------------------------------------------------
+
+
+class ProjectUserCreateForm(SODARModelForm):
+    """Form for ProjectInvite modification"""
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'password', 'email', 'username']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['username'].widget.attrs['readonly'] = True
+        self.fields['password'].widget = forms.PasswordInput()
+        self.fields['password_confirm'] = forms.CharField(
+            label='Confirm password', widget=forms.PasswordInput()
+        )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data['password'] != cleaned_data['password_confirm']:
+            self.add_error('password_confirm', 'Passwords didn\'t match!')
+            self.add_error('password', 'Passwords didn\'t match!')
+        return cleaned_data
 
 
 # RemoteSite form --------------------------------------------------------------

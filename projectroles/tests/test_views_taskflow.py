@@ -997,8 +997,12 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
         # Create guest user and role
         self.user_new = self.make_user('newuser')
 
-    def test_accept_invite(self):
-        """Test user accepting an invite with taskflow"""
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_ldap(self):
+        """Test LDAP user accepting an invite with taskflow"""
 
         # Init invite
         invite = self._make_invite(
@@ -1028,32 +1032,123 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
                     kwargs={'secret': invite.secret},
                 ),
                 self.request_data,
+                follow=True,
+            )
+
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse('home'),
+                        302,
+                    ),
+                ],
+            )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_ldap_category(self):
+        """Test LDAP user accepting an invite with taskflow for a category"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.category,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.category,
+                user=self.user_new,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+        with self.login(self.user_new):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                ),
+                self.request_data,
+                follow=True,
+            )
+
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse(
+                            'projectroles:detail',
+                            kwargs={'project': self.category.sodar_uuid},
+                        ),
+                        302,
+                    ),
+                ],
+            )
+
+    def test_accept_invite_local(self):
+        """Test local user accepting an invite with taskflow"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(self.user_new):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                ),
+                self.request_data,
             )
 
             self.assertRedirects(
                 response,
                 reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
                 ),
             )
 
             # Assert postconditions
             self.assertEqual(
-                ProjectInvite.objects.filter(active=True).count(), 0
+                ProjectInvite.objects.filter(active=True).count(), 1
             )
 
-            self.assertEqual(
-                RoleAssignment.objects.filter(
-                    project=self.project,
-                    user=self.user_new,
-                    role=self.role_contributor,
-                ).count(),
-                1,
-            )
-
-    def test_accept_invite_category(self):
-        """Test user accepting an invite with taskflow for a category"""
+    def test_accept_invite_local_category(self):
+        """Test local user accepting an invite with taskflow for a category"""
 
         # Init invite
         invite = self._make_invite(
@@ -1088,21 +1183,12 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
             self.assertRedirects(
                 response,
                 reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.category.sodar_uuid},
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
                 ),
             )
 
             # Assert postconditions
             self.assertEqual(
-                ProjectInvite.objects.filter(active=True).count(), 0
-            )
-
-            self.assertEqual(
-                RoleAssignment.objects.filter(
-                    project=self.category,
-                    user=self.user_new,
-                    role=self.role_contributor,
-                ).count(),
-                1,
+                ProjectInvite.objects.filter(active=True).count(), 1
             )

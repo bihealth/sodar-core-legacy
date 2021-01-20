@@ -27,6 +27,7 @@ Added
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
     - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
     - Display placeholders for app setting form fields (#584)
+    - Support for non-LDAP user invites (#548)
 
 Changed
 -------

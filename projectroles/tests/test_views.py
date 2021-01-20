@@ -9,6 +9,8 @@ from django.forms.models import model_to_dict
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib import auth
+from django.contrib.messages import get_messages
 
 from test_plus.test import TestCase
 
@@ -38,6 +40,10 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.utils import get_user_display_name
+
+
+# Access Django user model
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -2686,8 +2692,10 @@ class TestProjectInviteCreateView(
                 ),
             )
 
-    def test_accept_invite(self):
-        """Test user accepting an invite"""
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_ldap(self):
+        """Test user accepting an LDAP invite"""
 
         # Init invite
         invite = self._make_invite(
@@ -2715,15 +2723,28 @@ class TestProjectInviteCreateView(
                 reverse(
                     'projectroles:invite_accept',
                     kwargs={'secret': invite.secret},
-                )
+                ),
+                follow=True,
             )
 
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse(
+                            'projectroles:detail',
+                            kwargs={'project': self.project.sodar_uuid},
+                        ),
+                        302,
+                    ),
+                ],
             )
 
             # Assert postconditions
@@ -2740,8 +2761,10 @@ class TestProjectInviteCreateView(
                 1,
             )
 
-    def test_accept_invite_expired(self):
-        """Test user accepting an expired invite"""
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_expired_ldap(self):
+        """Test user accepting an expired LDAP invite"""
 
         # Init invite
         invite = self._make_invite(
@@ -2770,10 +2793,13 @@ class TestProjectInviteCreateView(
                 reverse(
                     'projectroles:invite_accept',
                     kwargs={'secret': invite.secret},
-                )
+                ),
             )
 
-            self.assertRedirects(response, reverse('home'))
+            self.assertRedirects(
+                response,
+                reverse('home'),
+            )
 
             # Assert postconditions
             self.assertEqual(
@@ -2788,6 +2814,328 @@ class TestProjectInviteCreateView(
                 ).count(),
                 0,
             )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_invite_local(self):
+        """Test user accepting a local invite"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        email = response.context['form']['email'].value()
+        username = response.context['form']['username'].value()
+
+        self.assertEqual(email, invite.email)
+        self.assertEqual(username, invite.email.split('@')[0])
+
+        self.assertEqual(User.objects.count(), 2)
+
+        response = self.client.post(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            data={
+                'first_name': 'First',
+                'last_name': 'Last',
+                'username': username,
+                'email': email,
+                'password': 'asd',
+                'password_confirm': 'asd',
+            },
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse(
+                        'projectroles:detail',
+                        kwargs={'project': self.project.sodar_uuid},
+                    ),
+                    302,
+                ),
+                (
+                    reverse('login')
+                    + '?next='
+                    + reverse(
+                        'projectroles:detail',
+                        kwargs={'project': self.project.sodar_uuid},
+                    ),
+                    302,
+                ),
+            ],
+        )
+
+        user = User.objects.get(username=username)
+
+        # Assert postconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=user,
+                role=self.role_contributor,
+            ).count(),
+            1,
+        )
+
+        with self.login(user, password='asd'):
+            response = self.client.get(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_invite_expired_local(self):
+        """Test user accepting an expired local invite"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+            date_expire=timezone.now(),
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (reverse('home'), 302),
+                (reverse('login') + '?next=' + reverse('home'), 302),
+            ],
+        )
+
+        # Assert postconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_wrong_type_local(self):
+        """Test user accepting a local invite in the view processing LDAP invites"""
+
+        # Init invite
+        invite = self._make_invite(
+            email='test@different.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_ldap',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        # LDAP expects user to be logged in
+        self.assertRedirects(
+            response,
+            reverse('login')
+            + '?next='
+            + reverse(
+                'projectroles:invite_process_ldap',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_wrong_type_ldap(self):
+        """Test user accepting a LDAP invite in the view processing local invites"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse('home'),
+                    302,
+                ),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
+            ],
+        )
+
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invite was issued for LDAP user, but local invite view was requested.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_accept_invite_accept_local_user_not_allowed(self):
+        """Test user accepting a local invite while local users are disabled"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse('home'),
+                    302,
+                ),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
+            ],
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_accept_invite_process_local_user_not_allowed(self):
+        """Test processing a local invite while local users are disabled"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse('home'),
+                    302,
+                ),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
+            ],
+        )
 
 
 class TestProjectInviteListView(
