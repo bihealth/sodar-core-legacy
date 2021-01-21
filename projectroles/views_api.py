@@ -103,12 +103,13 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
 
     def has_permission(self, request, view):
         """
-        Override has_permission() for checking auth and  project permission
+        Override has_permission() for checking auth and project permission
         """
-        if not request.user or not request.user.is_authenticated:
+        project = self.get_project(request=request, kwargs=view.kwargs)
+
+        if not project or not request.user or not request.user.is_authenticated:
             return False
 
-        project = self.get_project(request=request, kwargs=view.kwargs)
         owner_or_delegate = project.is_owner_or_delegate(request.user)
 
         if not (
