@@ -56,18 +56,19 @@ class TestPermissionMixin:
         :param url: Target URL for the request
         :param users: Users to test (single user, list or tuple)
         :param status_code: Status code
-        :param redirect_user: Redirect URL for signed in user (None=default)
-        :param redirect_anon: Redirect URL for anonymous (None=default)
-        :param method: Method for request (default='GET')
-        :param data: Optional data for request (dict)
+        :param redirect_user: Redirect URL for signed in user (optional)
+        :param redirect_anon: Redirect URL for anonymous (optional)
+        :param method: Method for request (string, optional, default='GET')
+        :param data: Optional data for request (dict, optional)
+        :param header: Request header (dict, optional)
         """
+        if header is None:
+            header = {}
 
         def _send_request():
             req_method = getattr(self.client, method.lower(), None)
-
             if not req_method:
                 raise ValueError('Invalid method "{}"'.format(method))
-
             return req_method(url, **req_kwargs)
 
         if not isinstance(users, (list, tuple)):
@@ -82,7 +83,6 @@ class TestPermissionMixin:
                 redirect_url = (
                     redirect_user if redirect_user else reverse('home')
                 )
-
                 with self.login(user):
                     response = _send_request()
 
