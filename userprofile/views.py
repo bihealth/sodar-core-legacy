@@ -7,7 +7,10 @@ from django.views.generic import TemplateView, FormView
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
-from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin
+from projectroles.views import (
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+)
 
 from .forms import UserSettingsForm
 
@@ -31,6 +34,7 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     def get_context_data(self, **kwargs):
         result = super().get_context_data(**kwargs)
         result['user_settings'] = list(self._get_user_settings())
+        result['local_user'] = self.request.user.is_local()
         return result
 
     def _get_user_settings(self):

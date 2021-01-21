@@ -1,3 +1,4 @@
+import re
 import uuid
 
 from django.apps import apps
@@ -1077,6 +1078,9 @@ class SODARUser(AbstractUser):
         if group not in self.groups.all():
             group.user_set.add(self)
             return group_name
+
+    def is_local(self):
+        return not bool(re.search('@[A-Za-z0-9._-]+$', self.username))
 
 
 # User signals -----------------------------------------------------------------

@@ -29,6 +29,7 @@ Added
     - Display placeholders for app setting form fields (#584)
     - Support for non-LDAP user invites (#548)
     - ``batchupdateroles`` management command (#15, #602)
+    - Non-LDAP user can change password and other details (#547)
 
 Changed
 -------

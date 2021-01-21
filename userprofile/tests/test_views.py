@@ -1,5 +1,5 @@
 """Tests for views in the userprofile Django app"""
-
+from django.contrib import auth
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -11,6 +11,10 @@ from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
 
 # App settings API
 app_settings = AppSettingAPI()
+
+
+# Access Django user model
+User = auth.get_user_model()
 
 
 class TestViewsBase(TestCase):

@@ -92,6 +92,11 @@ urls_ui = [
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
     ),
+    url(
+        regex=r'^user/update$',
+        view=views.UserUpdateView.as_view(),
+        name='user_update',
+    ),
     # Remote site and project views
     url(
         regex=r'^remote/sites$',

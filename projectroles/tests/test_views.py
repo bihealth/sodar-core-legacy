@@ -3775,3 +3775,67 @@ class TestRemoteProjectsBatchUpdateView(
                     kwargs={'remotesite': self.target_site.sodar_uuid},
                 ),
             )
+
+
+class TestUserUpdateView(TestViewsBase):
+    """Tests for the user update view."""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        # Init user & role
+        self.user_local = self.make_user('local_user')
+        self.user_ldap = self.make_user('ldap_user@EXAMPLE')
+
+    def test_render_local_user(self):
+        with self.login(self.user_local):
+            response = self.client.get(reverse('projectroles:user_update'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_render_ldap_user(self):
+        with self.login(self.user_ldap):
+            response = self.client.get(
+                reverse('projectroles:user_update'), follow=True
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: LDAP user can\'t edit user details',
+        )
+
+    def test_submit_local_user(self):
+        self.assertEqual(User.objects.count(), 2)
+        user = User.objects.get(id=self.user_local.id)
+        self.assertEqual(user.first_name, '')
+        self.assertEqual(user.last_name, '')
+
+        with self.login(self.user_local):
+            response = self.client.post(
+                reverse('projectroles:user_update'),
+                {
+                    'first_name': 'Local',
+                    'last_name': 'User',
+                    'username': self.user_local.username,
+                    'email': self.user_local.email,
+                    'password': 'fjf',
+                    'password_confirm': 'fjf',
+                },
+                follow=True,
+            )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (reverse('home'), 302),
+                (
+                    reverse('login') + '?next=' + reverse('home'),
+                    302,
+                ),
+            ],
+        )
+
+        self.assertEqual(User.objects.count(), 2)
+        user = User.objects.get(id=self.user_local.id)
+        self.assertEqual(user.first_name, 'Local')
+        self.assertEqual(user.last_name, 'User')

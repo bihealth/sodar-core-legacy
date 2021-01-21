@@ -1,0 +1,43 @@
+{% extends 'projectroles/base.html' %}
+
+{% load rules %}
+{% load projectroles_common_tags %}
+{% load crispy_forms_filters %}
+
+{% block title %}User Update form{% endblock title %}
+
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    /* Responsive modifications */
+    @media screen and (max-width: 800px) {
+      .table#sodar-pr-role-invite-table thead tr th:nth-child(3),
+      .table#sodar-pr-role-invite-table tbody tr td:nth-child(3) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 600px) {
+      .table#sodar-pr-role-invite-table thead tr th:nth-child(4),
+      .table#sodar-pr-role-invite-table tbody tr td:nth-child(4) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
+
+{% block projectroles %}
+
+<div class="container-fluid sodar-page-container">
+  <form method="post">{% csrf_token %}
+    <div class="form-group">{{ form.first_name|as_crispy_field }}</div>
+    <div class="form-group">{{ form.last_name|as_crispy_field }}</div>
+    <div class="form-group">{{ form.username|as_crispy_field }}</div>
+    <div class="form-group">{{ form.email|as_crispy_field }}</div>
+    <div class="form-group">{{ form.password|as_crispy_field }}</div>
+    <div class="form-group">{{ form.password_confirm|as_crispy_field }}</div>
+    <button type="submit" class="btn btn-primary">Update User</button>
+  </form>
+</div>
+
+{% endblock projectroles %}

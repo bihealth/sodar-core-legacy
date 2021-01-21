@@ -16,7 +16,7 @@ from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.db import transaction
 from django.shortcuts import redirect
-from django.urls import resolve, reverse
+from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic import (
     TemplateView,
@@ -2288,6 +2288,26 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
                 kwargs={'project': invite.project.sodar_uuid},
             )
         )
+
+
+class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
+    """Display and process the user update view"""
+
+    form_class = ProjectUserCreateForm
+    template_name = 'projectroles/user_create.html'
+    success_url = reverse_lazy('home')
+
+    def get_object(self, **kwargs):
+        return self.request.user
+
+    def get(self, *args, **kwargs):
+        if not self.request.user.is_local():
+            messages.error(
+                self.request, 'Error: LDAP user can\'t edit user details'
+            )
+            return redirect(reverse('home'))
+        messages.success(self.request, 'User successfully updated')
+        return super().get(*args, **kwargs)
 
 
 class ProjectInviteResendView(
