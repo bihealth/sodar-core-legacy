@@ -30,6 +30,7 @@ Added
     - Support for non-LDAP user invites (#548)
     - ``batchupdateroles`` management command (#15, #602)
     - Non-LDAP user can change password and other details (#547)
+    - Non-LDAP user invite feature accepts alternative LDAP domains (#613)
 
 Changed
 -------
