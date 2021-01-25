@@ -62,7 +62,7 @@ mistune>=0.8.4, <0.9
 django-db-file-storage==0.5.5
 
 # Backround Jobs requirements
-celery>=5.0.5, <5.1
+celery<4.2  # pyup: <4.2  # blocker: https://github.com/celery/celery/issues/4878
 
 # Django autocomplete light (DAL)
 django-autocomplete-light==3.2.10  # Higher versions require Django 2.x
