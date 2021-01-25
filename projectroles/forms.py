@@ -940,18 +940,15 @@ class ProjectInviteForm(SODARModelForm):
 
     def clean(self):
         # Check if user email is already in users
-        try:
-            existing_user = User.objects.get(
-                email=self.cleaned_data.get('email')
-            )
+        existing_user = User.objects.filter(
+            email=self.cleaned_data.get('email')
+        ).first()
+        if existing_user:
             self.add_error(
                 'email',
                 'User "{}" already exists in the system with this email. '
                 'Please use "Add Role" instead.'.format(existing_user.username),
             )
-
-        except User.DoesNotExist:
-            pass
 
         # Check if user already has an invite in the project
         try:

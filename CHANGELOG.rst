@@ -59,6 +59,7 @@ Fixed
     - Wrong role label displayed for category owner/delegate in member list (#593)
     - Django settings access in ``forms`` and ``serializers``
     - Delegate limit check broken by existing delegate roles of inherited owners (#595)
+    - Crash in project invite if multiple users exist with the same email (#614)
 - **Taskflowbackend**
     - Django settings access in ``api`` (#605)
     - ``sodar_url`` override not working if ``request`` object is present (#605)
