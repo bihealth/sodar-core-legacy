@@ -1950,6 +1950,10 @@ class ProjectInviteProcessMixin:
         if settings.ENABLE_LDAP and domain in (
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
             getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
+            *[
+                a.lower()
+                for a in getattr(settings, 'PROJECTROLES_ALT_LDAP_DOMAINS', [])
+            ],
         ):
             return 'ldap'
 
