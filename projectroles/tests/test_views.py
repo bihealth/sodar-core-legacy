@@ -2817,7 +2817,7 @@ class TestProjectInviteCreateView(
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_accept_invite_local(self):
-        """Test user accepting a local invite"""
+        """Test user accepting a local invite (user doesn't exist and no user is logged in)"""
 
         # Init invite
         invite = self._make_invite(
@@ -3042,23 +3042,13 @@ class TestProjectInviteCreateView(
             follow=True,
         )
 
-        self.assertListEqual(
-            response.redirect_chain,
-            [
-                (
-                    reverse('home'),
-                    302,
-                ),
-                (
-                    reverse('login') + '?next=/',
-                    302,
-                ),
-            ],
+        self.assertRedirects(
+            response, reverse('login') + '?next=' + reverse('home')
         )
-
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: Invite was issued for LDAP user, but local invite view was requested.',
+            'Error: Invite was issued for LDAP user, but local invite view '
+            'was requested.',
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
@@ -3123,18 +3113,171 @@ class TestProjectInviteCreateView(
             follow=True,
         )
 
-        self.assertListEqual(
-            response.redirect_chain,
-            [
-                (
-                    reverse('home'),
-                    302,
+        self.assertRedirects(
+            response, reverse('login') + '?next=' + reverse('home')
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invite of non-LDAP user, but local users are not allowed!',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_no_local_user_different_user_logged_in(
+        self,
+    ):
+        """Test processing a local invite while invited user doesn't exist and different user is logged in"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
                 ),
-                (
-                    reverse('login') + '?next=/',
-                    302,
+                follow=True,
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: logged in user is not allowed to accept others invite.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_different_user_logged_in(self):
+        """Test processing a local invite while invited user exists but different user is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
                 ),
-            ],
+                follow=True,
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invited user exists, but logged in user is not invited '
+            'user.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_is_logged_in(self):
+        """Test processing a local invite while invited user exists and is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(invited_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Welcome to project "TestProject"! You have been assigned the '
+            'role of project contributor.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_not_logged_in(self):
+        """Test processing a local invite while invited user exists but not user is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'login',
+            )
+            + '?next='
+            + reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'A user with that email already exists. Please login first to '
+            'accept the invite.',
         )
 
 

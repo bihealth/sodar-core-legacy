@@ -2183,7 +2183,8 @@ class ProjectInviteProcessLDAPView(
         if self.get_invite_type(invite) == 'local':
             messages.error(
                 self.request,
-                'Error: Invite was issued for local user, but LDAP invite view was requested.',
+                'Error: Invite was issued for local user, but LDAP invite '
+                'view was requested.',
             )
             return redirect(reverse('home'))
 
@@ -2220,6 +2221,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
     def get(self, *args, **kwargs):
         invite = self.get_invite(self.kwargs['secret'])
+        timeline = get_backend_api('timeline_backend')
 
         if not invite:
             return redirect(reverse('home'))
@@ -2227,21 +2229,83 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
-                'Error: Invite of non-LDAP user, but local users are not allowed!',
+                'Error: Invite of non-LDAP user, but local users are not '
+                'allowed!',
             )
             return redirect(reverse('home'))
 
         if self.get_invite_type(invite) == 'ldap':
             messages.error(
                 self.request,
-                'Error: Invite was issued for LDAP user, but local invite view was requested.',
+                'Error: Invite was issued for LDAP user, but local invite '
+                'view was requested.',
             )
             return redirect(reverse('home'))
 
         if self.is_invite_expired(invite):
             return redirect(reverse('home'))
 
-        return super().get(*args, **kwargs)
+        # Check if invited user exists
+        try:
+            user = User.objects.get(email=invite.email)
+        except User.DoesNotExist:
+            user = None
+
+        # A user is not logged in
+        if self.request.user.is_anonymous:
+            # Redirect to login if user exists and
+            if user:
+                messages.info(
+                    self.request,
+                    'A user with that email already exists. Please login '
+                    'first to accept the invite.',
+                )
+                return redirect(
+                    reverse('login')
+                    + '?next='
+                    + reverse(
+                        'projectroles:invite_process_local',
+                        kwargs={'secret': invite.secret},
+                    )
+                )
+
+            # Show form if user doesn't exists and no user is logged in
+            return super().get(*args, **kwargs)
+
+        # Logged in but the invited user does not exist yet
+        if not user:
+            messages.error(
+                self.request,
+                'Error: logged in user is not allowed to accept others invite.',
+            )
+            return redirect(reverse('home'))
+
+        # Logged in user is not invited user
+        if not self.request.user == user:
+            messages.error(
+                self.request,
+                'Error: Invited user exists, but logged in user is not '
+                'invited user.',
+            )
+            return redirect(reverse('home'))
+
+        # User exists but is not local
+        if not user.is_local():
+            messages.error(
+                self.request, 'Error: User exists, but is not local.'
+            )
+            return redirect(reverse('home'))
+
+        # Create role if user exists
+        if not self.create_roleassignment(invite, user, timeline=timeline):
+            return redirect(reverse('home'))
+
+        return redirect(
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': invite.project.sodar_uuid},
+            )
+        )
 
     def get_initial(self):
         """Returns the initial data for the form."""
@@ -2275,7 +2339,8 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
-                'Error: Invite of non-LDAP user, but local users are not allowed!',
+                'Error: Invite of non-LDAP user, but local users are not '
+                'allowed!',
             )
             return redirect(reverse('home'))
 
@@ -2285,7 +2350,8 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if self.get_invite_type(invite) == 'ldap':
             messages.error(
                 self.request,
-                'Error: Invite was issued for LDAP user, but local invite view was requested.',
+                'Error: Invite was issued for LDAP user, but local invite '
+                'view was requested.',
             )
             return redirect(reverse('home'))
 
