@@ -29,6 +29,17 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
 
 
+# HACK for issue #612
+class MockRequest(HttpRequest):
+    scheme = 'http'
+
+    def mock_scheme(self, host):
+        self.scheme = host.scheme
+
+    def scheme(self):
+        return self.scheme
+
+
 class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     help = 'Batch updates project roles and sends invites'
 
@@ -38,6 +49,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     issuer = None
     update_count = 0
     invite_count = 0
+    request = None
     sodar_url = None
 
     def __init__(
@@ -51,7 +63,8 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     def _make_request(self):
         """Make HttpRequest to supply to view-based handlers"""
         host = settings.SODAR_API_DEFAULT_HOST
-        request = HttpRequest()
+        request = MockRequest()
+        request.mock_scheme(host)
         request.META['HTTP_HOST'] = host.hostname
         if host.port:
             request.META['HTTP_HOST'] += ':' + str(host.port)
@@ -81,7 +94,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
 
         self.modify_assignment(
             data={'user': user, 'role': role},
-            request=self._make_request(),
+            request=self.request,
             project=project,
             instance=role_as,
             sodar_url=self.sodar_url,
@@ -112,7 +125,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             date_expire=get_expiry_date(),
             secret=build_secret(),
         )
-        self.handle_invite(invite, self._make_request(), add_message=False)
+        self.handle_invite(invite, self.request, add_message=False)
         self.invite_count += 1
 
     def _handle_list_row(self, project, role_name, email):
@@ -247,6 +260,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
         self.roles = {r.name: r for r in Role.objects.all()}
         self.owner_role = self.roles[SODAR_CONSTANTS['PROJECT_ROLE_OWNER']]
         self.del_role = self.roles[SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']]
+        self.request = self._make_request()
         project_uuids = list(set([d.split(';')[0] for d in file_data]))
         error_count = 0
 
