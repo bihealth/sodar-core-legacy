@@ -1132,14 +1132,24 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
                     kwargs={'secret': invite.secret},
                 ),
                 self.request_data,
+                follow=True,
             )
 
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': invite.secret},
-                ),
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_local',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse('home'),
+                        302,
+                    ),
+                ],
             )
 
             # Assert postconditions
@@ -1178,14 +1188,24 @@ class TestProjectInviteAcceptView(ProjectInviteMixin, TestTaskflowBase):
                     kwargs={'secret': invite.secret},
                 ),
                 self.request_data,
+                follow=True,
             )
 
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:invite_process_local',
-                    kwargs={'secret': invite.secret},
-                ),
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_local',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse('home'),
+                        302,
+                    ),
+                ],
             )
 
             # Assert postconditions

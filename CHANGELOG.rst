@@ -27,10 +27,9 @@ Added
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
     - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
     - Display placeholders for app setting form fields (#584)
-    - Support for non-LDAP user invites (#548)
+    - Support for local user invites (#548, #613, #615)
+    - Local user account creation and updating (#547)
     - ``batchupdateroles`` management command (#15, #602)
-    - Non-LDAP user can change password and other details (#547)
-    - Non-LDAP user invite feature accepts alternative LDAP domains (#613)
     - Project invite REST API views (#15, #598)
 
 Changed
