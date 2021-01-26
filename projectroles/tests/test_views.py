@@ -3227,9 +3227,51 @@ class TestProjectInviteRevokeView(
                 )
             )
 
-        # Assert ProjectInvite state after creation
+        # Assert ProjectInvite state
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+    def test_revoke_delegate(self):
+        """Test invite revocation for a delegate role"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+
+        # Assert precondition
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        # Issue POST request
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:invite_revoke',
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
+
+        # Assert ProjectInvite state
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+    def test_revoke_delegate_no_perms(self):
+        """Test delegate revocation with insufficient perms (should fail)"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+        delegate = self.make_user('delegate')
+        self._make_assignment(self.project, delegate, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        # Issue POST request
+        with self.login(delegate):
+            self.client.post(
+                reverse(
+                    'projectroles:invite_revoke',
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
+
+        # Assert ProjectInvite state
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
 
 # Remote view tests ------------------------------------------------------------

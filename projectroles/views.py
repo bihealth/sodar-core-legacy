@@ -1853,15 +1853,17 @@ class ProjectInviteMixin:
             messages.error(request, status_desc)
 
     @classmethod
-    def revoke_invite(cls, invite, request):
+    def revoke_invite(cls, invite, project, request):
         timeline = get_backend_api('timeline_backend')
-        invite.active = False
-        invite.save()
+
+        if invite:
+            invite.active = False
+            invite.save()
 
         # Add event in Timeline
-        if timeline and invite:
+        if timeline:
             timeline.add_event(
-                project=invite.project,
+                project=project,
                 app_name=APP_NAME,
                 user=request.user,
                 event_name='invite_revoke',
@@ -1983,8 +1985,9 @@ class ProjectInviteProcessMixin:
 
         return 'error'
 
+    @classmethod
     def revoke_invite(
-        self, invite, user=None, failed=True, fail_desc='', timeline=None
+        cls, invite, user=None, failed=True, fail_desc='', timeline=None
     ):
         """Set invite.active to False and save the invite"""
         invite.active = False
@@ -2315,26 +2318,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         )
 
 
-class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
-    """Display and process the user update view"""
-
-    form_class = ProjectUserCreateForm
-    template_name = 'projectroles/user_create.html'
-    success_url = reverse_lazy('home')
-
-    def get_object(self, **kwargs):
-        return self.request.user
-
-    def get(self, *args, **kwargs):
-        if not self.request.user.is_local():
-            messages.error(
-                self.request, 'Error: LDAP user can\'t edit user details'
-            )
-            return redirect(reverse('home'))
-        messages.success(self.request, 'User successfully updated')
-        return super().get(*args, **kwargs)
-
-
 class ProjectInviteResendView(
     LoginRequiredMixin, ProjectModifyPermissionMixin, ProjectInviteMixin, View
 ):
@@ -2406,17 +2389,51 @@ class ProjectInviteRevokeView(
             sodar_uuid=kwargs['projectinvite']
         ).first()
 
-        if invite:
+        if (
+            invite
+            and invite.role.name == PROJECT_ROLE_DELEGATE
+            and not request.user.has_perm(
+                'projectroles.update_project_delegate', project
+            )
+        ):
+            invite = None  # Causes revoke_invite() to add failed timeline event
+            messages.error(
+                self.request, 'No perms for updating delegate invite!'
+            )
+        elif invite:
             messages.success(self.request, 'Invite revoked.')
         else:
             messages.error(self.request, 'Invite not found!')
 
-        self.revoke_invite(invite, self.request)
+        self.revoke_invite(invite, project, request)
         return redirect(
             reverse(
                 'projectroles:invites', kwargs={'project': project.sodar_uuid}
             )
         )
+
+
+# User management views --------------------------------------------------------
+
+
+class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
+    """Display and process the user update view"""
+
+    form_class = ProjectUserCreateForm
+    template_name = 'projectroles/user_create.html'
+    success_url = reverse_lazy('home')
+
+    def get_object(self, **kwargs):
+        return self.request.user
+
+    def get(self, *args, **kwargs):
+        if not self.request.user.is_local():
+            messages.error(
+                self.request, 'Error: LDAP user can\'t edit user details'
+            )
+            return redirect(reverse('home'))
+        messages.success(self.request, 'User successfully updated')
+        return super().get(*args, **kwargs)
 
 
 # Remote site and project views ------------------------------------------------

@@ -1,4 +1,4 @@
-"""REST API views for the samplesheets app"""
+"""REST API views for the projectroles app"""
 
 import re
 from ipaddress import ip_address, ip_network
@@ -698,7 +698,7 @@ class ProjectInviteRevokeAPIView(
             sodar_uuid=kwargs['projectinvite']
         ).first()
         self._validate(invite, request, **kwargs)
-        invite = self.revoke_invite(invite, request)
+        invite = self.revoke_invite(invite, invite.project, request)
         return Response(
             {
                 'detail': 'Invite revoked from email {} in project "{}"'.format(

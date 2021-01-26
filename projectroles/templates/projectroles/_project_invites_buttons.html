@@ -8,8 +8,10 @@
     <a class="dropdown-item" href="{% url 'projectroles:invite_resend' projectinvite=invite_uuid %}">
       <i class="fa fa-fw fa-send"></i> Resend Invite
       </a>
-    <a class="dropdown-item" href="{% url 'projectroles:invite_revoke' projectinvite=invite_uuid %}">
-      <i class="fa fa-fw fa-close"></i> Revoke Invite
-    </a>
+    {% if invite.role.name != 'project delegate' or can_update_delegate %}
+      <a class="dropdown-item text-danger" href="{% url 'projectroles:invite_revoke' projectinvite=invite_uuid %}">
+        <i class="fa fa-fw fa-close"></i> Revoke Invite
+      </a>
+    {% endif %}
   </div>
 </div>
