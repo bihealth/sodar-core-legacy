@@ -104,4 +104,12 @@ API Views
 
 .. autoclass:: RoleAssignmentOwnerTransferAPIView
 
+.. autoclass:: ProjectInviteListAPIView
+
+.. autoclass:: ProjectInviteCreateAPIView
+
+.. autoclass:: ProjectInviteRevokeAPIView
+
+.. autoclass:: ProjectInviteResendAPIView
+
 .. autoclass:: UserListAPIView

@@ -9,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -33,6 +33,7 @@ from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
+    ProjectInvite,
     RemoteSite,
     SODAR_CONSTANTS,
 )
@@ -40,6 +41,7 @@ from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.serializers import (
     ProjectSerializer,
     RoleAssignmentSerializer,
+    ProjectInviteSerializer,
     SODARUserSerializer,
     REMOTE_MODIFY_MSG,
 )
@@ -47,6 +49,7 @@ from projectroles.views import (
     ProjectAccessMixin,
     RoleAssignmentDeleteMixin,
     RoleAssignmentOwnerTransferMixin,
+    ProjectInviteMixin,
     SITE_MODE_TARGET,
 )
 
@@ -609,6 +612,129 @@ class RoleAssignmentOwnerTransferAPIView(
                     old_owner_as.user.username,
                     new_owner.username,
                     project.title,
+                )
+            },
+            status=200,
+        )
+
+
+class ProjectInviteAPIMixin:
+    """Validation helpers for project invite modification via API"""
+
+    def _validate(self, invite, request, **kwargs):
+        if not invite:
+            raise NotFound(
+                'Invite not found (uuid={})'.format(kwargs['projectinvite'])
+            )
+        if (
+            invite.role.name == PROJECT_ROLE_DELEGATE
+            and not request.user.has_perm(
+                'projectroles.update_project_delegate', invite.project
+            )
+        ):
+            raise PermissionDenied(
+                'User lacks permission to modify delegate invites'
+            )
+        if not invite.active:
+            raise serializers.ValidationError('Invite is not active')
+
+
+class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
+    """
+    List user invites for a project.
+
+    **URL:** ``/project/api/invites/list/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``
+
+    **Returns:** List of project invite details
+    """
+
+    # lookup_field = 'project__sodar_uuid'
+    # lookup_url_kwarg = 'projectinvite'
+    permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
+
+    def get_queryset(self):
+        return ProjectInvite.objects.filter(
+            project=self.get_project(), active=True
+        ).order_by('pk')
+
+
+class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+    """
+    Create a project invite.
+
+    **URL:** ``/project/api/invites/create/{Project.sodar_uuid}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``email``: User email (string)
+    - ``role``: Desired role for user (string, e.g. "project contributor")
+    """
+
+    permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
+
+
+class ProjectInviteRevokeAPIView(
+    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+):
+    """
+    Revoke a project invite.
+
+    **URL:** ``/project/api/invites/revoke/{ProjectInvite.sodar_uuid}``
+
+    **Methods:** ``POST``
+    """
+
+    permission_required = 'projectroles.invite_users'
+
+    def post(self, request, *args, **kwargs):
+        """Handle invite revoking in a POST request"""
+        invite = ProjectInvite.objects.filter(
+            sodar_uuid=kwargs['projectinvite']
+        ).first()
+        self._validate(invite, request, **kwargs)
+        invite = self.revoke_invite(invite, request)
+        return Response(
+            {
+                'detail': 'Invite revoked from email {} in project "{}"'.format(
+                    invite.email,
+                    invite.project.title,
+                )
+            },
+            status=200,
+        )
+
+
+class ProjectInviteResendAPIView(
+    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+):
+    """
+    Resend email for a project invite.
+
+    **URL:** ``/project/api/invites/resend/{ProjectInvite.sodar_uuid}``
+
+    **Methods:** ``POST``
+    """
+
+    permission_required = 'projectroles.invite_users'
+
+    def post(self, request, *args, **kwargs):
+        """Handle invite resending in a POST request"""
+        invite = ProjectInvite.objects.filter(
+            sodar_uuid=kwargs['projectinvite']
+        ).first()
+        self._validate(invite, request, **kwargs)
+        self.handle_invite(invite, request, resend=True, add_message=False)
+        return Response(
+            {
+                'detail': 'Invite resent from email {} in project "{}"'.format(
+                    invite.email,
+                    invite.project.title,
                 )
             },
             status=200,

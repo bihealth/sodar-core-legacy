@@ -90,7 +90,14 @@ class ProjectInviteMixin:
 
     @classmethod
     def _make_invite(
-        cls, email, project, role, issuer, message='', date_expire=None
+        cls,
+        email,
+        project,
+        role,
+        issuer,
+        message='',
+        date_expire=None,
+        secret=None,
     ):
         """Make and save a ProjectInvite"""
         values = {
@@ -102,7 +109,7 @@ class ProjectInviteMixin:
             'date_expire': date_expire
             if date_expire
             else (timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)),
-            'secret': SECRET,
+            'secret': secret or SECRET,
             'active': True,
         }
         invite = ProjectInvite(**values)

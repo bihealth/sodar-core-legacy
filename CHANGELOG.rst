@@ -31,6 +31,7 @@ Added
     - ``batchupdateroles`` management command (#15, #602)
     - Non-LDAP user can change password and other details (#547)
     - Non-LDAP user invite feature accepts alternative LDAP domains (#613)
+    - Project invite REST API views (#15, #598)
 
 Changed
 -------

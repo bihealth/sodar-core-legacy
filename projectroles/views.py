@@ -1793,7 +1793,7 @@ class RoleAssignmentOwnerTransferView(
 
 
 class ProjectInviteMixin:
-    """General utilities for mixins"""
+    """Mixin for ProjectInvite helpers"""
 
     @classmethod
     def handle_invite(cls, invite, request, resend=False, add_message=True):
@@ -1851,6 +1851,27 @@ class ProjectInviteMixin:
         elif add_message and not resend:  # NOTE: Delete invite if send fails
             invite.delete()
             messages.error(request, status_desc)
+
+    @classmethod
+    def revoke_invite(cls, invite, request):
+        timeline = get_backend_api('timeline_backend')
+        invite.active = False
+        invite.save()
+
+        # Add event in Timeline
+        if timeline and invite:
+            timeline.add_event(
+                project=invite.project,
+                app_name=APP_NAME,
+                user=request.user,
+                event_name='invite_revoke',
+                description='revoke invite sent to "{}"'.format(
+                    invite.email if invite else 'N/A'
+                ),
+                status_type='OK' if invite else 'FAILED',
+            )
+
+        return invite
 
 
 class ProjectInviteView(
@@ -2355,6 +2376,7 @@ class ProjectInviteRevokeView(
     LoginRequiredMixin,
     ProjectModifyPermissionMixin,
     ProjectContextMixin,
+    ProjectInviteMixin,
     TemplateView,
 ):
     """Batch delete/move confirm view"""
@@ -2379,35 +2401,17 @@ class ProjectInviteRevokeView(
 
     def post(self, request, **kwargs):
         """Override post() to handle POST from confirmation template"""
-        timeline = get_backend_api('timeline_backend')
-        invite = None
         project = self.get_project()
+        invite = ProjectInvite.objects.filter(
+            sodar_uuid=kwargs['projectinvite']
+        ).first()
 
-        try:
-            invite = ProjectInvite.objects.get(
-                sodar_uuid=kwargs['projectinvite']
-            )
-
-            invite.active = False
-            invite.save()
+        if invite:
             messages.success(self.request, 'Invite revoked.')
+        else:
+            messages.error(self.request, 'Invite not found!')
 
-        except ProjectInvite.DoesNotExist:
-            messages.error(self.request, 'Error: Unable to revoke invite!')
-
-        # Add event in Timeline
-        if timeline and invite:
-            timeline.add_event(
-                project=project,
-                app_name=APP_NAME,
-                user=self.request.user,
-                event_name='invite_revoke',
-                description='revoke invite sent to "{}"'.format(
-                    invite.email if invite else 'N/A'
-                ),
-                status_type='OK' if invite else 'FAILED',
-            )
-
+        self.revoke_invite(invite, self.request)
         return redirect(
             reverse(
                 'projectroles:invites', kwargs={'project': project.sodar_uuid}

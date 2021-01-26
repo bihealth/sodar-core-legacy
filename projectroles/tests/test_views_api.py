@@ -4,6 +4,7 @@ import json
 import pytz
 
 from django.conf import settings
+from django.core import mail
 from django.forms.models import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
@@ -14,12 +15,19 @@ from knox.models import AuthToken
 from test_plus.test import APITestCase
 
 from projectroles import views_api
-from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    SODAR_CONSTANTS,
+)
 from projectroles.plugins import change_plugin_status, get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
+    ProjectInviteMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
@@ -51,6 +59,10 @@ NEW_PROJECT_TITLE = 'New Project'
 UPDATED_TITLE = 'Updated Title'
 UPDATED_DESC = 'Updated description'
 UPDATED_README = 'Updated readme'
+
+INVITE_USER_EMAIL = 'new1@example.com'
+INVITE_USER2_EMAIL = 'new2@example.com'
+INVITE_MESSAGE = 'Message'
 
 
 # Base Classes -----------------------------------------------------------------
@@ -2198,6 +2210,522 @@ class TestRoleAssignmentOwnerTransferAPIView(
         self.assertEqual(self.project.get_owner().user, self.user)
 
 
+class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+    """Tests for ProjectInviteListAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        # Create invites
+        self.invite = self._make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.project,
+            role=self.role_guest,
+            issuer=self.user,
+            message='',
+            secret=build_secret(),
+        )
+        self.invite2 = self._make_invite(
+            email=INVITE_USER2_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message=INVITE_MESSAGE,
+            secret=build_secret(),
+        )
+
+    def test_get(self):
+        """Test ProjectInviteListAPIView get()"""
+        url = reverse(
+            'projectroles:api_invite_list',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        response = self.request_knox(url, token=self.get_token(self.user))
+
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 2)
+        expected = [
+            {
+                'email': INVITE_USER_EMAIL,
+                'project': str(self.project.sodar_uuid),
+                'role': self.role_guest.name,
+                'issuer': self.get_serialized_user(self.user),
+                'date_created': self.get_drf_datetime(self.invite.date_created),
+                'date_expire': self.get_drf_datetime(self.invite.date_expire),
+                'message': '',
+                'sodar_uuid': str(self.invite.sodar_uuid),
+            },
+            {
+                'email': INVITE_USER2_EMAIL,
+                'project': str(self.project.sodar_uuid),
+                'role': self.role_contributor.name,
+                'issuer': self.get_serialized_user(self.user),
+                'date_created': self.get_drf_datetime(
+                    self.invite2.date_created
+                ),
+                'date_expire': self.get_drf_datetime(self.invite2.date_expire),
+                'message': INVITE_MESSAGE,
+                'sodar_uuid': str(self.invite2.sodar_uuid),
+            },
+        ]
+        self.assertEqual(response_data, expected)
+
+    def test_get_inactive(self):
+        """Test get() with an inactive invite"""
+        self.invite.active = False
+        self.invite.save()
+
+        url = reverse(
+            'projectroles:api_invite_list',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        response = self.request_knox(url, token=self.get_token(self.user))
+
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        self.assertEqual(len(response_data), 1)
+        expected = [
+            {
+                'email': INVITE_USER2_EMAIL,
+                'project': str(self.project.sodar_uuid),
+                'role': self.role_contributor.name,
+                'issuer': self.get_serialized_user(self.user),
+                'date_created': self.get_drf_datetime(
+                    self.invite2.date_created
+                ),
+                'date_expire': self.get_drf_datetime(self.invite2.date_expire),
+                'message': INVITE_MESSAGE,
+                'sodar_uuid': str(self.invite2.sodar_uuid),
+            },
+        ]
+        self.assertEqual(response_data, expected)
+
+
+class TestProjectInviteCreateAPIView(
+    RemoteSiteMixin, RemoteProjectMixin, TestCoreAPIViewsBase
+):
+    """Tests for ProjectInviteCreateAPIView"""
+
+    def test_create(self):
+        """Test creating a contributor invite for user"""
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and role status
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 1
+        )
+
+        # Assert data
+        invite = ProjectInvite.objects.first()
+        self.assertEqual(invite.email, INVITE_USER_EMAIL)
+        self.assertEqual(invite.role, self.role_contributor)
+        self.assertEqual(invite.issuer, self.user)
+        self.assertEqual(invite.message, INVITE_MESSAGE)
+
+        # Assert response
+        expected = {
+            'email': INVITE_USER_EMAIL,
+            'project': str(self.project.sodar_uuid),
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'issuer': self.get_serialized_user(self.user),
+            'date_created': self.get_drf_datetime(invite.date_created),
+            'date_expire': self.get_drf_datetime(invite.date_expire),
+            'message': invite.message,
+            'sodar_uuid': str(invite.sodar_uuid),
+        }
+        self.assertEqual(json.loads(response.content), expected)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_create_owner(self):
+        """Test creating an invite for an owner role (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_OWNER,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and data
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_delegate(self):
+        """Test creating an invite for an delegate role"""
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_DELEGATE,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and data
+        self.assertEqual(response.status_code, 201, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 1
+        )
+        invite = ProjectInvite.objects.first()
+        self.assertEqual(invite.role, self.role_delegate)
+        self.assertEqual(len(mail.outbox), 1)
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
+    def test_create_delegate_no_perms(self):
+        """Test creating an delegate invite without perms (should fail)"""
+        del_user = self.make_user('delegate')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_DELEGATE,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(
+            url, method='POST', data=post_data, token=self.get_token(del_user)
+        )
+
+        # Assert response and data
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_delegate_limit(self):
+        """Test creating an delegate invite with exceeded limit (should fail)"""
+        del_user = self.make_user('delegate')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_DELEGATE,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and data
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_invalid_email(self):
+        """Test creating an invite with invalid email (should fail)"""
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': 'NOT_AN_EMAIL!',
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and data
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_create_existing_user(self):
+        """Test creating an invite for an existing user (should fail)"""
+        user = self.make_user('new_user')
+        user.email = INVITE_USER_EMAIL
+        user.save()
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and role status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_create_remote(self):
+        """Test creating an invite for a remote project (should fail)"""
+        # Set up remote site and project
+        source_site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description=REMOTE_SITE_DESC,
+            secret=REMOTE_SITE_SECRET,
+        )
+        self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=source_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Assert preconditions
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': INVITE_USER_EMAIL,
+            'role': PROJECT_ROLE_CONTRIBUTOR,
+            'message': INVITE_MESSAGE,
+        }
+        response = self.request_knox(url, method='POST', data=post_data)
+
+        # Assert response and role status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(
+            ProjectInvite.objects.filter(project=self.project).count(), 0
+        )
+        self.assertEqual(len(mail.outbox), 0)
+
+
+class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+    """Tests for ProjectInviteRevokeAPIView"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Create invite
+        self.invite = self._make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+        )
+
+    def test_revoke(self):
+        """Test revoking an invite"""
+
+        # Assert preconditions
+        self.assertEqual(self.invite.active, True)
+
+        url = reverse(
+            'projectroles:api_invite_revoke',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and invite status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.invite.refresh_from_db()
+        self.assertEqual(self.invite.active, False)
+
+    def test_revoke_inactive(self):
+        """Test revoking an already inactive invite (should fail)"""
+        self.invite.active = False
+        self.invite.save()
+
+        url = reverse(
+            'projectroles:api_invite_revoke',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and invite status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_revoke_delegate(self):
+        """Test revoking a delegate invite with sufficient perms"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+
+        url = reverse(
+            'projectroles:api_invite_revoke',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and invite status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.invite.refresh_from_db()
+        self.assertEqual(self.invite.active, False)
+
+    def test_revoke_delegate_no_perms(self):
+        """Test revoking a delegate invite without perms (should fail)"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+        delegate = self.make_user('delegate')
+        self._make_assignment(self.project, delegate, self.role_delegate)
+
+        url = reverse(
+            'projectroles:api_invite_revoke',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(
+            url, method='POST', token=self.get_token(delegate)
+        )
+
+        # Assert response and invite status
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.invite.refresh_from_db()
+        self.assertEqual(self.invite.active, True)
+
+
+class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
+    """Tests for ProjectInviteResendAPIView"""
+
+    def setUp(self):
+        super().setUp()
+
+        # Create invite
+        self.invite = self._make_invite(
+            email=INVITE_USER_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+        )
+
+    def test_resend(self):
+        """Test resending an invite"""
+
+        # Assert preconditions
+        self.assertEqual(len(mail.outbox), 0)
+
+        url = reverse(
+            'projectroles:api_invite_resend',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and mail status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_resend_inactive(self):
+        """Test resending an inactive invite (should fail)"""
+        self.invite.active = False
+        self.invite.save()
+
+        url = reverse(
+            'projectroles:api_invite_resend',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and mail status
+        self.assertEqual(response.status_code, 400, msg=response.content)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_resend_delegate(self):
+        """Test resending a delegate invite with sufficient perms"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+
+        url = reverse(
+            'projectroles:api_invite_resend',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(url, method='POST')
+
+        # Assert response and mail status
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_resend_delegate_no_perms(self):
+        """Test resending a delegate invite without perms (should fail)"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+        delegate = self.make_user('delegate')
+        self._make_assignment(self.project, delegate, self.role_delegate)
+
+        url = reverse(
+            'projectroles:api_invite_resend',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        response = self.request_knox(
+            url, method='POST', token=self.get_token(delegate)
+        )
+
+        # Assert response and mail status
+        self.assertEqual(response.status_code, 403, msg=response.content)
+        self.assertEqual(len(mail.outbox), 0)
+
+
 class TestUserListAPIView(TestCoreAPIViewsBase):
     """Tests for UserListAPIView"""
 
@@ -2292,7 +2820,7 @@ class TestAPIVersioning(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 406)
 
 
-# TODO: To be updated once the legacy API view is redone for SODAR Core v0.9
+# TODO: To be updated once the legacy API view is redone for SODAR Core v0.10
 class TestRemoteProjectGetAPIView(
     ProjectMixin,
     RoleAssignmentMixin,

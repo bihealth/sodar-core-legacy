@@ -199,6 +199,26 @@ urls_api = [
         name='api_role_owner_transfer',
     ),
     url(
+        regex=r'^api/invites/list/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteListAPIView.as_view(),
+        name='api_invite_list',
+    ),
+    url(
+        regex=r'^api/invites/create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteCreateAPIView.as_view(),
+        name='api_invite_create',
+    ),
+    url(
+        regex=r'^api/invites/revoke/(?P<projectinvite>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteRevokeAPIView.as_view(),
+        name='api_invite_revoke',
+    ),
+    url(
+        regex=r'^api/invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteResendAPIView.as_view(),
+        name='api_invite_resend',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
