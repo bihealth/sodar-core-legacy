@@ -44,33 +44,54 @@ PROJECT_TAG_STARRED = 'STARRED'
 class ProjectManager(models.Manager):
     """Manager for custom table-level Project queries"""
 
-    def find(self, search_term, keywords=None, project_type=None):
+    def find(self, search_terms, keywords=None, project_type=None):
         """
         Return projects with a partial match in full title or, including titles
         of parent Project objects, or the description of the current object.
         Restrict to project type if project_type is set.
 
-        :param search_term: Search term (string)
+        :param search_terms: Search terms (list)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
         :return: List of Project objects
         """
-        search_term = search_term.lower()
-        projects = super().get_queryset().order_by('title')
+        # Deprecation protection (#609, #618)
+        if not isinstance(search_terms, list):
+            search_terms = [search_terms]
 
+        # TODO: Remove once using Q objects
+        search_terms = [t.lower() for t in search_terms]
+
+        projects = super().get_queryset().order_by('title')
         if project_type:
             projects = projects.filter(type=project_type)
 
         # NOTE: Can't use a custom function in filter()
+        # TODO: Implement full title as model field (see #93)
+        # TODO: Implement with Q objects (pending #93, see #609)
         result = [
             p
             for p in projects
             if (
-                search_term in p.get_full_title().lower()
-                or (p.description and search_term in p.description.lower())
+                any(
+                    [
+                        True
+                        for t in search_terms
+                        if t in p.get_full_title().lower()
+                    ]
+                )
+                or (
+                    p.description
+                    and any(
+                        [
+                            True
+                            for t in search_terms
+                            if t in p.description.lower()
+                        ]
+                    )
+                )
             )
         ]
-
         return sorted(result, key=lambda x: x.get_full_title())
 
 

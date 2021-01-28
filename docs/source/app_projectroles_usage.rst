@@ -42,8 +42,8 @@ Basics
 Upon loggin into a SODAR Core based Django site using default templates and CSS,
 the general view of your site is split into the following elements:
 
-- **Top navigation bar**: Contains the site logo and title, search element,
-  help link and the user dropdown menu.
+- **Top navigation bar**: Contains the site logo and title, search element, link
+  to advanced search, help link and the user dropdown menu.
 - **User dropown menu**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
@@ -398,10 +398,14 @@ Alternatively, the following management command can be used:
 Search
 ======
 
-The search form is displayed in the top navigation bar if enabled. It currently
+The basic search form is displayed in the top navigation bar if enabled. It
 takes one string as a search parameter, followed by optional keyword argument.
 At this time, the keyword of ``type`` has been implemented, used to limit the
 search to a certain data type as specified in app plugins.
+
+Left to the basic search form is a link to the *Advanced Search* page, where you
+can currently search for items using multiple search terms combined with the OR
+operator.
 
 Search results are split into results from different apps. For example, entering
 ``test`` will return all objects from all apps containing this string.
@@ -412,8 +416,8 @@ name and/or description.
 
 .. note::
 
-    Multiple search terms, complex search strings, full-text search and
-    additional keywords/operators will be defined in the future.
+    Additional features such as full-text search and more keywords/operators
+    will be defined in the future.
 
 
 REST API

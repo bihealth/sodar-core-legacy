@@ -153,7 +153,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
-    """Tests for the project search view"""
+    """Tests for the project search results view"""
 
     def setUp(self):
         super().setUp()
@@ -166,7 +166,6 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
-
         self.plugins = get_active_plugins(plugin_type='project_app')
 
     def test_render(self):
@@ -178,7 +177,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
-        self.assertEqual(response.context['search_term'], 'test')
+        self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
         self.assertEqual(response.context['search_type'], None)
         self.assertEqual(response.context['search_input'], 'test')
@@ -198,7 +197,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
-        self.assertEqual(response.context['search_term'], 'test')
+        self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
         self.assertEqual(response.context['search_type'], 'file')
         self.assertEqual(response.context['search_input'], 'test type:file')
@@ -216,6 +215,34 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             ),
         )
 
+    def test_render_advanced(self):
+        """Test input from advanced search"""
+        new_project = self._make_project(
+            'AnotherProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            description='xxx',
+        )
+        self.cat_owner_as = self._make_assignment(
+            new_project, self.user, self.role_owner
+        )
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'testproject\r\nxxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the search parameters are provided
+        self.assertEqual(
+            response.context['search_terms'], ['testproject', 'xxx']
+        )
+        self.assertEqual(response.context['search_keywords'], {})
+        self.assertEqual(response.context['search_type'], None)
+        self.assertEqual(len(response.context['project_results']), 2)
+
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
         """Test redirecting the view due to search being disabled"""
@@ -223,6 +250,25 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
             )
+            self.assertRedirects(response, reverse('home'))
+
+
+class TestProjectAdvancedSearchView(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
+    """Tests for the advanced search view"""
+
+    def test_render(self):
+        """Test to ensure the advanced search view renders correctly"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_disable_search(self):
+        """Test redirecting the view due to search being disabled"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
             self.assertRedirects(response, reverse('home'))
 
 

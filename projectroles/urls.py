@@ -24,11 +24,16 @@ urls_ui = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
-    # Search view
+    # Search views
     url(
-        regex=r'^search/$',
-        view=views.ProjectSearchView.as_view(),
+        regex=r'^search/results/$',
+        view=views.ProjectSearchResultsView.as_view(),
         name='search',
+    ),
+    url(
+        regex=r'^search/advanced$',
+        view=views.ProjectAdvancedSearchView.as_view(),
+        name='search_advanced',
     ),
     # Project role views
     url(

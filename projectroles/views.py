@@ -1,6 +1,8 @@
 """UI views for the projectroles app"""
 
+import inspect
 import json
+import logging
 import re
 import ssl
 from ipaddress import ip_address, ip_network
@@ -60,6 +62,9 @@ from projectroles.plugins import (
 from projectroles.project_tags import get_tag_state, remove_tag
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
+
+
+logger = logging.getLogger(__name__)
 
 
 # Access Django user model
@@ -599,41 +604,64 @@ class ProjectDetailView(
         return context
 
 
-class ProjectSearchView(LoginRequiredMixin, TemplateView):
+class ProjectSearchMixin:
+    """Common functionalities for search views"""
+
+    def get(self, request, *args, **kwargs):
+        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
+            messages.error(request, 'Search not enabled')
+            return redirect('home')
+        context = self.get_context_data(*args, **kwargs)
+        return super().render_to_response(context)
+
+
+class ProjectSearchResultsView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
     """View for displaying results of search within projects"""
 
-    template_name = 'projectroles/search.html'
+    template_name = 'projectroles/search_results.html'
 
     def get_context_data(self, *args, **kwargs):
-        context = super().get_context_data(*args, **kwargs)
-
+        context = super().get_context_data(**kwargs)
         plugins = get_active_plugins(plugin_type='project_app')
-
-        search_input = self.request.GET.get('s').strip()
-        context['search_input'] = search_input
-
-        search_split = search_input.split(' ')
-        search_term = search_split[0].strip()
         search_type = None
+        keyword_input = []
         search_keywords = {}
 
-        for i in range(1, len(search_split)):
-            s = search_split[i].strip()
+        if self.request.GET.get('m'):  # Multi search
+            search_terms = [
+                t.strip() for t in self.request.GET['m'].strip().split('\r\n')
+            ]
+            if self.request.GET.get('k'):
+                keyword_input = self.request.GET['k'].strip().split(' ')
+            search_input = ''  # Clears input for basic search
 
-            if ':' in s:
-                kw = s.split(':')[0].lower().strip()
-                val = s.split(':')[1].lower().strip()
+        else:
+            search_input = self.request.GET.get('s').strip()
+            search_split = search_input.split(' ')
+            search_term = search_split[0].strip()
 
-                if kw == 'type':
-                    search_type = val
+            for i in range(1, len(search_split)):
+                s = search_split[i].strip()
+                if ':' in s:
+                    keyword_input.append(s)
+                elif s != '':
+                    search_term += ' ' + s.lower()
 
-                else:
-                    search_keywords[kw] = val
+            search_terms = [search_term]
 
-            elif s != '':
-                search_term += ' ' + s
+        for s in keyword_input:
+            kw = s.split(':')[0].lower().strip()
+            val = s.split(':')[1].lower().strip()
+            if kw == 'type':
+                search_type = val
+            else:
+                search_keywords[kw] = val
 
-        context['search_term'] = search_term
+        context['search_input'] = search_input
+        context['search_terms'] = search_terms
+        context['search_term'] = search_terms[0]  # Deprecation prot. (#618)
         context['search_type'] = search_type
         context['search_keywords'] = search_keywords
 
@@ -642,7 +670,7 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
             context['project_results'] = [
                 p
                 for p in Project.objects.find(
-                    search_term, project_type='PROJECT'
+                    search_terms, project_type='PROJECT'
                 )
                 if self.request.user.has_perm('projectroles.view_project', p)
             ]
@@ -657,7 +685,6 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
                 ],
                 key=lambda x: x.plugin_ordering,
             )
-
         else:
             search_apps = sorted(
                 [p for p in plugins if p.search_enable],
@@ -667,27 +694,45 @@ class ProjectSearchView(LoginRequiredMixin, TemplateView):
         context['app_search_data'] = []
 
         for plugin in search_apps:
+            # Deprecation protection for search changes in v0.9 (#609)
+            # TODO: Remove protection in v0.10 (#618)
+            search_kwargs = {
+                'user': self.request.user,
+                'search_type': search_type,
+                'keywords': search_keywords,
+            }
+
+            if 'search_terms' in inspect.signature(plugin.search).parameters:
+                search_kwargs['search_terms'] = search_terms
+            else:  # Old style search
+                search_kwargs['search_term'] = search_terms[0]
+                msg = (
+                    'Deprecated search() implementation in plugin '
+                    '"{}"'.format(plugin.name)
+                )
+                logger.warning(msg + ': to be removed in v0.10')
+                if len(search_terms) > 1:
+                    messages.warning(
+                        self.request,
+                        msg + ': unable to search for multiple terms',
+                    )
+
             context['app_search_data'].append(
                 {
                     'plugin': plugin,
-                    'results': plugin.search(
-                        search_term,
-                        self.request.user,
-                        search_type,
-                        search_keywords,
-                    ),
+                    'results': plugin.search(**search_kwargs),
                 }
             )
 
         return context
 
-    def get(self, request, *args, **kwargs):
-        if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search not enabled')
-            return redirect('home')
 
-        context = self.get_context_data(*args, **kwargs)
-        return super().render_to_response(context)
+class ProjectAdvancedSearchView(
+    LoginRequiredMixin, ProjectSearchMixin, TemplateView
+):
+    """View for displaying advanced search form"""
+
+    template_name = 'projectroles/search_advanced.html'
 
 
 # Project Editing Views --------------------------------------------------------

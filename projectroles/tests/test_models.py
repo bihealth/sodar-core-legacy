@@ -779,30 +779,66 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_find_all(self):
         """Test find() with any project type"""
-        result = Project.objects.find('Test', project_type=None)
+        result = Project.objects.find(['test'], project_type=None)
         self.assertEqual(len(result), 2)
-        result = Project.objects.find('ThisFails', project_type=None)
+        result = Project.objects.find(['ThisFails'], project_type=None)
         self.assertEqual(len(result), 0)
 
     def test_find_project(self):
         """Test find() with project_type=PROJECT"""
-        result = Project.objects.find('Test', project_type=PROJECT_TYPE_PROJECT)
+        result = Project.objects.find(
+            ['test'], project_type=PROJECT_TYPE_PROJECT
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.project_sub)
 
     def test_find_category(self):
         """Test find() with project_type=CATEGORY"""
         result = Project.objects.find(
-            'Test', project_type=PROJECT_TYPE_CATEGORY
+            ['test'], project_type=PROJECT_TYPE_CATEGORY
         )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
+    def test_find_multi_one(self):
+        """Test find() with one valid multi-term"""
+        result = Project.objects.find(['sub', 'ThisFails'])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.project_sub)
+
+    def test_find_multi_two(self):
+        """Test find() with two valid multi-terms"""
+        result = Project.objects.find(['top', 'sub'])
+        self.assertEqual(len(result), 2)
+
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find('XXX', project_type=None)
+        result = Project.objects.find(['xxx'], project_type=None)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
+
+    def test_find_description_multi_one(self):
+        """Test find() with one valid multi-search term for description"""
+        result = Project.objects.find(['xxx', 'ThisFails'], project_type=None)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.category_top)
+
+    def test_find_description_multi_two(self):
+        """Test find() with two valid multi-search terms for description"""
+        result = Project.objects.find(['xxx', 'yyy'], project_type=None)
+        self.assertEqual(len(result), 2)
+
+    def test_find_multi_fields(self):
+        """Test find() with multiple terms for different fields"""
+        result = Project.objects.find(['sub', 'xxx'])
+        self.assertEqual(len(result), 2)
+
+    def test_find_old_implementation(self):
+        """Test find() with deprecated old implementation (see #618)"""
+        result = Project.objects.find('Test', project_type=None)
+        self.assertEqual(len(result), 2)
+        result = Project.objects.find('ThisFails', project_type=None)
+        self.assertEqual(len(result), 0)
 
 
 class TestProjectSetting(

@@ -31,6 +31,7 @@ Added
     - Local user account creation and updating (#547)
     - ``batchupdateroles`` management command (#15, #602)
     - Project invite REST API views (#15, #598)
+    - Advanced search with multiple terms (#609)
 
 Changed
 -------
@@ -43,12 +44,16 @@ Changed
     - Migrate GitHub CI from Travis to GitHub actions (#577)
     - Refactor example ``PROJECT_USER`` scope app settings (#599)
     - Set logging level in test configurations to ``CRITICAL`` (#604)
+- **Filesfolders**
+    - Update ``search()`` and ``FilesfoldersManager.find()`` for multiple search terms (#609)
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
     - Refactor project list filtering (#566)
     - Move project list javascript to ``project_list.js`` (#566)
     - Rename owner role transfer URL pattern and timeline event (#590)
     - Add ``sodar_url`` override to ``modify_assignment()``
+    - Rename ``ProjectSearchResultsView`` and its template (#609)
+    - Deprecate old implementation of ``ProjectAppPluginPoint.search()`` (#609, #618)
 - **Userprofile**
     - Cosmetic updates for user detail template (#600)
 

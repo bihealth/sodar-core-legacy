@@ -137,19 +137,19 @@ class TestFolder(FolderMixin, ProjectMixin, HyperLinkMixin, TestCase):
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with Folder name"""
-        objects = Folder.objects.find('folder')
+        objects = Folder.objects.find(['folder'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with Folder description"""
-        objects = Folder.objects.find('description')
+        objects = Folder.objects.find(['description'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.folder)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing Folder"""
-        objects = Folder.objects.find('Jaix1azu')
+        objects = Folder.objects.find(['Jaix1azu'])
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
@@ -301,19 +301,19 @@ class TestFile(FileMixin, FolderMixin, ProjectMixin, TestCase):
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with File name"""
-        objects = File.objects.find('file.txt')
+        objects = File.objects.find(['file.txt'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with File description"""
-        objects = File.objects.find('description')
+        objects = File.objects.find(['description'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.file)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing File"""
-        objects = File.objects.find('Jaix1azu')
+        objects = File.objects.find(['Jaix1azu'])
         self.assertEqual(len(objects), 0)
 
     def test__str__(self):
@@ -415,17 +415,17 @@ class TestHyperLink(
 
     def test_find_name(self):
         """Test FilesfoldersManager find() with HyperLink name"""
-        objects = HyperLink.objects.find('Link')
+        objects = HyperLink.objects.find(['Link'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_desc(self):
         """Test FilesfoldersManager find() with HyperLink description"""
-        objects = HyperLink.objects.find('description')
+        objects = HyperLink.objects.find(['description'])
         self.assertEqual(len(objects), 1)
         self.assertEqual(objects[0], self.hyperlink)
 
     def test_find_fail(self):
         """Test FilesfoldersManager find() with a non-existing HyperLink"""
-        objects = HyperLink.objects.find('Jaix1azu')
+        objects = HyperLink.objects.find(['Jaix1azu'])
         self.assertEqual(len(objects), 0)

@@ -8,7 +8,7 @@
       <a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">
         {% get_project_title_html p as project_title %}
         {% autoescape off %}
-          {% highlight_search_term project_title search_term %}
+          {% highlight_search_term project_title search_terms %}
           {% get_remote_icon p request %}
           {% get_star p request.user %}
         {% endautoescape %}
@@ -19,7 +19,7 @@
     <td>
       <div class="sodar-overflow-container">
         {% autoescape off %}
-          {% highlight_search_term p.description search_term %}
+          {% highlight_search_term p.description search_terms %}
         {% endautoescape %}
       </div>
     </td>

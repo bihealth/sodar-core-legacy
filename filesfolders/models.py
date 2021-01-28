@@ -59,21 +59,20 @@ FLAG_CHOICES = [
 class FilesfoldersManager(models.Manager):
     """Manager for custom table-level BaseFilesfoldersClass queries"""
 
-    def find(self, search_term, keywords=None):
+    def find(self, search_terms, keywords=None):
         """
-        Return objects or links matching the query.
-        :param search_term: Search term (string)
+        Return files, folders and/or hyperlinks matching the query.
+
+        :param search_terms: Search terms (list of strings)
         :param keywords: Optional search keywords as key/value pairs (dict)
-        :return: Python list of BaseFilesfolderClass objects
+        :return: QuerySet of BaseFilesfolderClass objects
         """
         objects = super().get_queryset().order_by('name')
-
-        objects = objects.filter(
-            Q(name__icontains=search_term)
-            | Q(description__icontains=search_term)
-        )
-
-        return objects
+        term_query = Q()
+        for t in search_terms:
+            term_query.add(Q(name__icontains=t), Q.OR)
+            term_query.add(Q(description__icontains=t), Q.OR)
+        return objects.filter(term_query)
 
 
 class BaseFilesfoldersClass(models.Model):

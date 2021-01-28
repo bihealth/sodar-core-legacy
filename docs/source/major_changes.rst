@@ -25,6 +25,7 @@ Release Highlights
 - Add support for local user invites and local user account creation
 - Add batch invites and role updates via management command
 - Add REST API views for project invite management
+- Add Advanced search with multiple terms
 
 Breaking Changes
 ================
@@ -51,6 +52,22 @@ The following third party JS/CSS requirements have been updated:
     This is the last major update of SODAR Core based on and supporting Django
     v1.11, which is now out of long term support. From v0.10 onwards, SODAR Core
     based sites must be implemented on Django v3.x+.
+
+ProjectAppPlugin Search Updates
+-------------------------------
+
+The expected signature for ``ProjectAppPluginPoint.search()`` has changed.
+Instead of the ``search_term`` string argument, ``search_terms`` is expected.
+This argument is a list of strings expected to be combined with ``OR``
+operators.
+
+See the ``filesfolders`` app for an example of the new implementation.
+
+In SODAR Core v0.9, the old deprecated implementation still works, but searching
+for multiple terms in the "Advanced Search" view will only return results for
+the first search term given. This deprecation protection will be removed in the
+next major version. Please update the ``search()`` methods in your project app
+plugins if you have implemented them.
 
 
 v0.8.4 (2020-11-12)

@@ -250,8 +250,16 @@ def get_history_dropdown(project, obj):
 
 
 @register.simple_tag
-def highlight_search_term(item, term):
+def highlight_search_term(item, terms):
     """Return string with search term highlighted"""
+
+    # Skip highlighting for multiple terms (at least for now)
+    if isinstance(terms, list) and len(terms) > 1:
+        return item
+    elif isinstance(terms, list) and len(terms) == 1:
+        term = terms[0]
+    else:
+        term = terms  # Old implementation
 
     def get_highlights(item):
         pos = item.lower().find(term.lower())

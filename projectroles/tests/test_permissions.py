@@ -203,8 +203,23 @@ class TestBaseViews(TestProjectPermissionBase):
         self.assert_response(url, bad_users, 302)
 
     def test_project_search(self):
-        """Test permissions for the search view"""
+        """Test permissions for the search results view"""
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(reverse('home'), bad_users, 302)
+
+    def test_project_search_advanced(self):
+        """Test permissions for the advanced search view"""
+        url = reverse('projectroles:search_advanced')
         good_users = [
             self.superuser,
             self.owner_as.user,

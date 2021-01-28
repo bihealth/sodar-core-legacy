@@ -6,7 +6,10 @@
 {% load projectroles_common_tags %}
 
 {% block title %}
-  Search Results for "{{ search_term }}"
+  Search Results
+    {% if search_terms|length == 1 %}
+      for "{{ search_terms.0 }}"
+    {% endif %}
   {% if search_type %}
     (type:{{ search_type }})
   {% endif %}
@@ -37,13 +40,13 @@
       border-bottom: 0 !important;
     }
 
-    .table.sodar-search-table thead tr th {
+    table.sodar-search-table thead tr th {
       padding: 12px !important;
       padding-right: 22px !important; /* Avoid covering sort icons */
       max-width: 250px !important;
     }
 
-    .table.sodar-search-table tbody tr td {
+    table.sodar-search-table tbody tr td {
       padding: 12px !important;
       max-width: 250px !important;
     }
@@ -94,9 +97,16 @@
 {% has_perm 'projectroles.create_project' request.user as can_create_project %}
 
 <div class="row sodar-pr-content-title">
-  <h2 class="sodar-pr-content-title">Search Results</h2>
+  <h2 class="sodar-pr-content-title">
+    <i class="fa fa-search"></i> Search Results
+  </h2>
     <div class="sodar-pr-content-title-secondary text-muted">
-      for "{{ search_term }}"
+      for
+      {% if search_terms|length <= 5 %}
+        "{{ search_terms|join:'; ' }}"
+      {% else %}
+        multiple terms
+      {% endif %}
       {% if search_type %}
         (type:{{ search_type }})
       {% endif %}
@@ -118,7 +128,8 @@
         {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
         {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='cube' %}
 
-        <table class="table table-striped sodar-card-table sodar-search-table" id="sodar-pr-search-table">
+        <table class="table table-striped sodar-card-table sodar-search-table"
+               id="sodar-pr-search-table">
           <thead>
             <tr>
               <th>{% get_display_name 'PROJECT' title=True %}</th>
