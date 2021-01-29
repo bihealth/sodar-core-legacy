@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 item_count,
                 's' if item_count != 1 else '',
                 'project "{}" ({})'.format(
-                    project.get_full_title(), project.sodar_uuid
+                    project.full_title, project.sodar_uuid
                 )
                 if project
                 else 'all projects',

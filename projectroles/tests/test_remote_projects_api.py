@@ -99,6 +99,7 @@ SOURCE_PROJECT_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
+SOURCE_PROJECT_FULL_TITLE = SOURCE_CATEGORY_TITLE + ' / ' + SOURCE_PROJECT_TITLE
 SOURCE_CATEGORY_ROLE_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_ROLE2_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_ROLE3_UUID = str(uuid.uuid4())
@@ -688,6 +689,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -748,6 +750,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -1030,6 +1033,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
             'sodar_uuid': uuid.UUID(new_project_uuid),
         }
         model_dict = model_to_dict(new_project_obj)
@@ -1295,6 +1299,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -1319,6 +1324,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -1987,6 +1993,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -2011,6 +2018,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)

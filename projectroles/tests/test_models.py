@@ -301,6 +301,7 @@ class TestProject(ProjectMixin, TestCase):
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category_top.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': 'TestCategoryTop / TestProjectSub',
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
         }
@@ -346,17 +347,6 @@ class TestProject(ProjectMixin, TestCase):
         self.assertEqual(
             list(self.project_sub.get_parents()), [self.category_top]
         )
-
-    def test_get_full_title_top(self):
-        """Test full title function for top category"""
-        self.assertEqual(
-            self.category_top.get_full_title(), self.category_top.title
-        )
-
-    def test_get_full_title_sub(self):
-        """Test full title function for sub project"""
-        expected = self.category_top.title + ' / ' + self.project_sub.title
-        self.assertEqual(self.project_sub.get_full_title(), expected)
 
     def test_is_remote(self):
         """Test Project.is_remote() without remote projects"""

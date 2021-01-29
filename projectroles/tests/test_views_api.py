@@ -724,6 +724,7 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': new_category.title,
             'sodar_uuid': new_category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -780,6 +781,7 @@ class TestProjectCreateAPIView(
             'description': new_category.description,
             'readme': new_category.readme.raw,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + new_category.title,
             'sodar_uuid': new_category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -836,6 +838,7 @@ class TestProjectCreateAPIView(
             'description': new_project.description,
             'readme': new_project.readme.raw,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + new_project.title,
             'sodar_uuid': new_project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -1114,6 +1117,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': UPDATED_TITLE,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -1172,6 +1176,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -1227,6 +1232,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': UPDATED_TITLE,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -1285,6 +1291,7 @@ class TestProjectUpdateAPIView(
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -1327,6 +1334,12 @@ class TestProjectUpdateAPIView(
     def test_patch_project_move(self):
         """Test patch() for moving project under a different category"""
 
+        # Assert preconditions
+        self.assertEqual(
+            self.project.full_title,
+            self.category.title + ' / ' + self.project.title,
+        )
+
         new_category = self._make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -1348,6 +1361,12 @@ class TestProjectUpdateAPIView(
 
         # Assert role assignment
         self.assertEqual(self.project.get_owner().user, self.user)
+
+        # Assert child project full title update
+        self.assertEqual(
+            self.project.full_title,
+            new_category.title + ' / ' + self.project.title,
+        )
 
         # Assert API response
         self.assertEqual(

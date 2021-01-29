@@ -632,6 +632,7 @@ class TestProjectCreateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'full_title': self.category.title + ' / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -708,6 +709,7 @@ class TestProjectUpdateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'full_title': self.category.title + ' / updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
 

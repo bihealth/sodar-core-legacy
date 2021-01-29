@@ -2714,9 +2714,7 @@ class RemoteProjectListView(
             )
 
         if projects:
-            context['projects'] = sorted(
-                [p for p in projects], key=lambda x: x.get_full_title()
-            )
+            context['projects'] = projects.order_by('full_title')
 
         return context
 

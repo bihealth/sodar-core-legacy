@@ -25,7 +25,7 @@ Release Highlights
 - Add support for local user invites and local user account creation
 - Add batch invites and role updates via management command
 - Add REST API views for project invite management
-- Add Advanced search with multiple terms
+- Add advanced search with multiple terms
 
 Breaking Changes
 ================
@@ -68,6 +68,19 @@ for multiple terms in the "Advanced Search" view will only return results for
 the first search term given. This deprecation protection will be removed in the
 next major version. Please update the ``search()`` methods in your project app
 plugins if you have implemented them.
+
+Project Full Title Field
+------------------------
+
+The full title of a project, including the entire category path, can now be
+accessed via the ``Project.full_title``. This enables you to use the field
+directly in your Django queries and ordering. The value of the field is
+auto-populated on ``Project.save()`` and in a database migration accompanied in
+this release.
+
+As a result, the ``Project.get_full_title()`` has been deprecated and will be
+removed in the next major SODAR Core release. Please refactor your usage of that
+helper into referring to ``Project.full_title`` directly.
 
 
 v0.8.4 (2020-11-12)

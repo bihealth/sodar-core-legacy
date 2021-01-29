@@ -261,7 +261,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
             'data-placement="top">{}</a>'.format(
                 self.project.sodar_uuid,
                 self.project.description,
-                self.project.get_full_title(),
+                self.project.full_title,
             ),
         )
         # TODO: Also test remote project link display (with icon)

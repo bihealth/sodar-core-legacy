@@ -384,7 +384,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         # Issue POST request
         values = {
-            'title': 'TestProject',
+            'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': '',
             'owner': self.user.sodar_uuid,
@@ -413,11 +413,12 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         expected = {
             'id': project.pk,
-            'title': 'TestProject',
+            'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'full_title': 'TestCategory',
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -521,6 +522,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'full_title': 'TestCategory / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -664,6 +666,7 @@ class TestProjectUpdateView(
             'parent': new_category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'full_title': new_category.title + ' / ' + 'updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
 
@@ -781,6 +784,7 @@ class TestProjectUpdateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'full_title': 'updated title',
             'sodar_uuid': self.category.sodar_uuid,
         }
 
@@ -799,6 +803,64 @@ class TestProjectUpdateView(
                     kwargs={'project': self.category.sodar_uuid},
                 ),
             )
+
+    def test_update_category_parent(self):
+        """Test category parent updating to ensure titles are changed"""
+
+        new_category = self._make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(new_category, self.user, self.role_owner)
+
+        # Assert preconditions
+        self.assertEqual(
+            self.category.full_title,
+            self.category.title,
+        )
+        self.assertEqual(
+            self.project.full_title,
+            self.category.title + ' / ' + self.project.title,
+        )
+
+        values = model_to_dict(self.category)
+        values['title'] = self.category.title
+        values['description'] = self.category.description
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        values['parent'] = new_category.sodar_uuid  # Updated category
+
+        # Add settings values
+        values.update(
+            app_settings.get_all_settings(project=self.category, post_safe=True)
+        )
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert response
+        self.assertEqual(response.status_code, 302)
+
+        # Assert category state and project title after update
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.category.parent, new_category)
+        self.assertEqual(
+            self.category.full_title,
+            new_category.title + ' / ' + self.category.title,
+        )
+        self.assertEqual(
+            self.project.full_title,
+            new_category.title
+            + ' / '
+            + self.category.title
+            + ' / '
+            + self.project.title,
+        )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_remote(self):

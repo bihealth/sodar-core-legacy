@@ -164,7 +164,7 @@ def get_project_title_html(project):
     ret = ''
 
     if project.get_parents():
-        ret += ' / '.join(project.get_full_title().split(' / ')[:-1]) + ' / '
+        ret += ' / '.join(project.full_title.split(' / ')[:-1]) + ' / '
 
     ret += project.title
     return ret
@@ -185,7 +185,7 @@ def get_project_link(project, full_title=False, request=None):
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             ),
             project.description if project.description else '',
-            project.get_full_title() if full_title else project.title,
+            project.full_title if full_title else project.title,
             ' ' + remote_icon if remote_icon else '',
         )
     )

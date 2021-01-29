@@ -12,7 +12,7 @@
 <tr class="sodar-pr-project-list-item"
     id="sodar-pr-project-list-item-{{ p.sodar_uuid }}"
     data-title="{{ p.title }}"
-    data-full-title="{{ p.get_full_title }}"
+    data-full-title="{{ p.full_title }}"
     data-starred="{% if is_starred %}1{% else %}0{% endif %}">
   <td>
     <div class="sodar-overflow-container">
@@ -26,7 +26,7 @@
           <a class="sodar-pr-project-link" href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a>
         {% else %}
           {{ p.title }}
-        {% endif %}
+        {% endif %}o
         {{ project_star|safe }}
       </span>
     </div>

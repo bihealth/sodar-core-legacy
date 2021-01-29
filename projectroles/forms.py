@@ -286,7 +286,7 @@ class ProjectForm(SODARModelForm):
         ):
             categories.append(instance.parent)
 
-        ret += [(c.sodar_uuid, c.get_full_title()) for c in categories]
+        ret += [(c.sodar_uuid, c.full_title) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
     def _init_app_settings(self):
