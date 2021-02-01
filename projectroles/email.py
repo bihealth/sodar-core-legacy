@@ -455,21 +455,21 @@ def send_accept_note(invite, request, user):
     return send_mail(subject, message, [invite.issuer.email], request)
 
 
-def send_expiry_note(invite, request, user):
+def send_expiry_note(invite, request, user_name):
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
+
     :param invite: ProjectInvite object
     :param request: HTTP request
-    :param user: User object
+    :param user_name: User name of invited user
     :return: Amount of sent email (int)
     """
-    username = user.get_full_name() if user else 'non-LDAP user'
     subject = (
         SUBJECT_PREFIX
         + ' '
         + SUBJECT_EXPIRY.format(
-            user_name=username, project=invite.project.title
+            user_name=user_name, project=invite.project.title
         )
     )
 
@@ -479,7 +479,7 @@ def send_expiry_note(invite, request, user):
     message += MESSAGE_EXPIRY_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
-        user_name=username,
+        user_name=user_name,
         user_email=invite.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
         site_title=SITE_TITLE,
