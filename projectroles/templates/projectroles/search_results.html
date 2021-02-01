@@ -52,7 +52,12 @@
     }
 
     .sodar-header-input-group-search {
-        max-width: 200px;
+        max-width: 250px;
+    }
+
+    select.sodar-search-page-length {
+        height: 32px;
+        padding-top: 5px;
     }
 
     /* DataTables modifications */
@@ -95,6 +100,7 @@
 {% block projectroles %}
 
 {% has_perm 'projectroles.create_project' request.user as can_create_project %}
+{% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
 
 <div class="row sodar-pr-content-title">
   <h2 class="sodar-pr-content-title">
@@ -123,11 +129,9 @@
     {# Project Search #}
 
     {% if not search_type or search_type == 'project' %}
-
       {% if project_results|length > 0 %}
         {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
         {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='cube' %}
-
         <table class="table table-striped sodar-card-table sodar-search-table"
                id="sodar-pr-search-table">
           <thead>
@@ -142,11 +146,8 @@
             {% endfor %}
           </tbody>
         </table>
-
         {% include 'projectroles/_search_footer.html' %}
-
       {% endif %}
-
     {% endif %}
 
     {# App Search #}
@@ -171,13 +172,8 @@
 
   <!-- Settings for Javascript -->
   <script type="text/javascript">
-    {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' as search_pagination %}
-
-    {% if search_pagination %}
-      window.searchPagination = {{ search_pagination }};
-    {% else %}
-      window.searchPagination = 5;
-    {% endif %}
+    {% get_django_setting 'PROJECTROLES_SEARCH_PAGINATION' default=5 as search_pagination %}
+    window.searchPagination = {{ search_pagination }};
     window.refreshCellOverflow = true;
   </script>
 

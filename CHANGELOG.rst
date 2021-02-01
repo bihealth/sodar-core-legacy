@@ -32,6 +32,7 @@ Added
     - ``batchupdateroles`` management command (#15, #602)
     - Project invite REST API views (#15, #598)
     - Advanced search with multiple terms (#609)
+    - Search result pagination control (#610)
 
 Changed
 -------

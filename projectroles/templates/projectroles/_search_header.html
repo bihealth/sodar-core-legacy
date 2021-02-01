@@ -6,7 +6,16 @@
       {% if result_count %}
        ({{ result_count }})
       {% endif %}
-      <div class="input-group sodar-header-input-group sodar-header-input-group-search pull-right" table-id="">
+      <div class="input-group sodar-header-input-group sodar-header-input-group-search pull-right">
+        <select class="form-control sodar-search-page-length">
+          <option selected value="{{ search_pagination }}">Page</option>
+          <option value="{{ search_pagination }}">{{ search_pagination }} (default)</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="-1">All</option>
+        </select>
         <input class="form-control sodar-search-filter"
            type="text" placeholder="Filter" aria-label="Filter {{ search_title }}" />
       </div>

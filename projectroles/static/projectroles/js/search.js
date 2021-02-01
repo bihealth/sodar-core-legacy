@@ -12,6 +12,7 @@ $(document).ready(function() {
             scrollX: false,
             paging: true,
             pageLength: window.searchPagination,
+            lengthChange: true,
             scrollCollapse: true,
             info: false,
             language: {
@@ -44,8 +45,10 @@ $(document).ready(function() {
             }
         });
 
-        // Hide pagination if only one page
+        // Hide pagination and disable page dropdown if only one page
         if ($(this).DataTable().page.info().pages === 1) {
+            $(this).closest('.sodar-search-card')
+                .find('.sodar-search-page-length').prop('disabled', 'disabled');
             $(this).next('.dataTables_paginate').hide();
         }
 
@@ -58,6 +61,16 @@ $(document).ready(function() {
 
     // Update overflow status
     modifyCellOverflow();
+
+    /**********
+     Pagination
+     **********/
+
+    $('.sodar-search-page-length').change(function () {
+        var dt = $(this).closest('.sodar-search-card').find('table').DataTable();
+        var value = parseInt($(this).val());
+        dt.page.len(value).draw();
+    });
 
     /*********
      Filtering
