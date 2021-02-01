@@ -26,7 +26,7 @@
           <a class="sodar-pr-project-link" href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a>
         {% else %}
           {{ p.title }}
-        {% endif %}o
+        {% endif %}
         {{ project_star|safe }}
       </span>
     </div>
