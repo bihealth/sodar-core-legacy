@@ -2902,11 +2902,24 @@ class TestProjectInviteCreateView(
                     'projectroles:invite_accept',
                     kwargs={'secret': invite.secret},
                 ),
+                follow=True,
             )
 
-            self.assertRedirects(
-                response,
-                reverse('home'),
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse('home'),
+                        302,
+                    ),
+                ],
             )
 
             # Assert postconditions
@@ -3069,8 +3082,18 @@ class TestProjectInviteCreateView(
         self.assertListEqual(
             response.redirect_chain,
             [
+                (
+                    reverse(
+                        'projectroles:invite_process_local',
+                        kwargs={'secret': invite.secret},
+                    ),
+                    302,
+                ),
                 (reverse('home'), 302),
-                (reverse('login') + '?next=' + reverse('home'), 302),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
             ],
         )
 

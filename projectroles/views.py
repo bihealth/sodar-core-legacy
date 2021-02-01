@@ -2094,7 +2094,11 @@ class ProjectInviteProcessMixin:
 
             # Send notification of expiry to issuer
             if SEND_EMAIL:
-                email.send_expiry_note(invite, self.request, user)
+                email.send_expiry_note(
+                    invite,
+                    self.request,
+                    user_name=user.get_full_name() if user else invite.email,
+                )
 
             self.revoke_invite(
                 invite, user, failed=True, fail_desc='Invite expired'
@@ -2189,9 +2193,6 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
         if not invite:
             return redirect(reverse('home'))
 
-        if self.is_invite_expired(invite):
-            return redirect(reverse('home'))
-
         invite_type = self.get_invite_type(invite)
 
         if invite_type == 'ldap':
@@ -2225,6 +2226,7 @@ class ProjectInviteProcessLDAPView(
         if not invite:
             return redirect(reverse('home'))
 
+        # Check invite has correct type
         if self.get_invite_type(invite) == 'local':
             messages.error(
                 self.request,
@@ -2233,6 +2235,7 @@ class ProjectInviteProcessLDAPView(
             )
             return redirect(reverse('home'))
 
+        # Check if user already accepted the invite
         if self.user_role_exists(invite, self.request.user, timeline=timeline):
             return redirect(
                 reverse(
@@ -2241,6 +2244,7 @@ class ProjectInviteProcessLDAPView(
                 )
             )
 
+        # Check if invite expired
         if self.is_invite_expired(invite, self.request.user):
             return redirect(reverse('home'))
 
@@ -2271,6 +2275,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not invite:
             return redirect(reverse('home'))
 
+        # Check if local users are even enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
@@ -2279,6 +2284,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             )
             return redirect(reverse('home'))
 
+        # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
             messages.error(
                 self.request,
@@ -2287,14 +2293,15 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             )
             return redirect(reverse('home'))
 
-        if self.is_invite_expired(invite):
-            return redirect(reverse('home'))
-
         # Check if invited user exists
         try:
             user = User.objects.get(email=invite.email)
         except User.DoesNotExist:
             user = None
+
+        # Check if invite has expired
+        if self.is_invite_expired(invite, user):
+            return redirect(reverse('home'))
 
         # A user is not logged in
         if self.request.user.is_anonymous:
@@ -2381,6 +2388,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not invite:
             return redirect(reverse('home'))
 
+        # Check if local users are allowed
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
@@ -2389,15 +2397,17 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             )
             return redirect(reverse('home'))
 
-        if self.is_invite_expired(invite):
-            return redirect(reverse('home'))
-
+        # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
             messages.error(
                 self.request,
                 'Error: Invite was issued for LDAP user, but local invite '
                 'view was requested.',
             )
+            return redirect(reverse('home'))
+
+        # Check if invite is expired
+        if self.is_invite_expired(invite):
             return redirect(reverse('home'))
 
         user = User.objects.create_user(
