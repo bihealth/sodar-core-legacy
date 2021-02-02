@@ -165,9 +165,7 @@ def get_not_found_alert(project_results, app_search_data, search_type):
                 and search_type in result['search_types']
             ):
                 type_match = True
-            if (type_match or not search_type) and (
-                not result['items']
-            ):
+            if (type_match or not search_type) and (not result['items']):
                 not_found.append(result['title'])
 
     if not_found:
