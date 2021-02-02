@@ -69,6 +69,7 @@ Fixed
     - Crash in project invite if multiple users exist with the same email (#614)
     - Project delegate able to revoke invite for another delegate (#617)
     - Column alignment in invite list (#606)
+    - ``get_not_found_alert()`` fails if called with app plugin search type (#624)
 - **Taskflowbackend**
     - Django settings access in ``api`` (#605)
     - ``sodar_url`` override not working if ``request`` object is present (#605)
