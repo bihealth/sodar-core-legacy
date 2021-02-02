@@ -26,6 +26,7 @@ Release Highlights
 - Add batch invites and role updates via management command
 - Add REST API views for project invite management
 - Add advanced search with multiple terms
+- Add REST API view for current user info retrieval
 
 Breaking Changes
 ================

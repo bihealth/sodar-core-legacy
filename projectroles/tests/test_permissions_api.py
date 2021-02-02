@@ -733,3 +733,19 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+
+    def test_user_current(self):
+        """Test permissions for CurrentUserRetrieveAPIView"""
+        url = reverse('projectroles:api_user_current')
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        self.assert_response_api(url, good_users, 200)
+        self.assert_response_api(url, self.anonymous, 401)
+        self.assert_response_api(url, good_users, 200, knox=True)

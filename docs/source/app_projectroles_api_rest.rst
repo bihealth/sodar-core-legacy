@@ -113,3 +113,5 @@ API Views
 .. autoclass:: ProjectInviteResendAPIView
 
 .. autoclass:: UserListAPIView
+
+.. autoclass:: CurrentUserRetrieveAPIView

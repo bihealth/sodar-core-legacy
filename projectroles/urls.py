@@ -229,6 +229,11 @@ urls_api = [
         name='api_user_list',
     ),
     url(
+        regex=r'^api/users/current$',
+        view=views_api.CurrentUserRetrieveAPIView.as_view(),
+        name='api_user_current',
+    ),
+    url(
         regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',
         view=views_api.RemoteProjectGetAPIView.as_view(),
         name='api_remote_get',

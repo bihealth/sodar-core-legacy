@@ -741,7 +741,7 @@ class ProjectInviteResendAPIView(
         )
 
 
-class UserListAPIView(ListAPIView):
+class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
     """
     List users in the system.
 
@@ -761,9 +761,7 @@ class UserListAPIView(ListAPIView):
 
     lookup_field = 'project__sodar_uuid'
     permission_classes = [IsAuthenticated]
-    renderer_classes = [CoreAPIRenderer]
     serializer_class = SODARUserSerializer
-    versioning_class = CoreAPIVersioning
 
     def get_queryset(self):
         """
@@ -776,6 +774,31 @@ class UserListAPIView(ListAPIView):
             return qs
 
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
+
+
+class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
+    """
+    Return information on the user making the request.
+
+    **URL:** ``/project/api/users/current``
+
+    **Methods:** ``GET``
+
+    **Returns**:
+
+    For current user:
+
+    - ``email``: Email address of the user (string)
+    - ``name``: Full name of the user (string)
+    - ``sodar_uuid``: User UUID (string)
+    - ``username``: Username of the user (string)
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = SODARUserSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 # TODO: Update this for new API base classes

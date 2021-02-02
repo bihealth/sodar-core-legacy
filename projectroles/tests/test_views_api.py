@@ -2800,6 +2800,49 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         self.assertEqual(response_data, expected)
 
 
+class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
+    """Tests for CurrentUserRetrieveAPIView"""
+
+    def setUp(self):
+        super().setUp()
+        # Create additional users
+        self.domain_user = self.make_user('domain_user@domain')
+
+    def test_get(self):
+        """Test CurrentUserRetrieveAPIView get() as a regular user"""
+        url = reverse('projectroles:api_user_current')
+        response = self.request_knox(
+            url, token=self.get_token(self.domain_user)
+        )
+
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'username': self.domain_user.username,
+            'name': self.domain_user.name,
+            'email': self.domain_user.email,
+            'sodar_uuid': str(self.domain_user.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+    def test_get_superuser(self):
+        """Test CurrentUserRetrieveAPIView get() as superuser"""
+        url = reverse('projectroles:api_user_current')
+        response = self.request_knox(url)
+
+        # Assert response
+        self.assertEqual(response.status_code, 200)
+        response_data = json.loads(response.content)
+        expected = {
+            'username': self.user.username,
+            'name': self.user.name,
+            'email': self.user.email,
+            'sodar_uuid': str(self.user.sodar_uuid),
+        }
+        self.assertEqual(response_data, expected)
+
+
 class TestAPIVersioning(TestCoreAPIViewsBase):
     """Tests for REST API view versioning using ProjectRetrieveAPIView"""
 

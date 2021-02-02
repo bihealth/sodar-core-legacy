@@ -33,6 +33,7 @@ Added
     - Project invite REST API views (#15, #598)
     - Advanced search with multiple terms (#609)
     - Search result pagination control (#610)
+    - REST API endpoint for retrieving current user info (#626)
 
 Changed
 -------
