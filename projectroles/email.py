@@ -94,6 +94,10 @@ To accept the invitation and access the {project_label} in {site_title},
 please click on the following link:
 {invite_url}
 
+Please note that the link is only to be used once. After successfully
+accepting the invitation, please access the project with its URL or
+through the project list on the site's "Home" page.
+
 This invitation will expire on {date_expire}.
 '''
 

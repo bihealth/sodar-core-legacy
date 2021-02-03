@@ -3282,7 +3282,7 @@ class TestProjectInviteCreateView(
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: logged in user is not allowed to accept others invite.',
+            'Error: Logged in user is not allowed to accept other\'s invites.',
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -3410,6 +3410,45 @@ class TestProjectInviteCreateView(
             'A user with that email already exists. Please login first to '
             'accept the invite.',
         )
+
+    def test_accept_role_exists(self):
+        """Test accepting an invite for user with roles in project"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Set up role assignment
+        self._make_assignment(self.project, invited_user, self.role_guest)
+
+        # Assert preconditions
+        self.assertTrue(invite.active)
+
+        with self.login(invited_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(
+            response,
+            reverse('home'),
+        )
+        invite.refresh_from_db()
+        self.assertFalse(invite.active)
 
 
 class TestProjectInviteListView(

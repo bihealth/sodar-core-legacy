@@ -20,6 +20,7 @@ from django.db import transaction
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 from django.views.generic import (
     TemplateView,
     DetailView,
@@ -96,9 +97,6 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_NAME = 'projectroles'
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 PROJECT_COLUMN_COUNT = 2  # Default columns
-
-
-# API constants for internal SODAR Core apps
 
 
 # Access Django user model
@@ -2009,9 +2007,11 @@ class ProjectInviteCreateView(
 
 
 class ProjectInviteProcessMixin:
-    """Mixin for accepting and processing project invites."""
+    """Mixin for accepting and processing project invites"""
 
-    def get_invite_type(self, invite):
+    @classmethod
+    def get_invite_type(cls, invite):
+        """Return invite type ("ldap", "local" or "error")"""
         # Check if domain is associated with LDAP
         domain = invite.email.split('@')[1].split('.')[0].lower()
 
@@ -2051,21 +2051,28 @@ class ProjectInviteProcessMixin:
             )
 
     def get_invite(self, secret):
+        """Get invite, display message if not found"""
         try:
             return ProjectInvite.objects.get(secret=secret)
-
         except ProjectInvite.DoesNotExist:
             messages.error(self.request, 'Error: Invite does not exist!')
-            return None
 
     def user_role_exists(self, invite, user, timeline=None):
-        # Check user does not already have a role
-        try:
-            RoleAssignment.objects.get(user=user, project=invite.project)
+        """
+        Display message and revoke invite if user already has roles in project
+        """
+        if invite.project.has_role(user):
             messages.warning(
                 self.request,
-                'You already have roles set in this {}.'.format(
-                    get_display_name(PROJECT_TYPE_PROJECT)
+                mark_safe(
+                    'You already have roles set in the {project}. You can '
+                    'access the {project} <a href="{url}">here</a>.'.format(
+                        project=get_display_name(invite.project.type),
+                        url=reverse(
+                            'projectroles:detail',
+                            kwargs={'project': invite.project.sodar_uuid},
+                        ),
+                    )
                 ),
             )
             self.revoke_invite(
@@ -2073,16 +2080,15 @@ class ProjectInviteProcessMixin:
                 user,
                 failed=True,
                 fail_desc='User already has roles in {}'.format(
-                    get_display_name(PROJECT_TYPE_PROJECT)
+                    get_display_name(invite.project.type)
                 ),
                 timeline=timeline,
             )
             return True
-
-        except RoleAssignment.DoesNotExist:
-            return False
+        return False
 
     def is_invite_expired(self, invite, user=None):
+        """Display message and send email to issuer if invite is expired"""
         if invite.date_expire < timezone.now():
             messages.error(
                 self.request,
@@ -2106,8 +2112,8 @@ class ProjectInviteProcessMixin:
             return True
         return False
 
-    def create_roleassignment(self, invite, user, timeline=None):
-        # Add event in Timeline
+    def create_assignment(self, invite, user, timeline=None):
+        """Create role assignment for invited user"""
         taskflow = get_backend_api('taskflow')
         tl_event = None
 
@@ -2175,7 +2181,7 @@ class ProjectInviteProcessMixin:
             self.request,
             'Welcome to {} "{}"! You have been assigned the role of '
             '{}.'.format(
-                get_display_name(PROJECT_TYPE_PROJECT),
+                get_display_name(invite.project.type),
                 invite.project.title,
                 invite.role.name,
             ),
@@ -2188,9 +2194,19 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
     """View to handle accepting a project invite"""
 
     def get(self, *args, **kwargs):
+        timeline = get_backend_api('timeline_backend')
         invite = self.get_invite(secret=kwargs['secret'])
+        user = self.request.user
 
         if not invite:
+            return redirect(reverse('home'))
+
+        if (
+            not user.is_anonymous()
+            and user.is_authenticated
+            and user.email == invite.email
+            and self.user_role_exists(invite, user, timeline)
+        ):
             return redirect(reverse('home'))
 
         invite_type = self.get_invite_type(invite)
@@ -2211,6 +2227,8 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
                 )
             )
 
+        # Error
+        messages.error(self.request, 'Local users not allowed on this site.')
         return redirect(reverse('home'))
 
 
@@ -2237,19 +2255,14 @@ class ProjectInviteProcessLDAPView(
 
         # Check if user already accepted the invite
         if self.user_role_exists(invite, self.request.user, timeline=timeline):
-            return redirect(
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': invite.project.sodar_uuid},
-                )
-            )
+            return redirect(reverse('home'))
 
         # Check if invite expired
         if self.is_invite_expired(invite, self.request.user):
             return redirect(reverse('home'))
 
         # If we get this far, create RoleAssignment..
-        if not self.create_roleassignment(
+        if not self.create_assignment(
             invite, self.request.user, timeline=timeline
         ):
             return redirect(reverse('home'))
@@ -2275,7 +2288,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not invite:
             return redirect(reverse('home'))
 
-        # Check if local users are even enabled
+        # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
@@ -2294,10 +2307,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             return redirect(reverse('home'))
 
         # Check if invited user exists
-        try:
-            user = User.objects.get(email=invite.email)
-        except User.DoesNotExist:
-            user = None
+        user = User.objects.filter(email=invite.email).first()
 
         # Check if invite has expired
         if self.is_invite_expired(invite, user):
@@ -2328,7 +2338,8 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not user:
             messages.error(
                 self.request,
-                'Error: logged in user is not allowed to accept others invite.',
+                'Error: Logged in user is not allowed to accept other\'s '
+                'invites.',
             )
             return redirect(reverse('home'))
 
@@ -2349,7 +2360,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             return redirect(reverse('home'))
 
         # Create role if user exists
-        if not self.create_roleassignment(invite, user, timeline=timeline):
+        if not self.create_assignment(invite, user, timeline=timeline):
             return redirect(reverse('home'))
 
         return redirect(
@@ -2427,7 +2438,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             )
 
         # If we get this far, create RoleAssignment..
-        if not self.create_roleassignment(invite, user, timeline=timeline):
+        if not self.create_assignment(invite, user, timeline=timeline):
             user.delete()
             redirect(reverse('home'))
 

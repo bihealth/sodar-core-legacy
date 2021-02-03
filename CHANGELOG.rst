@@ -56,6 +56,8 @@ Changed
     - Add ``sodar_url`` override to ``modify_assignment()``
     - Rename ``ProjectSearchResultsView`` and its template (#609)
     - Implement ``get_full_title()`` as ``Project.full_title`` field (#93)
+    - Clarify invite accepting procedure in invite email (#627)
+    - Redirect to home view when reusing accepted invite link (#628)
 - **Userprofile**
     - Cosmetic updates for user detail template (#600)
 
