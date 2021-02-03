@@ -207,6 +207,62 @@
       </div>
     {% endif %}
 
+    {% if app_settings_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4><i class="fa fa-users"></i> App Settings ({{ app_settings_count }})</h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-settings">
+            <thead>
+              <tr>
+                <th>{% get_display_name 'PROJECT' title=True %}</th>
+                <th>Name</th>
+                <th>Plugin</th>
+                <th>Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in update_data.app_settings.values %}
+                {% if a.status %}
+                  <tr>
+                    <td>
+                      {% get_project_by_uuid a.project_uuid as p_obj %}
+                      {% if p_obj %}
+                        {% autoescape off %}
+                          {% get_project_link p_obj full_title=True %}
+                        {% endautoescape %}
+                      {% else %}
+                        {{ p.title }}
+                      {% endif %}
+                    </td>
+                    <td>{{ a.name }}</td>
+                    <td>{% get_plugin_name_by_id a.plugin_id %}</td>
+                    <td>
+                      {% if a.type == 'JSON' %}
+                        {{ a.value_json }}
+                      {% elif a.type == 'BOOLEAN' %}
+                        {% if a.value == '1' %}
+                          True
+                        {% else %}
+                          False
+                        {% endif %}
+                      {% else %}
+                        {{ a.value }}
+                      {% endif %}
+                    </td>
+                    <td>{{ a.status | title }}</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
   {% endif %}
 
 </div>

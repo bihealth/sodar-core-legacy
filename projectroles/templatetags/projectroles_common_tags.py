@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.template.loader import get_template
 from django.templatetags.static import static
 from django.urls import reverse
+from djangoplugins.models import Plugin
 
 import projectroles
 from projectroles.app_settings import AppSettingAPI
@@ -73,6 +74,18 @@ def get_user_by_username(username):
 
     except User.DoesNotExist:
         return None
+
+
+@register.simple_tag
+def get_plugin_name_by_id(plugin_id):
+    """Return Plugin by id"""
+    if plugin_id:
+        try:
+            return Plugin.objects.get(id=plugin_id).name
+        except Plugin.DoesNotExist:
+            return None
+    else:
+        return 'projectroles'
 
 
 # Django helpers ---------------------------------------------------------------
@@ -151,7 +164,7 @@ def get_project_title_html(project):
     ret = ''
 
     if project.get_parents():
-        ret += ' / '.join(project.get_full_title().split(' / ')[:-1]) + ' / '
+        ret += ' / '.join(project.full_title.split(' / ')[:-1]) + ' / '
 
     ret += project.title
     return ret
@@ -172,7 +185,7 @@ def get_project_link(project, full_title=False, request=None):
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             ),
             project.description if project.description else '',
-            project.get_full_title() if full_title else project.title,
+            project.full_title if full_title else project.title,
             ' ' + remote_icon if remote_icon else '',
         )
     )
@@ -237,8 +250,16 @@ def get_history_dropdown(project, obj):
 
 
 @register.simple_tag
-def highlight_search_term(item, term):
+def highlight_search_term(item, terms):
     """Return string with search term highlighted"""
+
+    # Skip highlighting for multiple terms (at least for now)
+    if isinstance(terms, list) and len(terms) > 1:
+        return item
+    elif isinstance(terms, list) and len(terms) == 1:
+        term = terms[0]
+    else:
+        term = terms  # Old implementation
 
     def get_highlights(item):
         pos = item.lower().find(term.lower())

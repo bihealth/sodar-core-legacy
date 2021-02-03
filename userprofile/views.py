@@ -7,7 +7,10 @@ from django.views.generic import TemplateView, FormView
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins
-from projectroles.views import LoggedInPermissionMixin, HTTPRefererMixin
+from projectroles.views import (
+    LoggedInPermissionMixin,
+    HTTPRefererMixin,
+)
 
 from .forms import UserSettingsForm
 
@@ -31,22 +34,29 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
     def get_context_data(self, **kwargs):
         result = super().get_context_data(**kwargs)
         result['user_settings'] = list(self._get_user_settings())
+        result['local_user'] = self.request.user.is_local()
         return result
 
     def _get_user_settings(self):
         plugins = get_active_plugins(
             plugin_type='project_app'
         ) + get_active_plugins(plugin_type='site_app')
-        for plugin in plugins:
-            p_settings = app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
-            )
+        for plugin in plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, plugin=plugin, user_modifiable=True
+                )
+            else:
+                name = 'projectroles'
+                p_settings = app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_USER, app_name=name, user_modifiable=True
+                )
             for s_key, s_val in p_settings.items():
                 yield {
-                    'label': s_val.get('label')
-                    or '{}.{}'.format(plugin.name, s_key),
+                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'value': app_settings.get_app_setting(
-                        plugin.name, s_key, user=self.request.user
+                        name, s_key, user=self.request.user
                     ),
                     'description': s_val.get('description'),
                 }

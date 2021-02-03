@@ -119,7 +119,7 @@ Now you should be able to run the server:
 
 .. code-block:: console
 
-    $ ./run.sh
+    $ make serve
 
 
 App Development
@@ -148,6 +148,44 @@ media type and versioning for these views are **hardcoded** and should not be
 changed, except version information upon a new release of SODAR Core.
 
 
+Projectroles App Development
+============================
+
+This section details issues regarding updates to the ``projectroles`` app.
+
+.. warning::
+
+    As all other apps in SODAR Core as well as sites implementing SODAR Core
+    are based on projectroles, changes to this app need to be implemented and
+    tested with extra care. Also make sure to provide detailed documentation for
+    all breaking changes.
+
+Projectroles App Settings
+-------------------------
+
+Projectroles defines its own app settings in ``projectroles/app_settings.py``.
+These are not expected to be altered by SODAR Core based sites. These settings
+add the ``local`` attribute, which allows/disallows editing the value on a
+``TARGET`` site.
+
+To alter projectroles app settings when developing the app, update the
+``PROJECTROLES_APP_SETTINGS`` dictionary as follows:
+
+.. code-block:: python
+
+     'example_setting': {
+         'scope': 'PROJECT',  # PROJECT/USER
+         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+         'default': 'example',
+         'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+         'label': 'Project setting',  # Optional, defaults to name/key
+         'placeholder': 'Enter example setting here',  # Optional
+         'description': 'Example project setting',  # Optional
+         'user_modifiable': True,  # Optional, show/hide in forms
+         'local': False,  # Allow editing in target site forms if True
+     }
+
+
 Testing
 =======
 
@@ -159,24 +197,24 @@ present on your system), followed by the Python test requirements:
     $ sudo utility/install_chrome.sh
     $ pip install -r requirements/test.txt
 
-Now you can run all tests with the following script:
+Now you can run all tests with the following make command:
 
 .. code-block:: console
 
-    $ ./test.sh
+    $ make test
 
 If you want to only run a certain subset of tests, use e.g.:
 
 .. code-block:: console
 
-    $ ./test.sh projectroles.tests.test_views
+    $ make test arg=projectroles.tests.test_views
 
 For running tests with SODAR Taskflow (not currently publicly available), you
-can use the supplied shortcut script:
+can use the supplied make command:
 
 .. code-block:: console
 
-    $ ./test_taskflow.sh
+    $ make test_taskflow
 
 
 Remote Site Development
@@ -193,17 +231,19 @@ First, set up a second database called ``sodar_core_target`` using
 ``utility/setup_database.sh``.
 
 Next, migrate the new database and create a superuser using
-``./manage_target.sh``. It is recommended to use a different admin user name
+``make manage_target``. It is recommended to use a different admin user name
 than on your ``SOURCE`` site, to help debugging.
 
 .. code-block:: console
 
-    $ ./manage_target.sh migrate
-    $ ./manage_target.sh createsuperuser
+    $ make manage_target arg=migrate
+    $ make manage_target arg=createsuperuser
 
-Launch your site with ``./run_target.sh``. By default, you can access the site
-at Port ``8001`` on localhost. Management commands to the target site can be
-issued with the ``manage_target.sh`` shortcut script.
+Launch your site with ``make serve_target``. By default, you can access the site
+at Port ``8001`` on localhost. The port can be altered by providing the
+``target_port`` parameter, e.g. ``make serve_target target_port=8002``.
+Management commands to the target site can be issued with the ``make manage_target``
+make command.
 
 Due to how cookies are set by Django, you currently may have to relogin when
 switching to a different site on your browser. As a workaround you can launch

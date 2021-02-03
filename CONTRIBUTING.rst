@@ -63,7 +63,9 @@ Ready to contribute? Here's how to set up ``sodar_core`` for local development.
 
     $ git clone git@github.com:your_name_here/sodar_core.git
 
-3. Install your local copy into a virtualenv. Assuming you have virtualenvwrapper installed, this is how you set up your fork for local development::
+3. Install your local copy into a virtualenv. Assuming you have
+   virtualenvwrapper installed, this is how you set up your fork for local
+   development::
 
     $ mkvirtualenv sodar_core
     $ cd sodar_core/
@@ -111,7 +113,7 @@ Before you submit a pull request, check that it meets these guidelines:
    your new functionality into a function with a docstring, and add the
    feature to the list in ``CHANGELOG.rst``.
 5. The pull request should work for Python 3.6 and preferably for 3.7. Check
-   https://travis-ci.org/bihealth/sodar_core/pull_requests
+   https://github.com/bihealth/sodar_core/actions
    and make sure that the tests pass for supported Python versions.
    The 1.11 branch of Django does not currently support Python 3.8.
 

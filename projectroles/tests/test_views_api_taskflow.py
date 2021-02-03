@@ -251,6 +251,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': UPDATED_TITLE,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -300,6 +301,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -347,6 +349,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': UPDATED_TITLE,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -391,6 +394,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'description': UPDATED_DESC,
             'readme': UPDATED_README,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
+            'full_title': self.category.title + ' / ' + UPDATED_TITLE,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)

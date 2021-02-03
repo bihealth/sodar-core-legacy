@@ -3,8 +3,8 @@
 ;(function ($) {
     function get_forwards(element) {
         var forwardElem, forwardList, prefix, forwardedData, divSelector, form;
-        divSelector = "div.dal-forward-conf#dal-forward-conf-for-" +
-                element.attr("id");
+        divSelector = 'div.dal-forward-conf#dal-forward-conf-for-' +
+                element.attr('id');
         form = element.length > 0 ? $(element[0].form) : $();
 
         forwardElem =
@@ -26,13 +26,13 @@
         forwardedData = {};
 
         $.each(forwardList, function(ix, f) {
-            if (f["type"] === "const") {
-                forwardedData[f["dst"]] = f["val"];
-            } else if (f["type"] === "field") {
+            if (f['type'] === 'const') {
+                forwardedData[f['dst']] = f['val'];
+            } else if (f['type'] === 'field') {
                 var srcName, dstName;
-                srcName = f["src"];
-                if (f.hasOwnProperty("dst")) {
-                    dstName = f["dst"];
+                srcName = f['src'];
+                if (f.hasOwnProperty('dst')) {
+                    dstName = f['dst'];
                 } else {
                     dstName = srcName;
                 }
@@ -48,7 +48,7 @@
                     if ($field.attr('type') === 'checkbox')
                         forwardedData[dstName] = $field[0].checked;
                     else if ($field.attr('type') === 'radio')
-                        forwardedData[dstName] = $($field_selector + ":checked").val();
+                        forwardedData[dstName] = $($field_selector + ':checked').val();
                     else
                         forwardedData[dstName] = $field.val();
                 }
@@ -57,7 +57,9 @@
         return JSON.stringify(forwardedData);
     }
 
-    $(document).on('autocompleteLightInitialize', '[data-autocomplete-light-function=autocomplete_redirect]', function() {
+    $(document).on('autocompleteLightInitialize',
+        '[data-autocomplete-light-function=autocomplete_redirect]',
+        function() {
         var element = $(this);
 
         // Templating helper
@@ -135,25 +137,25 @@
                     role: role,
                 },
                 beforeSend: function(xhr, settings) {
-                    xhr.setRequestHeader("X-CSRFToken", document.csrftoken);
+                    xhr.setRequestHeader('X-CSRFToken', document.csrftoken);
                 },
                 success: function(data, textStatus, jqXHR ) {
 
                     // use hidden form to redirect to invite and send form data
-                    var form = document.createElement("form");
-                    form.setAttribute("method", "get");
-                    form.setAttribute("action", data.redirect_url);
+                    var form = document.createElement('form');
+                    form.setAttribute('method', 'get');
+                    form.setAttribute('action', data.redirect_url);
 
-                    var hiddenMailField = document.createElement("input");
-                    hiddenMailField.setAttribute("type", "hidden");
-                    hiddenMailField.setAttribute("name", "forwarded-email");
-                    hiddenMailField.setAttribute("value", email);
+                    var hiddenMailField = document.createElement('input');
+                    hiddenMailField.setAttribute('type', 'hidden');
+                    hiddenMailField.setAttribute('name', 'e');
+                    hiddenMailField.setAttribute('value', email);
                     form.appendChild(hiddenMailField);
 
-                    var hiddenRoleField = document.createElement("input");
-                    hiddenRoleField.setAttribute("type", "hidden");
-                    hiddenRoleField.setAttribute("name", "forwarded-role");
-                    hiddenRoleField.setAttribute("value", role);
+                    var hiddenRoleField = document.createElement('input');
+                    hiddenRoleField.setAttribute('type', 'hidden');
+                    hiddenRoleField.setAttribute('name', 'r');
+                    hiddenRoleField.setAttribute('value', role);
                     form.appendChild(hiddenRoleField);
 
                     document.body.appendChild(form);

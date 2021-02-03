@@ -16,6 +16,7 @@ from projectroles.models import (
     RemoteProject,
     RemoteSite,
     SODAR_CONSTANTS,
+    AppSetting,
 )
 
 from projectroles.remote_projects import RemoteProjectAPI
@@ -26,6 +27,7 @@ from projectroles.tests.test_models import (
     RemoteSiteMixin,
     RemoteProjectMixin,
     SodarUserMixin,
+    AppSettingMixin,
 )
 
 User = auth.get_user_model()
@@ -64,14 +66,48 @@ SOURCE_USER_LAST_NAME = SOURCE_USER_NAME.split(' ')[1]
 SOURCE_USER_EMAIL = SOURCE_USER_USERNAME.split('@')[0] + '@example.com'
 SOURCE_USER_UUID = str(uuid.uuid4())
 
+SOURCE_USER2_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER2_USERNAME = 'source_user2@' + SOURCE_USER_DOMAIN
+SOURCE_USER2_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER2_NAME = 'Firstname2 Lastname2'
+SOURCE_USER2_FIRST_NAME = SOURCE_USER2_NAME.split(' ')[0]
+SOURCE_USER2_LAST_NAME = SOURCE_USER2_NAME.split(' ')[1]
+SOURCE_USER2_EMAIL = SOURCE_USER2_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER2_UUID = str(uuid.uuid4())
+
+SOURCE_USER3_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER3_USERNAME = 'source_user3@' + SOURCE_USER_DOMAIN
+SOURCE_USER3_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER3_NAME = 'Firstname3 Lastname3'
+SOURCE_USER3_FIRST_NAME = SOURCE_USER3_NAME.split(' ')[0]
+SOURCE_USER3_LAST_NAME = SOURCE_USER3_NAME.split(' ')[1]
+SOURCE_USER3_EMAIL = SOURCE_USER3_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER3_UUID = str(uuid.uuid4())
+
+SOURCE_USER4_DOMAIN = SOURCE_USER_DOMAIN
+SOURCE_USER4_USERNAME = 'source_user4@' + SOURCE_USER_DOMAIN
+SOURCE_USER4_GROUP = SOURCE_USER_DOMAIN.lower()
+SOURCE_USER4_NAME = 'Firstname4 Lastname4'
+SOURCE_USER4_FIRST_NAME = SOURCE_USER4_NAME.split(' ')[0]
+SOURCE_USER4_LAST_NAME = SOURCE_USER4_NAME.split(' ')[1]
+SOURCE_USER4_EMAIL = SOURCE_USER4_USERNAME.split('@')[0] + '@example.com'
+SOURCE_USER4_UUID = str(uuid.uuid4())
+
 SOURCE_CATEGORY_UUID = str(uuid.uuid4())
 SOURCE_CATEGORY_TITLE = 'TestCategory'
 SOURCE_PROJECT_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_TITLE = 'TestProject'
 SOURCE_PROJECT_DESCRIPTION = 'Description'
 SOURCE_PROJECT_README = 'Readme'
+SOURCE_PROJECT_FULL_TITLE = SOURCE_CATEGORY_TITLE + ' / ' + SOURCE_PROJECT_TITLE
 SOURCE_CATEGORY_ROLE_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE2_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE3_UUID = str(uuid.uuid4())
+SOURCE_CATEGORY_ROLE4_UUID = str(uuid.uuid4())
 SOURCE_PROJECT_ROLE_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE2_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE3_UUID = str(uuid.uuid4())
+SOURCE_PROJECT_ROLE4_UUID = str(uuid.uuid4())
 
 TARGET_SITE_NAME = 'Target name'
 TARGET_SITE_URL = 'https://target.url'
@@ -88,6 +124,9 @@ PEER_SITE_USER_DISPLAY = True
 NEW_PEER_NAME = PEER_SITE_NAME + ' new'
 NEW_PEER_DESC = PEER_SITE_DESC + ' new'
 NEW_PEER_USER_DISPLAY = not PEER_SITE_USER_DISPLAY
+
+PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID = str(uuid.uuid4())
+PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 
 
 class TestGetTargetData(
@@ -184,6 +223,7 @@ class TestGetTargetData(
                 }
             },
             'peer_sites': {},
+            'app_settings': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -233,6 +273,7 @@ class TestGetTargetData(
                     'user_display': self.peer_site.user_display,
                 }
             },
+            'app_settings': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -285,6 +326,7 @@ class TestGetTargetData(
                 },
             },
             'peer_sites': {},
+            'app_settings': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -354,6 +396,7 @@ class TestGetTargetData(
                     'user_display': self.peer_site.user_display,
                 }
             },
+            'app_settings': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -412,6 +455,7 @@ class TestGetTargetData(
                 },
             },
             'peer_sites': {},
+            'app_settings': {},
         }
 
         self.assertEqual(sync_data, expected)
@@ -420,7 +464,12 @@ class TestGetTargetData(
         """Test get data with no project access set in the source site"""
         sync_data = self.remote_api.get_target_data(self.target_site)
 
-        expected = {'users': {}, 'projects': {}, 'peer_sites': {}}
+        expected = {
+            'users': {},
+            'projects': {},
+            'peer_sites': {},
+            'app_settings': {},
+        }
 
         self.assertEqual(sync_data, expected)
 
@@ -432,6 +481,7 @@ class TestSyncSourceData(
     RemoteSiteMixin,
     RemoteProjectMixin,
     SodarUserMixin,
+    AppSettingMixin,
     TestCase,
 ):
     """Tests for the sync_source_data() API function"""
@@ -441,6 +491,7 @@ class TestSyncSourceData(
         self.admin_user = self.make_user(settings.PROJECTROLES_DEFAULT_ADMIN)
         self.admin_user.is_staff = True
         self.admin_user.is_superuser = True
+        self.maxDiff = None
 
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
@@ -474,7 +525,7 @@ class TestSyncSourceData(
                     'last_name': SOURCE_USER_LAST_NAME,
                     'email': SOURCE_USER_EMAIL,
                     'groups': [SOURCE_USER_GROUP],
-                }
+                },
             },
             'projects': {
                 SOURCE_CATEGORY_UUID: {
@@ -488,7 +539,7 @@ class TestSyncSourceData(
                         SOURCE_CATEGORY_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name,
-                        }
+                        },
                     },
                 },
                 SOURCE_PROJECT_UUID: {
@@ -502,7 +553,7 @@ class TestSyncSourceData(
                         SOURCE_PROJECT_ROLE_UUID: {
                             'user': SOURCE_USER_USERNAME,
                             'role': self.role_owner.name,
-                        }
+                        },
                     },
                     'remote_sites': [PEER_SITE_UUID],
                 },
@@ -514,6 +565,28 @@ class TestSyncSourceData(
                     'description': PEER_SITE_DESC,
                     'user_display': PEER_SITE_USER_DISPLAY,
                 }
+            },
+            'app_settings': {
+                PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID: {
+                    'name': 'ip_restrict',
+                    'type': 'BOOLEAN',
+                    'value': False,
+                    'value_json': {},
+                    'app_plugin_id': None,  # None is for 'projectroles' app
+                    'project_uuid': SOURCE_PROJECT_UUID,
+                    'user_id': None,
+                    'local': False,
+                },
+                PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID: {
+                    'name': 'ip_allowlist',
+                    'type': 'JSON',
+                    'value': '',
+                    'value_json': [],
+                    'app_plugin_id': None,  # None is for 'projectroles' app
+                    'project_uuid': SOURCE_PROJECT_UUID,
+                    'user_id': None,
+                    'local': False,
+                },
             },
         }
 
@@ -527,20 +600,86 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
-        remote_data = self.default_data
-        original_data = deepcopy(remote_data)
+        self.default_data['users'].update(
+            {
+                SOURCE_USER2_UUID: {
+                    'sodar_uuid': SOURCE_USER2_UUID,
+                    'username': SOURCE_USER2_USERNAME,
+                    'name': SOURCE_USER2_NAME,
+                    'first_name': SOURCE_USER2_FIRST_NAME,
+                    'last_name': SOURCE_USER2_LAST_NAME,
+                    'email': SOURCE_USER2_EMAIL,
+                    'groups': [SOURCE_USER2_GROUP],
+                },
+                SOURCE_USER3_UUID: {
+                    'sodar_uuid': SOURCE_USER3_UUID,
+                    'username': SOURCE_USER3_USERNAME,
+                    'name': SOURCE_USER3_NAME,
+                    'first_name': SOURCE_USER3_FIRST_NAME,
+                    'last_name': SOURCE_USER3_LAST_NAME,
+                    'email': SOURCE_USER3_EMAIL,
+                    'groups': [SOURCE_USER3_GROUP],
+                },
+                SOURCE_USER4_UUID: {
+                    'sodar_uuid': SOURCE_USER4_UUID,
+                    'username': SOURCE_USER4_USERNAME,
+                    'name': SOURCE_USER4_NAME,
+                    'first_name': SOURCE_USER4_FIRST_NAME,
+                    'last_name': SOURCE_USER4_LAST_NAME,
+                    'email': SOURCE_USER4_EMAIL,
+                    'groups': [SOURCE_USER4_GROUP],
+                },
+            }
+        )
+        self.default_data['projects'][SOURCE_CATEGORY_UUID]['roles'].update(
+            {
+                SOURCE_CATEGORY_ROLE2_UUID: {
+                    'user': SOURCE_USER2_USERNAME,
+                    'role': self.role_delegate.name,
+                },
+                SOURCE_CATEGORY_ROLE3_UUID: {
+                    'user': SOURCE_USER3_USERNAME,
+                    'role': self.role_contributor.name,
+                },
+                SOURCE_CATEGORY_ROLE4_UUID: {
+                    'user': SOURCE_USER4_USERNAME,
+                    'role': self.role_guest.name,
+                },
+            }
+        )
+        self.default_data['projects'][SOURCE_PROJECT_UUID]['roles'].update(
+            {
+                SOURCE_PROJECT_ROLE2_UUID: {
+                    'user': SOURCE_USER2_USERNAME,
+                    'role': self.role_delegate.name,
+                },
+                SOURCE_PROJECT_ROLE3_UUID: {
+                    'user': SOURCE_USER3_USERNAME,
+                    'role': self.role_contributor.name,
+                },
+                SOURCE_PROJECT_ROLE4_UUID: {
+                    'user': SOURCE_USER4_USERNAME,
+                    'role': self.role_guest.name,
+                },
+            }
+        )
+        original_data = deepcopy(self.default_data)
 
         # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_source_data(self.source_site, self.default_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 8)
+        self.assertEqual(User.objects.all().count(), 5)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
+        self.assertEqual(AppSetting.objects.count(), 2)
 
         new_user = User.objects.get(username=SOURCE_USER_USERNAME)
+        new_user2 = User.objects.get(username=SOURCE_USER2_USERNAME)
+        new_user3 = User.objects.get(username=SOURCE_USER3_USERNAME)
+        new_user4 = User.objects.get(username=SOURCE_USER4_USERNAME)
 
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         expected = {
@@ -550,6 +689,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -559,6 +699,16 @@ class TestSyncSourceData(
         c_owner_obj = RoleAssignment.objects.get(
             sodar_uuid=SOURCE_CATEGORY_ROLE_UUID
         )
+        c_delegate_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE2_UUID
+        )
+        c_contributor_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE3_UUID
+        )
+        c_guest_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_CATEGORY_ROLE4_UUID
+        )
+
         expected = {
             'id': c_owner_obj.pk,
             'project': category_obj.pk,
@@ -567,6 +717,30 @@ class TestSyncSourceData(
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE_UUID),
         }
         self.assertEqual(model_to_dict(c_owner_obj), expected)
+        expected = {
+            'id': c_delegate_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user2.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE2_UUID),
+        }
+        self.assertEqual(model_to_dict(c_delegate_obj), expected)
+        expected = {
+            'id': c_contributor_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user3.pk,
+            'role': self.role_contributor.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE3_UUID),
+        }
+        self.assertEqual(model_to_dict(c_contributor_obj), expected)
+        expected = {
+            'id': c_guest_obj.pk,
+            'project': category_obj.pk,
+            'user': new_user4.pk,
+            'role': self.role_guest.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_ROLE4_UUID),
+        }
+        self.assertEqual(model_to_dict(c_guest_obj), expected)
 
         project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         expected = {
@@ -576,6 +750,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -585,6 +760,16 @@ class TestSyncSourceData(
         p_owner_obj = RoleAssignment.objects.get(
             sodar_uuid=SOURCE_PROJECT_ROLE_UUID
         )
+        p_delegate_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE2_UUID
+        )
+        p_contributor_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE3_UUID
+        )
+        p_guest_obj = RoleAssignment.objects.get(
+            sodar_uuid=SOURCE_PROJECT_ROLE4_UUID
+        )
+
         expected = {
             'id': p_owner_obj.pk,
             'project': project_obj.pk,
@@ -593,6 +778,30 @@ class TestSyncSourceData(
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE_UUID),
         }
         self.assertEqual(model_to_dict(p_owner_obj), expected)
+        expected = {
+            'id': p_delegate_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user2.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE2_UUID),
+        }
+        self.assertEqual(model_to_dict(p_delegate_obj), expected)
+        expected = {
+            'id': p_contributor_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user3.pk,
+            'role': self.role_contributor.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE3_UUID),
+        }
+        self.assertEqual(model_to_dict(p_contributor_obj), expected)
+        expected = {
+            'id': p_guest_obj.pk,
+            'project': project_obj.pk,
+            'user': new_user4.pk,
+            'role': self.role_guest.pk,
+            'sodar_uuid': uuid.UUID(SOURCE_PROJECT_ROLE4_UUID),
+        }
+        self.assertEqual(model_to_dict(p_guest_obj), expected)
 
         remote_cat_obj = RemoteProject.objects.get(
             site=self.source_site, project_uuid=category_obj.sodar_uuid
@@ -654,6 +863,102 @@ class TestSyncSourceData(
         peer_project_dict.pop('date_access')
         self.assertEqual(peer_project_dict, expected)
 
+        app_setting_ip_restrict_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+        app_setting_ip_allowlist_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
+        expected_ip_restrict = {
+            'name': 'ip_restrict',
+            'type': 'BOOLEAN',
+            'value': '0',
+            'value_json': {},
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        expected_ip_allowlist = {
+            'name': 'ip_allowlist',
+            'type': 'JSON',
+            'value': '',
+            'value_json': [],
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        app_setting_ip_restrict_dict = model_to_dict(
+            app_setting_ip_restrict_obj
+        )
+        app_setting_ip_allowlist_dict = model_to_dict(
+            app_setting_ip_allowlist_obj
+        )
+        app_setting_ip_restrict_dict.pop('id')
+        app_setting_ip_allowlist_dict.pop('id')
+
+        self.assertEqual(app_setting_ip_allowlist_dict, expected_ip_allowlist)
+        self.assertEqual(app_setting_ip_restrict_dict, expected_ip_restrict)
+
+        # Assert remote_data changes
+        expected = original_data
+        expected['users'][SOURCE_USER_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER2_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER3_UUID]['status'] = 'created'
+        expected['users'][SOURCE_USER4_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE2_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE3_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_CATEGORY_UUID]['roles'][
+            SOURCE_CATEGORY_ROLE4_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE2_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE3_UUID
+        ]['status'] = 'created'
+        expected['projects'][SOURCE_PROJECT_UUID]['roles'][
+            SOURCE_PROJECT_ROLE4_UUID
+        ]['status'] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
+
+        self.assertEqual(self.default_data, expected)
+
+    def test_create_app_setting_local(self):
+        remote_data = self.default_data
+
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'local'
+        ] = True
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'local'
+        ] = True
+
+        original_data = deepcopy(remote_data)
+
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
         # Assert remote_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'created'
@@ -665,6 +970,12 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID
         ]['status'] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -722,6 +1033,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
             'sodar_uuid': uuid.UUID(new_project_uuid),
         }
         model_dict = model_to_dict(new_project_obj)
@@ -751,6 +1063,12 @@ class TestSyncSourceData(
         ]['status'] = 'created'
         expected['projects'][new_project_uuid]['status'] = 'created'
         expected['projects'][new_project_uuid]['roles'][new_role_uuid][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
             'status'
         ] = 'created'
 
@@ -892,12 +1210,34 @@ class TestSyncSourceData(
             level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
         )
 
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
+        self.assertEqual(AppSetting.objects.count(), 2)
 
         remote_data = self.default_data
 
@@ -929,6 +1269,15 @@ class TestSyncSourceData(
 
         original_data = deepcopy(remote_data)
 
+        # Change projectroles app settings
+
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'value'
+        ] = True
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'value_json'
+        ] = ['192.168.1.1']
+
         # Do sync
         self.remote_api.sync_source_data(self.source_site, remote_data)
 
@@ -938,6 +1287,7 @@ class TestSyncSourceData(
         self.assertEqual(User.objects.all().count(), 3)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
+        self.assertEqual(AppSetting.objects.count(), 2)
 
         new_user = User.objects.get(username=new_user_username)
 
@@ -949,6 +1299,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -973,6 +1324,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -1062,6 +1414,47 @@ class TestSyncSourceData(
         peer_project_dict.pop('date_access')
         self.assertEqual(peer_project_dict, expected)
 
+        app_setting_ip_restrict_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+        app_setting_ip_allowlist_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
+        expected_ip_restrict = {
+            'name': 'ip_restrict',
+            'type': 'BOOLEAN',
+            'value': '1',
+            'value_json': {},
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        expected_ip_allowlist = {
+            'name': 'ip_allowlist',
+            'type': 'JSON',
+            'value': '',
+            'value_json': ['192.168.1.1'],
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        app_setting_ip_restrict_dict = model_to_dict(
+            app_setting_ip_restrict_obj
+        )
+        app_setting_ip_allowlist_dict = model_to_dict(
+            app_setting_ip_allowlist_obj
+        )
+        app_setting_ip_restrict_dict.pop('id')
+        app_setting_ip_allowlist_dict.pop('id')
+
+        self.assertEqual(app_setting_ip_allowlist_dict, expected_ip_allowlist)
+        self.assertEqual(app_setting_ip_restrict_dict, expected_ip_restrict)
+
         # Assert update_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
@@ -1071,6 +1464,182 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid][
             'status'
         ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'value'
+        ] = True
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'value_json'
+        ] = ['192.168.1.1']
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'updated'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'updated'
+
+        self.assertEqual(remote_data, expected)
+
+    def test_update_app_setting_local(self):
+        # Set up target category and project
+        category_obj = self._make_project(
+            title='NewCategoryTitle',
+            type=PROJECT_TYPE_CATEGORY,
+            parent=None,
+            description='New description',
+            readme='New readme',
+            sodar_uuid=SOURCE_CATEGORY_UUID,
+        )
+        project_obj = self._make_project(
+            title='NewProjectTitle',
+            type=PROJECT_TYPE_PROJECT,
+            parent=category_obj,
+            description='New description',
+            readme='New readme',
+            sodar_uuid=SOURCE_PROJECT_UUID,
+        )
+
+        # Set up user and roles
+        target_user = self._make_sodar_user(
+            username=SOURCE_USER_USERNAME,
+            name='NewFirstName NewLastName',
+            first_name='NewFirstName',
+            last_name='NewLastName',
+            email='newemail@example.com',
+        )
+        self._make_assignment(category_obj, target_user, self.role_owner)
+        self._make_assignment(project_obj, target_user, self.role_owner)
+
+        # Set up RemoteProject objects
+        self._make_remote_project(
+            project_uuid=category_obj.sodar_uuid,
+            project=category_obj,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=self.source_site,
+            level=REMOTE_LEVEL_READ_ROLES,
+        )
+
+        # Set up Peer Objects
+        peer_site = RemoteSite.objects.create(
+            **{
+                'name': PEER_SITE_NAME,
+                'url': PEER_SITE_URL,
+                'mode': SITE_MODE_PEER,
+                'description': PEER_SITE_DESC,
+                'secret': None,
+                'sodar_uuid': PEER_SITE_UUID,
+                'user_display': PEER_SITE_USER_DISPLAY,
+            }
+        )
+
+        self._make_remote_project(
+            project_uuid=project_obj.sodar_uuid,
+            project=project_obj,
+            site=peer_site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
+        )
+
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
+        # Assert preconditions
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+        self.assertEqual(AppSetting.objects.count(), 2)
+
+        remote_data = self.default_data
+
+        # Change projectroles app settings
+
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'local'
+        ] = True
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'local'
+        ] = True
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'value'
+        ] = True
+        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'value_json'
+        ] = ['192.168.1.1']
+
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        app_setting_ip_restrict_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+        app_setting_ip_allowlist_obj = AppSetting.objects.get(
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
+        expected_ip_restrict = {
+            'name': 'ip_restrict',
+            'type': 'BOOLEAN',
+            'value': '0',
+            'value_json': {},
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        expected_ip_allowlist = {
+            'name': 'ip_allowlist',
+            'type': 'JSON',
+            'value': None,
+            'value_json': [],
+            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'project': project_obj.id,
+            'app_plugin': None,
+            'user': None,
+            'user_modifiable': True,
+        }
+        app_setting_ip_restrict_dict = model_to_dict(
+            app_setting_ip_restrict_obj
+        )
+        app_setting_ip_allowlist_dict = model_to_dict(
+            app_setting_ip_allowlist_obj
+        )
+        app_setting_ip_restrict_dict.pop('id')
+        app_setting_ip_allowlist_dict.pop('id')
+
+        self.assertEqual(app_setting_ip_allowlist_dict, expected_ip_allowlist)
+        self.assertEqual(app_setting_ip_restrict_dict, expected_ip_restrict)
+
+        # Assert update_data changes
+        expected = original_data
+        expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
+        expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
+        expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
 
         self.assertEqual(remote_data, expected)
 
@@ -1296,6 +1865,12 @@ class TestSyncSourceData(
             'role': PROJECT_ROLE_CONTRIBUTOR,
             'status': 'deleted',
         }
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
+            'status'
+        ] = 'created'
+        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1349,6 +1924,27 @@ class TestSyncSourceData(
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
+            project=project_obj,
+            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+        )
+
         # Set up Peer Objects
         peer_site = RemoteSite.objects.create(
             **{
@@ -1397,6 +1993,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -1421,6 +2018,7 @@ class TestSyncSourceData(
             'description': SOURCE_PROJECT_DESCRIPTION,
             'parent': category_obj.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -1498,6 +2096,13 @@ class TestSyncSourceData(
         self.assertEqual(peer_project_dict, expected)
 
         # Assert no changes between update_data and remote_data
+        # Except global app settings, they are always updated.
+        original_data['app_settings'][
+            PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID
+        ]['status'] = 'updated'
+        original_data['app_settings'][
+            PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID
+        ]['status'] = 'updated'
         self.assertEqual(original_data, remote_data)
 
     def test_create_no_access(self):

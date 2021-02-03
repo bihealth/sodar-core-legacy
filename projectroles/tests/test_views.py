@@ -9,6 +9,8 @@ from django.forms.models import model_to_dict
 from django.test import RequestFactory, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from django.contrib import auth
+from django.contrib.messages import get_messages
 
 from test_plus.test import TestCase
 
@@ -35,8 +37,13 @@ from projectroles.tests.test_models import (
     RemoteSiteMixin,
     RemoteProjectMixin,
     AppSettingMixin,
+    RemoteTargetMixin,
 )
 from projectroles.utils import get_user_display_name
+
+
+# Access Django user model
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -146,7 +153,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
-    """Tests for the project search view"""
+    """Tests for the project search results view"""
 
     def setUp(self):
         super().setUp()
@@ -159,7 +166,6 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
-
         self.plugins = get_active_plugins(plugin_type='project_app')
 
     def test_render(self):
@@ -171,7 +177,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
-        self.assertEqual(response.context['search_term'], 'test')
+        self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
         self.assertEqual(response.context['search_type'], None)
         self.assertEqual(response.context['search_input'], 'test')
@@ -191,7 +197,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 200)
 
         # Assert the search parameters are provided
-        self.assertEqual(response.context['search_term'], 'test')
+        self.assertEqual(response.context['search_terms'], ['test'])
         self.assertEqual(response.context['search_keywords'], {})
         self.assertEqual(response.context['search_type'], 'file')
         self.assertEqual(response.context['search_input'], 'test type:file')
@@ -209,6 +215,34 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             ),
         )
 
+    def test_render_advanced(self):
+        """Test input from advanced search"""
+        new_project = self._make_project(
+            'AnotherProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            description='xxx',
+        )
+        self.cat_owner_as = self._make_assignment(
+            new_project, self.user, self.role_owner
+        )
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'testproject\r\nxxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the search parameters are provided
+        self.assertEqual(
+            response.context['search_terms'], ['testproject', 'xxx']
+        )
+        self.assertEqual(response.context['search_keywords'], {})
+        self.assertEqual(response.context['search_type'], None)
+        self.assertEqual(len(response.context['project_results']), 2)
+
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
         """Test redirecting the view due to search being disabled"""
@@ -216,6 +250,25 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
             )
+            self.assertRedirects(response, reverse('home'))
+
+
+class TestProjectAdvancedSearchView(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
+    """Tests for the advanced search view"""
+
+    def test_render(self):
+        """Test to ensure the advanced search view renders correctly"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
+        self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
+    def test_disable_search(self):
+        """Test redirecting the view due to search being disabled"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:search_advanced'))
             self.assertRedirects(response, reverse('home'))
 
 
@@ -331,7 +384,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         # Issue POST request
         values = {
-            'title': 'TestProject',
+            'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': '',
             'owner': self.user.sodar_uuid,
@@ -360,11 +413,12 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         expected = {
             'id': project.pk,
-            'title': 'TestProject',
+            'title': 'TestCategory',
             'type': PROJECT_TYPE_CATEGORY,
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'full_title': 'TestCategory',
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -468,6 +522,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'full_title': 'TestCategory / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -491,7 +546,9 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
-class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectUpdateView(
+    ProjectMixin, RoleAssignmentMixin, RemoteTargetMixin, TestViewsBase
+):
     """Tests for Project updating view"""
 
     def setUp(self):
@@ -562,7 +619,6 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     def test_update_project(self):
         """Test Project updating"""
         timeline = get_backend_api('timeline_backend')
-        app_settings = AppSettingAPI()
 
         new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
         self._make_assignment(new_category, self.user, self.role_owner)
@@ -583,6 +639,8 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         ps['settings.example_project_app.project_str_setting'] = 'test'
         ps['settings.example_project_app.project_bool_setting'] = True
         ps['settings.example_project_app.project_json_setting'] = '{}'
+        ps['settings.projectroles.ip_restrict'] = True
+        ps['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
         values.update(ps)
 
         with self.login(self.user):
@@ -608,6 +666,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': new_category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'full_title': new_category.title + ' / ' + 'updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
 
@@ -632,7 +691,13 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 post_safe=True,
             )
 
-            if isinstance(v_json, dict):
+            if isinstance(
+                v_json,
+                (
+                    dict,
+                    list,
+                ),
+            ):
                 self.assertEqual(json.loads(s), v_json)
 
             else:
@@ -719,6 +784,7 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'full_title': 'updated title',
             'sodar_uuid': self.category.sodar_uuid,
         }
 
@@ -738,6 +804,146 @@ class TestProjectUpdateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 ),
             )
 
+    def test_update_category_parent(self):
+        """Test category parent updating to ensure titles are changed"""
+
+        new_category = self._make_project(
+            'NewCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(new_category, self.user, self.role_owner)
+
+        # Assert preconditions
+        self.assertEqual(
+            self.category.full_title,
+            self.category.title,
+        )
+        self.assertEqual(
+            self.project.full_title,
+            self.category.title + ' / ' + self.project.title,
+        )
+
+        values = model_to_dict(self.category)
+        values['title'] = self.category.title
+        values['description'] = self.category.description
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        values['parent'] = new_category.sodar_uuid  # Updated category
+
+        # Add settings values
+        values.update(
+            app_settings.get_all_settings(project=self.category, post_safe=True)
+        )
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.category.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert response
+        self.assertEqual(response.status_code, 302)
+
+        # Assert category state and project title after update
+        self.category.refresh_from_db()
+        self.project.refresh_from_db()
+        self.assertEqual(self.category.parent, new_category)
+        self.assertEqual(
+            self.category.full_title,
+            new_category.title + ' / ' + self.category.title,
+        )
+        self.assertEqual(
+            self.project.full_title,
+            new_category.title
+            + ' / '
+            + self.category.title
+            + ' / '
+            + self.project.title,
+        )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_render_remote(self):
+        self._set_up_as_target(projects=[self.category, self.project])
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+            form = response.context['form']
+            self.assertIsNotNone(form)
+            self.assertIsInstance(form.fields['title'].widget, HiddenInput)
+            self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+            self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+            self.assertIsInstance(
+                form.fields['description'].widget, HiddenInput
+            )
+            self.assertIsInstance(form.fields['readme'].widget, HiddenInput)
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_str_setting'
+                ].widget,
+                HiddenInput,
+            )
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_int_setting'
+                ].widget,
+                HiddenInput,
+            )
+            self.assertNotIsInstance(
+                form.fields[
+                    'settings.example_project_app.project_bool_setting'
+                ].widget,
+                HiddenInput,
+            )
+            self.assertTrue(
+                form.fields['settings.projectroles.ip_restrict'].disabled
+            )
+            self.assertTrue(
+                form.fields['settings.projectroles.ip_allowlist'].disabled
+            )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_update_remote(self):
+        self._set_up_as_target(projects=[self.category, self.project])
+
+        values = model_to_dict(self.project)
+        values['owner'] = self.user.sodar_uuid
+        values['parent'] = self.category.sodar_uuid
+        values['settings.example_project_app.project_int_setting'] = 0
+        values['settings.example_project_app.project_int_setting_options'] = 0
+        values['settings.example_project_app.project_str_setting'] = 'test'
+        values[
+            'settings.example_project_app.project_str_setting_options'
+        ] = 'string1'
+        values['settings.example_project_app.project_bool_setting'] = True
+        values['settings.projectroles.ip_restrict'] = True
+        values['settings.projectroles.ip_allowlist'] = '["192.168.1.1"]'
+
+        # Assert precondition
+        self.assertEqual(Project.objects.all().count(), 2)
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+            # Assert response
+            self.assertEqual(response.status_code, 302)
+
+            # Assert category state after update
+            self.assertEqual(Project.objects.all().count(), 2)
+
 
 class TestProjectSettingsForm(
     AppSettingMixin, TestViewsBase, ProjectMixin, RoleAssignmentMixin
@@ -756,7 +962,7 @@ class TestProjectSettingsForm(
         )
 
         # Init string setting
-        self.setting_bool = self._make_setting(
+        self.setting_str = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_str_setting',
             setting_type='STRING',
@@ -764,12 +970,343 @@ class TestProjectSettingsForm(
             project=self.project,
         )
 
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
         # Init integer setting
+        self.setting_int = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value=0,
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
+            project=self.project,
+        )
+
+        # Init boolean setting
         self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            project=self.project,
+        )
+
+        # Init IP restrict setting
+        self.setting_ip_restrict = self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self.setting_ip_allowlist = self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=[],
+            project=self.project,
+        )
+
+    def test_get(self):
+        """Test rendering the settings values"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        field = response.context['form'].fields.get(
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+        )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 'Example string')
+        field = response.context['form'].fields.get(
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+        )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 0)
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_restrict'
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_allowlist'
+            )
+        )
+
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            [],
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.ip_restrict': True,
+            'settings.projectroles.ip_allowlist': '["192.168.1.1"]',
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_restrict', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project=self.project
+            ),
+            ['192.168.1.1'],
+        )
+
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+class TestProjectSettingsFormTarget(
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    AppSettingMixin,
+    TestViewsBase,
+    ProjectMixin,
+    RoleAssignmentMixin,
+):
+    """Tests for project settings in the project create/update view on target site"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=self.site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Init string setting
+        self.setting_str = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_int = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
             name='project_int_setting',
             setting_type='INTEGER',
             value='0',
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
             project=self.project,
         )
 
@@ -819,6 +1356,16 @@ class TestProjectSettingsForm(
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
                 'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
             )
         )
@@ -826,6 +1373,26 @@ class TestProjectSettingsForm(
             response.context['form'].fields.get(
                 'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
             )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_restrict'
+            )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.ip_restrict')
+            .disabled
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.ip_allowlist'
+            )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.ip_allowlist')
+            .disabled
         )
 
     def test_post(self):
@@ -839,6 +1406,22 @@ class TestProjectSettingsForm(
         self.assertEqual(
             app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
             ),
             0,
         )
@@ -858,6 +1441,9 @@ class TestProjectSettingsForm(
         values = {
             'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
             'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
             'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
             'settings.%s.project_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
@@ -900,6 +1486,22 @@ class TestProjectSettingsForm(
         )
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
             ),
             True,
@@ -909,6 +1511,328 @@ class TestProjectSettingsForm(
                 EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
             ),
             {'Test': 'Updated'},
+        )
+
+
+PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
+    'test_setting': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': False,
+    },
+    'test_setting_local': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': True,
+    },
+}
+
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+@override_settings(
+    PROJECTROLES_APP_SETTINGS_TEST=PROJECTROLES_APP_SETTINGS_TEST_LOCAL
+)
+class TestProjectSettingsFormTargetLocal(
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    AppSettingMixin,
+    TestViewsBase,
+    ProjectMixin,
+    RoleAssignmentMixin,
+):
+    """Tests for project settings in the project create/update view on target site"""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        super().setUp()
+        # Init user & role
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, None
+        )
+        self.owner_as = self._make_assignment(
+            self.project, self.user, self.role_owner
+        )
+
+        # Create site
+        self.site = self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
+            description='',
+            secret=REMOTE_SITE_SECRET,
+        )
+
+        self.remote_project = self._make_remote_project(
+            project_uuid=self.project.sodar_uuid,
+            project=self.project,
+            site=self.site,
+            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        )
+
+        # Init string setting
+        self.setting_str = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting',
+            setting_type='STRING',
+            value='',
+            project=self.project,
+        )
+
+        # Init string setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            project=self.project,
+        )
+
+        # Init integer setting
+        self.setting_int = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting',
+            setting_type='INTEGER',
+            value='0',
+            project=self.project,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
+            project=self.project,
+        )
+
+        # Init boolean setting
+        self.setting_bool = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_bool_setting',
+            setting_type='BOOLEAN',
+            value=False,
+            project=self.project,
+        )
+
+        # Init json setting
+        self.setting_json = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='project_json_setting',
+            setting_type='JSON',
+            value=None,
+            value_json={
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            project=self.project,
+        )
+
+    def test_get(self):
+        """Test rendering the settings values"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNotNone(response.context['form'])
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_str_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.%s.project_json_setting' % EXAMPLE_APP_NAME
+            )
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.test_setting_local'
+            )
+        )
+        self.assertFalse(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting_local')
+            .disabled
+        )
+        self.assertIsNotNone(
+            response.context['form'].fields.get(
+                'settings.projectroles.test_setting'
+            )
+        )
+        self.assertTrue(
+            response.context['form']
+            .fields.get('settings.projectroles.test_setting')
+            .disabled
+        )
+
+    def test_post(self):
+        """Test modifying the settings values"""
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            '',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            False,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'test_setting', project=self.project
+            ),
+            False,
+        )
+
+        values = {
+            'settings.%s.project_str_setting' % EXAMPLE_APP_NAME: 'updated',
+            'settings.%s.project_int_setting' % EXAMPLE_APP_NAME: 170,
+            'settings.%s.project_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.project_int_setting_options' % EXAMPLE_APP_NAME: 1,
+            'settings.%s.project_bool_setting' % EXAMPLE_APP_NAME: True,
+            'settings.%s.project_json_setting'
+            % EXAMPLE_APP_NAME: '{"Test": "Updated"}',
+            'settings.projectroles.test_setting_local': True,
+            'owner': self.user.sodar_uuid,
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+        }
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert redirect
+        with self.login(self.user):
+            self.assertRedirects(
+                response,
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+        # Assert settings state after update
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_str_setting', project=self.project
+            ),
+            'updated',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_int_setting', project=self.project
+            ),
+            170,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting_options',
+                project=self.project,
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME,
+                'project_int_setting_options',
+                project=self.project,
+            ),
+            1,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_bool_setting', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'project_json_setting', project=self.project
+            ),
+            {'Test': 'Updated'},
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'test_setting_local', project=self.project
+            ),
+            True,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                'projectroles', 'test_setting', project=self.project
+            ),
+            False,
         )
 
 
@@ -996,11 +1920,20 @@ class TestRoleAssignmentCreateView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         self.user_new = self.make_user('guest')
@@ -1047,7 +1980,7 @@ class TestRoleAssignmentCreateView(
     def test_create_assignment(self):
         """Test RoleAssignment creation"""
         # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
 
         # Issue POST request
         values = {
@@ -1055,7 +1988,6 @@ class TestRoleAssignmentCreateView(
             'user': self.user_new.sodar_uuid,
             'role': self.role_guest.pk,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1066,12 +1998,10 @@ class TestRoleAssignmentCreateView(
             )
 
         # Assert RoleAssignment state after creation
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
         )
-        self.assertIsNotNone(role_as)
-
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
@@ -1079,7 +2009,6 @@ class TestRoleAssignmentCreateView(
             'role': self.role_guest.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(role_as), expected)
 
         # Assert redirect
@@ -1091,6 +2020,140 @@ class TestRoleAssignmentCreateView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+    def test_create_delegate(self):
+        """Test RoleAssignment creation with project delegate role"""
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_new
+        )
+        expected = {
+            'id': role_as.pk,
+            'project': self.project.pk,
+            'user': self.user_new.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': role_as.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(role_as), expected)
+
+    def test_create_delegate_limit_reached(self):
+        """Test RoleAssignment creation with exceeded delegate limit"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertIsNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
+    def test_create_delegate_limit_increased(self):
+        """Test RoleAssignment creation with delegate limit > 1"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertIsNotNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
+
+    def test_create_delegate_limit_inherited(self):
+        """Test creation with existing delegate role for inherited owner"""
+        self._make_assignment(
+            self.project, self.user_owner_cat, self.role_delegate
+        )
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_create',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        # NOTE: Limit should be reached, but inherited owner role is disregarded
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertIsNotNone(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            ).first()
+        )
 
     def test_redirect_to_invite(self):
         """Test SODARUserRedirectWidget redirects to the ProjectInvite creation view"""
@@ -1145,7 +2208,7 @@ class TestRoleAssignmentCreateView(
 
     def test_dont_create_option(self):
         """Test if new options are not being displayed by the SODARUserRedirectWidget if
-        they are nor valid email addresses """
+        they are nor valid email addresses"""
         values = {
             'project': self.project.sodar_uuid,
             'role': self.role_guest.pk,
@@ -1176,11 +2239,20 @@ class TestRoleAssignmentUpdateView(
     def setUp(self):
         super().setUp()
 
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
+        # Set up category and project
+        self.category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
+        self.user_owner_cat = self.make_user('owner_cat')
+        self.owner_as_cat = self._make_assignment(
+            self.category, self.user_owner_cat, self.role_owner
+        )
+        self.project = self._make_project(
+            'TestProject', PROJECT_TYPE_PROJECT, self.category
+        )
+        self.user_owner = self.make_user('owner')
         self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
+            self.project, self.user_owner, self.role_owner
         )
 
         # Create guest user and role
@@ -1224,14 +2296,13 @@ class TestRoleAssignmentUpdateView(
         """Test RoleAssignment updating"""
 
         # Assert precondition
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
 
         values = {
             'project': self.role_as.project.sodar_uuid,
             'user': self.role_as.user.sodar_uuid,
             'role': self.role_contributor.pk,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1242,12 +2313,10 @@ class TestRoleAssignmentUpdateView(
             )
 
         # Assert RoleAssignment state after update
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
         )
-        self.assertIsNotNone(role_as)
-
         expected = {
             'id': role_as.pk,
             'project': self.project.pk,
@@ -1255,7 +2324,6 @@ class TestRoleAssignmentUpdateView(
             'role': self.role_contributor.pk,
             'sodar_uuid': role_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(role_as), expected)
 
         # Assert redirect
@@ -1267,6 +2335,153 @@ class TestRoleAssignmentUpdateView(
                     kwargs={'project': self.project.sodar_uuid},
                 ),
             )
+
+    def test_update_delegate(self):
+        """Test RoleAssignment updating to delegate"""
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+
+        values = {
+            'project': self.role_as.project.sodar_uuid,
+            'user': self.role_as.user.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        role_as = RoleAssignment.objects.get(
+            project=self.project, user=self.user_new
+        )
+        expected = {
+            'id': role_as.pk,
+            'project': self.project.pk,
+            'user': self.user_new.pk,
+            'role': self.role_delegate.pk,
+            'sodar_uuid': role_as.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(role_as), expected)
+
+    def test_update_delegate_limit_reached(self):
+        """Test RoleAssignment updating with exceeded delegate limit"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(RoleAssignment.objects.all().count(), 4)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, user=self.user_new
+            )
+            .first()
+            .role,
+            self.role_guest,
+        )
+
+    @override_settings(PROJECTROLES_DELEGATE_LIMIT=2)
+    def test_update_delegate_limit_increased(self):
+        """Test RoleAssignment updating with delegate limit > 1"""
+        del_user = self.make_user('new_del_user')
+        self._make_assignment(self.project, del_user, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            1,
+        )
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            2,
+        )
+
+    def test_update_delegate_limit_inherited(self):
+        """Test updating with existing delegate role for inherited owner"""
+        self._make_assignment(
+            self.project, self.user_owner_cat, self.role_delegate
+        )
+
+        # Assert precondition
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            1,
+        )
+
+        # Issue POST request
+        values = {
+            'project': self.project.sodar_uuid,
+            'user': self.user_new.sodar_uuid,
+            'role': self.role_delegate.pk,
+        }
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_update',
+                    kwargs={'roleassignment': self.role_as.sodar_uuid},
+                ),
+                values,
+            )
+
+        # Assert postconditions
+        # NOTE: Limit should be reached, but inherited owner role is disregarded
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project, role=self.role_delegate
+            ).count(),
+            2,
+        )
 
 
 class TestRoleAssignmentDeleteView(
@@ -1407,7 +2622,7 @@ class TestRoleAssignmentOwnerTransferView(
         with self.login(self.user):
             response = self.client.post(
                 reverse(
-                    'projectroles:role_transfer_owner',
+                    'projectroles:role_owner_transfer',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
                 data={
@@ -1433,7 +2648,7 @@ class TestRoleAssignmentOwnerTransferView(
         with self.login(self.user):
             response = self.client.post(
                 reverse(
-                    'projectroles:role_transfer_owner',
+                    'projectroles:role_owner_transfer',
                     kwargs={'project': self.project.sodar_uuid},
                 ),
                 data={
@@ -1499,8 +2714,8 @@ class TestProjectInviteCreateView(
         from the RoleAssignment Form"""
 
         values = {
-            'forwarded-email': 'test@example.com',
-            'forwarded-role': self.role_contributor.pk,
+            'e': 'test@example.com',
+            'r': self.role_contributor.pk,
         }
 
         with self.login(self.owner_as.user):
@@ -1585,8 +2800,10 @@ class TestProjectInviteCreateView(
                 ),
             )
 
-    def test_accept_invite(self):
-        """Test user accepting an invite"""
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_ldap(self):
+        """Test user accepting an LDAP invite"""
 
         # Init invite
         invite = self._make_invite(
@@ -1614,15 +2831,28 @@ class TestProjectInviteCreateView(
                 reverse(
                     'projectroles:invite_accept',
                     kwargs={'secret': invite.secret},
-                )
+                ),
+                follow=True,
             )
 
-            self.assertRedirects(
-                response,
-                reverse(
-                    'projectroles:detail',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse(
+                            'projectroles:detail',
+                            kwargs={'project': self.project.sodar_uuid},
+                        ),
+                        302,
+                    ),
+                ],
             )
 
             # Assert postconditions
@@ -1639,8 +2869,10 @@ class TestProjectInviteCreateView(
                 1,
             )
 
-    def test_accept_invite_expired(self):
-        """Test user accepting an expired invite"""
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_expired_ldap(self):
+        """Test user accepting an expired LDAP invite"""
 
         # Init invite
         invite = self._make_invite(
@@ -1669,10 +2901,26 @@ class TestProjectInviteCreateView(
                 reverse(
                     'projectroles:invite_accept',
                     kwargs={'secret': invite.secret},
-                )
+                ),
+                follow=True,
             )
 
-            self.assertRedirects(response, reverse('home'))
+            self.assertListEqual(
+                response.redirect_chain,
+                [
+                    (
+                        reverse(
+                            'projectroles:invite_process_ldap',
+                            kwargs={'secret': invite.secret},
+                        ),
+                        302,
+                    ),
+                    (
+                        reverse('home'),
+                        302,
+                    ),
+                ],
+            )
 
             # Assert postconditions
             self.assertEqual(
@@ -1687,6 +2935,520 @@ class TestProjectInviteCreateView(
                 ).count(),
                 0,
             )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_invite_local(self):
+        """Test user accepting a local invite (user doesn't exist and no user is logged in)"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        email = response.context['form']['email'].value()
+        username = response.context['form']['username'].value()
+
+        self.assertEqual(email, invite.email)
+        self.assertEqual(username, invite.email.split('@')[0])
+
+        self.assertEqual(User.objects.count(), 2)
+
+        response = self.client.post(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            data={
+                'first_name': 'First',
+                'last_name': 'Last',
+                'username': username,
+                'email': email,
+                'password': 'asd',
+                'password_confirm': 'asd',
+            },
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse(
+                        'projectroles:detail',
+                        kwargs={'project': self.project.sodar_uuid},
+                    ),
+                    302,
+                ),
+                (
+                    reverse('login')
+                    + '?next='
+                    + reverse(
+                        'projectroles:detail',
+                        kwargs={'project': self.project.sodar_uuid},
+                    ),
+                    302,
+                ),
+            ],
+        )
+
+        user = User.objects.get(username=username)
+
+        # Assert postconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=user,
+                role=self.role_contributor,
+            ).count(),
+            1,
+        )
+
+        with self.login(user, password='asd'):
+            response = self.client.get(
+                reverse(
+                    'projectroles:detail',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+            )
+
+            self.assertEqual(response.status_code, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_invite_expired_local(self):
+        """Test user accepting an expired local invite"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+            date_expire=timezone.now(),
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse(
+                        'projectroles:invite_process_local',
+                        kwargs={'secret': invite.secret},
+                    ),
+                    302,
+                ),
+                (reverse('home'), 302),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
+            ],
+        )
+
+        # Assert postconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+        self.assertEqual(
+            RoleAssignment.objects.filter(
+                project=self.project,
+                user=self.new_user,
+                role=self.role_contributor,
+            ).count(),
+            0,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_wrong_type_local(self):
+        """Test user accepting a local invite in the view processing LDAP invites"""
+
+        # Init invite
+        invite = self._make_invite(
+            email='test@different.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_ldap',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+        # LDAP expects user to be logged in
+        self.assertRedirects(
+            response,
+            reverse('login')
+            + '?next='
+            + reverse(
+                'projectroles:invite_process_ldap',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
+    @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
+    @override_settings(ENABLE_LDAP=True)
+    def test_accept_invite_wrong_type_ldap(self):
+        """Test user accepting a LDAP invite in the view processing local invites"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response, reverse('login') + '?next=' + reverse('home')
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invite was issued for LDAP user, but local invite view '
+            'was requested.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_accept_invite_accept_local_user_not_allowed(self):
+        """Test user accepting a local invite while local users are disabled"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_accept',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (
+                    reverse('home'),
+                    302,
+                ),
+                (
+                    reverse('login') + '?next=/',
+                    302,
+                ),
+            ],
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
+    def test_accept_invite_process_local_user_not_allowed(self):
+        """Test processing a local invite while local users are disabled"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response, reverse('login') + '?next=' + reverse('home')
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invite of non-LDAP user, but local users are not allowed!',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_no_local_user_different_user_logged_in(
+        self,
+    ):
+        """Test processing a local invite while invited user doesn't exist and different user is logged in"""
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Logged in user is not allowed to accept other\'s invites.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_different_user_logged_in(self):
+        """Test processing a local invite while invited user exists but different user is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: Invited user exists, but logged in user is not invited '
+            'user.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_is_logged_in(self):
+        """Test processing a local invite while invited user exists and is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        with self.login(invited_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_process_local',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'projectroles:detail',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Welcome to project "TestProject"! You have been assigned the '
+            'role of project contributor.',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_accept_local_user_exists_not_logged_in(self):
+        """Test processing a local invite while invited user exists but not user is logged in"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Assert preconditions
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        response = self.client.get(
+            reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                'login',
+            )
+            + '?next='
+            + reverse(
+                'projectroles:invite_process_local',
+                kwargs={'secret': invite.secret},
+            ),
+        )
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'A user with that email already exists. Please login first to '
+            'accept the invite.',
+        )
+
+    def test_accept_role_exists(self):
+        """Test accepting an invite for user with roles in project"""
+
+        # Create invited user
+        invited_user = self.make_user(INVITE_EMAIL.split('@')[0])
+        invited_user.email = INVITE_EMAIL
+        invited_user.save()
+
+        # Init invite
+        invite = self._make_invite(
+            email=INVITE_EMAIL,
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user,
+            message='',
+        )
+
+        # Set up role assignment
+        self._make_assignment(self.project, invited_user, self.role_guest)
+
+        # Assert preconditions
+        self.assertTrue(invite.active)
+
+        with self.login(invited_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:invite_accept',
+                    kwargs={'secret': invite.secret},
+                ),
+                follow=True,
+            )
+
+        self.assertRedirects(
+            response,
+            reverse('home'),
+        )
+        invite.refresh_from_db()
+        self.assertFalse(invite.active)
 
 
 class TestProjectInviteListView(
@@ -1778,9 +3540,51 @@ class TestProjectInviteRevokeView(
                 )
             )
 
-        # Assert ProjectInvite state after creation
+        # Assert ProjectInvite state
         self.assertEqual(ProjectInvite.objects.all().count(), 1)
         self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+    def test_revoke_delegate(self):
+        """Test invite revocation for a delegate role"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+
+        # Assert precondition
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        # Issue POST request
+        with self.login(self.user):
+            self.client.post(
+                reverse(
+                    'projectroles:invite_revoke',
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
+
+        # Assert ProjectInvite state
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 0)
+
+    def test_revoke_delegate_no_perms(self):
+        """Test delegate revocation with insufficient perms (should fail)"""
+        self.invite.role = self.role_delegate
+        self.invite.save()
+        delegate = self.make_user('delegate')
+        self._make_assignment(self.project, delegate, self.role_delegate)
+
+        # Assert precondition
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
+
+        # Issue POST request
+        with self.login(delegate):
+            self.client.post(
+                reverse(
+                    'projectroles:invite_revoke',
+                    kwargs={'projectinvite': self.invite.sodar_uuid},
+                )
+            )
+
+        # Assert ProjectInvite state
+        self.assertEqual(ProjectInvite.objects.filter(active=True).count(), 1)
 
 
 # Remote view tests ------------------------------------------------------------
@@ -2326,3 +4130,67 @@ class TestRemoteProjectsBatchUpdateView(
                     kwargs={'remotesite': self.target_site.sodar_uuid},
                 ),
             )
+
+
+class TestUserUpdateView(TestViewsBase):
+    """Tests for the user update view."""
+
+    # NOTE: This assumes an example app is available
+    def setUp(self):
+        # Init user & role
+        self.user_local = self.make_user('local_user')
+        self.user_ldap = self.make_user('ldap_user@EXAMPLE')
+
+    def test_render_local_user(self):
+        with self.login(self.user_local):
+            response = self.client.get(reverse('projectroles:user_update'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_render_ldap_user(self):
+        with self.login(self.user_ldap):
+            response = self.client.get(
+                reverse('projectroles:user_update'), follow=True
+            )
+
+        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            'Error: LDAP user can\'t edit user details',
+        )
+
+    def test_submit_local_user(self):
+        self.assertEqual(User.objects.count(), 2)
+        user = User.objects.get(id=self.user_local.id)
+        self.assertEqual(user.first_name, '')
+        self.assertEqual(user.last_name, '')
+
+        with self.login(self.user_local):
+            response = self.client.post(
+                reverse('projectroles:user_update'),
+                {
+                    'first_name': 'Local',
+                    'last_name': 'User',
+                    'username': self.user_local.username,
+                    'email': self.user_local.email,
+                    'password': 'fjf',
+                    'password_confirm': 'fjf',
+                },
+                follow=True,
+            )
+
+        self.assertListEqual(
+            response.redirect_chain,
+            [
+                (reverse('home'), 302),
+                (
+                    reverse('login') + '?next=' + reverse('home'),
+                    302,
+                ),
+            ],
+        )
+
+        self.assertEqual(User.objects.count(), 2)
+        user = User.objects.get(id=self.user_local.id)
+        self.assertEqual(user.first_name, 'Local')
+        self.assertEqual(user.last_name, 'User')

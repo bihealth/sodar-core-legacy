@@ -16,7 +16,16 @@
 
   <div class="card" id="sodar-user-details-card">
     <div class="card-header">
-      <h4><i class="fa fa-user-circle-o"></i> Details</h4>
+      <h4>
+        <i class="fa fa-user-circle-o"></i> Details
+        <span class="sodar-header-input-group pull-right">
+        <a role="button"
+           class="btn btn-primary {% if not local_user %}disabled{% endif %}"
+           href="{% url 'projectroles:user_update' %}">
+          <i class="fa fa-pencil"></i> Update User
+        </a>
+        </span>
+      </h4>
     </div>
     <div class="card-body">
       <dl class="row">
@@ -46,7 +55,7 @@
         <a role="button"
            class="btn btn-primary {% if not user_settings or user_settings|length == 0 %}disabled{% endif %}"
            href="{% url 'userprofile:settings_update' %}">
-          <i class="fa fa-pencil"></i> Update
+          <i class="fa fa-pencil"></i> Update Settings
         </a>
         </span>
       </h4>
@@ -58,12 +67,12 @@
             {{ setting.label }}
           {% if setting.description %}
             {% get_info_link setting.description as info_link %}
-            {{ info_link | safe }}
+            <span class="pull-right">{{ info_link | safe }}</span>
           {% endif %}
           </dt>
           <dd class="col-md-8">
-            {% if setting.value == None %}
-              <span class="text-muted font-italic">Not set</span>
+            {% if setting.value == None or setting.value == '' %}
+              <span class="text-muted">N/A</span>
             {% else %}
               {{ setting.value }}
             {% endif %}

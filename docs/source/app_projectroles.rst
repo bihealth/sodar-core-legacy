@@ -5,7 +5,7 @@ Projectroles App
 ^^^^^^^^^^^^^^^^
 
 The ``projectroles`` app is the base app for building a
-:term:`SODAR Core based Django site<Sodar Core Based Site>`. It provides a
+:term:`SODAR Core based Django site<SODAR Core Based Site>`. It provides a
 ramework for project access management, dynamic content retrieval, models and
 tools for SODAR-compatible apps plus a default template and CSS layout.
 

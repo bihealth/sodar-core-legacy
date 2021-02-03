@@ -27,8 +27,7 @@ from projectroles.utils import (
     get_user_display_name,
     build_secret,
 )
-from projectroles.app_settings import AppSettingAPI
-
+from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
 
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -54,8 +53,6 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
-DISABLE_CATEGORIES = getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
 
 
 User = auth.get_user_model()
@@ -86,7 +83,7 @@ class SODARFormMixin:
 
         log_msg = 'Field "{}": {}'.format(field, log_err)
 
-        if self.current_user:
+        if hasattr(self, 'current_user') and self.current_user:
             log_msg += ' (user={})'.format(self.current_user.username)
 
         self.logger.error(log_msg)
@@ -241,7 +238,10 @@ class ProjectForm(SODARModelForm):
         if (
             user.is_superuser
             or not instance.parent
-            or (instance.type == PROJECT_TYPE_PROJECT and DISABLE_CATEGORIES)
+            or (
+                instance.type == PROJECT_TYPE_PROJECT
+                and settings.PROJECTROLES_DISABLE_CATEGORIES
+            )
         ):
             ret.append((None, '--------'))
 
@@ -288,32 +288,39 @@ class ProjectForm(SODARModelForm):
         ):
             categories.append(instance.parent)
 
-        ret += [(c.sodar_uuid, c.get_full_title()) for c in categories]
+        ret += [(c.sodar_uuid, c.full_title) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
     def _init_app_settings(self):
         # Set up setting query kwargs
-        self.p_kwargs = (
-            {'user_modifiable': True}
-            if not self.current_user.is_superuser
-            else {}
-        )
+        self.p_kwargs = {}
+        if not self.current_user.is_superuser:
+            self.p_kwargs['user_modifiable'] = True
         self.app_settings = AppSettingAPI()
         self.app_plugins = sorted(get_active_plugins(), key=lambda x: x.name)
 
-        for plugin in self.app_plugins:
+        # plugin == 'None' refers to projectroles app
+        for plugin in self.app_plugins + [None]:
             # Show non-modifiable settings to superusers
-            p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-            )
+            if plugin:
+                name = plugin.name
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
                 s_widget_attrs = s_val.get('widget_attrs') or {}
+                if 'placeholder' in s_val:
+                    s_widget_attrs['placeholder'] = s_val.get('placeholder')
                 setting_kwargs = {
                     'required': False,
-                    'label': s_val.get('label')
-                    or '{}.{}'.format(plugin.name, s_key),
+                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
                     'help_text': s_val['description'],
                 }
 
@@ -332,7 +339,7 @@ class ProjectForm(SODARModelForm):
                     if self.instance.pk:
                         self.initial[s_field] = json.dumps(
                             self.app_settings.get_app_setting(
-                                app_name=plugin.name,
+                                app_name=name,
                                 setting_name=s_key,
                                 project=self.instance,
                             )
@@ -341,20 +348,40 @@ class ProjectForm(SODARModelForm):
                     else:
                         self.initial[s_field] = json.dumps(
                             self.app_settings.get_default_setting(
-                                app_name=plugin.name, setting_name=s_key
+                                app_name=name, setting_name=s_key
                             )
                         )
                 else:
                     if s_val['type'] == 'STRING':
-                        self.fields[s_field] = forms.CharField(
-                            max_length=APP_SETTING_VAL_MAXLENGTH,
-                            **setting_kwargs
-                        )
+                        if 'options' in s_val:
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (option, option)
+                                    for option in s_val.get('options')
+                                ],
+                                **setting_kwargs
+                            )
+                        else:
+                            self.fields[s_field] = forms.CharField(
+                                max_length=APP_SETTING_VAL_MAXLENGTH,
+                                widget=forms.TextInput(attrs=s_widget_attrs),
+                                **setting_kwargs
+                            )
 
                     elif s_val['type'] == 'INTEGER':
-                        self.fields[s_field] = forms.IntegerField(
-                            **setting_kwargs
-                        )
+                        if 'options' in s_val:
+                            self.fields[s_field] = forms.ChoiceField(
+                                choices=[
+                                    (int(option), int(option))
+                                    for option in s_val.get('options')
+                                ],
+                                **setting_kwargs
+                            )
+                        else:
+                            self.fields[s_field] = forms.IntegerField(
+                                widget=forms.NumberInput(attrs=s_widget_attrs),
+                                **setting_kwargs
+                            )
 
                     elif s_val['type'] == 'BOOLEAN':
                         self.fields[s_field] = forms.BooleanField(
@@ -370,7 +397,7 @@ class ProjectForm(SODARModelForm):
                         self.initial[
                             s_field
                         ] = self.app_settings.get_app_setting(
-                            app_name=plugin.name,
+                            app_name=name,
                             setting_name=s_key,
                             project=self.instance,
                         )
@@ -379,13 +406,25 @@ class ProjectForm(SODARModelForm):
                         self.initial[
                             s_field
                         ] = self.app_settings.get_default_setting(
-                            app_name=plugin.name, setting_name=s_key
+                            app_name=name, setting_name=s_key
                         )
 
                 # Add hidden note
                 if s_val.get('user_modifiable') is False:
                     self.fields[s_field].label += ' [HIDDEN]'
                     self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
+
+                if s_val.get('local', APP_SETTING_LOCAL_DEFAULT) is False:
+                    if self.instance.is_remote():
+                        self.fields[s_field].label += ' [DISABLED]'
+                        self.fields[
+                            s_field
+                        ].help_text += ' [Only editable on source site]'
+                        self.fields[s_field].disabled = True
+                    else:
+                        self.fields[
+                            s_field
+                        ].help_text += ' [Not editable on target sites]'
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -445,7 +484,7 @@ class ProjectForm(SODARModelForm):
             self.fields['owner'].widget = forms.HiddenInput()
 
             # Set valid choices for parent
-            if not DISABLE_CATEGORIES:
+            if not settings.PROJECTROLES_DISABLE_CATEGORIES:
                 self.fields['parent'].choices = self._get_parent_choices(
                     self.instance, self.current_user
                 )
@@ -488,7 +527,7 @@ class ProjectForm(SODARModelForm):
             # Creating a top level project
             else:
                 # Force project type
-                if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
+                if settings.PROJECTROLES_DISABLE_CATEGORIES:
                     self.initial['type'] = PROJECT_TYPE_PROJECT
 
                 else:
@@ -499,6 +538,13 @@ class ProjectForm(SODARModelForm):
 
                 # Set up parent field
                 self.initial['parent'] = None
+
+        if self.instance.is_remote():
+            self.fields['title'].widget = forms.HiddenInput()
+            self.fields['type'].widget = forms.HiddenInput()
+            self.fields['parent'].widget = forms.HiddenInput()
+            self.fields['description'].widget = forms.HiddenInput()
+            self.fields['readme'].widget = forms.HiddenInput()
 
     def clean(self):
         """Function for custom form validation and cleanup"""
@@ -519,7 +565,7 @@ class ProjectForm(SODARModelForm):
 
             elif (
                 self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-                and not DISABLE_CATEGORIES
+                and not settings.PROJECTROLES_DISABLE_CATEGORIES
             ):
                 self.add_error(
                     'parent', 'Projects can not be placed under root'
@@ -566,16 +612,23 @@ class ProjectForm(SODARModelForm):
             )
 
         # Verify settings fields
-        for plugin in self.app_plugins:
-            p_settings = self.app_settings.get_setting_defs(
-                APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
-            )
+        for plugin in self.app_plugins + [None]:
+            if plugin:
+                name = plugin.name
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
+                )
+            else:
+                name = 'projectroles'
+                p_settings = self.app_settings.get_setting_defs(
+                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
+                )
 
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(plugin.name, s_key)
+                s_field = 'settings.{}.{}'.format(name, s_key)
 
                 if s_val['type'] == 'JSON':
-                    # for some reason, there is a distinct possiblity, that the
+                    # for some reason, there is a distinct possibility, that the
                     # initial value has been discarded and we get '' as value.
                     # Seems to only happen in automated tests. Will catch that
                     # here.
@@ -593,9 +646,15 @@ class ProjectForm(SODARModelForm):
                             'Couldn\'t encode JSON\n' + str(err)
                         )
 
+                elif s_val['type'] == 'INTEGER':
+                    # when field is a select/dropdown, the information of the datatype gets lost.
+                    # we need to convert that here, otherwise subsequent checks will fail.
+                    self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
+
                 if not self.app_settings.validate_setting(
                     setting_type=s_val['type'],
                     setting_value=self.cleaned_data.get(s_field),
+                    setting_options=s_val.get('options'),
                 ):
                     self.add_error(s_field, 'Invalid value')
 
@@ -700,6 +759,8 @@ class RoleAssignmentForm(SODARModelForm):
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -708,17 +769,17 @@ class RoleAssignmentForm(SODARModelForm):
                     'role', 'Insufficient permissions for altering delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
-            delegates = self.project.get_delegates()
-
-            if DELEGATE_LIMIT != 0:
-                if len(delegates) >= DELEGATE_LIMIT:
-                    self.add_error(
-                        'role',
-                        'The limit ({}) of delegates for this project has '
-                        'already been reached.'.format(DELEGATE_LIMIT),
-                    )
+            # Ensure delegate limit is not exceeded
+            if (
+                del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+            ):
+                self.add_error(
+                    'role',
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit),
+                )
 
         return self.cleaned_data
 
@@ -779,6 +840,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             raise forms.ValidationError('Selected role does not exist')
 
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -787,21 +850,21 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
                     'Insufficient permissions for assigning a delegate role'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
+            # Ensure delegate limit is not exceeded
             new_owner_role = RoleAssignment.objects.filter(
                 project=self.project, user=self.cleaned_data.get('new_owner')
             ).first()
 
             if (
-                DELEGATE_LIMIT != 0
+                del_limit != 0
                 and new_owner_role
                 and new_owner_role.role.name != PROJECT_ROLE_DELEGATE
-                and self.project.get_delegates().count() >= DELEGATE_LIMIT
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
             ):
                 raise forms.ValidationError(
                     'The limit ({}) of delegates for this project has '
-                    'already been reached.'.format(DELEGATE_LIMIT)
+                    'already been reached.'.format(del_limit)
                 )
 
         return role
@@ -879,18 +942,15 @@ class ProjectInviteForm(SODARModelForm):
 
     def clean(self):
         # Check if user email is already in users
-        try:
-            existing_user = User.objects.get(
-                email=self.cleaned_data.get('email')
-            )
+        existing_user = User.objects.filter(
+            email=self.cleaned_data.get('email')
+        ).first()
+        if existing_user:
             self.add_error(
                 'email',
                 'User "{}" already exists in the system with this email. '
                 'Please use "Add Role" instead.'.format(existing_user.username),
             )
-
-        except User.DoesNotExist:
-            pass
 
         # Check if user already has an invite in the project
         try:
@@ -914,6 +974,8 @@ class ProjectInviteForm(SODARModelForm):
         # Delegate checks
         role = self.cleaned_data.get('role')
         if role.name == PROJECT_ROLE_DELEGATE:
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
             # Ensure current user has permission to invite delegate
             if not self.current_user.has_perm(
                 'projectroles.update_project_delegate', obj=self.project
@@ -922,17 +984,17 @@ class ProjectInviteForm(SODARModelForm):
                     'role', 'Insufficient permissions for inviting delegate'
                 )
 
-            # Ensure user can't attempt to add another delegate if limit is
-            # reached
-            delegates = self.project.get_delegates()
-
-            if DELEGATE_LIMIT != 0:
-                if len(delegates) >= DELEGATE_LIMIT:
-                    self.add_error(
-                        'role',
-                        'The limit ({}) of delegates for this project has '
-                        'already been reached.'.format(DELEGATE_LIMIT),
-                    )
+            # Ensure delegate limit is not exceeded
+            if (
+                del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+            ):
+                self.add_error(
+                    'role',
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit),
+                )
 
         return self.cleaned_data
 
@@ -949,6 +1011,40 @@ class ProjectInviteForm(SODARModelForm):
 
         obj.save()
         return obj
+
+
+# ProjectUserCreate form -------------------------------------------------------
+
+
+class ProjectUserCreateForm(SODARModelForm):
+    """Form for ProjectInvite modification"""
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'password', 'email', 'username']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['username'].widget.attrs['readonly'] = True
+        self.fields['password'].widget = forms.PasswordInput()
+        self.fields['password_confirm'] = forms.CharField(
+            label='Confirm password', widget=forms.PasswordInput()
+        )
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data['password'] != cleaned_data['password_confirm']:
+            self.add_error('password_confirm', 'Passwords didn\'t match!')
+            self.add_error('password', 'Passwords didn\'t match!')
+        return cleaned_data
 
 
 # RemoteSite form --------------------------------------------------------------

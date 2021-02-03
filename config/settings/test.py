@@ -63,7 +63,7 @@ TEMPLATES[0]['OPTIONS']['loaders'] = [
 # ------------------------------------------------------------------------------
 
 LOGGING = set_logging(DEBUG)
-LOGGING['handlers']['console']['level'] = 'ERROR'
+LOGGING['handlers']['console']['level'] = 'CRITICAL'
 
 # Local App Settings
 # ------------------------------------------------------------------------------
@@ -93,3 +93,5 @@ PROJECTROLES_TEST_UI_WAIT_TIME = 30
 PROJECTROLES_TEST_UI_LEGACY_LOGIN = env.bool(
     'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False
 )
+
+PROJECTROLES_APP_SETTINGS_TEST = None

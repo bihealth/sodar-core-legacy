@@ -3,15 +3,15 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 {% load rules %}
+{% load static %}
 
 {% block title %}Home{% endblock title %}
 
 {% block css %}
   {{ block.super }}
   <style type="text/css">
-    tr.sodar-pr-home-display-filtered,
-    tr.sodar-pr-home-display-notfound,
-    tr.sodar-pr-home-display-nostars {
+    tr#sodar-pr-home-display-notfound,
+    tr#sodar-pr-home-display-nostars {
       display: none;
     }
   </style>
@@ -38,7 +38,9 @@
           <div class="input-group-prepend">
             <button class="btn btn-secondary"
                     type="submit" id="sodar-pr-project-list-link-star"
-                    filter-mode="0"><i class="fa fa-star-o"></i> Starred</button>
+                    data-filter-mode="0">
+              <i class="fa fa-star-o"></i> Starred
+            </button>
           </div>
           <input class="form-control"
                  type="text" placeholder="Filter"
@@ -55,25 +57,22 @@
        <tbody>
          {% if project_list|length > 0 %}
            {% for p in project_list %}
-             {# Actual project list #}
              {% include 'projectroles/_project_list_item.html' with list_parent=None %}
-             {# List for Javascript filtering #}
-             {% include 'projectroles/_project_filter_item.html' %}
            {% endfor %}
            {# Not found message for filtering #}
-           <tr class="sodar-pr-home-display-notfound">
+           <tr id="sodar-pr-home-display-notfound">
              <td class="bg-faded font-italic text-center text-danger"
                  colspan="{{ project_col_count }}">
                No {% get_display_name 'PROJECT' title=False plural=True %} found matching current filter
              </td>
            </tr>
-           <tr class="sodar-pr-home-display-nostars">
+           <tr id="sodar-pr-home-display-nostars">
              <td class="bg-faded font-italic text-center text-danger"
                  colspan="{{ project_col_count }}">
                No starred {% get_display_name 'PROJECT' title=False plural=True %} found
              </td>
            </tr>
-        {% elif request.user.is_superuser %}
+         {% elif request.user.is_superuser %}
            <tr>
              <td class="bg-faded font-italic text-center text-danger"
                  colspan="{{ project_col_count }}">
@@ -98,6 +97,9 @@
 
 {% block javascript %}
   {{ block.super }}
+
+  {# Project list JQuery #}
+  <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">

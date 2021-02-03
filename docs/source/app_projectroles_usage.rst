@@ -42,8 +42,8 @@ Basics
 Upon loggin into a SODAR Core based Django site using default templates and CSS,
 the general view of your site is split into the following elements:
 
-- **Top navigation bar**: Contains the site logo and title, search element,
-  help link and the user dropdown menu.
+- **Top navigation bar**: Contains the site logo and title, search element, link
+  to advanced search, help link and the user dropdown menu.
 - **User dropown menu**: Contains links to user management, admin site and
   site-wide apps the user has access to.
 - **Project sidebar**: Shortcuts to project apps and project management pages
@@ -161,11 +161,16 @@ target category or superuser status.
 
     Category/project updating form
 
+.. note::
+
+    For remote project synchronized from another SODAR Core based site, you can
+    only edit local application settings in this view.
+
 App Settings
 ------------
 
-Project and site apps may define :term:`app settings`, which can be either be
-set with the scope of *project*, *user* or *user within a project*.
+Project and site apps may define :term:`app settings<App Settings>`, which can
+be either be set with the scope of *project*, *user* or *user within a project*.
 
 Widgets for project specific settings will show up in the project creation and
 updating form and can only be modified by users with sufficient project access.
@@ -178,7 +183,6 @@ used e.g. in cases where a project app provides its own UI or updates some
 "hidden" setting due to user actions. Superusers will still see these hidden
 settings in the Update Project view.
 
-
 Settings with the scope of user within a project do not currently have a
 separate UI of their own. Instead, project apps can produce their own user
 specific UIs for this functionality if manual user selection is needed.
@@ -188,6 +192,20 @@ specific UIs for this functionality if manual user selection is needed.
     Currently, project specific app settings are also enabled for categories but
     do not actually do anything. The behaviour regarding this (remove settings /
     inherit by nested projects / etc) is TBD.
+
+The projectroles app provides the following built-in app settings with the
+project scope:
+
+- ``ip_restrict``: Restict project access by an allowed IP list if enabled.
+- ``ip_allowlist``: List of allowed IP addresses for project access.
+
+To clean up settings which have been stored in the database but have since
+been removed from the plugin app settings definitions, run the following
+management command:
+
+.. code-block::
+
+    $ ./manage.py cleanappsettings
 
 
 Member Management
@@ -246,9 +264,19 @@ Invites
 -------
 
 Invites are accepted by the responding user clicking on a link supplied in their
-invite email and logging in to the site with their LDAP/AD credentials. Invites
-expire after a certain time and can be reissued or revoked on the
-**Project Invites** page.
+invite email and either logging in to the site with their LDAP/AD credentials or
+creating a local user. The latter is only allowed if local users are enabled in
+the site's Django settings and the user email domain is not associated with
+configured LDAP domains. Invites expire after a certain time and can be reissued
+or revoked on the **Project Invites** page.
+
+Batch Member Modifications
+--------------------------
+
+Batch member updates can be done either by using REST API views with appropriate
+project permissions, or by a site admin using the ``batchupdateroles``
+management command. The latter supports multiple projects in one batch. It is
+also able to send invites to users who have not yet signed up on the site.
 
 
 Remote Projects
@@ -370,10 +398,14 @@ Alternatively, the following management command can be used:
 Search
 ======
 
-The search form is displayed in the top navigation bar if enabled. It currently
+The basic search form is displayed in the top navigation bar if enabled. It
 takes one string as a search parameter, followed by optional keyword argument.
 At this time, the keyword of ``type`` has been implemented, used to limit the
 search to a certain data type as specified in app plugins.
+
+Left to the basic search form is a link to the *Advanced Search* page, where you
+can currently search for items using multiple search terms combined with the OR
+operator.
 
 Search results are split into results from different apps. For example, entering
 ``test`` will return all objects from all apps containing this string.
@@ -384,8 +416,8 @@ name and/or description.
 
 .. note::
 
-    Multiple search terms, complex search strings, full-text search and
-    additional keywords/operators will be defined in the future.
+    Additional features such as full-text search and more keywords/operators
+    will be defined in the future.
 
 
 REST API

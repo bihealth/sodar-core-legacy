@@ -7,6 +7,88 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.9.0 (2021-02-03)
+===================
+
+Added
+-----
+
+- **General**
+    - SAML SSO authentication support (#588)
+    - REST API example ``HelloExampleProjectAPIView`` in ``example_project_app`` (#518)
+- **Projectroles**
+    - Projectroles app settings (#532)
+    - Remote sync for projectroles app setting (#533, #586)
+    - IP address based access restriction for projects (#531)
+    - ``is_delegate()`` and ``is_owner_or_delegate()`` helpers for ``Project`` model
+    - Remote sync for non-owner category members (#502)
+    - ``setting_delete()`` function to ``AppSettingAPI`` (#538)
+    - ``cleanappsettings`` management command (#374)
+    - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
+    - Value options for app settings of type ``STRING`` and ``INTEGER`` (#592)
+    - Display placeholders for app setting form fields (#584)
+    - Support for local user invites (#548, #613, #615, #621)
+    - Local user account creation and updating (#547)
+    - ``batchupdateroles`` management command (#15, #602)
+    - Project invite REST API views (#15, #598)
+    - Advanced search with multiple terms (#609)
+    - Search result pagination control (#610)
+    - REST API endpoint for retrieving current user info (#626)
+
+Changed
+-------
+
+- **General**
+    - Replace development helper scripts with ``Makefile`` (#135)
+    - Upgrade to Bootstrap v4.5.3 and jQuery v3.5.1 (#563)
+    - Upgrade to Chromedriver v87
+    - Upgrade general Python requirements (#576)
+    - Migrate GitHub CI from Travis to GitHub actions (#577)
+    - Refactor example ``PROJECT_USER`` scope app settings (#599)
+    - Set logging level in test configurations to ``CRITICAL`` (#604)
+- **Filesfolders**
+    - Update ``search()`` and ``find()`` for multiple search terms (#609)
+- **Projectroles**
+    - Allow updating local app settings on a ``TARGET`` site (#545)
+    - Refactor project list filtering (#566)
+    - Move project list javascript to ``project_list.js`` (#566)
+    - Rename owner role transfer URL pattern and timeline event (#590)
+    - Add ``sodar_url`` override to ``modify_assignment()``
+    - Rename ``ProjectSearchResultsView`` and its template (#609)
+    - Implement ``get_full_title()`` as ``Project.full_title`` field (#93)
+    - Clarify invite accepting procedure in invite email (#627)
+    - Redirect to home view when reusing accepted invite link (#628)
+- **Userprofile**
+    - Cosmetic updates for user detail template (#600)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Invite redirect not working in Add Member view (#589)
+    - Wrong role label displayed for category owner/delegate in member list (#593)
+    - Django settings access in ``forms`` and ``serializers``
+    - Delegate limit check broken by existing delegate roles of inherited owners (#595)
+    - Crash in project invite if multiple users exist with the same email (#614)
+    - Project delegate able to revoke invite for another delegate (#617)
+    - Column alignment in invite list (#606)
+    - ``get_not_found_alert()`` fails if called with app plugin search type (#624)
+- **Taskflowbackend**
+    - Django settings access in ``api`` (#605)
+    - ``sodar_url`` override not working if ``request`` object is present (#605)
+
+Removed
+-------
+
+- **General**
+    - Travis CI setup in ``.travis.yml`` (#577)
+- **Projectroles**
+    - Template ``_project_filter_item.html`` (#566)
+    - Template tag ``get_project_list()`` (#566)
+    - Deprecate old implementation of ``ProjectAppPluginPoint.search()`` (#609, #618)
+    - Deprecate ``Project.get_full_title()`` (#93)
+
+
 v0.8.4 (2020-11-12)
 ===================
 

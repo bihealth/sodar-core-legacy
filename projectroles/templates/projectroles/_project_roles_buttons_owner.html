@@ -1,7 +1,8 @@
 {% load rules %}
 {% load projectroles_common_tags %}
 
-<div class="btn-group sodar-list-btn-group sodar-pr-btn-grp-role" role="group" id="sodar-pr-btn-grp-role-{{ assignment_id }}">
+<div class="btn-group sodar-list-btn-group sodar-pr-btn-grp-role" role="group"
+     id="sodar-pr-btn-grp-role-{{ assignment_id }}">
   <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
       type="button" data-toggle="dropdown"
       aria-haspopup="true" aria-expanded="false">
@@ -9,7 +10,7 @@
   </button>
   <div class="dropdown-menu dropdown-menu-right">
     <a class="dropdown-item {% if not delegates and not members and not inherited_owners %}disabled{% endif %}"
-       href="{% url 'projectroles:role_transfer_owner' project=project.sodar_uuid %}">
+       href="{% url 'projectroles:role_owner_transfer' project=project.sodar_uuid %}">
       <i class="fa fa-fw fa-exchange"></i> Transfer Ownership
     </a>
     {% get_history_dropdown project=project obj=user as history_item %}

@@ -1,13 +1,19 @@
 """Remote project management utilities for the projectroles app"""
 
 import logging
+from copy import deepcopy
 
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth.models import Group
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
 
+from projectroles.app_settings import (
+    AppSettingAPI,
+    APP_SETTING_LOCAL_DEFAULT,
+)
 from projectroles.models import (
     Project,
     Role,
@@ -15,9 +21,13 @@ from projectroles.models import (
     RemoteProject,
     RemoteSite,
     SODAR_CONSTANTS,
+    AppSetting,
 )
 from projectroles.plugins import get_backend_api
 
+
+# App settings API
+app_settings_api = AppSettingAPI()
 
 User = auth.get_user_model()
 logger = logging.getLogger(__name__)
@@ -724,66 +734,12 @@ class RemoteProjectAPI:
         :param target_site: RemoteSite object for the target site
         :return: Dict
         """
-        sync_data = {'users': {}, 'projects': {}, 'peer_sites': {}}
-
-        def _add_user(user):
-            if user.username not in [
-                u['username'] for u in sync_data['users'].values()
-            ]:
-                sync_data['users'][str(user.sodar_uuid)] = {
-                    'username': user.username,
-                    'name': user.name,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'email': user.email,
-                    'groups': [g.name for g in user.groups.all()],
-                }
-
-        def _add_parent_categories(category, project_level):
-            if category.parent:
-                _add_parent_categories(category.parent, project_level)
-
-            # Add if not added yet OR if a READ_ROLES project is encountered
-            if (
-                str(category.sodar_uuid) not in sync_data['projects'].keys()
-                or sync_data['projects'][str(category.sodar_uuid)]['level']
-                != REMOTE_LEVEL_READ_ROLES
-                and sync_data[project_level] == REMOTE_LEVEL_READ_ROLES
-            ):
-                cat_data = {
-                    'title': category.title,
-                    'type': PROJECT_TYPE_CATEGORY,
-                    'parent_uuid': str(category.parent.sodar_uuid)
-                    if category.parent
-                    else None,
-                    'description': category.description,
-                    'readme': category.readme.raw,
-                }
-
-                if project_level == REMOTE_LEVEL_READ_ROLES:
-                    cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-                    role_as = category.get_owner()
-                    cat_data['roles'] = {}
-                    cat_data['roles'][str(role_as.sodar_uuid)] = {
-                        'user': role_as.user.username,
-                        'role': role_as.role.name,
-                    }
-                    _add_user(role_as.user)
-
-                else:
-                    cat_data['level'] = REMOTE_LEVEL_READ_INFO
-
-                sync_data['projects'][str(category.sodar_uuid)] = cat_data
-
-        def _add_peer_site(site):
-            # Do not add sites twice
-            if not sync_data['peer_sites'].get(str(site.sodar_uuid), None):
-                sync_data['peer_sites'][str(site.sodar_uuid)] = {
-                    'name': site.name,
-                    'url': site.url,
-                    'description': site.description,
-                    'user_display': site.user_display,
-                }
+        sync_data = {
+            'users': {},
+            'projects': {},
+            'peer_sites': {},
+            'app_settings': {},
+        }
 
         for rp in target_site.projects.all():
             project = rp.get_project()
@@ -800,9 +756,13 @@ class RemoteProjectAPI:
                 and relation.site != target_site  # Dont add current target site
             ]
 
+            # Get and add app settings for project
+            for app_setting in AppSetting.objects.filter(project=project):
+                sync_data = _add_app_setting(sync_data, app_setting)
+
             # RemoteSite data to create objects on target site
             for site in remote_sites:
-                _add_peer_site(site)
+                sync_data = _add_peer_site(sync_data, site)
 
             project_data = {
                 'level': rp.level,
@@ -826,7 +786,9 @@ class RemoteProjectAPI:
 
                 # Add categories
                 if project.parent:
-                    _add_parent_categories(project.parent, rp.level)
+                    sync_data = _add_parent_categories(
+                        sync_data, project.parent, rp.level
+                    )
                     project_data['parent_uuid'] = str(project.parent.sodar_uuid)
 
             # If level is READ_ROLES or REVOKED, add roles
@@ -844,7 +806,7 @@ class RemoteProjectAPI:
                             'user': role_as.user.username,
                             'role': role_as.role.name,
                         }
-                        _add_user(role_as.user)
+                        sync_data = _add_user(sync_data, role_as.user)
 
             sync_data['projects'][str(rp.project_uuid)] = project_data
 
@@ -969,5 +931,132 @@ class RemoteProjectAPI:
             self._sync_peer_projects(sodar_uuid, p_data)
             self._remove_revoked_peers(sodar_uuid, p_data)
 
+        ###############
+        # App Settings
+        ###############
+
+        logger.info('Synchronizing app settings..')
+
+        for sodar_uuid, app_setting in self.remote_data['app_settings'].items():
+            self._sync_app_settings(sodar_uuid, app_setting)
+
         logger.info('Synchronization OK')
         return self.remote_data
+
+    def _sync_app_settings(self, sodar_uuid, app_setting):
+        """Make and save a AppSetting"""
+        _app_setting = deepcopy(app_setting)
+        project = Project.objects.get(sodar_uuid=_app_setting['project_uuid'])
+
+        try:
+            app_setting_obj = AppSetting.objects.get(sodar_uuid=sodar_uuid)
+            # Keep local app setting if available
+            if _app_setting.get('local', APP_SETTING_LOCAL_DEFAULT):
+                logger.info(
+                    'Keeping local setting {}'.format(str(app_setting_obj))
+                )
+                return
+            action_str = 'Updating'
+            app_setting_obj.delete()
+        except ObjectDoesNotExist:
+            action_str = 'Creating'
+            pass
+
+        # Remove keys that are not available in the model
+        _app_setting.pop('local', None)
+        _app_setting.pop('project_uuid', None)
+        # Add keys required for the model
+        _app_setting['project_id'] = project.id
+
+        # Create new app setting
+        app_setting_draft = AppSetting(**_app_setting, sodar_uuid=sodar_uuid)
+        logger.info('{} setting {}'.format(action_str, str(app_setting_draft)))
+        app_setting_draft.save()
+        app_setting['status'] = action_str.lower().replace('ing', 'ed')
+
+
+def _add_user(sync_data, user):
+    if user.username not in [
+        u['username'] for u in sync_data['users'].values()
+    ]:
+        sync_data['users'][str(user.sodar_uuid)] = {
+            'username': user.username,
+            'name': user.name,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'email': user.email,
+            'groups': [g.name for g in user.groups.all()],
+        }
+    return sync_data
+
+
+def _add_parent_categories(sync_data, category, project_level):
+    if category.parent:
+        sync_data = _add_parent_categories(
+            sync_data, category.parent, project_level
+        )
+
+    # Add if not added yet OR if a READ_ROLES project is encountered
+    if (
+        str(category.sodar_uuid) not in sync_data['projects'].keys()
+        or sync_data['projects'][str(category.sodar_uuid)]['level']
+        != REMOTE_LEVEL_READ_ROLES
+        and sync_data[project_level] == REMOTE_LEVEL_READ_ROLES
+    ):
+        cat_data = {
+            'title': category.title,
+            'type': PROJECT_TYPE_CATEGORY,
+            'parent_uuid': str(category.parent.sodar_uuid)
+            if category.parent
+            else None,
+            'description': category.description,
+            'readme': category.readme.raw,
+        }
+
+        if project_level == REMOTE_LEVEL_READ_ROLES:
+            cat_data['roles'] = {}
+            cat_data['level'] = REMOTE_LEVEL_READ_ROLES
+
+            for role_as in category.roles.all():
+                cat_data['roles'][str(role_as.sodar_uuid)] = {
+                    'user': role_as.user.username,
+                    'role': role_as.role.name,
+                }
+                sync_data = _add_user(sync_data, role_as.user)
+
+        else:
+            cat_data['level'] = REMOTE_LEVEL_READ_INFO
+
+        sync_data['projects'][str(category.sodar_uuid)] = cat_data
+    return sync_data
+
+
+def _add_peer_site(sync_data, site):
+    # Do not add sites twice
+    if not sync_data['peer_sites'].get(str(site.sodar_uuid), None):
+        sync_data['peer_sites'][str(site.sodar_uuid)] = {
+            'name': site.name,
+            'url': site.url,
+            'description': site.description,
+            'user_display': site.user_display,
+        }
+    return sync_data
+
+
+def _add_app_setting(sync_data, app_setting):
+    if not sync_data['app_settings'].get(str(app_setting.sodar_uuid)):
+        sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
+            'name': app_setting.name,
+            'type': app_setting.type,
+            'value': app_setting.value,
+            'value_json': app_setting.value_json,
+            'app_plugin_id': app_setting.app_plugin.id
+            if app_setting.app_plugin
+            else None,
+            'project_uuid': app_setting.project.sodar_uuid,
+            'user_id': app_setting.user.id if app_setting.user else None,
+            'local': AppSettingAPI._get_projectroles_settings()
+            .get(app_setting.name, {})
+            .get('local', APP_SETTING_LOCAL_DEFAULT),
+        }
+    return sync_data

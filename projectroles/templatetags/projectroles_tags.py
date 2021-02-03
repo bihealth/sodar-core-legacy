@@ -7,7 +7,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from projectroles.models import (
-    Project,
     RoleAssignment,
     RemoteProject,
     SODAR_CONSTANTS,
@@ -135,43 +134,6 @@ def is_app_visible(plugin, project, user):
 
 
 @register.simple_tag
-def get_project_list(user, parent=None):
-    """Return flat project list for displaying in templates"""
-    # TODO: Remove once reimplementing custom column retrieval
-    project_list = []
-
-    if user.is_superuser:
-        project_list = Project.objects.filter(
-            parent=parent, submit_status='OK'
-        ).order_by('title')
-
-    elif not user.is_anonymous():
-        project_list = [
-            p
-            for p in Project.objects.filter(
-                parent=parent, submit_status='OK'
-            ).order_by('title')
-            if p.has_role(user, include_children=True)
-        ]
-
-    def append_projects(project):
-        lst = [project]
-
-        for c in project.get_children():
-            if user.is_superuser or c.has_role(user, include_children=True):
-                lst += append_projects(c)
-
-        return lst
-
-    flat_list = []
-
-    for p in project_list:
-        flat_list += append_projects(p)
-
-    return flat_list
-
-
-@register.simple_tag
 def get_project_list_indent(project, list_parent):
     """Return indent in pixels for project list"""
     project_depth = project.get_depth()
@@ -190,23 +152,21 @@ def get_not_found_alert(project_results, app_search_data, search_type):
     if len(project_results) == 0 and (
         not search_type or search_type == 'project'
     ):
-        not_found.append('Projects'),
+        not_found.append('Projects')
 
     for results in [a['results'] for a in app_search_data]:
-        if results:
-            for k, result in results.items():
-                type_match = False
-
-                if not search_type or (
-                    'search_type' in result
-                    and search_type in result['search_types']
-                ):
-                    type_match = True
-
-                if type_match and (
-                    not result['items'] or len(result['items']) == 0
-                ):
-                    not_found.append(result['title'])
+        if not results:
+            continue
+        for k, result in results.items():
+            type_match = True if search_type else False
+            if (
+                not type_match
+                and 'search_type' in result
+                and search_type in result['search_types']
+            ):
+                type_match = True
+            if (type_match or not search_type) and (not result['items']):
+                not_found.append(result['title'])
 
     if not_found:
         ret = (
@@ -216,7 +176,6 @@ def get_not_found_alert(project_results, app_search_data, search_type):
         )
         for n in not_found:
             ret += '<li>{}</li>\n'.format(n)
-
         ret += '</ul>\n</div>\n'
         return ret
 
@@ -255,7 +214,7 @@ def get_user_role_html(project, user):
 @register.simple_tag
 def get_app_link_state(app_plugin, app_name, url_name):
     """Return "active" if plugin matches app_name and url_name is found in
-    app_plugin.urls. """
+    app_plugin.urls."""
     if app_name == app_plugin.name and url_name in [
         u.name for u in app_plugin.urls
     ]:

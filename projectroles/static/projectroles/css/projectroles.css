@@ -101,10 +101,6 @@ nav.sodar-base-navbar ul li.nav-item {
   white-space: nowrap;
 }
 
-.sodar-navbar-search {
-  padding-right: 24px;
-}
-
 .sodar-navbar-user-dropdown {
   z-index: 1100;
 }
@@ -594,6 +590,9 @@ span.select2-selection__rendered {
   padding-top: 1.15em !important;
 }
 
+.text-underline {
+  text-decoration: underline;
+}
 
 /* Misc --------------------------------------------------------------------- */
 

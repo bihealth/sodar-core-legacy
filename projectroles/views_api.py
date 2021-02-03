@@ -1,6 +1,7 @@
-"""REST API views for the samplesheets app"""
+"""REST API views for the projectroles app"""
 
 import re
+from ipaddress import ip_address, ip_network
 
 from django.conf import settings
 from django.contrib import auth
@@ -8,7 +9,7 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import APIException, NotFound, PermissionDenied
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -27,10 +28,12 @@ from rest_framework.versioning import AcceptHeaderVersioning
 from rest_framework.views import APIView
 
 from projectroles import __version__ as core_version
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
     Role,
     RoleAssignment,
+    ProjectInvite,
     RemoteSite,
     SODAR_CONSTANTS,
 )
@@ -38,6 +41,7 @@ from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.serializers import (
     ProjectSerializer,
     RoleAssignmentSerializer,
+    ProjectInviteSerializer,
     SODARUserSerializer,
     REMOTE_MODIFY_MSG,
 )
@@ -45,6 +49,7 @@ from projectroles.views import (
     ProjectAccessMixin,
     RoleAssignmentDeleteMixin,
     RoleAssignmentOwnerTransferMixin,
+    ProjectInviteMixin,
     SITE_MODE_TARGET,
 )
 
@@ -72,11 +77,22 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = ['0.7.2', '0.8.0', '0.8.1', '0.8.2', '0.8.3']
+CORE_API_ALLOWED_VERSIONS = [
+    '0.7.2',
+    '0.8.0',
+    '0.8.1',
+    '0.8.2',
+    '0.8.3',
+    '0.9.0',
+]
 
 
 # Access Django user model
 User = auth.get_user_model()
+
+
+# App Settings
+app_settings = AppSettingAPI()
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -97,10 +113,44 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
 
     def has_permission(self, request, view):
         """
-        Override has_permission() for checking auth and  project permission
+        Override has_permission() for checking auth and project permission
         """
-        if not request.user or not request.user.is_authenticated:
+        project = self.get_project(request=request, kwargs=view.kwargs)
+
+        if not project or not request.user or not request.user.is_authenticated:
             return False
+
+        owner_or_delegate = project.is_owner_or_delegate(request.user)
+
+        if not (
+            request.user.is_superuser or owner_or_delegate
+        ) and app_settings.get_app_setting(
+            'projectroles', 'ip_restrict', project
+        ):
+            for k in (
+                'HTTP_X_FORWARDED_FOR',
+                'X_FORWARDED_FOR',
+                'FORWARDED',
+                'REMOTE_ADDR',
+            ):
+                v = request.META.get(k)
+                if v:
+                    client_address = ip_address(v.split(',')[0])
+                    break
+            else:  # Can't fetch client ip address
+                return False
+
+            for record in app_settings.get_app_setting(
+                'projectroles', 'ip_allowlist', project
+            ):
+                if '/' in record:
+                    if client_address in ip_network(record):
+                        break
+                else:
+                    if client_address == ip_address(record):
+                        break
+            else:
+                return False
 
         if not hasattr(view, 'permission_required') and (
             not hasattr(view, 'get_permission_required')
@@ -123,9 +173,7 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
             # TODO: TBD: Raise exception / log warning if given multiple perms?
             perm = perm[0]
 
-        return request.user.has_perm(
-            perm, self.get_project(request=request, kwargs=view.kwargs)
-        )
+        return request.user.has_perm(perm, project)
 
 
 class SODARAPIVersioning(AcceptHeaderVersioning):
@@ -577,7 +625,130 @@ class RoleAssignmentOwnerTransferAPIView(
         )
 
 
-class UserListAPIView(ListAPIView):
+class ProjectInviteAPIMixin:
+    """Validation helpers for project invite modification via API"""
+
+    def _validate(self, invite, request, **kwargs):
+        if not invite:
+            raise NotFound(
+                'Invite not found (uuid={})'.format(kwargs['projectinvite'])
+            )
+        if (
+            invite.role.name == PROJECT_ROLE_DELEGATE
+            and not request.user.has_perm(
+                'projectroles.update_project_delegate', invite.project
+            )
+        ):
+            raise PermissionDenied(
+                'User lacks permission to modify delegate invites'
+            )
+        if not invite.active:
+            raise serializers.ValidationError('Invite is not active')
+
+
+class ProjectInviteListAPIView(CoreAPIBaseProjectMixin, ListAPIView):
+    """
+    List user invites for a project.
+
+    **URL:** ``/project/api/invites/list/{Project.sodar_uuid}``
+
+    **Methods:** ``GET``
+
+    **Returns:** List of project invite details
+    """
+
+    # lookup_field = 'project__sodar_uuid'
+    # lookup_url_kwarg = 'projectinvite'
+    permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
+
+    def get_queryset(self):
+        return ProjectInvite.objects.filter(
+            project=self.get_project(), active=True
+        ).order_by('pk')
+
+
+class ProjectInviteCreateAPIView(CoreAPIGenericProjectMixin, CreateAPIView):
+    """
+    Create a project invite.
+
+    **URL:** ``/project/api/invites/create/{Project.sodar_uuid}``
+
+    **Methods:** ``POST``
+
+    **Parameters:**
+
+    - ``email``: User email (string)
+    - ``role``: Desired role for user (string, e.g. "project contributor")
+    """
+
+    permission_required = 'projectroles.invite_users'
+    serializer_class = ProjectInviteSerializer
+
+
+class ProjectInviteRevokeAPIView(
+    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+):
+    """
+    Revoke a project invite.
+
+    **URL:** ``/project/api/invites/revoke/{ProjectInvite.sodar_uuid}``
+
+    **Methods:** ``POST``
+    """
+
+    permission_required = 'projectroles.invite_users'
+
+    def post(self, request, *args, **kwargs):
+        """Handle invite revoking in a POST request"""
+        invite = ProjectInvite.objects.filter(
+            sodar_uuid=kwargs['projectinvite']
+        ).first()
+        self._validate(invite, request, **kwargs)
+        invite = self.revoke_invite(invite, invite.project, request)
+        return Response(
+            {
+                'detail': 'Invite revoked from email {} in project "{}"'.format(
+                    invite.email,
+                    invite.project.title,
+                )
+            },
+            status=200,
+        )
+
+
+class ProjectInviteResendAPIView(
+    ProjectInviteMixin, ProjectInviteAPIMixin, CoreAPIBaseProjectMixin, APIView
+):
+    """
+    Resend email for a project invite.
+
+    **URL:** ``/project/api/invites/resend/{ProjectInvite.sodar_uuid}``
+
+    **Methods:** ``POST``
+    """
+
+    permission_required = 'projectroles.invite_users'
+
+    def post(self, request, *args, **kwargs):
+        """Handle invite resending in a POST request"""
+        invite = ProjectInvite.objects.filter(
+            sodar_uuid=kwargs['projectinvite']
+        ).first()
+        self._validate(invite, request, **kwargs)
+        self.handle_invite(invite, request, resend=True, add_message=False)
+        return Response(
+            {
+                'detail': 'Invite resent from email {} in project "{}"'.format(
+                    invite.email,
+                    invite.project.title,
+                )
+            },
+            status=200,
+        )
+
+
+class UserListAPIView(CoreAPIBaseMixin, ListAPIView):
     """
     List users in the system.
 
@@ -597,9 +768,7 @@ class UserListAPIView(ListAPIView):
 
     lookup_field = 'project__sodar_uuid'
     permission_classes = [IsAuthenticated]
-    renderer_classes = [CoreAPIRenderer]
     serializer_class = SODARUserSerializer
-    versioning_class = CoreAPIVersioning
 
     def get_queryset(self):
         """
@@ -612,6 +781,31 @@ class UserListAPIView(ListAPIView):
             return qs
 
         return qs.exclude(groups__name=SODAR_CONSTANTS['SYSTEM_USER_GROUP'])
+
+
+class CurrentUserRetrieveAPIView(CoreAPIBaseMixin, RetrieveAPIView):
+    """
+    Return information on the user making the request.
+
+    **URL:** ``/project/api/users/current``
+
+    **Methods:** ``GET``
+
+    **Returns**:
+
+    For current user:
+
+    - ``email``: Email address of the user (string)
+    - ``name``: Full name of the user (string)
+    - ``sodar_uuid``: User UUID (string)
+    - ``username``: Username of the user (string)
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = SODARUserSerializer
+
+    def get_object(self):
+        return self.request.user
 
 
 # TODO: Update this for new API base classes

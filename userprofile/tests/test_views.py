@@ -1,5 +1,5 @@
 """Tests for views in the userprofile Django app"""
-
+from django.contrib import auth
 from django.test import RequestFactory
 from django.urls import reverse
 
@@ -11,6 +11,10 @@ from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
 
 # App settings API
 app_settings = AppSettingAPI()
+
+
+# Access Django user model
+User = auth.get_user_model()
 
 
 class TestViewsBase(TestCase):
@@ -67,6 +71,24 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             user=self.user,
         )
 
+        # Init test setting with options
+        self.setting_str_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='user_str_setting_options',
+            setting_type='STRING',
+            value='string1',
+            user=self.user,
+        )
+
+        # Init integer setting with options
+        self.setting_int_options = self._make_setting(
+            app_name=EXAMPLE_APP_NAME,
+            name='user_int_setting_options',
+            setting_type='INTEGER',
+            value=0,
+            user=self.user,
+        )
+
         # Init boolean setting
         self.setting_bool = self._make_setting(
             app_name=EXAMPLE_APP_NAME,
@@ -92,14 +114,24 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
             response = self.client.get(reverse('userprofile:settings_update'))
         self.assertEqual(response.status_code, 200)
         self.assertIsNotNone(response.context['form'])
+        field = response.context['form'].fields.get(
+            'settings.%s.user_str_setting' % EXAMPLE_APP_NAME
+        )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 'Example string')
+        field = response.context['form'].fields.get(
+            'settings.%s.user_int_setting' % EXAMPLE_APP_NAME
+        )
+        self.assertIsNotNone(field)
+        self.assertEqual(field.widget.attrs['placeholder'], 0)
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_str_setting' % EXAMPLE_APP_NAME
+                'settings.%s.user_str_setting_options' % EXAMPLE_APP_NAME
             )
         )
         self.assertIsNotNone(
             response.context['form'].fields.get(
-                'settings.%s.user_int_setting' % EXAMPLE_APP_NAME
+                'settings.%s.user_int_setting_options' % EXAMPLE_APP_NAME
             )
         )
         self.assertIsNotNone(
@@ -129,6 +161,18 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         )
         self.assertEqual(
             app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
+            ),
+            'string1',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
+            ),
+            0,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
                 EXAMPLE_APP_NAME, 'user_bool_setting', user=self.user
             ),
             True,
@@ -143,6 +187,9 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         values = {
             'settings.%s.user_str_setting' % EXAMPLE_APP_NAME: 'another-text',
             'settings.%s.user_int_setting' % EXAMPLE_APP_NAME: '123',
+            'settings.%s.user_str_setting_options'
+            % EXAMPLE_APP_NAME: 'string2',
+            'settings.%s.user_int_setting_options' % EXAMPLE_APP_NAME: 1,
             'settings.%s.user_bool_setting' % EXAMPLE_APP_NAME: False,
             'settings.%s.user_json_setting'
             % EXAMPLE_APP_NAME: '{"Test": "Less"}',
@@ -169,6 +216,18 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
                 EXAMPLE_APP_NAME, 'user_int_setting', user=self.user
             ),
             123,
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_str_setting_options', user=self.user
+            ),
+            'string2',
+        )
+        self.assertEqual(
+            app_settings.get_app_setting(
+                EXAMPLE_APP_NAME, 'user_int_setting_options', user=self.user
+            ),
+            1,
         )
         self.assertEqual(
             app_settings.get_app_setting(

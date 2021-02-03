@@ -39,6 +39,8 @@ class TestAppSettingAPI(
     # NOTE: This assumes an example app is available
 
     def setUp(self):
+        self.maxDiff = None
+
         # Init project
         self.project = self._make_project(
             title='TestProject', type=PROJECT_TYPE_PROJECT, parent=None
@@ -53,7 +55,7 @@ class TestAppSettingAPI(
             self.project, self.user, self.role_owner
         )
 
-        # Init test setting
+        # Init test project settings
         self.setting_str_values = {
             'app_name': EXAMPLE_APP_NAME,
             'project': self.project,
@@ -71,6 +73,32 @@ class TestAppSettingAPI(
             'value': 0,
             'update_value': 170,
             'non_valid_value': 'Nan',
+        }
+        self.setting_str_values_options = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'project_str_setting_options',
+            'setting_type': 'STRING',
+            'value': 'string1',
+            'options': [
+                'string1',
+                'string2',
+            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'update_value': 'string2',
+            'non_valid_value': 'string3',
+        }
+        self.setting_int_values_options = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'name': 'project_int_setting_options',
+            'setting_type': 'INTEGER',
+            'value': 0,
+            'options': [
+                0,
+                1,
+            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'update_value': 1,
+            'non_valid_value': 2,
         }
         self.setting_bool_values = {
             'app_name': EXAMPLE_APP_NAME,
@@ -94,30 +122,165 @@ class TestAppSettingAPI(
             'update_value': {'Test_more': 'often_always'},
             'non_valid_value': self.project,
         }
+
+        # Init test user settings
+        self.user_setting_str_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_str_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+            'update_value': 'better test',
+            'non_valid_value': False,
+        }
+        self.user_setting_int_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_int_setting',
+            'setting_type': 'INTEGER',
+            'value': 0,
+            'update_value': 170,
+            'non_valid_value': 'Nan',
+        }
+        self.user_setting_str_values_options = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_str_setting_options',
+            'setting_type': 'STRING',
+            'value': 'string1',
+            'update_value': 'string2',
+            'options': [
+                'string1',
+                'string2',
+            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'non_valid_value': False,
+        }
+        self.user_setting_int_values_options = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_int_setting_options',
+            'setting_type': 'INTEGER',
+            'value': 0,
+            'update_value': 1,
+            'options': [
+                0,
+                1,
+            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'non_valid_value': 'Nan',
+        }
+        self.user_setting_bool_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_bool_setting',
+            'setting_type': 'BOOLEAN',
+            'value': False,
+            'update_value': True,
+            'non_valid_value': 170,
+        }
+        self.user_setting_json_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'user': self.user,
+            'name': 'user_json_setting',
+            'setting_type': 'JSON',
+            'value': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            'update_value': {'Test_more': 'often_always'},
+            'non_valid_value': self.project,
+        }
+
+        # Init test project-user settings
+        self.project_user_setting_str_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': self.user,
+            'name': 'project_user_string_setting',
+            'setting_type': 'STRING',
+            'value': 'test',
+            'update_value': 'better test',
+            'non_valid_value': False,
+        }
+        self.project_user_setting_int_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': self.user,
+            'name': 'project_user_int_setting',
+            'setting_type': 'INTEGER',
+            'value': 0,
+            'update_value': 170,
+            'non_valid_value': 'Nan',
+        }
+        self.project_user_setting_bool_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': self.user,
+            'name': 'project_user_bool_setting',
+            'setting_type': 'BOOLEAN',
+            'value': False,
+            'update_value': True,
+            'non_valid_value': 170,
+        }
+        self.project_user_setting_json_values = {
+            'app_name': EXAMPLE_APP_NAME,
+            'project': self.project,
+            'user': self.user,
+            'name': 'project_user_json_setting',
+            'setting_type': 'JSON',
+            'value': {
+                'Example': 'Value',
+                'list': [1, 2, 3, 4, 5],
+                'level_6': False,
+            },
+            'update_value': {'Test_more': 'often_always'},
+            'non_valid_value': self.project,
+        }
+
         self.settings = [
             self.setting_int_values,
+            self.setting_int_values_options,
             self.setting_json_values,
             self.setting_str_values,
+            self.setting_str_values_options,
             self.setting_bool_values,
+            self.user_setting_int_values,
+            self.user_setting_int_values_options,
+            self.user_setting_json_values,
+            self.user_setting_str_values,
+            self.user_setting_str_values_options,
+            self.user_setting_bool_values,
+            self.project_user_setting_int_values,
+            self.project_user_setting_json_values,
+            self.project_user_setting_str_values,
+            self.project_user_setting_bool_values,
         ]
         for s in self.settings:
-            self._make_setting(
-                app_name=s['app_name'],
-                name=s['name'],
-                setting_type=s['setting_type'],
-                value=s['value'] if s['setting_type'] != 'JSON' else '',
-                value_json=s['value'] if s['setting_type'] == 'JSON' else {},
-                project=s['project'],
-            )
+            data = {
+                'app_name': s['app_name'],
+                'name': s['name'],
+                'setting_type': s['setting_type'],
+                'value': s['value'] if s['setting_type'] != 'JSON' else '',
+                'value_json': s['value'] if s['setting_type'] == 'JSON' else {},
+            }
+            if 'project' in s:
+                data['project'] = s['project']
+            if 'user' in s:
+                data['user'] = s['user']
+            self._make_setting(**data)
 
     def test_get_project_setting(self):
         """Test get_app_setting()"""
         for setting in self.settings:
-            val = app_settings.get_app_setting(
-                app_name=setting['app_name'],
-                setting_name=setting['name'],
-                project=setting['project'],
-            )
+            data = {
+                'app_name': setting['app_name'],
+                'setting_name': setting['name'],
+            }
+            if 'project' in setting:
+                data['project'] = setting['project']
+            if 'user' in setting:
+                data['user'] = setting['user']
+            val = app_settings.get_app_setting(**data)
             self.assertEqual(val, setting['value'])
 
     def test_get_project_setting_default(self):
@@ -156,31 +319,41 @@ class TestAppSettingAPI(
         """Test set_app_setting()"""
 
         for setting in self.settings:
-            ret = app_settings.set_app_setting(
-                app_name=setting['app_name'],
-                setting_name=setting['name'],
-                project=setting['project'],
-                value=setting['update_value'],
-            )
+            data = {
+                'app_name': setting['app_name'],
+                'setting_name': setting['name'],
+            }
+            if 'project' in setting:
+                data['project'] = setting['project']
+            if 'user' in setting:
+                data['user'] = setting['user']
+
+            update_data = dict(data)
+            update_data['value'] = setting['update_value']
+
+            ret = app_settings.set_app_setting(**update_data)
             self.assertEqual(ret, True)
 
-            val = app_settings.get_app_setting(
-                app_name=setting['app_name'],
-                setting_name=setting['name'],
-                project=setting['project'],
-            )
+            val = app_settings.get_app_setting(**data)
             self.assertEqual(val, setting['update_value'])
 
     def test_set_project_setting_unchanged(self):
-        """Test set_app_setting() with an unchnaged value"""
+        """Test set_app_setting() with an unchanged value"""
 
         for setting in self.settings:
-            ret = app_settings.set_app_setting(
-                app_name=setting['app_name'],
-                setting_name=setting['name'],
-                project=setting['project'],
-                value=setting['value'],
-            )
+            data = {
+                'app_name': setting['app_name'],
+                'setting_name': setting['name'],
+            }
+            if 'project' in setting:
+                data['project'] = setting['project']
+            if 'user' in setting:
+                data['user'] = setting['user']
+
+            update_data = dict(data)
+            update_data['value'] = setting['value']
+
+            ret = app_settings.set_app_setting(**update_data)
             self.assertEqual(
                 ret,
                 False,
@@ -189,11 +362,7 @@ class TestAppSettingAPI(
                 ),
             )
 
-            val = app_settings.get_app_setting(
-                app_name=setting['app_name'],
-                setting_name=setting['name'],
-                project=setting['project'],
-            )
+            val = app_settings.get_app_setting(**data)
             self.assertEqual(
                 val,
                 setting['value'],
@@ -254,7 +423,7 @@ class TestAppSettingAPI(
 
         ret = app_settings.set_app_setting(
             app_name=EXAMPLE_APP_NAME,
-            setting_name='project_user_string_hidden_setting',
+            setting_name='project_user_string_setting',
             project=self.project,
             user=self.user,
             value=True,
@@ -263,7 +432,7 @@ class TestAppSettingAPI(
 
         ret = app_settings.set_app_setting(
             app_name=EXAMPLE_APP_NAME,
-            setting_name='project_user_string_hidden_setting',
+            setting_name='project_user_string_setting',
             project=self.project,
             user=new_user,
             value=True,
@@ -275,7 +444,9 @@ class TestAppSettingAPI(
         for setting in self.settings:
             self.assertEqual(
                 app_settings.validate_setting(
-                    setting['setting_type'], setting['value']
+                    setting['setting_type'],
+                    setting['value'],
+                    setting.get('options'),
                 ),
                 True,
             )
@@ -283,22 +454,28 @@ class TestAppSettingAPI(
                 continue
             with self.assertRaises(ValueError):
                 app_settings.validate_setting(
-                    setting['setting_type'], setting['non_valid_value']
+                    setting['setting_type'],
+                    setting['non_valid_value'],
+                    setting.get('options'),
                 )
 
     def test_validate_project_setting_int(self):
         """Test validate_setting() with type INTEGER"""
-        self.assertEqual(app_settings.validate_setting('INTEGER', 170), True)
+        self.assertEqual(
+            app_settings.validate_setting('INTEGER', 170, None), True
+        )
         # NOTE: String is also OK if it corresponds to an int
-        self.assertEqual(app_settings.validate_setting('INTEGER', '170'), True)
+        self.assertEqual(
+            app_settings.validate_setting('INTEGER', '170', None), True
+        )
 
         with self.assertRaises(ValueError):
-            app_settings.validate_setting('INTEGER', 'not an integer')
+            app_settings.validate_setting('INTEGER', 'not an integer', None)
 
     def test_validate_project_setting_invalid(self):
         """Test validate_setting() with an invalid type"""
         with self.assertRaises(ValueError):
-            app_settings.validate_setting('INVALID_TYPE', 'value')
+            app_settings.validate_setting('INVALID_TYPE', 'value', None)
 
     def test_get_setting_def_plugin(self):
         """Test get_setting_def() with a plugin"""
@@ -309,6 +486,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string project setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -324,6 +502,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string project setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -339,6 +518,7 @@ class TestAppSettingAPI(
             'label': 'String Setting',
             'default': '',
             'description': 'Example string user setting',
+            'placeholder': 'Example string',
             'user_modifiable': True,
         }
         s_def = app_settings.get_setting_def(
@@ -371,6 +551,7 @@ class TestAppSettingAPI(
                 'label': 'String Setting',
                 'default': '',
                 'description': 'Example string project setting',
+                'placeholder': 'Example string',
                 'user_modifiable': True,
             },
             'project_int_setting': {
@@ -379,6 +560,26 @@ class TestAppSettingAPI(
                 'label': 'Integer Setting',
                 'default': 0,
                 'description': 'Example integer project setting',
+                'placeholder': 0,
+                'user_modifiable': True,
+                'widget_attrs': {'class': 'text-success'},
+            },
+            'project_str_setting_options': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'STRING',
+                'label': 'String Setting',
+                'default': 'string1',
+                'options': ['string1', 'string2'],
+                'description': 'Example string project setting with options',
+                'user_modifiable': True,
+            },
+            'project_int_setting_options': {
+                'scope': APP_SETTING_SCOPE_PROJECT,
+                'type': 'INTEGER',
+                'label': 'Integer Setting',
+                'default': 0,
+                'options': [0, 1],
+                'description': 'Example integer project setting with options',
                 'user_modifiable': True,
                 'widget_attrs': {'class': 'text-success'},
             },
@@ -431,6 +632,7 @@ class TestAppSettingAPI(
                 'label': 'String Setting',
                 'default': '',
                 'description': 'Example string user setting',
+                'placeholder': 'Example string',
                 'user_modifiable': True,
             },
             'user_int_setting': {
@@ -439,6 +641,26 @@ class TestAppSettingAPI(
                 'label': 'Integer Setting',
                 'default': 0,
                 'description': 'Example integer user setting',
+                'placeholder': 0,
+                'user_modifiable': True,
+                'widget_attrs': {'class': 'text-success'},
+            },
+            'user_str_setting_options': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'STRING',
+                'label': 'String Setting',
+                'default': 'string1',
+                'options': ['string1', 'string2'],
+                'description': 'Example string user setting with options',
+                'user_modifiable': True,
+            },
+            'user_int_setting_options': {
+                'scope': APP_SETTING_SCOPE_USER,
+                'type': 'INTEGER',
+                'label': 'Integer Setting',
+                'default': 0,
+                'options': [0, 1],
+                'description': 'Example integer user setting with options',
                 'user_modifiable': True,
                 'widget_attrs': {'class': 'text-success'},
             },
@@ -479,33 +701,29 @@ class TestAppSettingAPI(
     def test_get_setting_defs_project_user(self):
         """Test get_setting_defs() with the PROJECT_USER scope"""
         expected = {
-            'project_user_string_hidden_setting': {
+            'project_user_string_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'STRING',
                 'default': '',
                 'description': 'Example string project user setting',
-                'user_modifiable': False,
             },
-            'project_user_int_hidden_setting': {
+            'project_user_int_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'INTEGER',
                 'default': '',
                 'description': 'Example int project user setting',
-                'user_modifiable': False,
             },
-            'project_user_bool_hidden_setting': {
+            'project_user_bool_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'BOOLEAN',
                 'default': '',
                 'description': 'Example bool project user setting',
-                'user_modifiable': False,
             },
-            'project_user_json_hidden_setting': {
+            'project_user_json_setting': {
                 'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT_USER'],
                 'type': 'JSON',
                 'default': '',
                 'description': 'Example json project user setting',
-                'user_modifiable': False,
             },
         }
         defs = app_settings.get_setting_defs(
@@ -518,13 +736,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 6)
+        self.assertEqual(len(defs), 8)
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 4)
+        self.assertEqual(len(defs), 6)
 
     def test_get_setting_defs_invalid_scope(self):
         """Test get_setting_defs() with an invalid scope"""
@@ -556,3 +774,101 @@ class TestAppSettingAPI(
             defaults[prefix + 'user_json_setting'],
             {'Example': 'Value', 'list': [1, 2, 3, 4, 5], 'level_6': False},
         )
+
+    def test_delete_setting_scope_user_params_none(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(EXAMPLE_APP_NAME, 'user_str_setting')
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_user_params_user(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME, 'user_str_setting', user=self.user
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_user_params_project(self):
+        with self.assertRaises(ValueError):
+            app_settings.delete_setting(
+                EXAMPLE_APP_NAME, 'user_str_setting', project=self.project
+            )
+
+    def test_delete_setting_scope_user_params_user_project(self):
+        with self.assertRaises(ValueError):
+            app_settings.delete_setting(
+                EXAMPLE_APP_NAME,
+                'user_str_setting',
+                project=self.project,
+                user=self.user,
+            )
+
+    def test_delete_setting_scope_project_user_params_none(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME, 'project_user_string_setting'
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_user_params_user(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME,
+            'project_user_string_setting',
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_user_params_project(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME,
+            'project_user_string_setting',
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_user_params_user_project(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME,
+            'project_user_string_setting',
+            project=self.project,
+            user=self.user,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_params_none(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME,
+            'project_str_setting',
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_params_user(self):
+        with self.assertRaises(ValueError):
+            app_settings.delete_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting',
+                user=self.user,
+            )
+
+    def test_delete_setting_scope_project_params_project(self):
+        self.assertEqual(AppSetting.objects.count(), 16)
+        app_settings.delete_setting(
+            EXAMPLE_APP_NAME,
+            'project_str_setting',
+            project=self.project,
+        )
+        self.assertEqual(AppSetting.objects.count(), 15)
+
+    def test_delete_setting_scope_project_params_user_project(self):
+        with self.assertRaises(ValueError):
+            app_settings.delete_setting(
+                EXAMPLE_APP_NAME,
+                'project_str_setting',
+                project=self.project,
+                user=self.user,
+            )

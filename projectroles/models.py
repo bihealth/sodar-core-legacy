@@ -1,3 +1,5 @@
+import logging
+import re
 import uuid
 
 from django.apps import apps
@@ -16,6 +18,7 @@ from markupfield.fields import MarkupField
 
 from projectroles.constants import get_sodar_constants
 
+logger = logging.getLogger(__name__)
 
 # Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
@@ -43,34 +46,31 @@ PROJECT_TAG_STARRED = 'STARRED'
 class ProjectManager(models.Manager):
     """Manager for custom table-level Project queries"""
 
-    def find(self, search_term, keywords=None, project_type=None):
+    def find(self, search_terms, keywords=None, project_type=None):
         """
         Return projects with a partial match in full title or, including titles
         of parent Project objects, or the description of the current object.
         Restrict to project type if project_type is set.
 
-        :param search_term: Search term (string)
+        :param search_terms: Search terms (list)
         :param keywords: Optional search keywords as key/value pairs (dict)
         :param project_type: Project type or None
-        :return: List of Project objects
+        :return: QuerySet of Project objects
         """
-        search_term = search_term.lower()
-        projects = super().get_queryset().order_by('title')
+        # Deprecation protection (#609, #618)
+        if not isinstance(search_terms, list):
+            search_terms = [search_terms]
 
+        projects = super().get_queryset().order_by('title')
         if project_type:
             projects = projects.filter(type=project_type)
 
-        # NOTE: Can't use a custom function in filter()
-        result = [
-            p
-            for p in projects
-            if (
-                search_term in p.get_full_title().lower()
-                or (p.description and search_term in p.description.lower())
-            )
-        ]
+        term_query = Q()
+        for t in search_terms:
+            term_query.add(Q(full_title__icontains=t), Q.OR)
+            term_query.add(Q(description__icontains=t), Q.OR)
 
-        return sorted(result, key=lambda x: x.get_full_title())
+        return projects.filter(term_query).order_by('full_title')
 
 
 class Project(models.Model):
@@ -127,6 +127,13 @@ class Project(models.Model):
         help_text='Status of project creation',
     )
 
+    #: Full project title with parent path (auto-generated)
+    full_title = models.CharField(
+        max_length=4096,
+        null=True,
+        help_text='Full project title with parent path (auto-generated)',
+    )
+
     #: Project SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='Project SODAR UUID'
@@ -140,14 +147,7 @@ class Project(models.Model):
         ordering = ['parent__title', 'title']
 
     def __str__(self):
-        parents = self.get_parents()
-        ret = ' / '.join([p.title for p in parents]) if parents else ''
-
-        if ret:
-            ret += ' / '
-
-        ret += self.title
-        return ret
+        return self.full_title
 
     def __repr__(self):
         values = (
@@ -158,10 +158,16 @@ class Project(models.Model):
         return 'Project({})'.format(', '.join(repr(v) for v in values))
 
     def save(self, *args, **kwargs):
-        """Version of save() to include custom validation for Project"""
+        """Custom validation and field populating for Project"""
         self._validate_parent()
         self._validate_title()
         self._validate_parent_type()
+
+        # Update full title of self and children
+        self.full_title = self._get_full_title()
+        for child in self.get_children():
+            child.save()
+
         super().save(*args, **kwargs)
 
     def _validate_parent(self):
@@ -191,6 +197,14 @@ class Project(models.Model):
             'projectroles:detail', kwargs={'project': self.sodar_uuid}
         )
 
+    # Internal helpers
+    def _get_full_title(self):
+        """Return full title of project with path."""
+        parents = self.get_parents()
+        ret = ' / '.join([p.title for p in parents]) + ' / ' if parents else ''
+        ret += self.title
+        return ret
+
     # Custom row-level functions
 
     def get_children(self, flat=False):
@@ -200,21 +214,17 @@ class Project(models.Model):
         :param flat: Return all children recursively as a flat list (bool)
         :return: Iterable of Project
         """
+
+        def _get(obj, ret=None):
+            if ret is None:
+                ret = []
+            ret += list(obj.get_children())
+            for child in obj.get_children():
+                ret = _get(child, ret)
+            return ret
+
         if flat:
-
-            def _get(obj, ret=None):
-                if ret is None:
-                    ret = []
-
-                ret += list(obj.get_children())
-
-                for child in obj.get_children():
-                    ret = _get(child, ret)
-
-                return ret
-
             return _get(self)
-
         return self.children.filter(
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
@@ -223,11 +233,9 @@ class Project(models.Model):
         """Return depth of project in the project tree structure (root=0)"""
         ret = 0
         p = self
-
         while p.parent:
             ret += 1
             p = p.parent
-
         return ret
 
     def get_owner(self):
@@ -239,7 +247,6 @@ class Project(models.Model):
             return self.roles.get(
                 role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
             )
-
         except RoleAssignment.DoesNotExist:
             return None
 
@@ -253,20 +260,16 @@ class Project(models.Model):
         """
         owners = []
         owner_as = self.get_owner()
-
         if owner_as and not inherited_only:
             owners.append(owner_as)
-
         parent = self.parent
 
         while parent:
             parent_owner_as = parent.get_owner()
-
             if parent_owner_as and parent_owner_as.user not in [
                 a.user for a in owners
             ]:
                 owners.append(parent_owner_as)
-
             parent = parent.parent
 
         return owners
@@ -278,11 +281,29 @@ class Project(models.Model):
         """
         return True if user in [a.user for a in self.get_owners()] else False
 
-    def get_delegates(self):
+    def is_delegate(self, user):
+        """
+        Return True if user is delegate in this project.
+        """
+        return True if user in [a.user for a in self.get_delegates()] else False
+
+    def is_owner_or_delegate(self, user):
+        """
+        Return True if user is either an owner or a delegate in this project.
+        Includes inherited owner relationships.
+        """
+        return self.is_owner(user) or self.is_delegate(user)
+
+    def get_delegates(self, exclude_inherited=False):
         """Return RoleAssignments for delegates"""
-        return self.roles.filter(
+        delegates = self.roles.filter(
             role__name=SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
         )
+        if exclude_inherited:
+            return delegates.exclude(
+                user__in=[a.user for a in self.get_owners(inherited_only=True)]
+            )
+        return delegates
 
     def get_members(self):
         """
@@ -313,30 +334,34 @@ class Project(models.Model):
         """
         if self.is_owner(user) or self.roles.filter(user=user).count() > 0:
             return True
-
         if include_children:
             for child in self.children.all():
                 if child.has_role(user, include_children=True):
                     return True
-
         return False
 
     def get_parents(self):
         """Return an array of parent projects in inheritance order"""
         if not self.parent:
             return None
-
         ret = []
         parent = self.parent
-
         while parent:
             ret.append(parent)
             parent = parent.parent
-
         return reversed(ret)
 
     def get_full_title(self):
-        """Return full title of project (just an alias for __str__())"""
+        """
+        Return full title of project with path.
+
+        NOTE: Deprecated, will be removed in the next major release (#620)
+        NOTE: Use Project.full_title instead!
+        """
+        logger.warning(
+            'Project.get_full_title() is deprecated, to be removed in v0.10! '
+            'Please use Project.full_title instead.'
+        )
         return str(self)
 
     def get_source_site(self):
@@ -346,7 +371,6 @@ class Project(models.Model):
             == SODAR_CONSTANTS['SITE_MODE_SOURCE']
         ):
             return None
-
         RemoteProject = apps.get_model('projectroles', 'RemoteProject')
 
         try:
@@ -354,7 +378,6 @@ class Project(models.Model):
                 project_uuid=self.sodar_uuid,
                 site__mode=SODAR_CONSTANTS['SITE_MODE_SOURCE'],
             ).site
-
         except RemoteProject.DoesNotExist:
             pass
 
@@ -369,7 +392,6 @@ class Project(models.Model):
             and self.get_source_site()
         ):
             return True
-
         return False
 
     def is_revoked(self):
@@ -385,7 +407,6 @@ class Project(models.Model):
                 == SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
             ):
                 return True
-
         return False
 
 
@@ -518,23 +539,24 @@ class RoleAssignment(models.Model):
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
-            delegate_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
+            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            if (
+                self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+                and del_limit != 0
+                and self.project.get_delegates(exclude_inherited=True).count()
+                >= del_limit
+                and (
+                    not self.pk
+                    or (self.project.get_delegates().filter(pk=self.pk) is None)
+                )
+            ):
+                raise ValidationError(
+                    'The limit ({}) of delegates for this project has '
+                    'already been reached.'.format(del_limit)
+                )
 
-            if self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']:
-                delegates = self.project.get_delegates()
 
-                # No delegate limit if PROJECTROLES_DELEGATE_LIMIT is set to 0
-                if delegate_limit != 0:
-                    if len(delegates) >= delegate_limit and (
-                        not self.pk or (delegates.filter(pk=self.pk) is None)
-                    ):
-                        raise ValidationError(
-                            'The limit ({}) of delegates for this project has '
-                            'already been reached.'.format(delegate_limit)
-                        )
-
-
-# AppSetting ---------------------------------------------------------------
+# AppSetting -------------------------------------------------------------------
 
 
 class AppSettingManager(models.Manager):
@@ -557,16 +579,14 @@ class AppSettingManager(models.Manager):
         """
         if (project is None) and (user is None):
             raise ValueError('Project and user unset.')
-        setting = (
-            super()
-            .get_queryset()
-            .get(
-                app_plugin__name=app_name,
-                name=setting_name,
-                project=project,
-                user=user,
-            )
-        )
+        query_parameters = {
+            'name': setting_name,
+            'project': project,
+            'user': user,
+        }
+        if not app_name == 'projectroles':
+            query_parameters['app_plugin__name'] = app_name
+        setting = super().get_queryset().get(**query_parameters)
         return setting.get_value()
 
 
@@ -583,7 +603,7 @@ class AppSetting(models.Model):
     #: App to which the setting belongs
     app_plugin = models.ForeignKey(
         Plugin,
-        null=False,
+        null=True,
         unique=False,
         related_name='settings',
         help_text='App to which the setting belongs',
@@ -649,17 +669,20 @@ class AppSetting(models.Model):
         unique_together = ['project', 'user', 'app_plugin', 'name']
 
     def __str__(self):
+        plugin_name = (
+            self.app_plugin.name if self.app_plugin else 'projectroles'
+        )
         if self.project:
             label = self.project.title
         else:
             label = self.user.username
-        return '{}: {} / {}'.format(label, self.app_plugin.name, self.name)
+        return '{}: {} / {}'.format(label, plugin_name, self.name)
 
     def __repr__(self):
         values = (
             self.project.title if self.project else None,
             self.user.username if self.user else None,
-            self.app_plugin.name,
+            self.app_plugin.name if self.app_plugin else 'projectroles',
             self.name,
         )
         return 'AppSetting({})'.format(', '.join(repr(v) for v in values))
@@ -830,7 +853,7 @@ class ProjectUserTag(models.Model):
         return 'ProjectUserTag({})'.format(', '.join(repr(v) for v in values))
 
 
-# RemoteSite--------------------------------------------------------------------
+# RemoteSite -------------------------------------------------------------------
 
 
 class RemoteSite(models.Model):
@@ -893,7 +916,7 @@ class RemoteSite(models.Model):
         unique_together = ['url', 'mode', 'secret']
 
     def __str__(self):
-        return '{} ({})'.format(self.name, self.mode, self.name)
+        return '{} ({})'.format(self.name, self.mode)
 
     def __repr__(self):
         values = (self.name, self.mode, self.url)
@@ -1057,6 +1080,9 @@ class SODARUser(AbstractUser):
         if group not in self.groups.all():
             group.user_set.add(self)
             return group_name
+
+    def is_local(self):
+        return not bool(re.search('@[A-Za-z0-9._-]+$', self.username))
 
 
 # User signals -----------------------------------------------------------------

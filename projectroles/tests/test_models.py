@@ -90,7 +90,14 @@ class ProjectInviteMixin:
 
     @classmethod
     def _make_invite(
-        cls, email, project, role, issuer, message, date_expire=None
+        cls,
+        email,
+        project,
+        role,
+        issuer,
+        message='',
+        date_expire=None,
+        secret=None,
     ):
         """Make and save a ProjectInvite"""
         values = {
@@ -102,7 +109,7 @@ class ProjectInviteMixin:
             'date_expire': date_expire
             if date_expire
             else (timezone.now() + timezone.timedelta(days=INVITE_EXPIRY_DAYS)),
-            'secret': SECRET,
+            'secret': secret or SECRET,
             'active': True,
         }
         invite = ProjectInvite(**values)
@@ -124,10 +131,13 @@ class AppSettingMixin:
         user_modifiable=True,
         project=None,
         user=None,
+        sodar_uuid=None,
     ):
         """Make and save a AppSetting"""
         values = {
-            'app_plugin': get_app_plugin(app_name).get_model(),
+            'app_plugin': None
+            if app_name == 'projectroles'
+            else get_app_plugin(app_name).get_model(),
             'project': project,
             'name': name,
             'type': setting_type,
@@ -136,6 +146,8 @@ class AppSettingMixin:
             'user_modifiable': user_modifiable,
             'user': user,
         }
+        if sodar_uuid:
+            values['sodar_uuid'] = sodar_uuid
         setting = AppSetting(**values)
         setting.save()
         return setting
@@ -289,6 +301,7 @@ class TestProject(ProjectMixin, TestCase):
             'type': PROJECT_TYPE_PROJECT,
             'parent': self.category_top.pk,
             'submit_status': SUBMIT_STATUS_OK,
+            'full_title': 'TestCategoryTop / TestProjectSub',
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
         }
@@ -334,17 +347,6 @@ class TestProject(ProjectMixin, TestCase):
         self.assertEqual(
             list(self.project_sub.get_parents()), [self.category_top]
         )
-
-    def test_get_full_title_top(self):
-        """Test full title function for top category"""
-        self.assertEqual(
-            self.category_top.get_full_title(), self.category_top.title
-        )
-
-    def test_get_full_title_sub(self):
-        """Test full title function for sub project"""
-        expected = self.category_top.title + ' / ' + self.project_sub.title
-        self.assertEqual(self.project_sub.get_full_title(), expected)
 
     def test_is_remote(self):
         """Test Project.is_remote() without remote projects"""
@@ -415,8 +417,7 @@ class TestRole(TestCase):
 
 
 class RoleAssignmentMixin:
-    """Helper mixin for RoleAssignment creation
-    """
+    """Helper mixin for RoleAssignment creation"""
 
     @classmethod
     def _make_assignment(cls, project, user, role):
@@ -768,30 +769,66 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 
     def test_find_all(self):
         """Test find() with any project type"""
-        result = Project.objects.find('Test', project_type=None)
+        result = Project.objects.find(['test'], project_type=None)
         self.assertEqual(len(result), 2)
-        result = Project.objects.find('ThisFails', project_type=None)
+        result = Project.objects.find(['ThisFails'], project_type=None)
         self.assertEqual(len(result), 0)
 
     def test_find_project(self):
         """Test find() with project_type=PROJECT"""
-        result = Project.objects.find('Test', project_type=PROJECT_TYPE_PROJECT)
+        result = Project.objects.find(
+            ['test'], project_type=PROJECT_TYPE_PROJECT
+        )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.project_sub)
 
     def test_find_category(self):
         """Test find() with project_type=CATEGORY"""
         result = Project.objects.find(
-            'Test', project_type=PROJECT_TYPE_CATEGORY
+            ['test'], project_type=PROJECT_TYPE_CATEGORY
         )
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
 
+    def test_find_multi_one(self):
+        """Test find() with one valid multi-term"""
+        result = Project.objects.find(['sub', 'ThisFails'])
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.project_sub)
+
+    def test_find_multi_two(self):
+        """Test find() with two valid multi-terms"""
+        result = Project.objects.find(['top', 'sub'])
+        self.assertEqual(len(result), 2)
+
     def test_find_description(self):
         """Test find() with search term for description"""
-        result = Project.objects.find('XXX', project_type=None)
+        result = Project.objects.find(['xxx'], project_type=None)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.category_top)
+
+    def test_find_description_multi_one(self):
+        """Test find() with one valid multi-search term for description"""
+        result = Project.objects.find(['xxx', 'ThisFails'], project_type=None)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.category_top)
+
+    def test_find_description_multi_two(self):
+        """Test find() with two valid multi-search terms for description"""
+        result = Project.objects.find(['xxx', 'yyy'], project_type=None)
+        self.assertEqual(len(result), 2)
+
+    def test_find_multi_fields(self):
+        """Test find() with multiple terms for different fields"""
+        result = Project.objects.find(['sub', 'xxx'])
+        self.assertEqual(len(result), 2)
+
+    def test_find_old_implementation(self):
+        """Test find() with deprecated old implementation (see #618)"""
+        result = Project.objects.find('Test', project_type=None)
+        self.assertEqual(len(result), 2)
+        result = Project.objects.find('ThisFails', project_type=None)
+        self.assertEqual(len(result), 0)
 
 
 class TestProjectSetting(
@@ -907,8 +944,10 @@ class TestProjectSetting(
 
     def test__repr__(self):
         """Test AppSetting __repr__()"""
-        expected = "AppSetting('TestProject', None, '{}', 'str_setting')".format(
-            EXAMPLE_APP_NAME
+        expected = (
+            "AppSetting('TestProject', None, '{}', 'str_setting')".format(
+                EXAMPLE_APP_NAME
+            )
         )
         self.assertEqual(repr(self.setting_str), expected)
 
@@ -1294,7 +1333,7 @@ class TestRemoteProject(
     @override_settings(PROJECTROLES_DELEGATE_LIMIT=1)
     def test_validate_remote_delegates(self):
         """Test delegate validation: can add delegate for remote project even if
-         there is a limit"""
+        there is a limit"""
         self.site.mode = SITE_MODE_SOURCE
         self.site.save()
 

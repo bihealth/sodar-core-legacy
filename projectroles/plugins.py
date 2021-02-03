@@ -38,7 +38,9 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
+    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
@@ -167,12 +169,13 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return '(unknown)'
 
-    def search(self, search_term, user, search_type=None, keywords=None):
+    def search(self, search_terms, user, search_type=None, keywords=None):
         """
-        Return app items based on a search term, user, optional type and
-        optional keywords.
+        Return app items based on one or more search terms, user, optional type
+        and optional keywords.
 
-        :param search_term: String
+        :param search_terms: Search terms to be joined with the OR operator
+                             (list of strings)
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
@@ -288,7 +291,9 @@ class SiteAppPluginPoint(PluginPoint):
     #:             'default': 'example',
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example user setting',  # Optional
+    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
+    #:             'local': False,  # Optional, show/hide in forms on target site
     #:         }
     #:     }
     # TODO: Define user specific settings in your app plugin, example above

@@ -10,6 +10,80 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.9.0 (2021-02-03)
+*******************
+
+Release Highlights
+==================
+
+- Last major update based on Django v1.11
+- Enable modifying local app settings in project update form on target sites
+- Add projectroles app settings
+- Add remote sync for global projectroles app settings
+- Add IP address based access restriction for projects
+- Add SSO support via SAML
+- Add support for local user invites and local user account creation
+- Add batch invites and role updates via management command
+- Add REST API views for project invite management
+- Add advanced search with multiple terms
+- Add REST API view for current user info retrieval
+
+Breaking Changes
+================
+
+Development Helper Scripts
+--------------------------
+
+Development helper scripts (``.sh``) have been replaced by a ``Makefile``.
+Get an overview of the available commands via ``make usage``.
+
+System Prerequisites
+--------------------
+
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
+
+The following third party JS/CSS requirements have been updated:
+
+- JQuery v3.5.1
+- Bootstrap v4.5.3
+
+.. note::
+
+    This is the last major update of SODAR Core based on and supporting Django
+    v1.11, which is now out of long term support. From v0.10 onwards, SODAR Core
+    based sites must be implemented on Django v3.x+.
+
+ProjectAppPlugin Search Updates
+-------------------------------
+
+The expected signature for ``ProjectAppPluginPoint.search()`` has changed.
+Instead of the ``search_term`` string argument, ``search_terms`` is expected.
+This argument is a list of strings expected to be combined with ``OR``
+operators.
+
+See the ``filesfolders`` app for an example of the new implementation.
+
+In SODAR Core v0.9, the old deprecated implementation still works, but searching
+for multiple terms in the "Advanced Search" view will only return results for
+the first search term given. This deprecation protection will be removed in the
+next major version. Please update the ``search()`` methods in your project app
+plugins if you have implemented them.
+
+Project Full Title Field
+------------------------
+
+The full title of a project, including the entire category path, can now be
+accessed via the ``Project.full_title``. This enables you to use the field
+directly in your Django queries and ordering. The value of the field is
+auto-populated on ``Project.save()`` and in a database migration accompanied in
+this release.
+
+As a result, the ``Project.get_full_title()`` has been deprecated and will be
+removed in the next major SODAR Core release. Please refactor your usage of that
+helper into referring to ``Project.full_title`` directly.
+
+
 v0.8.4 (2020-11-12)
 *******************
 

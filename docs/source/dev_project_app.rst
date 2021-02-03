@@ -593,10 +593,11 @@ The search() Function
 See the signature of ``search()`` in
 ``projectroles.plugins.ProjectAppPluginPoint``. The arguments are as follows:
 
-- ``search_term``
-    - Term to be searched for (string). Should be self-explanatory.
-    - Multiple strings or separating multiple phrases with quotation marks not
-      yet supported.
+- ``search_terms``
+    - One or more terms to be searched for (list of strings). Expected to be
+      combined with OR operators in your search logic.
+    - Multiple search terms or phrases containing whitespaces can be provided
+      via the Advanced Search view.
 - ``user``
     - User object for user initiating search
 - ``search_type``
@@ -612,6 +613,11 @@ See the signature of ``search()`` in
 
    Within this function, you are expected to verify appropriate access of the
    seaching user yourself!
+
+.. warning::
+
+    The old expected signature of providing a single ``search_term`` argument
+    has been deprecated in v0.9 and will be removed in the next major release!
 
 The return data is a dictionary, which is split by groups in case your app can
 return multiple different lists for data. This is useful where e.g. the same
@@ -753,6 +759,9 @@ Base REST API classes without a project context can also be used in site apps.
 
 API documentation for each available base class and mixin for REST API views can
 be found in :ref:`app_projectroles_api_django`.
+
+An example "hello world" REST API view for SODAR apps is available in
+``example_project_app.views.HelloExampleProjectAPIView``.
 
 .. note::
 

@@ -1,13 +1,26 @@
 """REST API view model serializers for the projectroles app"""
 
+from email.utils import parseaddr
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 
 from rest_framework import exceptions, serializers
 from drf_keyed_list import KeyedListSerializer
 
-from projectroles.models import Project, Role, RoleAssignment, SODAR_CONSTANTS
-from projectroles.views import ProjectModifyMixin, RoleAssignmentModifyMixin
+from projectroles.models import (
+    Project,
+    Role,
+    RoleAssignment,
+    ProjectInvite,
+    SODAR_CONSTANTS,
+)
+from projectroles.utils import build_secret, get_expiry_date
+from projectroles.views import (
+    ProjectModifyMixin,
+    RoleAssignmentModifyMixin,
+    ProjectInviteMixin,
+)
 
 
 # SODAR constants
@@ -21,7 +34,6 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 
 # Local constants
-DELEGATE_LIMIT = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 REMOTE_MODIFY_MSG = (
     'Modification of remote projects is not allowed, modify on '
     'the SOURCE site instead'
@@ -144,8 +156,55 @@ class SODARUserSerializer(SODARModelSerializer):
 # Projectroles Serializers -----------------------------------------------------
 
 
+class RoleAssignmentValidateMixin:
+    """Mixin for common role assignment validation"""
+
+    def validate(self, attrs):
+        project = self.context['project']
+        current_user = self.context['request'].user
+        del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+
+        # Validation for remote sites and projects
+        if project.is_remote():
+            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
+
+        if 'role' not in attrs:
+            return attrs
+
+        # Do not allow modifying/inviting owner
+        if attrs['role'].name == PROJECT_ROLE_OWNER:
+            raise serializers.ValidationError('Modifying owner not allowed')
+
+        # Check delegate perms
+        if attrs[
+            'role'
+        ].name == PROJECT_ROLE_DELEGATE and not current_user.has_perm(
+            'projectroles.update_project_delegate', project
+        ):
+            raise exceptions.PermissionDenied(
+                'User lacks permission to assign delegates'
+            )
+
+        # Check delegate limit
+        if (
+            attrs['role'].name == PROJECT_ROLE_DELEGATE
+            and del_limit != 0
+            and project.get_delegates(exclude_inherited=True).count()
+            >= del_limit
+        ):
+            raise serializers.ValidationError(
+                'Project delegate limit of {} has been reached'.format(
+                    del_limit
+                )
+            )
+
+        return attrs
+
+
 class RoleAssignmentSerializer(
-    RoleAssignmentModifyMixin, SODARProjectModelSerializer
+    RoleAssignmentModifyMixin,
+    RoleAssignmentValidateMixin,
+    SODARProjectModelSerializer,
 ):
     """Serializer for the RoleAssignment model"""
 
@@ -161,12 +220,8 @@ class RoleAssignmentSerializer(
         fields = ['project', 'role', 'user', 'sodar_uuid']
 
     def validate(self, attrs):
+        attrs = super().validate(attrs)
         project = self.context['project']
-        current_user = self.context['request'].user
-
-        # Validation for remote sites and projects
-        if project.is_remote():
-            raise serializers.ValidationError(REMOTE_MODIFY_MSG)
 
         # Do not allow updating user
         if (
@@ -177,34 +232,6 @@ class RoleAssignmentSerializer(
             raise serializers.ValidationError(
                 'Updating the user is not allowed, create a new role '
                 'assignment instead'
-            )
-
-        # Do not allow editing owner here
-        if attrs['role'].name == PROJECT_ROLE_OWNER:
-            raise serializers.ValidationError(
-                'Use ownership transfer API view to update owner'
-            )
-
-        # Check delegate perms
-        if attrs[
-            'role'
-        ].name == PROJECT_ROLE_DELEGATE and not current_user.has_perm(
-            'projectroles.update_project_delegate', project
-        ):
-            raise exceptions.PermissionDenied(
-                'User lacks permission to assign delegates'
-            )
-
-        # Check delegate limit
-        if (
-            attrs['role'].name == PROJECT_ROLE_DELEGATE
-            and settings.PROJECTROLES_DELEGATE_LIMIT != 0
-            and len(project.get_delegates()) >= DELEGATE_LIMIT
-        ):
-            raise serializers.ValidationError(
-                'Project delegate limit of {} has been reached'.format(
-                    DELEGATE_LIMIT
-                )
             )
 
         # Check for existing role if creating
@@ -251,6 +278,63 @@ class RoleAssignmentNestedListSerializer(
         model = RoleAssignment
         fields = ['role', 'user', 'sodar_uuid']
         read_only_fields = ['role']
+
+
+class ProjectInviteSerializer(
+    ProjectInviteMixin, RoleAssignmentValidateMixin, SODARProjectModelSerializer
+):
+    """Serializer for the ProjectInvite model"""
+
+    issuer = SODARUserSerializer(read_only=True)
+    role = serializers.SlugRelatedField(
+        slug_field='name', queryset=Role.objects.all()
+    )
+
+    class Meta:
+        model = ProjectInvite
+        fields = [
+            'email',
+            'project',
+            'role',
+            'issuer',
+            'date_created',
+            'date_expire',
+            'message',
+            'sodar_uuid',
+        ]
+        read_only_fields = ['issuer', 'date_created', 'date_expire', 'active']
+
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+
+        # Validate email
+        if not parseaddr(attrs['email'])[1]:
+            raise serializers.ValidationError(
+                'Invalid email address "{}"'.format(attrs['email'])
+            )
+
+        # Check for existing user
+        user = User.objects.filter(email=attrs['email']).first()
+        if user:
+            raise serializers.ValidationError(
+                'User already exist in system with given email '
+                '"{}": {} ({})'.format(
+                    attrs['email'], user.username, user.sodar_uuid
+                )
+            )
+
+        return attrs
+
+    def create(self, validated_data):
+        validated_data['issuer'] = self.context['request'].user
+        validated_data['date_expire'] = get_expiry_date()
+        validated_data['secret'] = build_secret()
+        return super().create(validated_data)
+
+    def save(self, **kwargs):
+        obj = super().save(**kwargs)
+        self.handle_invite(obj, self.context['request'], add_message=False)
+        return self.post_save(obj)
 
 
 class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):

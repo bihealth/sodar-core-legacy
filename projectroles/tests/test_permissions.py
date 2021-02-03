@@ -15,6 +15,7 @@ from projectroles.tests.test_models import (
     ProjectInviteMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
+    AppSettingMixin,
 )
 
 
@@ -46,6 +47,7 @@ class TestPermissionMixin:
         redirect_anon=None,
         method='GET',
         data=None,
+        header=None,
     ):
         """
         Assert a response status code for url with a list of users. Also checks
@@ -54,31 +56,33 @@ class TestPermissionMixin:
         :param url: Target URL for the request
         :param users: Users to test (single user, list or tuple)
         :param status_code: Status code
-        :param redirect_user: Redirect URL for signed in user (None=default)
-        :param redirect_anon: Redirect URL for anonymous (None=default)
-        :param method: Method for request (default='GET')
-        :param data: Optional data for request (dict)
+        :param redirect_user: Redirect URL for signed in user (optional)
+        :param redirect_anon: Redirect URL for anonymous (optional)
+        :param method: Method for request (string, optional, default='GET')
+        :param data: Optional data for request (dict, optional)
+        :param header: Request header (dict, optional)
         """
+        if header is None:
+            header = {}
 
         def _send_request():
             req_method = getattr(self.client, method.lower(), None)
-
             if not req_method:
                 raise ValueError('Invalid method "{}"'.format(method))
-
             return req_method(url, **req_kwargs)
 
         if not isinstance(users, (list, tuple)):
             users = [users]
 
         for user in users:
-            req_kwargs = {'data': data} if data else {}
+            req_kwargs = {'data': data, **header} if data else {}
+            if header:
+                req_kwargs.update(header)
 
             if user:  # Authenticated user
                 redirect_url = (
                     redirect_user if redirect_user else reverse('home')
                 )
-
                 with self.login(user):
                     response = _send_request()
 
@@ -199,8 +203,23 @@ class TestBaseViews(TestProjectPermissionBase):
         self.assert_response(url, bad_users, 302)
 
     def test_project_search(self):
-        """Test permissions for the search view"""
+        """Test permissions for the search results view"""
         url = reverse('projectroles:search') + '?' + urlencode({'s': 'test'})
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(reverse('home'), bad_users, 302)
+
+    def test_project_search_advanced(self):
+        """Test permissions for the advanced search view"""
+        url = reverse('projectroles:search_advanced')
         good_users = [
             self.superuser,
             self.owner_as.user,
@@ -282,7 +301,7 @@ class TestBaseViews(TestProjectPermissionBase):
         )
 
 
-class TestProjectViews(TestProjectPermissionBase):
+class TestProjectViews(AppSettingMixin, TestProjectPermissionBase):
     """Permission tests for Project UI views"""
 
     # TODO: Add category owner
@@ -327,6 +346,281 @@ class TestProjectViews(TestProjectPermissionBase):
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+
+    def _setup_ip_allowing(self, ip_list):
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=ip_list,
+            project=self.project,
+        )
+
+    def test_project_details_ip_allowing_http_x_forwarded_for_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'HTTP_X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_x_forwarded_for_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_forwarded_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'FORWARDED': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_http_x_forwarded_for_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'HTTP_X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_x_forwarded_for_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_forwarded_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'FORWARDED': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_allow_network(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.2'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_network(
+        self,
+    ):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.2.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
 
     def test_update(self):
         """Test permissions for project updating"""
@@ -615,10 +909,10 @@ class TestProjectViews(TestProjectPermissionBase):
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
-    def test_role_transfer_owner(self):
+    def test_role_owner_transfer(self):
         """Test permissions for owner role update: not allowed, should fail"""
         url = reverse(
-            'projectroles:role_transfer_owner',
+            'projectroles:role_owner_transfer',
             kwargs={'project': self.project.sodar_uuid},
         )
         good_users = [
@@ -815,7 +1109,10 @@ class TestProjectViews(TestProjectPermissionBase):
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
 class TestTargetProjectViews(
-    RemoteSiteMixin, RemoteProjectMixin, TestProjectPermissionBase
+    AppSettingMixin,
+    RemoteSiteMixin,
+    RemoteProjectMixin,
+    TestProjectPermissionBase,
 ):
     """Tests for Project updating views on a TARGET site"""
 
@@ -845,21 +1142,316 @@ class TestTargetProjectViews(
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
 
+    def test_project_details(self):
+        """Test permissions for project details"""
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [self.anonymous, self.user_no_roles]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+
+    def _setup_ip_allowing(self, ip_list):
+        # Init IP restrict setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_restrict',
+            setting_type='BOOLEAN',
+            value=True,
+            project=self.project,
+        )
+
+        # Init IP allowlist setting
+        self._make_setting(
+            app_name='projectroles',
+            name='ip_allowlist',
+            setting_type='JSON',
+            value=None,
+            value_json=ip_list,
+            project=self.project,
+        )
+
+    def test_project_details_ip_allowing_http_x_forwarded_for_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'HTTP_X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_x_forwarded_for_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_forwarded_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'FORWARDED': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_block_all(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing([])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_http_x_forwarded_for_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'HTTP_X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_x_forwarded_for_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'X_FORWARDED_FOR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_forwarded_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'FORWARDED': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_allow_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.1'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_allow_network(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_ip(self):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.1.2'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
+    def test_project_details_ip_allowing_remote_addr_not_in_allowlist_network(
+        self,
+    ):
+        """Test permissions for project details"""
+        self._setup_ip_allowing(['192.168.2.0/24'])
+
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,  # Inherited
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.anonymous,
+            self.user_no_roles,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        header = {'REMOTE_ADDR': '192.168.1.1'}
+        self.assert_response(url, good_users, 200, header=header)
+        self.assert_response(url, bad_users, 302, header=header)
+
     def test_update(self):
         """Test permissions for project updating as target"""
         url = reverse(
             'projectroles:update', kwargs={'project': self.project.sodar_uuid}
         )
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.owner_as_cat.user,
+            self.delegate_as.user,
+        ]
         bad_users = [
             self.anonymous,
-            self.superuser,
-            self.owner_as_cat.user,
-            self.owner_as.user,
-            self.delegate_as.user,
             self.contributor_as.user,
             self.guest_as.user,
             self.user_no_roles,
         ]
+        self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
 
     def test_create_top_allowed(self):

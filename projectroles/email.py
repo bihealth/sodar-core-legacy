@@ -94,6 +94,10 @@ To accept the invitation and access the {project_label} in {site_title},
 please click on the following link:
 {invite_url}
 
+Please note that the link is only to be used once. After successfully
+accepting the invitation, please access the project with its URL or
+through the project list on the site's "Home" page.
+
 This invitation will expire on {date_expire}.
 '''
 
@@ -417,7 +421,7 @@ def send_invite_mail(invite, request):
     return send_mail(subject, message, [invite.email], request, reply_to)
 
 
-def send_accept_note(invite, request):
+def send_accept_note(invite, request, user):
     """
     Send a notification email to the issuer of an invitation when a user
     accepts the invitation.
@@ -429,7 +433,7 @@ def send_accept_note(invite, request):
         SUBJECT_PREFIX
         + ' '
         + SUBJECT_ACCEPT.format(
-            user_name=request.user.get_full_name(),
+            user_name=user.get_full_name(),
             project_label=get_display_name(invite.project.type),
             project=invite.project.title,
         )
@@ -441,8 +445,8 @@ def send_accept_note(invite, request):
     message += MESSAGE_ACCEPT_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
-        user_name=request.user.get_full_name(),
-        user_email=request.user.email,
+        user_name=user.get_full_name(),
+        user_email=user.email,
         site_title=SITE_TITLE,
         project_label=get_display_name(invite.project.type),
     )
@@ -455,19 +459,21 @@ def send_accept_note(invite, request):
     return send_mail(subject, message, [invite.issuer.email], request)
 
 
-def send_expiry_note(invite, request):
+def send_expiry_note(invite, request, user_name):
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
+
     :param invite: ProjectInvite object
     :param request: HTTP request
+    :param user_name: User name of invited user
     :return: Amount of sent email (int)
     """
     subject = (
         SUBJECT_PREFIX
         + ' '
         + SUBJECT_EXPIRY.format(
-            user_name=request.user.get_full_name(), project=invite.project.title
+            user_name=user_name, project=invite.project.title
         )
     )
 
@@ -477,8 +483,8 @@ def send_expiry_note(invite, request):
     message += MESSAGE_EXPIRY_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
-        user_name=request.user.get_full_name(),
-        user_email=request.user.email,
+        user_name=user_name,
+        user_email=invite.email,
         date_expire=localtime(invite.date_expire).strftime('%Y-%m-%d %H:%M'),
         site_title=SITE_TITLE,
         project_label=get_display_name(invite.project.type),

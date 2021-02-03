@@ -24,11 +24,16 @@ urls_ui = [
         view=views.ProjectCreateView.as_view(),
         name='create',
     ),
-    # Search view
+    # Search views
     url(
-        regex=r'^search/$',
-        view=views.ProjectSearchView.as_view(),
+        regex=r'^search/results/$',
+        view=views.ProjectSearchResultsView.as_view(),
         name='search',
+    ),
+    url(
+        regex=r'^search/advanced$',
+        view=views.ProjectAdvancedSearchView.as_view(),
+        name='search_advanced',
     ),
     # Project role views
     url(
@@ -52,9 +57,9 @@ urls_ui = [
         name='role_delete',
     ),
     url(
-        regex=r'^members/transferowner/(?P<project>[0-9a-f-]+)$',
+        regex=r'^members/owner/transfer/(?P<project>[0-9a-f-]+)$',
         view=views.RoleAssignmentOwnerTransferView.as_view(),
-        name='role_transfer_owner',
+        name='role_owner_transfer',
     ),
     # Project invite views
     url(
@@ -63,7 +68,7 @@ urls_ui = [
         name='invites',
     ),
     url(
-        regex=r'^invites/create/(?P<project>[0-9a-f-]+)$',
+        regex=r'^invites/create/(?P<project>[0-9a-f-]+)',
         view=views.ProjectInviteCreateView.as_view(),
         name='invite_create',
     ),
@@ -71,6 +76,16 @@ urls_ui = [
         regex=r'^invites/accept/(?P<secret>[\w\-]+)$',
         view=views.ProjectInviteAcceptView.as_view(),
         name='invite_accept',
+    ),
+    url(
+        regex=r'^invites/process/ldap/(?P<secret>[\w\-]+)$',
+        view=views.ProjectInviteProcessLDAPView.as_view(),
+        name='invite_process_ldap',
+    ),
+    url(
+        regex=r'^invites/process/local/(?P<secret>[\w\-]+)$',
+        view=views.ProjectInviteProcessLocalView.as_view(),
+        name='invite_process_local',
     ),
     url(
         regex=r'^invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
@@ -81,6 +96,11 @@ urls_ui = [
         regex=r'^invites/revoke/(?P<projectinvite>[0-9a-f-]+)$',
         view=views.ProjectInviteRevokeView.as_view(),
         name='invite_revoke',
+    ),
+    url(
+        regex=r'^user/update$',
+        view=views.UserUpdateView.as_view(),
+        name='user_update',
     ),
     # Remote site and project views
     url(
@@ -184,9 +204,34 @@ urls_api = [
         name='api_role_owner_transfer',
     ),
     url(
+        regex=r'^api/invites/list/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteListAPIView.as_view(),
+        name='api_invite_list',
+    ),
+    url(
+        regex=r'^api/invites/create/(?P<project>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteCreateAPIView.as_view(),
+        name='api_invite_create',
+    ),
+    url(
+        regex=r'^api/invites/revoke/(?P<projectinvite>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteRevokeAPIView.as_view(),
+        name='api_invite_revoke',
+    ),
+    url(
+        regex=r'^api/invites/resend/(?P<projectinvite>[0-9a-f-]+)$',
+        view=views_api.ProjectInviteResendAPIView.as_view(),
+        name='api_invite_resend',
+    ),
+    url(
         regex=r'^api/users/list$',
         view=views_api.UserListAPIView.as_view(),
         name='api_user_list',
+    ),
+    url(
+        regex=r'^api/users/current$',
+        view=views_api.CurrentUserRetrieveAPIView.as_view(),
+        name='api_user_current',
     ),
     url(
         regex=r'^api/remote/get/(?P<secret>[\w\-]+)$',

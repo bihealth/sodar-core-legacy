@@ -18,8 +18,6 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 # Local constants
 HEADERS = {'Content-Type': 'application/json'}
-TARGETS = getattr(settings, 'TASKFLOW_TARGETS', ['sodar'])
-TASKFLOW_TEST_MODE = getattr(settings, 'TASKFLOW_TEST_MODE', False)
 
 
 class TaskflowAPI:
@@ -47,7 +45,7 @@ class TaskflowAPI:
         flow_name,
         flow_data,
         request=None,
-        targets=TARGETS,
+        targets=None,
         request_mode='sync',
         timeline_uuid=None,
         force_fail=False,
@@ -68,6 +66,8 @@ class TaskflowAPI:
         :return: Boolean
         :raise: FlowSubmitException if submission fails
         """
+        if not targets:
+            targets = settings.TASKFLOW_TARGETS
         url = self.taskflow_url + '/submit'
 
         # Format UUIDs in flow_data
@@ -87,21 +87,18 @@ class TaskflowAPI:
         }
 
         # Add the "test_mode" parameter
-        data['test_mode'] = TASKFLOW_TEST_MODE
+        data['test_mode'] = settings.TASKFLOW_TEST_MODE
 
         # HACK: Add overriding URL for test server
-        if request:
+        if sodar_url:
+            data['sodar_url'] = sodar_url
+        elif request:
             if request.POST.get('sodar_url'):
                 data['sodar_url'] = request.POST['sodar_url']
-
             elif request.GET.get('sodar_url'):
                 data['sodar_url'] = request.GET['sodar_url']
-
             elif hasattr(request, 'data') and request.data.get('sodar_url'):
                 data['sodar_url'] = request.data['sodar_url']
-
-        elif sodar_url:
-            data['sodar_url'] = sodar_url
 
         logger.debug('Submit data: {}'.format(data))
         response = requests.post(url, json=data, headers=HEADERS)
@@ -133,13 +130,13 @@ class TaskflowAPI:
         :raise: ImproperlyConfigured if TASKFLOW_TEST_MODE is not set True
         :raise: CleanupException if SODAR Taskflow raises an error
         """
-        if not TASKFLOW_TEST_MODE:
+        if not settings.TASKFLOW_TEST_MODE:
             raise ImproperlyConfigured(
                 'TASKFLOW_TEST_MODE not True, cleanup command not allowed'
             )
 
         url = self.taskflow_url + '/cleanup'
-        data = {'test_mode': TASKFLOW_TEST_MODE}
+        data = {'test_mode': settings.TASKFLOW_TEST_MODE}
 
         response = requests.post(url, json=data, headers=HEADERS)
 

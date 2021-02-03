@@ -163,7 +163,7 @@ class Command(BaseCommand):
                     ProjectEventObjectRef.objects.filter(
                         label='prev_owner',
                         event__in=ProjectEvent.objects.filter(
-                            project=category, event_name='role_transfer_owner'
+                            project=category, event_name='role_owner_transfer'
                         ),
                     )
                     .exclude(object_uuid=category.get_owner().user.sodar_uuid)

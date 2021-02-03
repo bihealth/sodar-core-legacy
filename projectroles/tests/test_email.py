@@ -125,7 +125,8 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             request = self.factory.get(reverse('home'))
             request.user = new_user
             email_sent = send_project_create_mail(
-                project=new_project, request=request,
+                project=new_project,
+                request=request,
             )
             self.assertEqual(email_sent, 1)
             self.assertEqual(len(mail.outbox), 1)

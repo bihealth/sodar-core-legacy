@@ -97,15 +97,17 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     def get_taskflow_sync_data(self):
         """
-        Return data for syncing taskflow operations
+        Return data for synchronizing taskflow operations.
+
         :return: List of dicts or None.
         """
         return None
 
     def get_object_link(self, model_str, uuid):
         """
-        Return URL for referring to a object used by the app, along with a
+        Return the URL for referring to a object used by the app, along with a
         label to be shown to the user for linking.
+
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
         :return: Dict or None if not found
@@ -138,11 +140,13 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
         return None
 
-    def search(self, search_term, user, search_type=None, keywords=None):
+    def search(self, search_terms, user, search_type=None, keywords=None):
         """
-        Return app items based on a search term, user, optional type and
-        optional keywords
-        :param search_term: String
+        Return app items based on one or more search terms, user, optional type
+        and optional keywords.
+
+        :param search_terms: Search terms to be joined with the OR operator
+                             (list of strings)
         :param user: User object for user initiating the search
         :param search_type: String
         :param keywords: List (optional)
@@ -151,20 +155,17 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         items = []
 
         if not search_type:
-            files = File.objects.find(search_term, keywords)
-            folders = Folder.objects.find(search_term, keywords)
-            links = HyperLink.objects.find(search_term, keywords)
+            files = File.objects.find(search_terms, keywords)
+            folders = Folder.objects.find(search_terms, keywords)
+            links = HyperLink.objects.find(search_terms, keywords)
             items = list(files) + list(folders) + list(links)
             items.sort(key=lambda x: x.name.lower())
-
         elif search_type == 'file':
-            items = File.objects.find(search_term, keywords).order_by('name')
-
+            items = File.objects.find(search_terms, keywords).order_by('name')
         elif search_type == 'folder':
-            items = Folder.objects.find(search_term, keywords).order_by('name')
-
+            items = Folder.objects.find(search_terms, keywords).order_by('name')
         elif search_type == 'link':
-            items = HyperLink.objects.find(search_term, keywords).order_by(
+            items = HyperLink.objects.find(search_terms, keywords).order_by(
                 'name'
             )
 

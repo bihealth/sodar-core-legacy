@@ -1,8 +1,8 @@
 import json
 import logging
+import ssl
 import urllib.request
 
-from django.contrib import auth
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.urls import reverse
@@ -11,7 +11,6 @@ from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
-User = auth.get_user_model()
 logger = logging.getLogger(__name__)
 
 
@@ -73,8 +72,20 @@ class Command(BaseCommand):
             remote_data = json.loads(response.read())
 
         except Exception as ex:
+            helper_text = ''
+            if (
+                isinstance(ex, urllib.error.URLError)
+                and isinstance(ex.reason, ssl.SSLError)
+                and ex.reason.reason == 'WRONG_VERSION_NUMBER'
+            ):
+                helper_text = (
+                    ' (most likely server cannot handle HTTPS requests)'
+                )
+
             logger.error(
-                'Unable to retrieve data from remote site: {}'.format(ex)
+                'Unable to retrieve data from remote site: {}{}'.format(
+                    ex, helper_text
+                )
             )
             return
 

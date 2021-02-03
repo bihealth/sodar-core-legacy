@@ -30,3 +30,4 @@ echo "***********************************************"
 echo "Installing django-extensions dependencies"
 echo "***********************************************"
 apt-get -y install graphviz-dev
+apt-get -y install xmlsec1

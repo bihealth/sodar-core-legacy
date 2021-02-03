@@ -20,13 +20,14 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 
-from projectroles.models import Role, SODAR_CONSTANTS
+from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from projectroles.plugins import get_active_plugins
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
     ProjectInviteMixin,
+    ProjectUserTagMixin,
     RemoteTargetMixin,
     RemoteSiteMixin,
     RemoteProjectMixin,
@@ -511,27 +512,99 @@ class TestBaseTemplate(TestUIBase):
         )
 
 
-class TestProjectList(TestUIBase):
-    """Tests for the project list UI functionalities"""
+class TestHomeView(ProjectUserTagMixin, TestUIBase):
+    """Tests for the home view and project list UI"""
+
+    def _get_item_vis_count(self):
+        return len(
+            [
+                e
+                for e in self.selenium.find_elements_by_class_name(
+                    'sodar-pr-project-list-item'
+                )
+                if e.get_attribute('style') != 'display: none;'
+            ]
+        )
+
+    def test_project_list_items(self):
+        """Test visibility of project list items"""
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
+            (self.user_no_roles, 0),
+        ]
+        url = reverse('home')
+        self.assert_element_count(expected, url, 'sodar-pr-project-list-item')
+
+    def test_project_list_filter(self):
+        """Test filtering project list items"""
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url)
+        self.assertEqual(self._get_item_vis_count(), 2)
+
+        f_input = self.selenium.find_element_by_id(
+            'sodar-pr-project-list-filter'
+        )
+        f_input.send_keys('sub')
+        self.assertEqual(self._get_item_vis_count(), 1)
+
+    def test_project_list_star(self):
+        """Test project list star filter"""
+        self._make_tag(
+            self.project, self.owner_as.user, name=PROJECT_TAG_STARRED
+        )
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url)
+        self.assertEqual(self._get_item_vis_count(), 2)
+
+        button = self.selenium.find_element_by_id(
+            'sodar-pr-project-list-link-star'
+        )
+        button.click()
+        self.assertEqual(self._get_item_vis_count(), 1)
+        self.assertEqual(
+            self.selenium.find_element_by_id(
+                'sodar-pr-home-display-nostars'
+            ).get_attribute('style'),
+            'display: none;',
+        )
+
+    def test_project_list_star_no_project(self):
+        """Test project list star filter with no project"""
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url)
+        self.assertEqual(self._get_item_vis_count(), 2)
+
+        button = self.selenium.find_element_by_id(
+            'sodar-pr-project-list-link-star'
+        )
+        button.click()
+        self.assertEqual(self._get_item_vis_count(), 0)
+        self.assertNotEqual(
+            self.selenium.find_element_by_id(
+                'sodar-pr-home-display-nostars'
+            ).get_attribute('style'),
+            'display: none;',
+        )
 
     def test_link_create_toplevel(self):
-        """Test project creation link visibility according to user
-        permissions"""
+        """Test project creation link visibility according to user permissions"""
         expected_true = [self.superuser]
-
         expected_false = [
             self.owner_as.user,
             self.delegate_as.user,
             self.contributor_as.user,
             self.guest_as.user,
+            self.user_no_roles,
         ]
-
         url = reverse('home')
 
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-home-link-create', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-home-link-create', False
         )
@@ -1294,19 +1367,24 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
-        expected_false = [
+        expected_true = [
             self.superuser,
             self.owner_as.user,
             self.delegate_as.user,
-            self.contributor_as.user,
-            self.guest_as.user,
         ]
+        expected_false = [self.contributor_as.user, self.guest_as.user]
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
 
         self.assert_element_exists(
+            expected_true, url, 'sodar-pr-nav-project-update', True
+        )
+        self.assert_element_exists(
             expected_false, url, 'sodar-pr-nav-project-update', False
+        )
+        self.assert_element_exists(
+            expected_true, url, 'sodar-pr-alt-link-project-update', True
         )
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-alt-link-project-update', False

@@ -38,14 +38,14 @@
       "affiliation": "Berlin Institute of Health, Anna-Louisa-Karsch-Straße 2, 10178 Berlin"
     }
   ],
-  "identifier": "https://zenodo.org/record/4269347",
+  "identifier": "https://doi.org/10.5281/zenodo.4269346",
   "codeRepository": "https://github.com/bihealth/sodar_core",
-  "datePublished": "2020-11-12",
-  "dateModified": "2020-11-12",
+  "datePublished": "2021-02-03",
+  "dateModified": "2021-02-03",
   "dateCreated": "2019-06-26",
   "description": "SODAR Core: A Django-based framework for scientific data management and analysis web apps",
   "keywords": "Python, Django, scientific data managmenent, software library",
   "license": "MIT",
   "title": "SODAR Core",
-  "version": "v0.8.4"
+  "version": "v0.9.0"
 }

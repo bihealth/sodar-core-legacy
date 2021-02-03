@@ -18,9 +18,10 @@ recommended options in this section.
 SODAR Django Site Template (Recommended)
 ========================================
 
-When setting up a new :term:`SODAR Core based site`, it is strongly recommended
-to use `sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as
-the template. The repository contains a minimal :term:`Django site`
+When setting up a new :term:`SODAR Core based site<SODAR Core Based Site>`, it
+is strongly recommended to use
+`sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as the
+template. The repository contains a minimal :term:`Django site<Django Site>`
 pre-configured with projectroles and other
 :term:`SODAR Core apps<SODAR Core App>`. The master branch of this project
 always integrates the latest stable release of SODAR Core and projectroles.
@@ -94,7 +95,7 @@ desired release tag.
 .. code-block:: console
 
     -e git+https://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+https://github.com/bihealth/sodar_core.git@v0.8.4#egg=django-sodar-core
+    -e git+https://github.com/bihealth/sodar_core.git@v0.9.0#egg=django-sodar-core
 
 Install the requirements for development:
 
@@ -117,11 +118,11 @@ you will have to resolve them before continuing.
 Django Settings
 ===============
 
-Next you need to modify your default :term:`Django settings` file, usually
-located in ``config/settings/base.py``. For sites created with an older
-cookiecutter-django version the file name may also be ``common.py``. Naturally,
-you should make sure no settings in other configuration files conflict with ones
-set here.
+Next you need to modify your default :term:`Django settings<Django Settings>`
+file, usually located in ``config/settings/base.py``. For sites created with an
+older cookiecutter-django version the file name may also be ``common.py``.
+Naturally, you should make sure no settings in other configuration files
+conflict with ones set here.
 
 For values retrieved from environment variables, make sure to configure your
 env accordingly. For development and testing, using ``READ_DOT_ENV_FILE`` is
@@ -303,11 +304,11 @@ All Done!
 
 After following all the instructions above, you should have a working SODAR Core
 based Django site with support for projectroles features and SODAR Core apps. To
-test the site locally execute the supplied shortcut script:
+test the site locally execute the supplied make command:
 
 .. code-block:: console
 
-    $ ./run.sh
+    $ make serve
 
 Or, run the standard Django ``runserver`` command:
 

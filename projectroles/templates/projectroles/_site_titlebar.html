@@ -11,7 +11,8 @@
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 
 <div class="m-b-1 sodar-titlebar-container">
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sodar-base-navbar" id="sodar-base-navbar">
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark sodar-base-navbar"
+       id="sodar-base-navbar">
 
     {# Site title #}
     <a class="navbar-brand" id="sodar-base-navbar-brand" href="/">
@@ -39,7 +40,29 @@
           {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
           {% if enable_search %}
             <li class="nav-item">
-              {% include 'projectroles/_site_titlebar_search.html' %}
+              <a class="btn btn-info mr-2" role="button"
+                 href="{% url 'projectroles:search_advanced' %}"
+                 title="Advanced search" data-toggle="tooltip" data-placement="left">
+                <i class="fa fa-search mt-1"></i>
+              </a>
+            </li>
+            <li class="nav-item">
+              <div class="sodar-navbar-search mr-3">
+                <form class="form-inline" method="get"
+                      action="{% url 'projectroles:search' %}">
+                  <div class="input-group sodar-input-group">
+                    <input class="form-control" type="text"
+                           placeholder="Search term" name="s" aria-label="Search term"
+                           id="sodar-nav-search-input" value="{{ search_input }}">
+                    <div class="input-group-append">
+                      <button class="btn btn-success" type="submit"
+                              id="sodar-nav-search-submit" disabled>
+                        Search
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
             </li>
           {% endif %}
         {% endif %}

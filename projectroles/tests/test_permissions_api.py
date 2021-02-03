@@ -4,7 +4,12 @@ import uuid
 
 from django.urls import reverse
 
-from projectroles.models import Project, RoleAssignment, SODAR_CONSTANTS
+from projectroles.models import (
+    Project,
+    RoleAssignment,
+    ProjectInvite,
+    SODAR_CONSTANTS,
+)
 from projectroles.tests.test_permissions import TestProjectPermissionBase
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
@@ -526,9 +531,212 @@ class TestAPIPermissions(TestCoreProjectAPIPermissionBase):
             url, bad_users, 403, method='POST', data=post_data, knox=True
         )
 
+    def test_invite_list(self):
+        """Test permissions for ProjectInviteListAPIView"""
+        url = reverse(
+            'projectroles:api_invite_list',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        self.assert_response_api(url, good_users, 200)
+        self.assert_response_api(url, bad_users, 403)
+        self.assert_response_api(url, self.anonymous, 401)
+        self.assert_response_api(url, good_users, 200, knox=True)
+
+    def test_invite_create(self):
+        """Test permissions for ProjectInviteCreateAPIView"""
+        email = 'new@example.com'
+        url = reverse(
+            'projectroles:api_invite_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        post_data = {
+            'email': email,
+            'role': SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR'],
+        }
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            invite = ProjectInvite.objects.filter(
+                email=email,
+            ).first()
+            if invite:
+                invite.delete()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data
+        )
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=post_data
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            201,
+            method='POST',
+            data=post_data,
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url, bad_users, 403, method='POST', data=post_data, knox=True
+        )
+
+    def test_invite_revoke(self):
+        """Test permissions for ProjectInviteRevokeAPIView"""
+        self.invite = self._make_invite(
+            email='new@example.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user_owner,
+        )
+        url = reverse(
+            'projectroles:api_invite_revoke',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        def _cleanup():
+            self.invite.active = True
+            self.invite.save()
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(
+            url,
+            bad_users,
+            403,
+            method='POST',
+        )
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='POST',
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            knox=True,
+            cleanup_method=_cleanup,
+        )
+        self.assert_response_api(url, bad_users, 403, method='POST', knox=True)
+
+    def test_invite_resend(self):
+        """Test permissions for ProjectInviteResendAPIView"""
+        self.invite = self._make_invite(
+            email='new@example.com',
+            project=self.project,
+            role=self.role_contributor,
+            issuer=self.user_owner,
+        )
+        url = reverse(
+            'projectroles:api_invite_resend',
+            kwargs={'projectinvite': self.invite.sodar_uuid},
+        )
+        good_users = [
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+        ]
+        bad_users = [
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+        )
+        self.assert_response_api(
+            url,
+            bad_users,
+            403,
+            method='POST',
+        )
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='POST',
+        )
+        # Test with Knox
+        self.assert_response_api(
+            url,
+            good_users,
+            200,
+            method='POST',
+            knox=True,
+        )
+        self.assert_response_api(url, bad_users, 403, method='POST', knox=True)
+
     def test_user_list(self):
         """Test permissions for UserListAPIView"""
         url = reverse('projectroles:api_user_list')
+        good_users = [
+            self.superuser,
+            self.owner_as_cat.user,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        self.assert_response_api(url, good_users, 200)
+        self.assert_response_api(url, self.anonymous, 401)
+        self.assert_response_api(url, good_users, 200, knox=True)
+
+    def test_user_current(self):
+        """Test permissions for CurrentUserRetrieveAPIView"""
+        url = reverse('projectroles:api_user_current')
         good_users = [
             self.superuser,
             self.owner_as_cat.user,

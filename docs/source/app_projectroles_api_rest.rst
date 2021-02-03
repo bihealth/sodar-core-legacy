@@ -44,7 +44,7 @@ expected version.
 
 .. code-block:: console
 
-    Accept: application/vnd.bihealth.sodar-core+json; version=0.8.2
+    Accept: application/vnd.bihealth.sodar-core+json; version=0.9.0
 
 .. note::
 
@@ -104,4 +104,14 @@ API Views
 
 .. autoclass:: RoleAssignmentOwnerTransferAPIView
 
+.. autoclass:: ProjectInviteListAPIView
+
+.. autoclass:: ProjectInviteCreateAPIView
+
+.. autoclass:: ProjectInviteRevokeAPIView
+
+.. autoclass:: ProjectInviteResendAPIView
+
 .. autoclass:: UserListAPIView
+
+.. autoclass:: CurrentUserRetrieveAPIView
