@@ -53,7 +53,6 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 # Local constants and settings
 APP_NAME = 'projectroles'
 INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-DISABLE_CATEGORIES = getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
 
 
 User = auth.get_user_model()
@@ -239,7 +238,10 @@ class ProjectForm(SODARModelForm):
         if (
             user.is_superuser
             or not instance.parent
-            or (instance.type == PROJECT_TYPE_PROJECT and DISABLE_CATEGORIES)
+            or (
+                instance.type == PROJECT_TYPE_PROJECT
+                and settings.PROJECTROLES_DISABLE_CATEGORIES
+            )
         ):
             ret.append((None, '--------'))
 
@@ -482,7 +484,7 @@ class ProjectForm(SODARModelForm):
             self.fields['owner'].widget = forms.HiddenInput()
 
             # Set valid choices for parent
-            if not DISABLE_CATEGORIES:
+            if not settings.PROJECTROLES_DISABLE_CATEGORIES:
                 self.fields['parent'].choices = self._get_parent_choices(
                     self.instance, self.current_user
                 )
@@ -525,7 +527,7 @@ class ProjectForm(SODARModelForm):
             # Creating a top level project
             else:
                 # Force project type
-                if getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False):
+                if settings.PROJECTROLES_DISABLE_CATEGORIES:
                     self.initial['type'] = PROJECT_TYPE_PROJECT
 
                 else:
@@ -563,7 +565,7 @@ class ProjectForm(SODARModelForm):
 
             elif (
                 self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-                and not DISABLE_CATEGORIES
+                and not settings.PROJECTROLES_DISABLE_CATEGORIES
             ):
                 self.add_error(
                     'parent', 'Projects can not be placed under root'

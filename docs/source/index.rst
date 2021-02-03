@@ -5,8 +5,10 @@ Welcome to the SODAR Core documentation!
 
 SODAR Core is a framework for Django web application development.
 
-It was conceived to facilitate the creation of scientific data management and analysis web applications (but can be useful in other contexts as well).
-In that it is similar to the CMS or ecommerce frameworks that you can find `Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
+It was conceived to facilitate the creation of scientific data management and
+analysis web applications (but can be useful in other contexts as well).
+In that it is similar to the CMS or ecommerce frameworks that you can find
+`Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
 
 How to read this manual?
 ------------------------
@@ -18,20 +20,24 @@ Front to Back
   you everything.
 
 Jump Around (recommended)
-  Start with :ref:`for_the_impatient` and/or :ref:`user_stories`, skim over the summary of each app, and explore what interests you most.
+  Start with :ref:`for_the_impatient` and/or :ref:`user_stories`, skim over the
+  summary of each app, and explore what interests you most.
 
 What SODAR Core is and what it is not
 -------------------------------------
 
 SODAR Core
 
-- is Django-based and you will need some knowledge about Django programming in Python for it to be useful,
+- is Django-based and you will need some knowledge about Django programming in
+  Python for it to be useful,
 - provides you with libraries for developing your own applications.
 
 SODAR Core
 
 - is NOT a ready-made web application,
-- is NOT for entry-level Python programmers (you will need intermediate Django knowledge; you probably do not want to base your first Django web application on SODAR-core).
+- is NOT for entry-level Python programmers (you will need intermediate Django
+  knowledge; you probably do not want to base your first Django web application
+  on SODAR Core).
 
 What's inside SODAR Core?
 -------------------------

@@ -169,8 +169,8 @@ target category or superuser status.
 App Settings
 ------------
 
-Project and site apps may define :term:`app settings`, which can be either be
-set with the scope of *project*, *user* or *user within a project*.
+Project and site apps may define :term:`app settings<App Settings>`, which can
+be either be set with the scope of *project*, *user* or *user within a project*.
 
 Widgets for project specific settings will show up in the project creation and
 updating form and can only be modified by users with sufficient project access.
@@ -203,7 +203,7 @@ To clean up settings which have been stored in the database but have since
 been removed from the plugin app settings definitions, run the following
 management command:
 
-.. code::
+.. code-block::
 
     $ ./manage.py cleanappsettings
 

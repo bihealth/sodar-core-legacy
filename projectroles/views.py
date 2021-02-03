@@ -2018,10 +2018,7 @@ class ProjectInviteProcessMixin:
         if settings.ENABLE_LDAP and domain in (
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
             getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
-            *[
-                a.lower()
-                for a in getattr(settings, 'PROJECTROLES_ALT_LDAP_DOMAINS', [])
-            ],
+            *[a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])],
         ):
             return 'ldap'
 
@@ -2031,7 +2028,7 @@ class ProjectInviteProcessMixin:
         return 'error'
 
     @classmethod
-    def revoke_invite(
+    def revoke_failed_invite(
         cls, invite, user=None, failed=True, fail_desc='', timeline=None
     ):
         """Set invite.active to False and save the invite"""
@@ -2075,7 +2072,7 @@ class ProjectInviteProcessMixin:
                     )
                 ),
             )
-            self.revoke_invite(
+            self.revoke_failed_invite(
                 invite,
                 user,
                 failed=True,
@@ -2106,7 +2103,7 @@ class ProjectInviteProcessMixin:
                     user_name=user.get_full_name() if user else invite.email,
                 )
 
-            self.revoke_invite(
+            self.revoke_failed_invite(
                 invite, user, failed=True, fail_desc='Invite expired'
             )
             return True
@@ -2174,7 +2171,7 @@ class ProjectInviteProcessMixin:
             email.send_accept_note(invite, self.request, user)
 
         # ..deactivate the invite..
-        self.revoke_invite(invite, user, failed=False, timeline=timeline)
+        self.revoke_failed_invite(invite, user, failed=False, timeline=timeline)
 
         # ..and finally redirect user to the project front page
         messages.success(
@@ -2528,7 +2525,7 @@ class ProjectInviteRevokeView(
                 'projectroles.update_project_delegate', project
             )
         ):
-            invite = None  # Causes revoke_invite() to add failed timeline event
+            invite = None  # Causes revoke_failed_invite() to add failed timeline event
             messages.error(
                 self.request, 'No perms for updating delegate invite!'
             )

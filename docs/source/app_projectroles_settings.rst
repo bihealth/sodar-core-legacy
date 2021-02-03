@@ -4,9 +4,9 @@
 Projectroles Django Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-This document describes the :term:`Django settings` for the ``projectroles``
-app, which also control the configuration of other apps in a SODAR Core based
-site.
+This document describes the :term:`Django settings<Django Settings>` for the
+``projectroles`` app, which also control the configuration of other apps in a
+SODAR Core based site.
 
 These settings are usually found in ``config/settings/*.py``, with
 ``config/settings/base.py`` being the default configuration other files may

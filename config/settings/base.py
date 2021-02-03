@@ -324,6 +324,9 @@ BASICAUTH_DISABLE = False
 ENABLE_LDAP = env.bool('ENABLE_LDAP', False)
 ENABLE_LDAP_SECONDARY = env.bool('ENABLE_LDAP_SECONDARY', False)
 
+# Alternative domains for detecting LDAP access by email address
+LDAP_ALT_DOMAINS = env.list('LDAP_ALT_DOMAINS', None, [])
+
 if ENABLE_LDAP:
     import itertools
     import ldap
@@ -386,6 +389,73 @@ if ENABLE_LDAP:
                 AUTHENTICATION_BACKENDS,
             )
         )
+
+
+# SAML configuration
+# ------------------------------------------------------------------------------
+
+
+ENABLE_SAML = env.bool('ENABLE_SAML', False)
+SAML2_AUTH = {
+    # Required setting
+    'SAML_CLIENT_SETTINGS': {  # Pysaml2 Saml client settings (https://pysaml2.readthedocs.io/en/latest/howto/config.html)
+        'entityid': env.str(
+            'SAML_CLIENT_ENTITY_ID', 'SODARcore'
+        ),  # The optional entity ID string to be passed in the 'Issuer' element of authn request, if required by the IDP.
+        'entitybaseurl': env.str(
+            'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
+        ),
+        'metadata': {
+            'local': [
+                env.str(
+                    'SAML_CLIENT_METADATA_FILE', 'metadata.xml'
+                ),  # The auto(dynamic) metadata configuration URL of SAML2
+            ],
+        },
+        "service": {
+            'sp': {
+                'idp': env.str(
+                    'SAML_CLIENT_IPD',
+                    'https://sso.hpc.bihealth.org/auth/realms/cubi',
+                ),
+                # Keycloak expects client signature
+                'authn_requests_signed': 'true',
+                # Enforce POST binding which is required by keycloak
+                'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
+            },
+        },
+        'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
+        'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
+        'xmlsec_binary': env.str('SAML_CLIENT_XMLSEC1', '/usr/bin/xmlsec1'),
+        'encryption_keypairs': [
+            {
+                'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
+                'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
+            }
+        ],
+    },
+    'DEFAULT_NEXT_URL': '/',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+    # # Optional settings below
+    # 'NEW_USER_PROFILE': {
+    #     'USER_GROUPS': [],  # The default group name when a new user logs in
+    #     'ACTIVE_STATUS': True,  # The default active status for new users
+    #     'STAFF_STATUS': True,  # The staff status for new users
+    #     'SUPERUSER_STATUS': False,  # The superuser status for new users
+    # },
+    # 'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
+    #     'email': 'Email',
+    #     'username': 'UserName',
+    #     'first_name': 'FirstName',
+    #     'last_name': 'LastName',
+    # },
+    # 'TRIGGER': {
+    #     'FIND_USER': 'path.to.your.find.user.hook.method',
+    #     'NEW_USER': 'path.to.your.new.user.hook.method',
+    #     'CREATE_USER': 'path.to.your.create.user.hook.method',
+    #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
+    # },
+    # 'ASSERTION_URL': 'https://your.url.here',  # Custom URL to validate incoming SAML requests against
+}
 
 
 # Logging
@@ -512,10 +582,6 @@ PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
     'PROJECTROLES_CUSTOM_CSS_INCLUDES', None, []
 )
 
-PROJECTROLES_ALT_LDAP_DOMAINS = env.list(
-    'PROJECTROLES_ALT_LDAP_DOMAINS', None, []
-)
-
 
 # Bgjobs app settings
 BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)
@@ -546,65 +612,3 @@ TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
 
 # SODAR constants
 # SODAR_CONSTANTS = get_sodar_constants(default=True)
-
-ENABLE_SAML = env.bool('ENABLE_SAML', False)
-SAML2_AUTH = {
-    # Required setting
-    'SAML_CLIENT_SETTINGS': {  # Pysaml2 Saml client settings (https://pysaml2.readthedocs.io/en/latest/howto/config.html)
-        'entityid': env.str(
-            'SAML_CLIENT_ENTITY_ID', 'SODARcore'
-        ),  # The optional entity ID string to be passed in the 'Issuer' element of authn request, if required by the IDP.
-        'entitybaseurl': env.str(
-            'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
-        ),
-        'metadata': {
-            'local': [
-                env.str(
-                    'SAML_CLIENT_METADATA_FILE', 'metadata.xml'
-                ),  # The auto(dynamic) metadata configuration URL of SAML2
-            ],
-        },
-        "service": {
-            'sp': {
-                'idp': env.str(
-                    'SAML_CLIENT_IPD',
-                    'https://sso.hpc.bihealth.org/auth/realms/cubi',
-                ),
-                # Keycloak expects client signature
-                'authn_requests_signed': 'true',
-                # Enforce POST binding which is required by keycloak
-                'binding': 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST',
-            },
-        },
-        'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-        'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-        'xmlsec_binary': env.str('SAML_CLIENT_XMLSEC1', '/usr/bin/xmlsec1'),
-        'encryption_keypairs': [
-            {
-                'key_file': env.str('SAML_CLIENT_KEY_FILE', 'key.pem'),
-                'cert_file': env.str('SAML_CLIENT_CERT_FILE', 'cert.pem'),
-            }
-        ],
-    },
-    'DEFAULT_NEXT_URL': '/',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
-    # # Optional settings below
-    # 'NEW_USER_PROFILE': {
-    #     'USER_GROUPS': [],  # The default group name when a new user logs in
-    #     'ACTIVE_STATUS': True,  # The default active status for new users
-    #     'STAFF_STATUS': True,  # The staff status for new users
-    #     'SUPERUSER_STATUS': False,  # The superuser status for new users
-    # },
-    # 'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
-    #     'email': 'Email',
-    #     'username': 'UserName',
-    #     'first_name': 'FirstName',
-    #     'last_name': 'LastName',
-    # },
-    # 'TRIGGER': {
-    #     'FIND_USER': 'path.to.your.find.user.hook.method',
-    #     'NEW_USER': 'path.to.your.new.user.hook.method',
-    #     'CREATE_USER': 'path.to.your.create.user.hook.method',
-    #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
-    # },
-    # 'ASSERTION_URL': 'https://cubi5.bihealth.org:8000',  # Custom URL to validate incoming SAML requests against
-}

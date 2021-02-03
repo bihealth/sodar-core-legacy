@@ -11,22 +11,26 @@ in this document.
 Projects
 ========
 
-The projectroles app allows grouping of data into **projects**.
-Here, a **project** is a data container object that other objects can be linked to (typically through a 1:n foreign key relationship).
-A special type of project is a **category** which is allowed to contain other categories and projects but no other data type.
+The projectroles app groups data into **projects**. Here, a **project** is a
+data container object that other objects can be linked to (typically through a
+1:n foreign key relationship). A **category** is a sub-type of a project which
+is allowed to contain other categories and projects but no other data type.
 
-Using categories and projects, data can be organized in a tree structure of category and project "containers".
-Users can be granted access to projects using roles as described in the next section.
+Using categories and projects, data can be organized in a tree structure of
+category and project "containers". Users can be granted access to projects using
+roles as described in the next section.
 
 
 User Roles in Projects
 ======================
 
-A **role** is a data type that has a string identifier in it score (e.g., "guest").
-Roles are assigned to individual users in the context of individual projects (a n:m relation from user to project with the string identifier).
-For example, user "paul" might be assigned the "guest" role in one project and another (or no) role in a second project.
-Users can only have one role in a given project at any given time.
-New types of roles can be defined by extending the default model's database table of the projectroles app.
+A **role** is a data type that has a string identifier in it score (e.g.,
+"project guest"). Roles are assigned to individual users in the context of
+individual projects (a n:m relation from user to project with the string
+identifier). For example, user "paul" might be assigned the "project guest" role
+in one project and another (or no) role in a second project. Users can only have
+one role in a given project at any given time. New types of roles can be defined
+by extending the default model's database table of the projectroles app.
 
 The default setup of role types used in SODAR sites:
 
@@ -70,7 +74,9 @@ SODAR Core allows optionally reading and synchronizing project metadata between
 multiple SODAR-based Django sites. A superuser is able to set desired levels of
 remote access for specific sites on a per-project basis.
 
-A SODAR site can have one of three modes: **source**, **target** or **peer** mode.
+A SODAR site can have one of three modes: **source**, **target** or **peer**
+mode.
+
 A SODAR site can be set by the user in either **source** or **target** mode.
 
 - **Source site** is one expecting to (potentially) serve project metadata to
@@ -78,9 +84,10 @@ A SODAR site can be set by the user in either **source** or **target** mode.
 - **Target site** can be linked with exactly one source site, from which it
   can retrieve project metadata. Creation of local projects can be enabled or
   disabled according to local configuration.
-- **Peer** mode is used only if two or more Target sites link to the same Source site.
-  If synchronizing a project which has multiple accessing Target sites, metadata
-  about those other Target sites is included and stored in Peer mode site objects.
+- **Peer** mode is used only if two or more Target sites link to the same Source
+  site. If synchronizing a project which has multiple accessing Target sites,
+  metadata about those other Target sites is included and stored in Peer mode
+  site objects.
 
 Among the data which can be synchronized:
 

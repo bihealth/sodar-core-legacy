@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.9.0 (2021-02-03)
+===================
 
 Added
 -----
@@ -25,7 +25,7 @@ Added
     - ``setting_delete()`` function to ``AppSettingAPI`` (#538)
     - ``cleanappsettings`` management command (#374)
     - ``exclude_inherited`` argument in ``Project.get_delegates()`` (#595)
-    - Optional options for app settings of type ``STRING`` and ``INTEGER`` (#592)
+    - Value options for app settings of type ``STRING`` and ``INTEGER`` (#592)
     - Display placeholders for app setting form fields (#584)
     - Support for local user invites (#548, #613, #615, #621)
     - Local user account creation and updating (#547)
@@ -47,7 +47,7 @@ Changed
     - Refactor example ``PROJECT_USER`` scope app settings (#599)
     - Set logging level in test configurations to ``CRITICAL`` (#604)
 - **Filesfolders**
-    - Update ``search()`` and ``FilesfoldersManager.find()`` for multiple search terms (#609)
+    - Update ``search()`` and ``find()`` for multiple search terms (#609)
 - **Projectroles**
     - Allow updating local app settings on a ``TARGET`` site (#545)
     - Refactor project list filtering (#566)
