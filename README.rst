@@ -17,8 +17,8 @@ SODAR Core
     :target: https://sodar-core.readthedocs.io/en/latest/?badge=latest
     :alt: Documentation Status
 
-.. image:: https://zenodo.org/badge/165220058.svg
-    :target: https://zenodo.org/badge/latestdoi/165220058
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4269346.svg
+    :target: https://doi.org/10.5281/zenodo.4269346
 
 SODAR Core is a framework for Django web application development.
 
