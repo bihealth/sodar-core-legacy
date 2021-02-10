@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Improve Codacy support in GitHub Actions
+
+
 v0.9.0 (2021-02-03)
 ===================
 
