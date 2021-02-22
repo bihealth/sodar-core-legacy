@@ -15,6 +15,8 @@ Changed
 
 - **General**
     - Improve Codacy support in GitHub Actions
+- **Projectroles**
+    - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
 
 
 v0.9.0 (2021-02-03)

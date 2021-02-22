@@ -10,6 +10,27 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.9.1 (WIP)
+************
+
+Release Highlights
+==================
+
+- Duplicate object UUIDs in REST API view nested lists
+
+Breaking Changes
+================
+
+Duplicate UUIDs in Nested REST API Lists
+----------------------------------------
+
+Nested object lists in SODAR Core REST API views are grouped into dictionaries
+using each object's ``sodar_uuid``. From this version onwards, the UUID fields
+are duplicated within each object as well. While this isn't a breaking change in
+itself, if you use ``SODARNestedListSerializer`` it may cause some of your test
+cases to fail unless altered.
+
+
 v0.9.0 (2021-02-03)
 *******************
 

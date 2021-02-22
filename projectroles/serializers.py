@@ -58,12 +58,10 @@ class SODARModelSerializer(serializers.ModelSerializer):
         Override to_representation() to ensure sodar_uuid is included for object
         creation POST responses.
         """
-        representation = super().to_representation(instance)
-
-        if 'sodar_uuid' not in representation and 'sodar_uuid' in self.context:
-            representation['sodar_uuid'] = str(self.context['sodar_uuid'])
-
-        return representation
+        ret = super().to_representation(instance)
+        if 'sodar_uuid' not in ret and 'sodar_uuid' in self.context:
+            ret['sodar_uuid'] = str(self.context['sodar_uuid'])
+        return ret
 
     def save(self, **kwargs):
         """
@@ -83,7 +81,6 @@ class SODARModelSerializer(serializers.ModelSerializer):
         """
         if hasattr(obj, 'sodar_uuid'):
             self.context['sodar_uuid'] = obj.sodar_uuid
-
         return obj
 
 
@@ -107,18 +104,15 @@ class SODARProjectModelSerializer(SODARModelSerializer):
         Override to_representation() to ensure the project value is included
         in responses.
         """
-        representation = super().to_representation(instance)
-
-        if 'project' not in representation and 'project' in self.context:
-            representation['project'] = str(self.context['project'].sodar_uuid)
-
-        return representation
+        ret = super().to_representation(instance)
+        if 'project' not in ret and 'project' in self.context:
+            ret['project'] = str(self.context['project'].sodar_uuid)
+        return ret
 
     def create(self, validated_data):
         """Override create() to add project into validated data"""
         if 'project' not in validated_data and 'project' in self.context:
             validated_data['project'] = self.context['project']
-
         return super().create(validated_data)
 
 
@@ -130,6 +124,7 @@ class SODARNestedListSerializer(SODARModelSerializer):
     class Meta:
         list_serializer_class = KeyedListSerializer
         keyed_list_serializer_field = 'sodar_uuid'
+        duplicate_list_key = True  # Extension to drf-keyed-list
 
     def to_representation(self, instance):
         """
@@ -137,12 +132,10 @@ class SODARNestedListSerializer(SODARModelSerializer):
         representation, where the project context is already known in the
         topmost model.
         """
-        representation = super().to_representation(instance)
-
+        ret = super().to_representation(instance)
         if self.context.get('project'):
-            representation.pop('project', None)
-
-        return representation
+            ret.pop('project', None)
+        return ret
 
 
 class SODARUserSerializer(SODARModelSerializer):
@@ -380,7 +373,6 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         # Validation for remote sites and projects
         if self.instance and self.instance.is_remote():
             raise serializers.ValidationError(REMOTE_MODIFY_MSG)
-
         elif (
             not self.instance
             and site_mode == SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -485,12 +477,9 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
                     'Modifying owner not allowed here, '
                     'use ownership transfer API view instead'
                 )
-
             owner = User.objects.filter(sodar_uuid=attrs['owner']).first()
-
             if not owner:
                 raise serializers.ValidationError('Owner not found')
-
             attrs['owner'] = owner
 
         # Set readme
@@ -510,17 +499,14 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
 
     def to_representation(self, instance):
         """Override to make sure fields are correctly returned."""
-        representation = super().to_representation(instance)
-        parent = representation.get('parent')
+        ret = super().to_representation(instance)
+        parent = ret.get('parent')
         project = Project.objects.get(
-            title=representation['title'],
+            title=ret['title'],
             **{'parent__sodar_uuid': parent} if parent else {},
         )
-
         # TODO: Better way to ensure this?
-        representation['readme'] = project.readme.raw or ''
-
-        if not representation.get('sodar_uuid'):
-            representation['sodar_uuid'] = str(project.sodar_uuid)
-
-        return representation
+        ret['readme'] = project.readme.raw or ''
+        if not ret.get('sodar_uuid'):
+            ret['sodar_uuid'] = str(project.sodar_uuid)
+        return ret
