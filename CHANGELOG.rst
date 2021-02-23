@@ -24,6 +24,12 @@ Changed
 - **Projectroles**
     - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Login redirect URLs with query strings not properly handled by ``assert_response()`` (#635)
+
 
 v0.9.0 (2021-02-03)
 ===================
