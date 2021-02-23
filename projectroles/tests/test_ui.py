@@ -55,16 +55,16 @@ PROJECT_LINK_IDS = [
     'sodar-pr-link-project-star',
 ]
 DEFAULT_WAIT_LOC = 'ID'
+HEAD_INCLUDE = '<meta name="keywords" content="SODAR Core">'
+REMOTE_SITE_NAME = 'Remote Site'
+REMOTE_SITE_URL = 'https://sodar.bihealth.org'
+REMOTE_SITE_DESC = 'New description'
+REMOTE_SITE_SECRET = build_secret()
 
 # App settings API
 app_settings = AppSettingAPI()
 
 User = auth.get_user_model()
-
-REMOTE_SITE_NAME = 'Remote Site'
-REMOTE_SITE_URL = 'https://sodar.bihealth.org'
-REMOTE_SITE_DESC = 'New description'
-REMOTE_SITE_SECRET = build_secret()
 
 
 class LiveUserMixin:
@@ -608,6 +608,22 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-home-link-create', False
         )
+
+    @override_settings(PROJECTROLES_INLINE_HEAD_INCLUDE=HEAD_INCLUDE)
+    def test_inline_head_include_enabled(self):
+        """Test visibility of inline head include from env variables"""
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url)
+        self.assertIsNotNone(
+            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
+        )
+
+    def test_inline_head_include_disabled(self):
+        """Test absence of inline head include when not set"""
+        url = reverse('home')
+        self.login_and_redirect(self.owner_as.user, url)
+        with self.assertRaises(NoSuchElementException):
+            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
 
 
 class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):

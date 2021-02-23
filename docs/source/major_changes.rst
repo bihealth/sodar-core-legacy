@@ -16,10 +16,19 @@ v0.9.1 (WIP)
 Release Highlights
 ==================
 
+- Add inline head include from environment variables in base template
 - Duplicate object UUIDs in REST API view nested lists
 
 Breaking Changes
 ================
+
+Base Template Updated
+---------------------
+
+The base site template in ``projectroles/base_site.html`` has been updated. If
+you have copied the template to your own site's base template to extend it,
+please make sure to copy the latest changes to maintain full compatibility. See
+diff between templates or search for lines containing ``inline_head_include``.
 
 Duplicate UUIDs in Nested REST API Lists
 ----------------------------------------
