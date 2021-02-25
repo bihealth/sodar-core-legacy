@@ -6,7 +6,6 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth.signals import user_logged_in
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -101,6 +100,7 @@ class Project(models.Model):
         null=True,
         related_name='children',
         help_text='Parent category if nested',
+        on_delete=models.CASCADE,
     )
 
     #: Short project description
@@ -461,6 +461,7 @@ class RoleAssignment(models.Model):
         Project,
         related_name='roles',
         help_text='Project in which role is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: User for whom role is assigned
@@ -468,11 +469,15 @@ class RoleAssignment(models.Model):
         AUTH_USER_MODEL,
         related_name='roles',
         help_text='User for whom role is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: Role to be assigned
     role = models.ForeignKey(
-        Role, related_name='assignments', help_text='Role to be assigned'
+        Role,
+        related_name='assignments',
+        help_text='Role to be assigned',
+        on_delete=models.CASCADE,
     )
 
     #: RoleAssignment SODAR UUID
@@ -607,6 +612,7 @@ class AppSetting(models.Model):
         unique=False,
         related_name='settings',
         help_text='App to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Project to which the setting belongs
@@ -616,6 +622,7 @@ class AppSetting(models.Model):
         blank=True,
         related_name='settings',
         help_text='Project to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Project to which the setting belongs
@@ -625,6 +632,7 @@ class AppSetting(models.Model):
         blank=True,
         related_name='user_settings',
         help_text='User to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Name of the setting
@@ -647,7 +655,7 @@ class AppSetting(models.Model):
     )
 
     #: Optional JSON value for the setting
-    value_json = JSONField(
+    value_json = models.JSONField(
         null=True, default=dict, help_text='Optional JSON value for the setting'
     )
 
@@ -736,11 +744,15 @@ class ProjectInvite(models.Model):
         null=False,
         related_name='invites',
         help_text='Project to which the person is invited',
+        on_delete=models.CASCADE,
     )
 
     #: Role assigned to the person
     role = models.ForeignKey(
-        Role, null=False, help_text='Role assigned to the person'
+        Role,
+        null=False,
+        help_text='Role assigned to the person',
+        on_delete=models.CASCADE,
     )
 
     #: User who issued the invite
@@ -749,6 +761,7 @@ class ProjectInvite(models.Model):
         null=False,
         related_name='issued_invites',
         help_text='User who issued the invite',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of invite creation
@@ -815,6 +828,7 @@ class ProjectUserTag(models.Model):
         null=False,
         related_name='tags',
         help_text='Project in which the tag is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: User for whom the tag is assigned
@@ -823,6 +837,7 @@ class ProjectUserTag(models.Model):
         null=False,
         related_name='project_tags',
         help_text='User for whom the tag is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: Name of tag to be assigned
@@ -970,6 +985,7 @@ class RemoteProject(models.Model):
         blank=True,
         null=True,
         help_text='Related project object (if created locally)',
+        on_delete=models.CASCADE,
     )
 
     #: Related remote SODAR site
@@ -978,6 +994,7 @@ class RemoteProject(models.Model):
         null=False,
         related_name='projects',
         help_text='Remote SODAR site',
+        on_delete=models.CASCADE,
     )
 
     #: Project access level

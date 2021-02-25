@@ -41,24 +41,16 @@ Cookiecutter-Django
 ===================
 
 If the SODAR Django site template does not suit your needs, it is also possible
-to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/>`_.
 In this case, follow the instructions in the following section as if you were
 integrating SODAR Core to an existing Django site.
 
-.. warning::
-
-    Currently, SODAR Core only supports Django 1.11.x, while the latest versions
-    of cookiecutter-django set up Django 2.0.x by default. It is strongly
-    recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
-    upwards is not guaranteed! Integration into the last official
-    `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-    of cookiecutter-django has been tested and verified to be working.
-
 .. note::
 
-    The latest cookiecutter-django 1.11 release has dependencies which are
-    already out of date. Please update them to match the requirements of the
-    django-sodar-core package.
+    The project was created using an old version of the cookiecutter script and
+    evolved from there. This means the site created by the version currently may
+    differ in several ways from how SODAR Core is set up. This method is
+    recommended only for experienced Django developers.
 
 .. note::
 
@@ -83,10 +75,9 @@ chapter.
 
 .. warning::
 
-    The rest of this section assumes that your Django project has been set up
-    sing a `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
-    Otherwise details such as directory structures and settings variables may
-    differ.
+    The rest of this section was originally written for the
+    `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+    Some details such as directory structures and settings variables may differ.
 
 First, add the ``django-plugins`` and ``django-sodar-core`` package requirements
 into your ``requirements/base.txt`` file. Make sure you are pointing to the
@@ -178,7 +169,7 @@ Populating UUIDs for Existing Users
 
 When integrating projectroles into an existing site with existing users, the
 ``sodar_uuid`` field needs to be populated. See
-`instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+`instructions in Django documentation <https://docs.djangoproject.com/en/3.1/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
 
 Synchronizing User Groups for Existing Users

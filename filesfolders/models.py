@@ -88,6 +88,7 @@ class BaseFilesfoldersClass(models.Model):
         Project,
         related_name='%(app_label)s_%(class)s_objects',
         help_text='Project in which the object belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Folder under which object exists (null if root folder)
@@ -97,11 +98,14 @@ class BaseFilesfoldersClass(models.Model):
         null=True,
         blank=True,
         help_text='Folder under which object exists (null if root folder)',
+        on_delete=models.CASCADE,
     )
 
     #: User who owns the object
     owner = models.ForeignKey(
-        AUTH_USER_MODEL, help_text='User who owns the object'
+        AUTH_USER_MODEL,
+        help_text='User who owns the object',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of last modification

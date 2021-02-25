@@ -51,7 +51,7 @@ to set up a fresh app generated in the standard way with
 
 It is also assumed that apps are more or less created according to best
 practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the
-use of `Class-Based Views <https://docs.djangoproject.com/en/1.11/topics/class-based-views/>`_
+use of `Class-Based Views <https://docs.djangoproject.com/en/3.1/topics/class-based-views//>`_
 being a requirement.
 
 
@@ -94,7 +94,7 @@ To provide a unique identifier for objects in the SODAR context, add a
 
     When updating an existing Django model with an existing database, the
     ``sodar_uuid`` field needs to be populated. See
-    `instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+    `instructions in Django documentation <https://docs.djangoproject.com/en/3.1/howto/writing-migrations/#migrations-that-add-unique-fields>`_
     on how to create the required migrations.
 
 Model Example

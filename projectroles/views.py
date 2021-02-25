@@ -443,7 +443,7 @@ class ProjectListContextMixin:
                 parent=parent, submit_status='OK'
             ).order_by('title')
 
-        elif not user.is_anonymous():
+        elif not user.is_anonymous:
             project_list = [
                 p
                 for p in Project.objects.filter(
@@ -2199,7 +2199,7 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
             return redirect(reverse('home'))
 
         if (
-            not user.is_anonymous()
+            not user.is_anonymous
             and user.is_authenticated
             and user.email == invite.email
             and self.user_role_exists(invite, user, timeline)

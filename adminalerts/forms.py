@@ -36,7 +36,9 @@ class AdminAlertForm(SODARModelForm):
         )
 
         # Set description widget with preview
-        self.fields['description'].widget = PagedownWidget(show_preview=True)
+        self.fields['description'].widget = PagedownWidget(
+            attrs={'show_preview': True}
+        )
 
         # Creation
         if not self.instance.pk:

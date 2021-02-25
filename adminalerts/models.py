@@ -26,6 +26,7 @@ class AdminAlert(models.Model):
         AUTH_USER_MODEL,
         related_name='alerts',
         help_text='Superuser who has set the alert',
+        on_delete=models.CASCADE,
     )
 
     #: Full description (optional, will be shown on a separate page)

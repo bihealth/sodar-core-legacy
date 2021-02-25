@@ -1,77 +1,54 @@
-# NOTE: This is a "fork" of the Django 1.10 TestCase class which does NOT
-#       enforce database transactions
-
-import warnings
+# NOTE: This is a "fork" of the django-test-plus 1.40 using TransactionTestCase
 
 import django
+
+from distutils.version import LooseVersion
+
 from django.conf import settings
-from django.contrib.auth.models import Permission
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ImproperlyConfigured
-from django.core.urlresolvers import reverse, NoReverseMatch
-from django.shortcuts import resolve_url
 from django.db import connections, DEFAULT_DB_ALIAS
 from django.db.models import Q
-from distutils.version import LooseVersion
+from django.shortcuts import resolve_url
 from django.test import (
     RequestFactory,
     signals,
     TransactionTestCase as DjangoTestCase,
 )
 from django.test.client import store_rendered_templates
-from django.utils.functional import curry
+from django.test.utils import CaptureQueriesContext
+from functools import partial
+
+from test_plus.status_codes import StatusCodeAssertionMixin
+from test_plus.compat import reverse, NoReverseMatch, get_api_client
 
 
 class NoPreviousResponse(Exception):
     pass
 
 
-# Build a real context in versions of Django greater than 1.6
-# On versions below 1.6, create a context that simply warns that
-# the query number assertion is not happening
-if LooseVersion(django.get_version()) >= LooseVersion('1.6'):
-    from django.test.utils import CaptureQueriesContext
-    from django.contrib.auth import get_user_model
+# Build a real context
 
-    User = get_user_model()
-
-    CAPTURE = True
-
-    class _AssertNumQueriesLessThanContext(CaptureQueriesContext):
-        def __init__(self, test_case, num, connection):
-            self.test_case = test_case
-            self.num = num
-            super(_AssertNumQueriesLessThanContext, self).__init__(connection)
-
-        def __exit__(self, exc_type, exc_value, traceback):
-            super(_AssertNumQueriesLessThanContext, self).__exit__(
-                exc_type, exc_value, traceback
-            )
-            if exc_type is not None:
-                return
-            executed = len(self)
-            self.test_case.assertTrue(
-                executed < self.num,
-                "%d queries executed, expected less than %d"
-                % (executed, self.num),
-            )
+CAPTURE = True
 
 
-else:
-    from django.contrib.auth.models import User
+class _AssertNumQueriesLessThanContext(CaptureQueriesContext):
+    def __init__(self, test_case, num, connection):
+        self.test_case = test_case
+        self.num = num
+        super(_AssertNumQueriesLessThanContext, self).__init__(connection)
 
-    CAPTURE = False
-
-    class _AssertNumQueriesLessThanContext(object):
-        def __init__(self, test_case, num, connection):
-            pass
-
-        def __enter__(self):
-            pass
-
-        def __exit__(self, exc_type, exc_value, traceback):
-            warnings.warn(
-                "assertNumQueriesLessThan being skipped, does not work prior to Django 1.6"
-            )
+    def __exit__(self, exc_type, exc_value, traceback):
+        super(_AssertNumQueriesLessThanContext, self).__exit__(
+            exc_type, exc_value, traceback
+        )
+        if exc_type is not None:
+            return
+        executed = len(self)
+        self.test_case.assertTrue(
+            executed < self.num,
+            "%d queries executed, expected less than %d" % (executed, self.num),
+        )
 
 
 class login(object):
@@ -83,11 +60,14 @@ class login(object):
 
     def __init__(self, testcase, *args, **credentials):
         self.testcase = testcase
+        User = get_user_model()
 
         if args and isinstance(args[0], User):
             USERNAME_FIELD = getattr(User, 'USERNAME_FIELD', 'username')
             credentials.update(
-                {USERNAME_FIELD: getattr(args[0], USERNAME_FIELD)}
+                {
+                    USERNAME_FIELD: getattr(args[0], USERNAME_FIELD),
+                }
             )
 
         if not credentials.get('password', False):
@@ -105,7 +85,7 @@ class login(object):
         self.testcase.client.logout()
 
 
-class TestCase(DjangoTestCase):
+class BaseTestCase(StatusCodeAssertionMixin):
     """
     Django TestCase with helpful additional features
     """
@@ -114,7 +94,6 @@ class TestCase(DjangoTestCase):
 
     def __init__(self, *args, **kwargs):
         self.last_response = None
-        super(TestCase, self).__init__(*args, **kwargs)
 
     def tearDown(self):
         self.client.logout()
@@ -192,12 +171,14 @@ class TestCase(DjangoTestCase):
     def head(self, url_name, *args, **kwargs):
         return self.request('head', url_name, *args, **kwargs)
 
-    # def trace(self, url_name, *args, **kwargs):
-    #     if LooseVersion(django.get_version()) >= LooseVersion('1.8.2'):
-    #         return self.request('trace', url_name, *args, **kwargs)
-    #     else:
-    #         raise LookupError("client.trace is not available for your version of django. Please\
-    #                            update your django version.")
+    def trace(self, url_name, *args, **kwargs):
+        if LooseVersion(django.get_version()) >= LooseVersion('1.8.2'):
+            return self.request('trace', url_name, *args, **kwargs)
+        else:
+            raise LookupError(
+                "client.trace is not available for your version of django. Please\
+                               update your django version."
+            )
 
     def options(self, url_name, *args, **kwargs):
         return self.request('options', url_name, *args, **kwargs)
@@ -211,50 +192,57 @@ class TestCase(DjangoTestCase):
         else:
             return response
 
-    def response_200(self, response=None):
+    def _assert_response_code(self, status_code, response=None, msg=None):
+        response = self._which_response(response)
+        self.assertEqual(response.status_code, status_code, msg)
+
+    def response_200(self, response=None, msg=None):
         """ Given response has status_code 200 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 200)
+        self._assert_response_code(200, response, msg)
 
-    def response_201(self, response=None):
+    def response_201(self, response=None, msg=None):
         """ Given response has status_code 201 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 201)
+        self._assert_response_code(201, response, msg)
 
-    def response_302(self, response=None):
+    def response_204(self, response=None, msg=None):
+        """ Given response has status_code 204 """
+        self._assert_response_code(204, response, msg)
+
+    def response_301(self, response=None, msg=None):
+        """ Given response has status_code 301 """
+        self._assert_response_code(301, response, msg)
+
+    def response_302(self, response=None, msg=None):
         """ Given response has status_code 302 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 302)
+        self._assert_response_code(302, response, msg)
 
-    def response_400(self, response=None):
+    def response_400(self, response=None, msg=None):
         """ Given response has status_code 400 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 400)
+        self._assert_response_code(400, response, msg)
 
-    def response_401(self, response=None):
+    def response_401(self, response=None, msg=None):
         """ Given response has status_code 401 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 401)
+        self._assert_response_code(401, response, msg)
 
-    def response_403(self, response=None):
+    def response_403(self, response=None, msg=None):
         """ Given response has status_code 403 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 403)
+        self._assert_response_code(403, response, msg)
 
-    def response_404(self, response=None):
+    def response_404(self, response=None, msg=None):
         """ Given response has status_code 404 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 404)
+        self._assert_response_code(404, response, msg)
 
-    def response_405(self, response=None):
+    def response_405(self, response=None, msg=None):
         """ Given response has status_code 405 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 405)
+        self._assert_response_code(405, response, msg)
 
-    def response_410(self, response=None):
+    def response_409(self, response=None, msg=None):
+        """ Given response has status_code 409 """
+        self._assert_response_code(409, response, msg)
+
+    def response_410(self, response=None, msg=None):
         """ Given response has status_code 410 """
-        response = self._which_response(response)
-        self.assertEqual(response.status_code, 410)
+        self._assert_response_code(410, response, msg)
 
     def get_check_200(self, url, *args, **kwargs):
         """ Test that we can GET a page and it returns a 200 """
@@ -278,24 +266,35 @@ class TestCase(DjangoTestCase):
         """ Reverse a url, convenience to avoid having to import reverse in tests """
         return reverse(name, args=args, kwargs=kwargs)
 
-    def make_user(self, username='testuser', password='password', perms=None):
+    @classmethod
+    def make_user(cls, username='testuser', password='password', perms=None):
         """
         Build a user with <username> and password of 'password' for testing
         purposes.
         """
-        if self.user_factory:
+        User = get_user_model()
+
+        if cls.user_factory:
             USERNAME_FIELD = getattr(
-                self.user_factory._meta.model, 'USERNAME_FIELD', 'username'
+                cls.user_factory._meta.model, 'USERNAME_FIELD', 'username'
             )
-            test_user = self.user_factory(**{USERNAME_FIELD: username})
+            test_user = cls.user_factory(
+                **{
+                    USERNAME_FIELD: username,
+                }
+            )
             test_user.set_password(password)
             test_user.save()
         else:
             test_user = User.objects.create_user(
-                username, '{0}@example.com'.format(username), password
+                username,
+                '{0}@example.com'.format(username),
+                password,
             )
 
         if perms:
+            from django.contrib.auth.models import Permission
+
             _filter = Q()
             for perm in perms:
                 if '.' not in perm:
@@ -363,6 +362,22 @@ class TestCase(DjangoTestCase):
         response = self._which_response(response)
         self.assertNotContains(response, text, html=html, **kwargs)
 
+    def assertResponseHeaders(self, headers, response=None):
+        """
+        Check that the headers in the response are as expected.
+
+        Only headers defined in `headers` are compared, other keys present on
+        the `response` will be ignored.
+
+        :param headers: Mapping of header names to expected values
+        :type headers: :class:`collections.Mapping`
+        :param response: Response to check headers against
+        :type response: :class:`django.http.response.HttpResponse`
+        """
+        response = self._which_response(response)
+        compare = {h: response.get(h) for h in headers}
+        self.assertEqual(compare, headers)
+
     def get_context(self, key):
         if self.last_response is not None:
             self.assertTrue(key in self.last_response.context)
@@ -375,6 +390,24 @@ class TestCase(DjangoTestCase):
             self.assertEqual(self.last_response.context[key], value)
         else:
             raise NoPreviousResponse("There isn't a previous response to query")
+
+
+class TestCase(DjangoTestCase, BaseTestCase):
+    """
+    Django TestCase with helpful additional features
+    """
+
+    user_factory = None
+
+    def __init__(self, *args, **kwargs):
+        self.last_response = None
+        super(TestCase, self).__init__(*args, **kwargs)
+
+
+class APITestCase(TestCase):
+    def __init__(self, *args, **kwargs):
+        self.client_class = get_api_client()
+        super(APITestCase, self).__init__(*args, **kwargs)
 
 
 # Note this class inherits from TestCase defined above.
@@ -402,7 +435,8 @@ class CBVTestCase(TestCase):
                 self.assertTrue(result)
     """
 
-    def get_instance(self, cls, *args, **kwargs):
+    @staticmethod
+    def get_instance(view_cls, *args, **kwargs):
         """
         Returns a decorated instance of a class-based generic view class.
 
@@ -414,52 +448,46 @@ class CBVTestCase(TestCase):
         because SingleObjectMixin (part of generic.DetailView)
         expects self.object to be set before invoking get_context_data().
 
-        `args` and `kwargs` are the same values you would pass to ``reverse()``.
+        Pass a "request" kwarg in order for your tests to have particular
+        request attributes.
         """
         initkwargs = kwargs.pop('initkwargs', None)
         request = kwargs.pop('request', None)
         if initkwargs is None:
             initkwargs = {}
-        instance = cls(**initkwargs)
+        instance = view_cls(**initkwargs)
         instance.request = request
         instance.args = args
         instance.kwargs = kwargs
         return instance
 
-    def get(self, cls, *args, **kwargs):
+    def get(self, view_cls, *args, **kwargs):
         """
-        Calls cls.get() method after instantiating view class
-        with `initkwargs`.
-        Renders view templates and sets context if appropriate.
-        """
-        initkwargs = kwargs.pop('initkwargs', None)
-        if initkwargs is None:
-            initkwargs = {}
-        request = RequestFactory().get('/')
-        instance = self.get_instance(
-            cls, initkwargs=initkwargs, request=request, **kwargs
-        )
-        self.last_response = self.get_response(request, instance.get)
-        self.context = self.last_response.context
-        return self.last_response
-
-    def post(self, cls, *args, **kwargs):
-        """
-        Calls cls.post() method after instantiating view class
-        with `initkwargs`.
+        Calls view_cls.get() method after instantiating view class.
         Renders view templates and sets context if appropriate.
         """
         data = kwargs.pop('data', None)
-        initkwargs = kwargs.pop('initkwargs', None)
+        instance = self.get_instance(view_cls, *args, **kwargs)
+        if not instance.request:
+            # Use a basic request
+            instance.request = RequestFactory().get('/', data)
+        self.last_response = self.get_response(instance.request, instance.get)
+        self.context = self.last_response.context
+        return self.last_response
+
+    def post(self, view_cls, *args, **kwargs):
+        """
+        Calls view_cls.post() method after instantiating view class.
+        Renders view templates and sets context if appropriate.
+        """
+        data = kwargs.pop('data', None)
         if data is None:
             data = {}
-        if initkwargs is None:
-            initkwargs = {}
-        request = RequestFactory().post('/', data)
-        instance = self.get_instance(
-            cls, initkwargs=initkwargs, request=request, **kwargs
-        )
-        self.last_response = self.get_response(request, instance.post)
+        instance = self.get_instance(view_cls, *args, **kwargs)
+        if not instance.request:
+            # Use a basic request
+            instance.request = RequestFactory().post('/', data)
+        self.last_response = self.get_response(instance.request, instance.post)
         self.context = self.last_response.context
         return self.last_response
 
@@ -470,10 +498,10 @@ class CBVTestCase(TestCase):
         No middleware is invoked, but templates are rendered
         and context saved if appropriate.
         """
-        # Curry a data dictionary into an instance of
-        # the template renderer callback function.
+        # Curry (using functools.partial) a data dictionary into
+        # an instance of the template renderer callback function.
         data = {}
-        on_template_render = curry(store_rendered_templates, data)
+        on_template_render = partial(store_rendered_templates, data)
         signal_uid = "template-render-%s" % id(request)
         signals.template_rendered.connect(
             on_template_render, dispatch_uid=signal_uid
@@ -494,23 +522,29 @@ class CBVTestCase(TestCase):
         finally:
             signals.template_rendered.disconnect(dispatch_uid=signal_uid)
 
-    def get_check_200(self, cls, *args, **kwargs):
+    def get_check_200(self, url, *args, **kwargs):
         """ Test that we can GET a page and it returns a 200 """
-        initkwargs = kwargs.pop('initkwargs', None)
-        response = self.get(cls, initkwargs=initkwargs, *args, **kwargs)
+        response = super(CBVTestCase, self).get(url, *args, **kwargs)
         self.response_200(response)
         return response
 
-    def assertGoodView(self, cls, *args, **kwargs):
+    def assertLoginRequired(self, url, *args, **kwargs):
+        """ Ensure login is required to GET this URL """
+        response = super(CBVTestCase, self).get(url, *args, **kwargs)
+        reversed_url = reverse(url, args=args, kwargs=kwargs)
+        login_url = str(resolve_url(settings.LOGIN_URL))
+        expected_url = "{0}?next={1}".format(login_url, reversed_url)
+        self.assertRedirects(response, expected_url)
+
+    def assertGoodView(self, url_name, *args, **kwargs):
         """
         Quick-n-dirty testing of a given view.
         Ensures view returns a 200 status and that generates less than 50
         database queries.
         """
-        initkwargs = kwargs.pop('initkwargs', None)
         query_count = kwargs.pop('test_query_count', 50)
 
         with self.assertNumQueriesLessThan(query_count):
-            response = self.get(cls, initkwargs=initkwargs, *args, **kwargs)
+            response = super(CBVTestCase, self).get(url_name, *args, **kwargs)
         self.response_200(response)
         return response

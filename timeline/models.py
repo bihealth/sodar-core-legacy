@@ -1,7 +1,6 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 # Projectroles dependency
@@ -54,6 +53,7 @@ class ProjectEvent(models.Model):
         Project,
         related_name='events',
         help_text='Project in which the event belongs',
+        on_delete=models.CASCADE,
     )
 
     #: App from which the event was triggered
@@ -66,6 +66,7 @@ class ProjectEvent(models.Model):
         AUTH_USER_MODEL,
         # related_name='events',
         help_text='User who initiated the event',
+        on_delete=models.CASCADE,
     )
 
     #: Event ID string
@@ -78,7 +79,7 @@ class ProjectEvent(models.Model):
     )
 
     #: Additional event data as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional event data as JSON'
     )
 
@@ -185,6 +186,7 @@ class ProjectEventObjectRef(models.Model):
         ProjectEvent,
         related_name='event_objects',
         help_text='Event to which the object belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Label for the object related to the event
@@ -217,7 +219,7 @@ class ProjectEventObjectRef(models.Model):
     )
 
     #: Additional data related to the object as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional data related to the object as JSON'
     )
 
@@ -249,6 +251,7 @@ class ProjectEventStatus(models.Model):
         ProjectEvent,
         related_name='status_changes',
         help_text='Event to which the status change belongs',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of the status change
@@ -270,7 +273,7 @@ class ProjectEventStatus(models.Model):
     )
 
     #: Additional status data as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional status data as JSON'
     )
 

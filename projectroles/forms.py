@@ -464,7 +464,9 @@ class ProjectForm(SODARModelForm):
         self.fields['parent'].to_field_name = 'sodar_uuid'
 
         # Set readme widget with preview
-        self.fields['readme'].widget = PagedownWidget(show_preview=True)
+        self.fields['readme'].widget = PagedownWidget(
+            attrs={'show_preview': True}
+        )
 
         # Updating an existing project
         if self.instance.pk:
