@@ -102,8 +102,10 @@ class SODARModelForm(SODARFormMixin, forms.ModelForm):
 
 
 class SODARUserAutocompleteWidget(autocomplete.ModelSelect2):
-    """Custom Select widget for user field autocompletion which uses the SODAR
-    User class sodar_uuid instead of pk"""
+    """
+    Custom Select widget for user field autocompletion which uses the SODAR
+    User class sodar_uuid instead of pk.
+    """
 
     # Override function to use sodar_uuid instead of pk
     def filter_choices_to_render(self, selected_choices):
@@ -649,8 +651,9 @@ class ProjectForm(SODARModelForm):
                         )
 
                 elif s_val['type'] == 'INTEGER':
-                    # when field is a select/dropdown, the information of the datatype gets lost.
-                    # we need to convert that here, otherwise subsequent checks will fail.
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
                 if not self.app_settings.validate_setting(
