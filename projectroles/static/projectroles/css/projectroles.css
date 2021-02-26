@@ -557,6 +557,10 @@ div.wmd-panel {
   resize: vertical;
 }
 
+div.wmd-button-bar {
+  background-color: #fff;
+}
+
 /* Select2 autocomplete field tweaks */
 span.select2-container {
   width: 100% !important;
