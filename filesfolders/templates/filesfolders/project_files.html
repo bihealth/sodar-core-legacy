@@ -107,12 +107,12 @@
           <ol id="sodar-ff-breadcrumb" class="breadcrumb sodar-breadcrumb-table">
             {% if not folder %}
               <li class="breadcrumb-item active">
-                <i class="fa fa-angle-right" id="sodar-ff-breadcrumb-icon"></i>
+                <i class="fa fa-angle-right mt-1 mr-1" id="sodar-ff-breadcrumb-icon"></i>
                 root
               </li>
             {% else %}
               <li class="breadcrumb-item">
-                <i class="fa fa-angle-right"></i>
+                <i class="fa fa-angle-right mt-1 mr-1"></i>
                 <a href="{% url 'filesfolders:list' project=project.sodar_uuid %}">root</a>
               </li>
               {% for f in folder_breadcrumb %}

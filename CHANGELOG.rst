@@ -28,6 +28,11 @@ Changed
 Fixed
 -----
 
+- **Filesfolders**
+    - File list breadcrumb icon alignment (#660)
+    - Cancel link in batch edit view (#647)
+    - Batch move folders not displayed in UI (#648)
+    - Batch moving objects to project root failing (#661)
 - **Projectroles**
     - Login redirect URLs with query strings not properly handled by ``assert_response()`` (#635)
 
