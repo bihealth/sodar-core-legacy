@@ -43,7 +43,7 @@ system of choice.
 System Installation
 -------------------
 
-First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
+First you need to install OS dependencies, PostgreSQL >=9.6 and Python >=3.7.
 
 .. code-block:: console
 
@@ -85,8 +85,7 @@ the environment, install Python requirements for the project:
 
     $ git clone https://github.com/bihealth/sodar_core.git
     $ cd sodar_core
-    $ pip install virtualenv
-    $ virtualenv -p python3.6 .venv
+    $ python3.x -m venv .venv
     $ source .venv/bin/activate
     $ utility/install_python_dependencies.sh
 

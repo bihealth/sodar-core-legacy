@@ -54,8 +54,8 @@ PostgreSQL
     administrative user.
 
 Development Essentials
-    We assume that you have ``git``, Python 3.6, and other essential tools
-    installed.
+    We assume that you have ``git``, Python 3.7 or above, and other essential
+    tools installed.
     If you are using a mainstream Unix-like distribution (Mac qualifies) then
     you should be good to go.
 
