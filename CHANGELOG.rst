@@ -21,6 +21,7 @@ Changed
 
 - **General**
     - Improve Codacy support in GitHub Actions
+    - Upgrade to Chromedriver v89 (#657)
 - **Projectroles**
     - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
 
