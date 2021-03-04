@@ -20,7 +20,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     title = 'Background Jobs'
     urls = urlpatterns
 
-    icon = 'tasks'
+    #: Iconify icon
+    icon = 'mdi:server'
 
     entry_point_url_id = 'bgjobs:list'
 
@@ -69,8 +70,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'tasks'
+    #: Iconify icon
+    icon = 'mdi:server'
 
     #: Description string
     description = 'Site-wide background jobs'

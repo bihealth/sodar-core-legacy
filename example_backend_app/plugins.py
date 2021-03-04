@@ -13,8 +13,8 @@ class BackendPlugin(BackendPluginPoint):
     #: Title (used in templates)
     title = 'Example Backend App'
 
-    #: FontAwesome icon ID string
-    icon = 'code'
+    #: Iconify icon
+    icon = 'mdi:code-braces'
 
     #: Description string
     description = 'Example Backend API'

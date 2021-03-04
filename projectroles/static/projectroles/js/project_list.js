@@ -13,7 +13,8 @@ $(document).ready(function () {
         if (v.length > 2) {
             $('.sodar-pr-home-display-default').hide();
             $('#sodar-pr-project-list-filter').removeClass('text-danger').addClass('text-success');
-            $('#sodar-pr-project-list-link-star').html('<i class="fa fa-star-o"></i> Starred');
+            $('#sodar-pr-project-list-link-star').html(
+                '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
 
             $('.sodar-pr-project-list-item').each(function () {
                 var fullTitle = $(this).attr('data-full-title');
@@ -78,7 +79,7 @@ $(document).ready(function () {
                 } else $(this).hide();
             });
             $('#sodar-pr-project-list-link-star').html(
-                '<i class="fa fa-star"></i> Starred');
+                '<i class="iconify" data-icon="mdi:star"></i> Starred');
             $(this).attr('data-filter-mode', '1');
             if (starCount === 0) {
                 $('#sodar-pr-home-display-nostars').show();
@@ -91,7 +92,7 @@ $(document).ready(function () {
                 $(this).show();
             });
             $('#sodar-pr-project-list-link-star').html(
-                '<i class="fa fa-star-o"></i> Starred');
+                '<i class="iconify" data-icon="mdi:star-outline"></i> Starred');
             $(this).attr('data-filter-mode', '0');
         }
 

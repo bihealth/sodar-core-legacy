@@ -23,7 +23,7 @@
                 <a class="nav-link"
                    href="{% url 'home' %}"
                    id="sodar-pr-nav-home-link">
-                  <i class="fa fa-home"></i><br />Home
+                  <i class="iconify" data-icon="mdi:home" data-height="32"></i><br />Home
                 </a>
               </li>
               {% block sidebar %} {# Actual sidebar content #}
@@ -45,7 +45,8 @@
         <div class="sodar-sub-navbar-container" id="sodar-sub-navbar-container">
           <div class="row bg-secondary sodar-pr-navbar" id="sodar-pr-navbar">
             <ol id="sodar-pr-breadcrumb" class="breadcrumb sodar-pr-breadcrumb">
-              <li class="breadcrumb-item"><a href="{% url 'home' %}"><i class="fa fa-home"></i> Home</a></li>
+              <li class="breadcrumb-item">
+                <a href="{% url 'home' %}"><i class="iconify" data-icon="mdi:home"></i> Home</a></li>
               {% if project.get_parents %}
                 {% for p in project.get_parents %}
                   <li class="breadcrumb-item"><a href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a></li>

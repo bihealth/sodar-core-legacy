@@ -23,9 +23,9 @@
      title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
      data-toggle="tooltip" data-placement="top">
     {% if project_starred %}
-      <i class="fa fa-star text-warning" id="sodar-pr-btn-star-icon"></i>
+      <i class="iconify text-warning" data-icon="mdi:star" height="26"></i>
     {% else %}
-      <i class="fa fa-star-o text-muted" id="sodar-pr-btn-star-icon"></i>
+      <i class="iconify text-muted" data-icon="mdi:star-outline" height="26"></i>
     {% endif %}
   </a>
 
@@ -35,7 +35,9 @@
        id="sodar-pr-btn-copy-uuid"
        data-clipboard-text="{{ project.sodar_uuid }}"
        title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
-      <i class="fa fa-clipboard text-muted" aria-hidden="true"></i>
+      <i class="iconify text-muted"
+         data-icon="mdi:clipboard-text-multiple-outline" data-height="26">
+      </i>
     </a>
   {% endif %}
 
@@ -47,7 +49,8 @@
   </div>
   {% if project.is_remote and request.user.is_superuser %}
     <div class="ml-auto">
-      <i class="fa fa-globe fa-2x sodar-pr-remote-project-icon {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
+      <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
+         data-icon="mdi:earth" data-height="26"
          title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %} {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
          data-toggle="tooltip" data-placement="left">
       </i>

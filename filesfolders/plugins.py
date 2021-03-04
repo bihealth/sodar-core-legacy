@@ -44,8 +44,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         }
     }
 
-    #: FontAwesome icon ID string
-    icon = 'file'
+    #: Iconify icon
+    icon = 'mdi:file'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'filesfolders:list'

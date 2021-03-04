@@ -43,7 +43,7 @@
               <a class="btn btn-info mr-2" role="button"
                  href="{% url 'projectroles:search_advanced' %}"
                  title="Advanced search" data-toggle="tooltip" data-placement="left">
-                <i class="fa fa-search mt-1"></i>
+                  <i class="iconify mt-1" data-icon="mdi:layers-search" height="18"></i>
               </a>
             </li>
             <li class="nav-item">
@@ -76,7 +76,9 @@
         {# Help link #}
         <li class="nav-item">
           <a class="nav-link {% get_help_highlight request.user %}"
-             id="site-help-link"><i class="fa fa-fw fa-info-circle"></i> Help</a>
+             id="site-help-link">
+            <i class="iconify" data-icon="mdi:information"></i> Help
+          </a>
         </li>
 
         {# User dropdown menu #}

@@ -21,12 +21,14 @@
     <div class="sodar-overflow-container">
       <span class="sodar-pr-project-indent"
             style="padding-left: {{ project_indent }}px;"></span>
-      <i class="fa fa-fw {% if p.type == 'CATEGORY' %}fa-cubes{% else %}fa-cube{% endif %}"></i>
+      <i class="iconify"
+         data-icon="mdi:{% if p.type == 'CATEGORY' %}rhombus-split{% else %}cube{% endif %}"></i>
       <span class="sodar-pr-project-title
                    {% if p.type == 'CATEGORY' %}text-underline{% endif %}
                    {% if not can_view_project %}text-muted{% endif %}">
         {% if can_view_project %}
-          <a class="sodar-pr-project-link" href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a>
+          <a class="sodar-pr-project-link"
+             href="{% url 'projectroles:detail' project=p.sodar_uuid %}">{{ p.title }}</a>
         {% else %}
           {{ p.title }}
         {% endif %}

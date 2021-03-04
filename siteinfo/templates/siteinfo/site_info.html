@@ -7,7 +7,7 @@
 {% block projectroles %}
 <div class="row sodar-subtitle-container">
   <h2>
-    <i class="fa fa-bar-chart"></i>
+    <i class="iconify" data-icon="mdi:chart-bar"></i>
     Site Info:
     {% if site_instance_title %}
       {{ site_instance_title }}
@@ -25,7 +25,10 @@
   {# Project Statistics #}
   <div class="card" id="sodar-si-project-stats-card">
     <div class="card-header">
-      <h4><i class="fa fa-cubes"></i> Project Statistics</h4>
+      <h4>
+        <i class="iconify" data-icon="mdi:rhombus-split"></i>
+        Project Statistics
+      </h4>
     </div>
     <div class="card-body">
       <dl class="row">
@@ -40,7 +43,10 @@
   {# User Statistics #}
   <div class="card" id="sodar-si-user-stats-card">
     <div class="card-header">
-      <h4><i class="fa fa-users"></i> User Statistics</h4>
+      <h4>
+        <i class="iconify" data-icon="mdi:account-group"></i>
+        User Statistics
+      </h4>
     </div>
     <div class="card-body">
       <dl class="row">
@@ -69,7 +75,7 @@
   {# Basic Site Info #}
   <div class="card" id="sodar-si-basic-card">
     <div class="card-header">
-      <h4><i class="fa fa-info-circle"></i> Basic Info</h4>
+      <h4><i class="iconify" data-icon="mdi:information"></i> Basic Info</h4>
     </div>
     <div class="card-body">
       <dl class="row">
@@ -90,7 +96,7 @@
   {# Remote Site Info #}
   <div class="card" id="sodar-si-remote-card">
     <div class="card-header">
-      <h4><i class="fa fa-globe"></i> Remote Site Info</h4>
+      <h4><i class="iconify" data-icon="mdi:earth"></i> Remote Site Info</h4>
     </div>
     <div class="card-body">
       <dl class="row">
@@ -107,13 +113,13 @@
   {# Enabled Project Apps #}
   <div class="card" id="sodar-si-project-apps-card">
     <div class="card-header">
-      <h4><i class="fa fa-cube"></i> Project Apps</h4>
+      <h4><i class="iconify" data-icon="mdi:cube"></i> Project Apps</h4>
     </div>
     <div class="card-body">
       <dl class="row">
         {% for plugin in project_plugins.keys %}
         <dt class="col-md-3">
-          <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
+          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
           {{ plugin.title }}
         </dt>
         <dd class="col-md-9">{{ plugin.description }}</dd>
@@ -125,13 +131,13 @@
   {# Enabled Site Apps #}
   <div class="card" id="sodar-si-site-apps-card">
     <div class="card-header">
-      <h4><i class="fa fa-sitemap"></i> Site Apps</h4>
+      <h4><i class="iconify" data-icon="mdi:sitemap"></i> Site Apps</h4>
     </div>
     <div class="card-body">
       <dl class="row">
         {% for plugin in site_plugins %}
         <dt class="col-md-3">
-          <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
+          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
           {{ plugin.title }}
         </dt>
         <dd class="col-md-9">{{ plugin.description }}</dd>
@@ -143,13 +149,13 @@
   {# Enabled Backend Apps #}
   <div class="card" id="sodar-si-site-apps-card">
     <div class="card-header">
-      <h4><i class="fa fa-server"></i> Backend Apps</h4>
+      <h4><i class="iconify" data-icon="mdi:server"></i> Backend Apps</h4>
     </div>
     <div class="card-body">
       <dl class="row">
         {% for plugin in backend_plugins.keys %}
         <dt class="col-md-3">
-          <i class="fa fa-fw fa-{{ plugin.icon }}"></i>
+          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
           {{ plugin.title }}
         </dt>
         <dd class="col-md-9">{{ plugin.description }}</dd>

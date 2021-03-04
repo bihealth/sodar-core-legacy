@@ -290,6 +290,40 @@ the options of extending or replacing content on the templates, or simply
 implementing your own.
 
 
+Site Icons
+==========
+
+SODAR Core uses `Iconify <https://iconify.design/>`_ to include icons on the
+site. SODAR Core apps use the `Material Design Icons <https://materialdesignicons.com>`_
+icon collection, however other collections can be added to your site.
+
+To enable the icons on your site, run the following management commands:
+
+.. code-block:: console
+
+    $ ./manage.py geticons
+    $ ./manage.py collectstatic
+
+If you want to use additional icon collections, you can add them using the
+``-c`` argument as displayed in the following example:
+
+.. code-block:: console
+
+    $ ./manage.py geticons -c carbon clarity
+
+You can view the supported icon collections
+`here <https://github.com/iconify/collections-json/tree/master/json>`_.
+
+The Iconify JSON files are rather large and potentially frequently updated, so
+it is recommended to ignore them in your Git setup and instead retrieve them
+dynamically for CI and deployment. Before committing your code, it is
+recommended to update your ``.gitignore`` file with the following lines:
+
+.. code-block::
+
+    */static/iconify/*.json
+    */static/iconify/json/*.json
+
 All Done!
 =========
 

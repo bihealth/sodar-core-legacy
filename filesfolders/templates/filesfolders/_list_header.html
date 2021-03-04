@@ -8,7 +8,9 @@
     <th></th>
     <th id="sodar-ff-list-header-select">
       {% if can_update_own or can_update_all %}
-        <input class="sodar-checkbox" type="checkbox" onchange="checkAll(this)" name="check_all" id="sodar-ff-check-all" title="Check/uncheck all" />
+        <input class="sodar-checkbox" type="checkbox"
+               onchange="checkAll(this)" name="check_all"
+               id="sodar-ff-check-all" title="Check/uncheck all" />
       {% endif %}
     </th>
   {% endif %}

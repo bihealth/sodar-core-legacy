@@ -171,19 +171,16 @@ $(document).ready(function () {
             method: 'POST',
             dataType: 'json'
         }).done(function (data) {
-            console.log('Star clicked: ' + data);  // DEBUG
             if (data === 1) {
-                $('#sodar-pr-btn-star-icon').removeClass(
-                    'text-muted').addClass('text-warning').removeClass(
-                    'fa-star-o').addClass('fa-star');
-                $('#sodar-pr-link-project-star').attr(
-                    'data-original-title', 'Unstar');
+                $('#sodar-pr-link-project-star').html(
+                    '<i class="iconify text-warning" ' +
+                    'data-icon="mdi:star" height="26"></i>'
+                ).attr('data-original-title', 'Unstar');
             } else {
-                $('#sodar-pr-btn-star-icon').removeClass(
-                    'text-warning').addClass('text-muted').removeClass(
-                    'fa-star').addClass('fa-star-o');
-                $('#sodar-pr-link-project-star').attr(
-                    'data-original-title', 'Star');
+                $('#sodar-pr-link-project-star').html(
+                    '<i class="iconify text-muted" ' +
+                    'data-icon="mdi:star-outline" height="26"></i>'
+                ).attr('data-original-title', 'Star');
             }
         }).fail(function () {
             alert('Error: unable to set project star!');
@@ -306,7 +303,7 @@ $(document).ready(function () {
 
             $('div.sodar-alert-container').prepend(
                 '<div class="alert alert-danger sodar-alert-top">' +
-                '<i class="fa fa-exclamation-triangle"></i> ' +
+                '<i class="iconify" data-icon="mdi:alert"></i> ' +
                 'You are using an unsupported browser. We recommend using ' +
                 'a recent version of ' +
                 '<a href="https://www.mozilla.org/firefox/new" target="_blank">Mozilla Firefox</a> or ' +

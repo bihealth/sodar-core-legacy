@@ -62,6 +62,7 @@ following apps need to be included in the list in order for SODAR Core to work:
         'projectroles.apps.ProjectrolesConfig',
         'dal',
         'dal_select2',
+        'dj_iconify.apps.DjIconifyConfig',
     ]
 
 
@@ -135,6 +136,18 @@ The following settings remain in your auth configuration:
     AUTH_USER_MODEL = 'users.User'
     LOGIN_REDIRECT_URL = 'home'
     LOGIN_URL = 'login'
+
+
+Icons
+=====
+
+The ``ICONIFY_JSON_ROOT`` setting must point to the appropriate path within
+your static files directory in order to make icons work on your SODAR Core based
+site.
+
+.. code-block:: python
+
+    ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 
 
 Django REST Framework
@@ -558,7 +571,6 @@ Example:
     ]
     PROJECTROLES_CUSTOM_CSS_INCLUDES = [
         STATIC_ROOT + '/your/path/bootstrap.min.css',
-        STATIC_ROOT + '/your/path/font-awesome.min.css',
         # ...
     ]
 

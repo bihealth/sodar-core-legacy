@@ -189,8 +189,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         },
     }
 
-    #: FontAwesome icon ID string
-    icon = 'rocket'
+    #: Iconify icon
+    icon = 'mdi:rocket-launch'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'example_project_app:example'

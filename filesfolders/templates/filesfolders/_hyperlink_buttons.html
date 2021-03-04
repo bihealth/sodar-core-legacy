@@ -4,14 +4,14 @@
 <div class="btn-group sodar-list-btn-group" id="sodar-ff-hyperlink-buttons-{{ link.sodar_uuid }}">
   <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
       type="button" data-toggle="dropdown" aria-expanded="false">
-    <i class="fa fa-cog"></i>
+    <i class="iconify" data-icon="mdi:cog"></i>
   </button>
   <div class="dropdown-menu dropdown-menu-right">
     <a class="dropdown-item" href="{% url 'filesfolders:hyperlink_update' item=link.sodar_uuid %}">
-      <i class="fa fa-fw fa-pencil"></i> Update Link
+      <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Link
     </a>
-    <a class="dropdown-item" href="{% url 'filesfolders:hyperlink_delete' item=link.sodar_uuid %}">
-      <i class="fa fa-fw fa-close"></i> Delete Link
+    <a class="dropdown-item text-danger" href="{% url 'filesfolders:hyperlink_delete' item=link.sodar_uuid %}">
+      <i class="iconify" data-icon="mdi:close-thick"></i> Delete Link
     </a>
     {% get_history_dropdown project=link.project obj=link as history_item %}
     {{ history_item|safe }}

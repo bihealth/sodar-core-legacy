@@ -15,7 +15,7 @@
     {% if can_clear_own_jobs %}
       <a class="dropdown-item text-danger"
          href="{% url 'bgjobs:clear_own' project=project.sodar_uuid %}">
-        <i class="fa fa-fw fa-trash"></i> Clear Own Jobs
+        <i class="iconify" data-icon="mdi:delete"></i> Clear Own Jobs
       </a>
     {% endif %}
 
@@ -23,7 +23,7 @@
     {% if can_clear_all_jobs %}
       <a class="dropdown-item text-danger"
          href="{% url 'bgjobs:clear_all' project=project.sodar_uuid %}">
-        <i class="fa fa-fw fa-trash"></i> Clear All Jobs
+        <i class="iconify" data-icon="mdi:delete-circle"></i> Clear All Jobs
       </a>
     {% endif %}
 

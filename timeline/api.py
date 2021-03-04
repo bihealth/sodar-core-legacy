@@ -219,7 +219,10 @@ class TimelineAPI:
             )
             history_link = (
                 '<a href="{}" class="sodar-tl-object-link">'
-                '<i class="fa fa-clock-o"></i></a>'.format(history_url)
+                '<i class="iconify" '
+                'data-icon="mdi:clock-time-eight-outline"></i></a>'.format(
+                    history_url
+                )
             )
 
             # Special case: User model
@@ -308,7 +311,7 @@ class TimelineAPI:
         """
         return (
             '<a href="{}" class="sodar-tl-object-link">'
-            '<i class="fa fa-clock-o"></i>'
+            '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i>'
             '</a>'.format(TimelineAPI.get_object_url(project_uuid, obj))
         )
 

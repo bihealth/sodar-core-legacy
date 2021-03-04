@@ -77,6 +77,10 @@ example_site/media/
 # Static files
 staticfiles/
 
+# Iconify SVG JSON
+*/static/iconify/*.json
+*/static/iconify/json/*.json
+
 # File handles
 .nfs*
 

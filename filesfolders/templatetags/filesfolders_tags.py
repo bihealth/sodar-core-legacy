@@ -40,35 +40,29 @@ def allow_public_links(project):
 @register.simple_tag
 def get_file_icon(file):
     """Return file icon"""
+    ret = 'file-outline'
     mt = file.file.file.mimetype
-
     if mt == 'application/pdf':
-        return 'file-pdf-o'
-
+        ret = 'file-pdf-outline'
     elif (
         mt == 'application/vnd.openxmlformats-officedocument.'
         'presentationml.presentation'
     ):
-        return 'file-powerpoint-o'
-
+        ret = 'file-powerpoint-outline'
     elif 'compressed' in mt or 'zip' in mt:
-        return 'file-archive-o'
-
+        ret = 'archive-outline'
     elif (
         'excel' in mt
         or mt == 'application/vnd.openxmlformats-'
         'officedocument.spreadsheetml.sheet'
     ):
-        return 'file-excel-o'
-
+        ret = 'file-excel-outline'
     elif 'image/' in mt:
-        return 'file-image-o'
-
+        ret = 'file-image-outline'
     elif 'text/' in mt:
-        return 'file-text-o'
-
+        ret = 'file-document-outline'
     # Default if not found
-    return 'file-o'
+    return 'mdi:' + ret
 
 
 @register.simple_tag
@@ -84,8 +78,8 @@ def get_flag(flag_name, tooltip=True):
         )
 
     return (
-        '<i class="fa fa-{} fa-fw text-{} sodar-ff-flag-icon" {}>'
-        '</i>'.format(f['icon'], f['color'], tip_str)
+        '<i class="iconify text-{} sodar-ff-flag-icon" data-icon="{}" {}>'
+        '</i>'.format(f['color'], f['icon'], tip_str)
     )
 
 

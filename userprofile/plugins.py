@@ -16,8 +16,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'user-circle-o'
+    #: Iconify icon
+    icon = 'mdi:account-details'
 
     #: Description string
     description = 'Project User Profile'

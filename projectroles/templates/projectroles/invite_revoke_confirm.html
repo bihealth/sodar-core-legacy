@@ -17,17 +17,18 @@
     Are you sure you want to permanently revoke the invite sent to {{ invite.email }}?
   </div>
 
-  <form method="post" action="{% url 'projectroles:invite_revoke' projectinvite=invite.sodar_uuid %}">
+  <form method="post"
+        action="{% url 'projectroles:invite_revoke' projectinvite=invite.sodar_uuid %}">
     {% csrf_token %}
 
     <div class="row">
       <div class="btn-group ml-auto">
         <a role="button" class="btn btn-secondary"
            href="{{ request.session.real_referer }}">
-          <i class="fa fa-arrow-circle-left"></i> Cancel
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
         </a>
         <button type="submit" class="btn btn-danger">
-          <i class="fa fa-close"></i> Revoke
+          <i class="iconify" data-icon="mdi:close-thick"></i> Revoke
         </button>
       </div>
     </div>

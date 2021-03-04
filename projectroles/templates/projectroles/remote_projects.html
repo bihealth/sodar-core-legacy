@@ -37,11 +37,11 @@
 {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
 
 <div class="row sodar-subtitle-container">
-  <h2><i class="fa fa-cloud-{% if site_mode == 'SOURCE' %}upload{% else %}download{% endif %}"></i>
+  <h2><i class="iconify" data-icon="mdi:cloud-{% if site_mode == 'SOURCE' %}upload{% else %}download{% endif %}"></i>
       {{ site.name }}</h2>
   <a role="button" class="btn btn-secondary ml-auto"
      href="{% url 'projectroles:remote_sites' %}">
-    <i class="fa fa-arrow-circle-left"></i> Back to Site List
+    <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back to Site List
   </a>
 </div>
 
@@ -64,7 +64,7 @@
       <div class="card mb-3">
         <div class="card-header">
           <h4>
-            <i class="fa fa-cubes"></i>
+            <i class="iconify" data-icon="mdi:rhombus-split"></i>
             {% if site_mode == 'SOURCE' %}Target{% else %}Source{% endif %} {% get_display_name 'PROJECT' title=True plural=True %}
           </h4>
         </div>
@@ -90,7 +90,8 @@
       {% if site_mode == 'SOURCE' %}
         <div class="container-fluid text-right">
           <button type="submit" class="btn btn-primary">
-            <i class="fa fa-pencil"></i> Update {% get_display_name 'PROJECT' title=True %} Access
+            <i class="iconify" data-icon="mdi:lead-pencil"></i>
+            Update {% get_display_name 'PROJECT' title=True %} Access
           </button>
         </div>
       {% endif %}

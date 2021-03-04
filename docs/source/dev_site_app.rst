@@ -74,7 +74,7 @@ The following variables and functions are **mandatory**:
 - ``name``: App name (ideally should correspond to the app package name)
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
+- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
 - ``entry_point_url_id``: View ID for the app entry point
 - ``description``: Verbose description of app
 - ``app_permission``: Basic permission for viewing app data in project (see

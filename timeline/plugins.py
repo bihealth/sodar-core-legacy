@@ -26,8 +26,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: FontAwesome icon ID string
-    icon = 'clock-o'
+    #: Iconify icon
+    icon = 'mdi:clock-time-eight'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'timeline:list_project'
@@ -73,8 +73,8 @@ class BackendPlugin(BackendPluginPoint):
     #: Title (used in templates)
     title = 'Timeline Backend'
 
-    #: FontAwesome icon ID string
-    icon = 'clock-o'
+    #: Iconify icon
+    icon = 'mdi:clock-time-eight-outline'
 
     #: Description string
     description = 'Timeline backend for modifying events'

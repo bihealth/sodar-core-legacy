@@ -21,8 +21,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'exclamation-triangle'
+    #: Iconify icon
+    icon = 'mdi:alert'
 
     #: Description string
     description = 'Administrator alerts to be shown for users'
@@ -45,13 +45,15 @@ class SiteAppPlugin(SiteAppPluginPoint):
         ).order_by('-pk')
 
         for a in alerts:
-            content = '<i class="fa fa-exclamation-triangle"></i> ' + a.message
+            content = (
+                '<i class="iconify" data-icon="mdi:alert"></i> ' + a.message
+            )
 
             if a.description.raw and user and user.is_authenticated:
                 content += (
                     '<span class="pull-right"><a href="{}" class="text-info">'
-                    '<i class="fa fa-arrow-circle-right"></i> '
-                    'Details</a>'.format(
+                    '<i class="iconify" data-icon="mdi:arrow-right-circle">'
+                    '</i> Details</a>'.format(
                         reverse(
                             'adminalerts:detail',
                             kwargs={'adminalert': a.sodar_uuid},

@@ -8,6 +8,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 import environ
+import os
 
 from projectroles.constants import get_sodar_constants
 
@@ -62,6 +63,7 @@ THIRD_PARTY_APPS = [
     'db_file_storage',  # For filesfolders
     'dal',  # For user search combo box
     'dal_select2',
+    'dj_iconify.apps.DjIconifyConfig',  # Iconify for SVG icons
     'django_saml2_auth',  # SAML2 support
 ]
 
@@ -218,6 +220,9 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 ]
+
+# Iconify SVG icons
+ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 
 # MEDIA CONFIGURATION
 # ------------------------------------------------------------------------------

@@ -15,8 +15,8 @@ class BackendPlugin(BackendPluginPoint):
     #: Title (used in templates)
     title = 'Sodar Cache Backend'
 
-    #: FontAwesome icon ID string
-    icon = 'shopping-basket'
+    #: Iconify icon
+    icon = 'mdi:basket-outline'
 
     #: Description string
     description = (

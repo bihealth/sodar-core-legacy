@@ -1,7 +1,8 @@
 <div class="card sodar-search-card">
   <div class="card-header">
     <h4>
-      <i class="fa fa-{% if icon %}{{ icon }}{% else %}{{ plugin.icon }}{% endif %}"></i>
+      <i class="iconify"
+         data-icon="{% if icon %}{{ icon }}{% else %}{{ plugin.icon }}{% endif %}"></i>
       {{ search_title }}
       {% if result_count %}
        ({{ result_count }})
@@ -23,7 +24,8 @@
   </div>
   {% if result_count >= result_limit %}
     <div class="card-body sodar-card-body-info">
-      <i class="fa fa-warning"></i> Some results may be omitted, please narrow down your search
+      <i class="iconify" data-icon="mdi:alert"></i>
+      Some results may be omitted, please narrow down your search.
     </div>
   {% endif %}
   <div class="card-body sodar-search-card-body">

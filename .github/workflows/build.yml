@@ -7,8 +7,9 @@ jobs:
     strategy:
       matrix:
         python-version:
-          - 3.6
           - 3.7
+          - 3.8
+          - 3.9
     services:
       postgres:
         image: postgres:9.6
@@ -43,6 +44,8 @@ jobs:
           pip install wheel==0.34.2
           pip install -r requirements/local.txt
           pip install -r requirements/test.txt
+      - name: Download icons
+        run: python manage.py geticons
       - name: Run collectstatic
         run: python manage.py collectstatic --noinput
       - name: Run tests
@@ -59,4 +62,4 @@ jobs:
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
-        if: ${{ matrix.python-version == '3.7' }}
+        if: ${{ matrix.python-version == '3.8' }}

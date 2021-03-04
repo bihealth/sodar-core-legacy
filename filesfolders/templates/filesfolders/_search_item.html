@@ -20,7 +20,7 @@
       </a>
       {% if item|get_class == 'File' and allow_public_links and item.public_url and can_share_link %}
         <a title="Public Link" href="{% url 'filesfolders:file_public_link' file=item.sodar_uuid %}" id="sodar-ff-link-public-{{ item.sodar_uuid }}">
-          <i class="fa fa-link" aria-hidden="false"></i>
+          <i class="iconify" data-icon="mdi:link-variant"></i>
         </a>
       {% endif %}
       {% if item.flag %}

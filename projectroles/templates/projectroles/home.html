@@ -33,13 +33,15 @@
 
   <div class="card" id="sodar-pr-project-list">
     <div class="card-header">
-      <h4><i class="fa fa-globe"></i> Available {% get_display_name 'PROJECT' title=True plural=True %}
+      <h4>
+        <i class="iconify" data-icon="mdi:earth"></i>
+        Available {% get_display_name 'PROJECT' title=True plural=True %}
         <div class="input-group sodar-header-input-group pull-right">
           <div class="input-group-prepend">
             <button class="btn btn-secondary"
                     type="submit" id="sodar-pr-project-list-link-star"
                     data-filter-mode="0">
-              <i class="fa fa-star-o"></i> Starred
+              <i class="iconify" data-icon="mdi:star-outline"></i> Starred
             </button>
           </div>
           <input class="form-control"

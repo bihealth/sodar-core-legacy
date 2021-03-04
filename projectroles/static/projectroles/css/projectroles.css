@@ -404,10 +404,6 @@ a.sodar-pr-btn-title {
   padding: 0;
 }
 
-a.sodar-pr-btn-star i {
-  font-size: 30px;
-}
-
 a.sodar-pr-btn-copy-uuid i {
   padding-top: 3px;
   font-size: 24px;
@@ -661,6 +657,17 @@ div#sodar-modal div.modal-dialog{
   color: #dfdfdf;
 }
 
+a#sodar-pr-link-project-star {
+  outline: 0;
+  border: none;
+  width: 26px;
+}
+
+a#sodar-pr-link-project-star:focus,
+a#sodar-pr-link-project-star:active {
+  box-shadow: none;
+}
+
 .sodar-search-highlight {
   font-weight: bold;
 }
@@ -683,6 +690,22 @@ pre#sodar-email-body {
 .sodar-code-input {
   font-family: monospace;
   font-size: 85%;
+}
+
+.spin {
+  animation-name: spin-anim;
+  animation-duration: 5000ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes spin-anim {
+  from {
+    transform:rotate(0deg);
+  }
+  to {
+    transform:rotate(360deg);
+  }
 }
 
 

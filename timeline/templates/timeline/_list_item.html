@@ -5,10 +5,11 @@
 
 <tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
   <td>
-    <a class="sodar-tl-link-detail text-primary" tabindex="0" data-toggle="popover"
-       data-trigger="focus" data-placement="right" data-html="true"
+    <a class="sodar-tl-link-detail text-primary" tabindex="0"
+       data-toggle="popover" data-trigger="focus"
+       data-placement="right" data-html="true"
        data-content="{% get_event_details event %}">
-        {% get_timestamp event %}
+      {% get_timestamp event %}
     </a>
   </td>
   <td><a href="{% get_app_url event %}">{{ event.app }}</a></td>
@@ -19,22 +20,25 @@
       {% get_event_description event request %}
     {% endautoescape %}
     {% if not details_card_mode and event|has_extra_data %}
-      <a class="sodar-tl-link-extra text-primary pull-right" tabindex="0" data-toggle="modal"
-         data-trigger="focus" data-target="#sodar-tl-modal-{{ event.pk }}">
-        <i class="fa fa-fw fa-file-text" title="Extra Data"
+      <a class="sodar-tl-link-extra text-primary pull-right" tabindex="0"
+         data-toggle="modal" data-trigger="focus"
+         data-target="#sodar-tl-modal-{{ event.pk }}">
+        <i class="iconify" data-icon="mdi:text-box" title="Extra Data"
            data-toggle="tooltip" data-placement="left">
         </i>
       </a>
     {% endif %}
     {% if event.classified %}
       <span class="pull-right text-muted">
-        <i class="fa fa-fw fa-lock" title="Classified"
+        <i class="iconify" data-icon="mdi:lock" title="Classified"
            data-toggle="tooltip" data-placement="left">
         </i>
       </span>
     {% endif %}
   </td>
-  <td class="{% get_status_style event.get_current_status %} text-light">{{ event.get_current_status.status_type }}</td>
+  <td class="{% get_status_style event.get_current_status %} text-light">
+    {{ event.get_current_status.status_type }}
+  </td>
 </tr>
 
 {% if event|has_extra_data %}

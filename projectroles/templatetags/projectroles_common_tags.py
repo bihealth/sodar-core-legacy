@@ -238,14 +238,13 @@ def get_backend_include(backend_name, include_type='js'):
 def get_history_dropdown(project, obj):
     """Return link to object timeline events within project"""
     timeline = get_backend_api('timeline_backend')
-
     if not timeline:
         return ''
-
     url = timeline.get_object_url(project.sodar_uuid, obj)
     return (
-        '<a class="dropdown-item" href="{}">\n<i class="fa fa-fw '
-        'fa-clock-o"></i> History</a>\n'.format(url)
+        '<a class="dropdown-item" href="{}">\n'
+        '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
+        'History</a>\n'.format(url)
     )
 
 
@@ -287,10 +286,9 @@ def get_info_link(content, html=False):
     """Return info popover link icon"""
     return (
         '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
-        'data-trigger="focus" data-placement="top" data-content="{}" '
-        '{}><i class="fa fa-info-circle text-info"></i></a>'.format(
-            content, 'data-html="true"' if html else ''
-        )
+        'data-trigger="focus" data-placement="top" data-content="{}" {}>'
+        '<i class="iconify text-info" data-icon="mdi:information"></i>'
+        '</a>'.format(content, 'data-html="true"' if html else '')
     )
 
 
@@ -303,8 +301,9 @@ def get_remote_icon(project, request):
                 project=project, site__mode=SITE_MODE_SOURCE
             )
             return (
-                '<i class="fa fa-globe {} mx-1 '
-                'sodar-pr-remote-project-icon" title="{} project from '
+                '<i class="iconify {} mx-1 '
+                'sodar-pr-remote-project-icon" data-icon="mdi:earth" '
+                'title="{} project from '
                 '{}" data-toggle="tooltip" data-placement="top">'
                 '</i>'.format(
                     'text-danger' if project.is_revoked() else 'text-info',

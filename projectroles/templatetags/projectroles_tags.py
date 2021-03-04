@@ -258,7 +258,10 @@ def get_star(project, user):
     if user.has_perm('projectroles.view_project', project) and get_tag_state(
         project, user, PROJECT_TAG_STARRED
     ):
-        return '<i class="fa fa-star text-warning sodar-tag-starred"></i>'
+        return (
+            '<i class="iconify text-warning sodar-tag-starred" '
+            'data-icon="mdi:star"></i>'
+        )
     return ''
 
 
@@ -413,7 +416,7 @@ def get_admin_warning():
     ret += (
         '<p><a class="btn btn-danger pull-right" role="button" '
         'target="_blank" href="{}">'
-        '<i class="fa fa-gears"></i> Continue to Django Admin'
+        '<i class="iconify" data-icon="mdi:cogs"></i> Continue to Django Admin'
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret

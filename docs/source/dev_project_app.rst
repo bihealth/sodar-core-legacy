@@ -186,7 +186,7 @@ The following variables and functions are **mandatory**:
   some functionality may not work as expected)
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
+- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
 - ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
   **must** take the project ``sodar_uuid`` as a kwarg named ``project``)
 - ``description``: Verbose description of app

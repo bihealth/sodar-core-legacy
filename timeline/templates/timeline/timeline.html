@@ -83,13 +83,14 @@
   {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
 
   <div class="row sodar-subtitle-container bg-white sticky-top">
-    <h3><i class="fa fa-clock-o"></i> {{ timeline_title }}</h3>
+    <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
     {% if timeline_mode == 'object' %}
       <div class="input-group sodar-header-input-group ml-auto mt-1">
         <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
            class="btn btn-secondary ml-auto"
            role="button">
-          <i class="fa fa-arrow-circle-left"></i> {% get_display_name 'PROJECT' title=True %} Timeline
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i>
+          {% get_display_name 'PROJECT' title=True %} Timeline
         </a>
       </div>
     {% endif %}

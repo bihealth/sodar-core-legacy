@@ -83,7 +83,7 @@
 
 {% if can_view_data %}
   <div class="row sodar-subtitle-container bg-white sticky-top">
-    <h3><i class="fa fa-file"></i> Small Files</h3>
+    <h3><i class="iconify" data-icon="mdi:file"></i> Small Files</h3>
     {% if can_add_data %}
       {% include 'filesfolders/_list_buttons.html' with project=project folder=folder up=False %}
     {% endif %}
@@ -107,12 +107,13 @@
           <ol id="sodar-ff-breadcrumb" class="breadcrumb sodar-breadcrumb-table">
             {% if not folder %}
               <li class="breadcrumb-item active">
-                <i class="fa fa-angle-right mt-1 mr-1" id="sodar-ff-breadcrumb-icon"></i>
+                <i class="iconify mt-1" data-icon="mdi:chevron-right"
+                   id="sodar-ff-breadcrumb-icon"></i>
                 root
               </li>
             {% else %}
               <li class="breadcrumb-item">
-                <i class="fa fa-angle-right mt-1 mr-1"></i>
+                <i class="iconify mt-1" data-icon="mdi:chevron-right"></i>
                 <a href="{% url 'filesfolders:list' project=project.sodar_uuid %}">root</a>
               </li>
               {% for f in folder_breadcrumb %}
@@ -140,7 +141,7 @@
               {% if folder %}
                 <tr>
                   <td>
-                    <i class="fa fa-folder"></i>
+                    <i class="iconify" data-icon="mdi:folder"></i>
                   </td>
                   <td>
                     {% if folder.folder %}
@@ -191,11 +192,15 @@
     {% if readme_data %}
       <div class="card" id="sodar-ff-readme-card">
         <div class="card-header">
-          <h4><i class="fa fa-book"></i> Folder ReadMe ({{ readme_name }})</h4>
+          <h4>
+            <i class="iconify" data-icon="mdi:book-open-page-variant"></i>
+            Folder ReadMe ({{ readme_name }})
+          </h4>
         </div>
         {% if readme_alt %}
           <div class="card-body sodar-card-body-info">
-            <i class="fa fa-info-circle"></i> File "{{ readme_alt }}" also found in folder
+            <i class="iconify" data-icon="mdi:information"></i>
+            File "{{ readme_alt }}" also found in folder
           </div>
         {% endif %}
         <div class="card-body">

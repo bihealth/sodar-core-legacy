@@ -16,8 +16,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'bar-chart'
+    #: Iconify icon
+    icon = 'mdi:bar-chart'
 
     #: Description string
     description = 'Site information and app statistics'

@@ -4,10 +4,12 @@ from projectroles.plugins import SiteAppPluginPoint
 class ProjectAppPlugin(SiteAppPluginPoint):
     """Plugin for registering app with Projectroles"""
 
-    icon = 'key'
     name = 'token'
 
     title = 'API Tokens'
+
+    #: Iconify icon
+    icon = 'mdi:key-chain-variant'
 
     entry_point_url_id = 'tokens:list'
 

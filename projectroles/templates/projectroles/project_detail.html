@@ -24,7 +24,10 @@
       {% if visible_target_projects %}
         <div class="card" id="sodar-pr-details-card-remote">
           <div class="card-header">
-            <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
+            <h4>
+              <i class="iconify" data-icon="mdi:earth"></i>
+              {% get_display_name object.type title=True %} on Other Sites
+            </h4>
           </div>
           <div class="card-body pb-2 mr-2">
             {% for rp in visible_target_projects %}
@@ -34,7 +37,7 @@
                 title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
                 data-toggle="tooltip"
                 target="_blank">
-                <i class="fa fa-globe"></i> {{ rp.site.name }}
+                <i class="iconify" data-icon="mdi:earth"></i> {{ rp.site.name }}
               </a>
             {% endfor %}
           </div>
@@ -43,7 +46,7 @@
       {% elif object.is_remote %}
         <div class="card" id="sodar-pr-details-card-remote">
           <div class="card-header">
-            <h4><i class="fa fa-globe"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
+            <h4><i class="iconify" data-icon="mdi:earth"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
           </div>
           <div class="card-body pb-2 mr-2">
             <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-master"
@@ -52,7 +55,7 @@
                 title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
                 data-toggle="tooltip"
                 target="_blank">
-              <i class="fa fa-globe"></i> {{ object.get_source_site.name }} (Master Project)
+              <i class="iconify" data-icon="mdi:earth"></i> {{ object.get_source_site.name }} (Master Project)
             </a>
             {% get_visible_projects peer_projects can_view_hidden_projects as visible_peer_projects %}
             {% for peer_p in visible_peer_projects %}
@@ -62,7 +65,7 @@
                   title="{% if peer_p.site.description %}{{ peer_p.site.description }}{% endif %}"
                   data-toggle="tooltip"
                   target="_blank">
-                <i class="fa fa-globe"></i> {{ peer_p.site.name }}
+                <i class="iconify" data-icon="mdi:earth"></i> {{ peer_p.site.name }}
               </a>
             {% endfor %}
           </div>
@@ -74,7 +77,7 @@
 
     <div class="card" id="sodar-pr-details-card-readme">
       <div class="card-header">
-        <h4><i class="fa fa-book"></i> ReadMe</h4>
+        <h4><i class="iconify" data-icon="mdi:book-open-page-variant"></i> ReadMe</h4>
       </div>
       <div class="card-body">
         {% if object.readme.rendered|length > 0 %}
@@ -98,7 +101,10 @@
       {% if project_list|length > 0 %}
         <div class="card">
           <div class="card-header">
-            <h4><i class="fa fa-cubes"></i> {% get_display_name 'PROJECT' title=True plural=True %}</h4>
+            <h4>
+              <i class="iconify" data-icon="mdi:rhombus-split"></i>
+              {% get_display_name 'PROJECT' title=True plural=True %}
+            </h4>
           </div>
           <div class="card-body p-0">
             <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
@@ -133,7 +139,7 @@
         <div class="card sodar-pr-app-card" id="sodar-pr-app-item-{{ plugin.name }}">
           <div class="card-header">
             <h4>
-              <i class="fa fa-{{ plugin.icon }}"></i>
+              <i class="iconify" data-icon="{{ plugin.icon }}"></i>
               {% if plugin.details_title %}
                 {{ plugin.details_title }}
               {% else %}

@@ -8,37 +8,41 @@
 
     {# Add Role #}
     {% if can_update_members %}
-      <a class="dropdown-item" href="{% url 'projectroles:role_create' project=project.sodar_uuid %}"
+      <a class="dropdown-item"
+         href="{% url 'projectroles:role_create' project=project.sodar_uuid %}"
          title="Add Member"
          id="sodar-pr-btn-role-list-create">
-        <i class="fa fa-fw fa-user-plus"></i> Add Member
+        <i class="iconify" data-icon="mdi:account-plus"></i> Add Member
       </a>
     {% endif %}
 
     {# Send Invite #}
     {% if can_invite %}
-      <a class="dropdown-item" href="{% url 'projectroles:invite_create' project=project.sodar_uuid %}"
+      <a class="dropdown-item"
+         href="{% url 'projectroles:invite_create' project=project.sodar_uuid %}"
          title="Send Invite"
          id="sodar-pr-btn-role-list-invite">
-        <i class="fa fa-fw fa-send"></i> Send Invite
+        <i class="iconify" data-icon="mdi:send"></i> Send Invite
       </a>
     {% endif %}
 
     {# View Roles #}
     {% if can_update_members and request.resolver_match.url_name != 'project_roles' %}
-      <a class="dropdown-item" href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
+      <a class="dropdown-item"
+         href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          title="View Members"
          id="sodar-pr-btn-role-list-roles">
-        <i class="fa fa-fw fa-users"></i> View Members
+        <i class="iconify" data-icon="mdi:account-group"></i> View Members
       </a>
     {% endif %}
 
     {# View Invites #}
     {% if can_invite and request.resolver_match.url_name != 'role_invites' %}
-      <a class="dropdown-item" href="{% url 'projectroles:invites' project=project.sodar_uuid %}"
+      <a class="dropdown-item"
+         href="{% url 'projectroles:invites' project=project.sodar_uuid %}"
          title="View Invites"
          id="sodar-pr-btn-role-list-invites">
-        <i class="fa fa-fw fa-envelope"></i> View Invites
+        <i class="iconify" data-icon="mdi:email"></i> View Invites
       </a>
     {% endif %}
 

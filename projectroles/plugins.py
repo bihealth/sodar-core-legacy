@@ -49,9 +49,9 @@ class ProjectAppPluginPoint(PluginPoint):
     # DEPRECATED, will be removed in the next SODAR Core release
     project_settings = {}
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your app plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     # TODO: Implement this in your app plugin
@@ -229,9 +229,9 @@ class ProjectAppPluginPoint(PluginPoint):
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your backend plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Description string
     # TODO: Implement this in your backend plugin
@@ -264,9 +264,9 @@ class BackendPluginPoint(PluginPoint):
 class SiteAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering site-wide apps"""
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your site app plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Description string
     # TODO: Implement this in your site app plugin
@@ -443,8 +443,8 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = []
 
-    #: FontAwesome icon ID string
-    icon = 'cloud'
+    #: Iconify icon
+    icon = 'mdi:cloud-sync'
 
     #: Description string
     description = 'Management of remote SODAR sites and remote project access'
