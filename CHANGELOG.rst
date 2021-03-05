@@ -16,6 +16,8 @@ Added
 - **Projectroles**
     - Inline head include from environment variables in base template (#639)
     - ``req_kwargs`` argument in ``SODARAPIPermissionTestMixin.assert_response_api()`` (#662)
+    - Display inherited owner note in remote project sync UI (#643)
+    - ``is_inherited_owner()`` template tag
 
 Changed
 -------
