@@ -24,6 +24,7 @@ Changed
     - Upgrade to Chromedriver v89 (#657)
 - **Projectroles**
     - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
+    - Rename and refactor ``LocalUserForm`` and ``user_form.html`` (#651)
 
 Fixed
 -----
@@ -35,6 +36,14 @@ Fixed
     - Batch moving objects to project root failing (#661)
 - **Projectroles**
     - Login redirect URLs with query strings not properly handled by ``assert_response()`` (#635)
+- **Userprofile**
+    - User update link and template not working as expected (#650)
+
+Removed
+-------
+
+- **Userprofile**
+    - Unused template ``user_update.html`` (#651)
 
 
 v0.9.0 (2021-02-03)
