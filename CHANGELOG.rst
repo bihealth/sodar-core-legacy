@@ -15,6 +15,7 @@ Added
 
 - **Projectroles**
     - Inline head include from environment variables in base template (#639)
+    - ``req_kwargs`` argument in ``SODARAPIPermissionTestMixin.assert_response_api()`` (#662)
 
 Changed
 -------

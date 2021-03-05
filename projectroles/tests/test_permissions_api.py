@@ -37,6 +37,7 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         version=None,
         knox=False,
         cleanup_method=None,
+        req_kwargs=None,
     ):
         """
         Assert a response status code for url with API headers and optional
@@ -54,42 +55,38 @@ class SODARAPIPermissionTestMixin(SODARAPIViewTestMixin):
         :param knox: Use Knox token auth instead of Django login (boolean)
         :param cleanup_method: Callable method to clean up data after a
                successful request
+        :param req_kwargs: Optional request kwargs override (dict or None)
         """
         if cleanup_method and not callable(cleanup_method):
             raise ValueError('cleanup_method is not callable')
 
         def _send_request():
             req_method = getattr(self.client, method.lower(), None)
-
             if not req_method:
                 raise ValueError('Invalid method "{}"'.format(method))
-
-            return req_method(url, **req_kwargs)
+            if req_kwargs:  # Override request kwargs if set
+                r_kwargs.update(req_kwargs)
+            return req_method(url, **r_kwargs)
 
         if not isinstance(users, (list, tuple)):
             users = [users]
 
         for user in users:
-            req_kwargs = {'format': format}
-
+            r_kwargs = {'format': format}
             if data:
-                req_kwargs['data'] = data
-
+                r_kwargs['data'] = data
             if knox and not user:  # Anonymous
                 raise ValueError(
                     'Unable to test Knox token auth with anonymous user'
                 )
-
-            req_kwargs.update(self.get_accept_header(media_type, version))
+            r_kwargs.update(self.get_accept_header(media_type, version))
 
             if knox:
-                req_kwargs.update(self.get_token_header(self.get_token(user)))
+                r_kwargs.update(self.get_token_header(self.get_token(user)))
                 response = _send_request()
-
             elif user:
                 with self.login(user):
                     response = _send_request()
-
             else:  # Anonymous, no knox
                 response = _send_request()
 
