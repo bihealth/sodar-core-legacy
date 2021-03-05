@@ -10,6 +10,150 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.0 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Release for major breaking platform-level updates
+- Minimum Python version requirement upgraded to 3.7
+- Project upgraded to Django v3.1
+- Site icons access via Iconify
+- Material Design Icons used as default icon set
+
+Breaking Changes
+================
+
+Python Version Requirements
+---------------------------
+
+Python version requirements have been upgraded as follows:
+
+- The **minimum** Python version is 3.7
+- The **recommended** Python version is 3.8
+- CI tests are run on Python 3.7, 3.8 and 3.9
+- Support for Python 3.6 has been dropped.
+
+It is recommended to always use the most recent minor version of a Python
+release.
+
+Django v3.1 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v1.11 to v3.1. This is a breaking
+change which causes many updates and also requires updating several
+dependencies.
+
+To upgrade, please update the Django requirement along with your site's other
+Python requirements to match ones in `requirements/*.txt`. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Minimum version of PostgreSQL has been raised to v9.5.
+- ``ForeignKey`` fields in models must explicitly declare an ``on_delete``
+  argument.
+- ``is_authenticated()`` and ``is_anonymous()`` in the user model no longer
+  work: use ``is_authenticated`` and ``is_anonymous`` instead.
+- Replace imports from ``django.core.urlresolvers`` with ``django.urls``.
+- Replace ``django.contrib.postgres.fields.JSONField`` with
+  ``django.db.models.JSONField``.
+
+In the future, the goal is to keep SODAR Core at the latest stable major version
+of Django, except for potential cases in which a critical third party package
+has not yet been updated to support a new release.
+
+System Prerequisites
+--------------------
+
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
+
+Site Icons Updated
+------------------
+
+Instead of directly including Font Awesome, site icons are now accessed as SVG
+using `Iconify <https://iconify.design/>`_. The default icon set has been
+changed from Font Awesome to `Material Design Icons <https://materialdesignicons.com>`_.
+It is however possible to use other icon sets supported by Iconify for your own
+SODAR Core apps.
+
+To make your icons work with SODAR Core v0.10+, you will need to take the
+following steps.
+
+First, make sure ``django-iconify`` is installed. Add
+``dj_iconify.apps.DjIconifyConfig`` to your Django site settings under
+``THIRD_PARTY_APPS`` and ``dj_iconify.urls`` to your site URLs. See SODAR Core
+or SODAR Django Site settings for an example.
+
+You will also need to set ``ICONIFY_JSON_ROOT`` in the base Django settings.
+
+.. code-block:: django
+
+    ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
+
+If you are overriding the ``base_site.html`` template, add the following lines
+to your base template:
+
+.. code-block:: django
+
+    <script type="text/javascript" src="{% url 'config.js' %}"></script>
+    <script type="text/javascript" src="{% static 'projectroles/js/iconify.min.js' %}"></script>
+
+Next, you must download the `Iconify JSON collection files <https://github.com/iconify/collections-json/>`_
+required for hosting the icons on your Django server. It is recommended to use
+the ``geticons`` management command for this. By default, this downloads the
+required ``collections.json`` file along with the ``mdi.json`` file for the MDI
+icon collection.
+
+.. code-block:: console
+
+    $ ./manage.py geticons
+
+If you wish to also use other collections than MDI, add them as a list using
+the ``-c`` argument. The following example downloads the additional ``carbon``
+and ``clarity`` icon sets.
+
+.. code-block:: console
+
+    $ ./manage.py geticons -c carbon clarity
+
+Make sure you run ``collectstatic`` after retrieving the collections for
+development.
+
+Before committing your code, it is recommended to update your ``.gitignore``
+file with the following lines:
+
+.. code-block::
+
+    */static/iconify/*.json
+    */static/iconify/json/*.json
+
+To make the icons in your apps work with this change, you must change the icon
+syntax in your Django templates. Use ``iconify`` as the base class of the icon
+element. Enter the collection and icon name into the ``data-icon`` attribute.
+
+Example:
+
+.. code-block:: django
+
+    <span class="iconify" data-icon="mdi:home"></span>
+
+Also make sure to modify the ``icon`` attribute of your app plugins to include
+the full ``collection:name`` syntax for Iconify icons.
+
+You may have to specify icon sizing manually in certain elements. In that
+case, use the ``data-height`` and/or ``data-width`` attributes. For spinning
+icons, add the ``spin`` class provided in ``projectroles.css``.
+
+Once you have updated all your icons, you can remove the Font Awesome CSS
+include from your base template if you are not directly importing it from
+``base_site.html``.
+
+
 v0.9.1 (2021-03-05)
 *******************
 

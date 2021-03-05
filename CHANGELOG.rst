@@ -7,6 +7,39 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.0 (WIP)
+=============
+
+Added
+-----
+
+- **Projectroles**
+    - ``geticons`` management command for retrieving Iconify icons (#54)
+    - ``spin`` class in ``projectroles.css`` for spinning icon support (#54)
+
+Changed
+-------
+
+- **General**
+    - Upgrade project to Django v3.1.7 (#194)
+    - Upgrade Python dependencies (#194)
+    - Use Iconify for icons (#54)
+    - Use Material Design Icons as default icon set (#54)
+    - Bump minimum Python version requirement to v3.7 (#121)
+
+Fixed
+-----
+
+- **Bgjobs**
+    - Plugin queries in template tag module root (#653)
+
+Removed
+-------
+
+- **General**
+    - Font Awesome support without Iconify (#54)
+
+
 v0.9.1 (2021-03-05)
 ===================
 
