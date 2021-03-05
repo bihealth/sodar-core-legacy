@@ -574,6 +574,11 @@ PROJECTROLES_DISABLE_CDN_INCLUDES = env.bool(
     'PROJECTROLES_DISABLE_CDN_INCLUDES', False
 )
 
+# Inline HTML include to the head element of the base site template
+PROJECTROLES_INLINE_HEAD_INCLUDE = env.str(
+    'PROJECTROLES_INLINE_HEAD_INCLUDE', None
+)
+
 # Paths/URLs to optional global includes to supplement/replace default ones
 PROJECTROLES_CUSTOM_JS_INCLUDES = env.list(
     'PROJECTROLES_CUSTOM_JS_INCLUDES', None, []

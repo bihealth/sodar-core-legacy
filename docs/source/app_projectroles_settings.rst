@@ -562,6 +562,21 @@ Example:
         # ...
     ]
 
+It is also possible to define inline HTML in an environment variable and include
+it in the ``head`` tag of the base template. To use this feature, add HTML
+script as the value of the variable ``PROJECTROLES_INLINE_HEAD_INCLUDE``.
+
+Example:
+
+.. code-block::
+
+    PROJECTROLES_INLINE_HEAD_INCLUDE="<meta name=\"keywords\" content=\"SODAR Core\">"
+
+.. warning::
+
+    Make sure you are inputting valid HTML or you risk breaking the HTML on
+    **all** pages of your SODAR Core based site!
+
 
 Modifying SODAR_CONSTANTS (Optional)
 ====================================

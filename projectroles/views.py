@@ -43,7 +43,7 @@ from projectroles.forms import (
     ProjectInviteForm,
     RemoteSiteForm,
     RoleAssignmentOwnerTransferForm,
-    ProjectUserCreateForm,
+    LocalUserForm,
 )
 from projectroles.models import (
     Project,
@@ -2275,8 +2275,8 @@ class ProjectInviteProcessLDAPView(
 class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
     """View to handle accepting a project local invite"""
 
-    form_class = ProjectUserCreateForm
-    template_name = 'projectroles/user_create.html'
+    form_class = LocalUserForm
+    template_name = 'projectroles/user_form.html'
 
     def get(self, *args, **kwargs):
         invite = self.get_invite(self.kwargs['secret'])
@@ -2548,8 +2548,8 @@ class ProjectInviteRevokeView(
 class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
     """Display and process the user update view"""
 
-    form_class = ProjectUserCreateForm
-    template_name = 'projectroles/user_create.html'
+    form_class = LocalUserForm
+    template_name = 'projectroles/user_form.html'
     success_url = reverse_lazy('home')
 
     def get_object(self, **kwargs):
@@ -2561,8 +2561,13 @@ class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
                 self.request, 'Error: LDAP user can\'t edit user details'
             )
             return redirect(reverse('home'))
-        messages.success(self.request, 'User successfully updated')
         return super().get(*args, **kwargs)
+
+    def get_success_url(self):
+        messages.success(
+            self.request, 'User successfully updated, please log in again'
+        )
+        return reverse('home')
 
 
 # Remote site and project views ------------------------------------------------

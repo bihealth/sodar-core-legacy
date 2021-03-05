@@ -850,7 +850,6 @@ class BatchEditView(
             'project': self.project,
             'folder_check': True,
         }
-
         if 'folder' in kwargs:
             context['folder'] = kwargs['folder']
 
@@ -876,11 +875,11 @@ class BatchEditView(
                 exclude_list.append(kwargs['folder'])
 
             folder_choices = Folder.objects.filter(
-                project__sodar_uuid=self.project.sodar_uuid
+                project=self.project
             ).exclude(sodar_uuid__in=exclude_list)
             context['folder_choices'] = folder_choices
 
-            if 'folder' not in kwargs or folder_choices.count() == 0:
+            if folder_choices.count() == 0:
                 context['folder_check'] = False
 
         return super().render_to_response(context)
@@ -888,7 +887,6 @@ class BatchEditView(
     def _finalize_edit(self, edit_count, target_folder, **kwargs):
         """Finalize executed batch operation"""
         timeline = get_backend_api('timeline_backend')
-
         edit_suffix = 's' if edit_count != 1 else ''
         fail_suffix = 's' if len(self.failed) != 1 else ''
 
@@ -949,7 +947,6 @@ class BatchEditView(
 
         if 'folder' in kwargs:
             re_kwargs = {'folder': kwargs['folder']}
-
         else:
             re_kwargs = {'project': kwargs['project']}
 
@@ -963,7 +960,6 @@ class BatchEditView(
         self.items = []
         self.item_names = []
         self.failed = []
-
         can_update_all = request.user.has_perm(
             'filesfolders.update_data_all', self.get_permission_object()
         )
@@ -971,7 +967,11 @@ class BatchEditView(
         edit_count = 0
         target_folder = None
 
-        if self.batch_action == 'move' and 'target-folder' in post_data:
+        if (
+            self.batch_action == 'move'
+            and 'target-folder' in post_data
+            and post_data['target-folder'] != '0'
+        ):
             target_folder = Folder.objects.filter(
                 sodar_uuid=post_data['target-folder']
             ).first()
@@ -983,7 +983,6 @@ class BatchEditView(
         ]:
             cls = eval(key.split('_')[2])
             item = cls.objects.filter(sodar_uuid=key.split('_')[3]).first()
-
             #: Item permission
             perm_ok = can_update_all | (item.owner == request.user)
 
@@ -997,14 +996,12 @@ class BatchEditView(
 
             # Moving checks (after user has selected target folder)
             elif self.batch_action == 'move' and user_confirmed:
-
                 # Can't move if item with same name in target
                 get_kwargs = {
                     'project': self.project,
                     'folder': target_folder if target_folder else None,
                     'name': item.name,
                 }
-
                 if cls.objects.filter(**get_kwargs):
                     self.failed.append(item)
 
@@ -1023,12 +1020,10 @@ class BatchEditView(
                 if not user_confirmed:
                     self.items.append(item)
                     self.item_names.append(key)
-
                 elif self.batch_action == 'move':
                     item.folder = target_folder
                     item.save()
                     edit_count += 1
-
                 elif self.batch_action == 'delete':
                     item.delete()
                     edit_count += 1
@@ -1040,7 +1035,6 @@ class BatchEditView(
         # Confirmation needed
         if not user_confirmed:
             return self._render_confirmation(**kwargs)
-
         # User confirmed, batch operation done
         else:
             return self._finalize_edit(edit_count, target_folder, **kwargs)

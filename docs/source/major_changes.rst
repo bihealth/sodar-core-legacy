@@ -10,6 +10,36 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.9.1 (2021-03-05)
+*******************
+
+Release Highlights
+==================
+
+- Add inline head include from environment variables in base template
+- Duplicate object UUIDs in REST API view nested lists
+
+Breaking Changes
+================
+
+Base Template Updated
+---------------------
+
+The base site template in ``projectroles/base_site.html`` has been updated. If
+you have copied the template to your own site's base template to extend it,
+please make sure to copy the latest changes to maintain full compatibility. See
+diff between templates or search for lines containing ``inline_head_include``.
+
+Duplicate UUIDs in Nested REST API Lists
+----------------------------------------
+
+Nested object lists in SODAR Core REST API views are grouped into dictionaries
+using each object's ``sodar_uuid``. From this version onwards, the UUID fields
+are duplicated within each object as well. While this isn't a breaking change in
+itself, if you use ``SODARNestedListSerializer`` it may cause some of your test
+cases to fail unless altered.
+
+
 v0.9.0 (2021-02-03)
 *******************
 

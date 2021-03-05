@@ -47,7 +47,8 @@ rules>=2.2, <2.3
 djangorestframework>=3.11.2, <3.12  # NOTE: 3.12 requires Django 2.x+
 
 # Keyed list addon for DRF
-drf-keyed-list==0.0.2
+# drf-keyed-list==0.0.2
+-e git+https://github.com/mikkonie/drf-keyed-list.git@b03607b866c5706b0e1ea46a7eeaab6527030734#egg=drf-keyed-list
 
 # Token authentication
 django-rest-knox>=4.1.0, <4.2

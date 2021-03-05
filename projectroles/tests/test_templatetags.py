@@ -545,6 +545,18 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             '<span class="text-muted">N/A</span>',
         )
 
+    def test_is_inherited_owner(self):
+        """Test is_inherited_owner()"""
+        owner_cat = self.make_user('user_cat_owner')
+        self.owner_as_cat.user = owner_cat
+        self.owner_as_cat.save()
+        self.assertEqual(
+            tags.is_inherited_owner(self.project, self.user), False
+        )
+        self.assertEqual(tags.is_inherited_owner(self.project, owner_cat), True)
+        # Should work without crashing
+        self.assertEqual(tags.is_inherited_owner(None, None), False)
+
     def test_get_app_link_state(self):
         """Test get_app_link_state()"""
         app_plugin = get_app_plugin('filesfolders')

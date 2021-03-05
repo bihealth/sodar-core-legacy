@@ -1013,40 +1013,6 @@ class ProjectInviteForm(SODARModelForm):
         return obj
 
 
-# ProjectUserCreate form -------------------------------------------------------
-
-
-class ProjectUserCreateForm(SODARModelForm):
-    """Form for ProjectInvite modification"""
-
-    class Meta:
-        model = User
-        fields = ['first_name', 'last_name', 'password', 'email', 'username']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['email'].widget.attrs['readonly'] = True
-        self.fields['username'].widget.attrs['readonly'] = True
-        self.fields['password'].widget = forms.PasswordInput()
-        self.fields['password_confirm'] = forms.CharField(
-            label='Confirm password', widget=forms.PasswordInput()
-        )
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.set_password(self.cleaned_data['password'])
-        if commit:
-            user.save()
-        return user
-
-    def clean(self):
-        cleaned_data = super().clean()
-        if cleaned_data['password'] != cleaned_data['password_confirm']:
-            self.add_error('password_confirm', 'Passwords didn\'t match!')
-            self.add_error('password', 'Passwords didn\'t match!')
-        return cleaned_data
-
-
 # RemoteSite form --------------------------------------------------------------
 
 
@@ -1101,6 +1067,48 @@ class RemoteSiteForm(SODARModelForm):
 
         obj.save()
         return obj
+
+
+# Local user editing form ------------------------------------------------------
+
+
+class LocalUserForm(SODARModelForm):
+    """Form for local user creation and updating"""
+
+    password_confirm = forms.CharField(
+        label='Confirm password', widget=forms.PasswordInput()
+    )
+
+    class Meta:
+        model = User
+        fields = [
+            'first_name',
+            'last_name',
+            'email',
+            'username',
+            'password',
+            'password_confirm',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email'].widget.attrs['readonly'] = True
+        self.fields['username'].widget.attrs['readonly'] = True
+        self.fields['password'].widget = forms.PasswordInput()
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password'])
+        if commit:
+            user.save()
+        return user
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data['password'] != cleaned_data['password_confirm']:
+            self.add_error('password_confirm', 'Passwords didn\'t match!')
+            self.add_error('password', 'Passwords didn\'t match!')
+        return cleaned_data
 
 
 # Helper functions -------------------------------------------------------------

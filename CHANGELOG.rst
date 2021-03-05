@@ -7,6 +7,50 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.9.1 (2021-03-05)
+===================
+
+Added
+-----
+
+- **Projectroles**
+    - Inline head include from environment variables in base template (#639)
+    - ``req_kwargs`` argument in ``SODARAPIPermissionTestMixin.assert_response_api()`` (#662)
+    - Display inherited owner note in remote project sync UI (#643)
+    - ``is_inherited_owner()`` template tag
+
+Changed
+-------
+
+- **General**
+    - Improve Codacy support in GitHub Actions
+    - Upgrade to Chromedriver v89 (#657)
+- **Projectroles**
+    - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
+    - Rename and refactor ``LocalUserForm`` and ``user_form.html`` (#651)
+
+Fixed
+-----
+
+- **Filesfolders**
+    - File list breadcrumb icon alignment (#660)
+    - Cancel link in batch edit view (#647)
+    - Batch move folders not displayed in UI (#648)
+    - Batch moving objects to project root failing (#661)
+- **Projectroles**
+    - Login redirect URLs with query strings not properly handled by ``assert_response()`` (#635)
+    - Remote project icons in project list not displayed (#664)
+    - Version ``0.8.4`` missing from ``CORE_API_ALLOWED_VERSIONS``
+- **Userprofile**
+    - User update link and template not working as expected (#650)
+
+Removed
+-------
+
+- **Userprofile**
+    - Unused template ``user_update.html`` (#651)
+
+
 v0.9.0 (2021-02-03)
 ===================
 

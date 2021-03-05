@@ -292,6 +292,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                             'sodar_uuid': str(self.user.sodar_uuid),
                         },
                         'role': PROJECT_ROLE_OWNER,
+                        'sodar_uuid': str(self.cat_owner_as.sodar_uuid),
                     }
                 },
                 'sodar_uuid': str(self.category.sodar_uuid),
@@ -312,6 +313,7 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
                             'sodar_uuid': str(self.user.sodar_uuid),
                         },
                         'role': PROJECT_ROLE_OWNER,
+                        'sodar_uuid': str(self.owner_as.sodar_uuid),
                     }
                 },
                 'sodar_uuid': str(self.project.sodar_uuid),
@@ -375,6 +377,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
                         'sodar_uuid': str(self.user.sodar_uuid),
                     },
                     'role': PROJECT_ROLE_OWNER,
+                    'sodar_uuid': str(self.cat_owner_as.sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.category.sodar_uuid),
@@ -408,6 +411,7 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
                         'sodar_uuid': str(self.user.sodar_uuid),
                     },
                     'role': PROJECT_ROLE_OWNER,
+                    'sodar_uuid': str(self.owner_as.sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.project.sodar_uuid),
@@ -476,13 +480,13 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
         )
 
         if username == 'owner':
-            projectrole = PROJECT_ROLE_OWNER
+            role = PROJECT_ROLE_OWNER
         elif username == 'delegate':
-            projectrole = PROJECT_ROLE_DELEGATE
+            role = PROJECT_ROLE_DELEGATE
         elif username == 'contributor':
-            projectrole = PROJECT_ROLE_CONTRIBUTOR
+            role = PROJECT_ROLE_CONTRIBUTOR
         else:
-            projectrole = PROJECT_ROLE_GUEST
+            role = PROJECT_ROLE_GUEST
 
         if blocked:
             self.assertEqual(response.status_code, 403)
@@ -502,7 +506,8 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
                             'email': user.email,
                             'sodar_uuid': str(user.sodar_uuid),
                         },
-                        'role': projectrole,
+                        'role': role,
+                        'sodar_uuid': str(user_as.sodar_uuid),
                     }
                 },
                 'sodar_uuid': str(self.project.sodar_uuid),
@@ -1134,6 +1139,7 @@ class TestProjectUpdateAPIView(
                 str(self.category.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
                     'user': self.get_serialized_user(self.user),
+                    'sodar_uuid': str(self.category.get_owner().sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.category.sodar_uuid),
@@ -1193,6 +1199,7 @@ class TestProjectUpdateAPIView(
                 str(self.project.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
                     'user': self.get_serialized_user(self.user),
+                    'sodar_uuid': str(self.project.get_owner().sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.project.sodar_uuid),
@@ -1252,6 +1259,7 @@ class TestProjectUpdateAPIView(
                 str(self.category.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
                     'user': self.get_serialized_user(self.user),
+                    'sodar_uuid': str(self.category.get_owner().sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.category.sodar_uuid),
@@ -1311,6 +1319,7 @@ class TestProjectUpdateAPIView(
                 str(self.project.get_owner().sodar_uuid): {
                     'role': PROJECT_ROLE_OWNER,
                     'user': self.get_serialized_user(self.user),
+                    'sodar_uuid': str(self.project.get_owner().sodar_uuid),
                 }
             },
             'sodar_uuid': str(self.project.sodar_uuid),

@@ -212,6 +212,18 @@ def get_user_role_html(project, user):
 
 
 @register.simple_tag
+def is_inherited_owner(project, user):
+    """Return True if user is inherited owner"""
+    if (
+        project
+        and user
+        and user in [r.user for r in project.get_owners(inherited_only=True)]
+    ):
+        return True
+    return False
+
+
+@register.simple_tag
 def get_app_link_state(app_plugin, app_name, url_name):
     """Return "active" if plugin matches app_name and url_name is found in
     app_plugin.urls."""

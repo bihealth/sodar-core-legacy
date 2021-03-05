@@ -1,6 +1,6 @@
 """UI view permission tests for the projectroles app"""
 
-from urllib.parse import urlencode
+from urllib.parse import urlencode, quote
 
 from django.test import override_settings
 from django.urls import reverse
@@ -87,11 +87,15 @@ class TestPermissionMixin:
                     response = _send_request()
 
             else:  # Anonymous
-                redirect_url = (
-                    redirect_anon
-                    if redirect_anon
-                    else reverse('login') + '?next=' + url
-                )
+                if redirect_anon:
+                    redirect_url = redirect_anon
+                else:
+                    url_split = url.split('?')
+                    if len(url_split) > 1:
+                        next_url = url_split[0] + quote('?' + url_split[1])
+                    else:
+                        next_url = url
+                    redirect_url = reverse('login') + '?next=' + next_url
                 response = _send_request()
 
             msg = 'user={}'.format(user)
