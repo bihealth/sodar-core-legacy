@@ -29,7 +29,7 @@ author = 'Mikko Nieminen'
 # The short X.Y version
 version = '0.9'
 # The full version, including alpha/beta/rc tags
-release = '0.9.1-WIP'
+release = '0.9.1'
 
 
 # -- General configuration ---------------------------------------------------

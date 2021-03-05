@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-v0.9.1 (WIP)
-============
+v0.9.1 (2021-03-05)
+===================
 
 Added
 -----
@@ -28,7 +28,6 @@ Changed
 - **Projectroles**
     - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
     - Rename and refactor ``LocalUserForm`` and ``user_form.html`` (#651)
-    - Display remote project icons in project list for superuser (#664)
 
 Fixed
 -----
@@ -40,6 +39,8 @@ Fixed
     - Batch moving objects to project root failing (#661)
 - **Projectroles**
     - Login redirect URLs with query strings not properly handled by ``assert_response()`` (#635)
+    - Remote project icons in project list not displayed (#664)
+    - Version ``0.8.4`` missing from ``CORE_API_ALLOWED_VERSIONS``
 - **Userprofile**
     - User update link and template not working as expected (#650)
 

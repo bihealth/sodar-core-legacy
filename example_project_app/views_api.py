@@ -14,9 +14,6 @@ class HelloExampleProjectAPIView(SODARAPIGenericProjectMixin, APIView):
     """
     Example API view with a project scope.
 
-    This view can be used to e.g. retrieve assay UUIDs for landing zone
-    operations.
-
     **URL:** ``api/hello/{Project.sodar_uuid}``
 
     **Methods:** ``GET``
