@@ -7,6 +7,9 @@
 {% has_perm 'projectroles.view_project' request.user p as can_view_project %}
 {% has_star p request.user as is_starred %}
 {% get_project_list_indent p list_parent as project_indent %}
+{% if request.user.is_superuser %}
+  {% get_remote_icon p request as remote_icon %}
+{% endif %}
 {% get_star p request.user as project_star %}
 
 <tr class="sodar-pr-project-list-item"
@@ -27,7 +30,10 @@
         {% else %}
           {{ p.title }}
         {% endif %}
-        {{ project_star|safe }}
+        {% if request.user.is_superuser and remote_icon %}
+          {{ remote_icon | safe }}
+        {% endif %}
+        {{ project_star | safe }}
       </span>
     </div>
   </td>

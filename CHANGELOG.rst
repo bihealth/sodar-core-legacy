@@ -28,6 +28,7 @@ Changed
 - **Projectroles**
     - Duplicate ``sodar_uuid`` in ``SODARNestedListSerializer`` (#633)
     - Rename and refactor ``LocalUserForm`` and ``user_form.html`` (#651)
+    - Display remote project icons in project list for superuser (#664)
 
 Fixed
 -----
