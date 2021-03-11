@@ -26,6 +26,7 @@ Changed
     - Use Iconify for icons (#54)
     - Use Material Design Icons as default icon set (#54)
     - Bump minimum Python version requirement to v3.7 (#121)
+    - Upgraded versioneer (#656)
 
 Fixed
 -----
