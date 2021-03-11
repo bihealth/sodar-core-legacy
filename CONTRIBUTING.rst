@@ -115,7 +115,7 @@ Before you submit a pull request, check that it meets these guidelines:
 5. The pull request should work for Python version 3.7, 3.8 and 3.9. Check
    https://github.com/bihealth/sodar_core/actions
    and make sure that the tests pass for supported Python versions.
-   From v0.10 onwards SODAR Core no longer supports Python 3.6.
+   From v1.0 onwards SODAR Core no longer supports Python 3.6.
 
 Deploying
 =========

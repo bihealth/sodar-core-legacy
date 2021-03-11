@@ -2891,7 +2891,7 @@ class TestAPIVersioning(TestCoreAPIViewsBase):
         self.assertEqual(response.status_code, 406)
 
 
-# TODO: To be updated once the legacy API view is redone for SODAR Core v0.10
+# TODO: To be updated once the legacy API view is redone for SODAR Core v1.0
 class TestRemoteProjectGetAPIView(
     ProjectMixin,
     RoleAssignmentMixin,

@@ -359,7 +359,7 @@ class Project(models.Model):
         NOTE: Use Project.full_title instead!
         """
         logger.warning(
-            'Project.get_full_title() is deprecated, to be removed in v0.10! '
+            'Project.get_full_title() is deprecated, to be removed in v1.0! '
             'Please use Project.full_title instead.'
         )
         return str(self)

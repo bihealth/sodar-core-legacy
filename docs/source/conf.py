@@ -27,9 +27,9 @@ copyright = '2021, Berlin Institute of Health'
 author = 'Mikko Nieminen'
 
 # The short X.Y version
-version = '0.10'
+version = '1.0'
 # The full version, including alpha/beta/rc tags
-release = '0.10.0-WIP'
+release = '1.0.0-WIP'
 
 
 # -- General configuration ---------------------------------------------------
