@@ -176,7 +176,11 @@ h2.sodar-pr-content-title {
 }
 
 .sodar-pr-content-title-secondary {
-  line-height: 40px;
+  margin-top: 6px;
+}
+
+.sodar-pr-content-title-secondary:first-line {
+  line-height: 30px;
 }
 
 .sodar-subtitle-container h3 {

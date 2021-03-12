@@ -37,6 +37,8 @@ Fixed
 
 - **Bgjobs**
     - Plugin queries in template tag module root (#653)
+- **Projectroles**
+    - Description line spacing in project header (#632)
 
 Removed
 -------
