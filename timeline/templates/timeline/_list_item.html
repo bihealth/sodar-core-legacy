@@ -14,7 +14,14 @@
   </td>
   <td><a href="{% get_app_url event %}">{{ event.app }}</a></td>
   <td>{{ event.event_name }}</td>
-  <td>{% get_user_html event.user as user_html %}{{ user_html|safe }}</td>
+  <td {% if not event.user %}class="text-muted"{% endif %}>
+    {% if event.user %}
+      {% get_user_html event.user as user_html %}
+      {{ user_html|safe }}
+    {% else %}
+      N/A
+    {% endif %}
+  </td>
   <td>
     {% autoescape off %}
       {% get_event_description event request %}

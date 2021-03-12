@@ -1,4 +1,4 @@
-"""Tests for models in the timeline app"""
+"""Model tests for the timeline app"""
 
 from test_plus.test import TestCase
 
@@ -8,7 +8,11 @@ from django.forms.models import model_to_dict
 from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
-from ..models import ProjectEvent, ProjectEventObjectRef, ProjectEventStatus
+from timeline.models import (
+    ProjectEvent,
+    ProjectEventObjectRef,
+    ProjectEventStatus,
+)
 
 
 # Global constants from settings
@@ -98,7 +102,6 @@ class TestProjectEvent(
 ):
     def setUp(self):
         super().setUp()
-
         self.event = self._make_event(
             project=self.project,
             app='projectroles',
@@ -110,6 +113,7 @@ class TestProjectEvent(
         )
 
     def test_initialization(self):
+        """Test ProjectEvent initialization"""
         expected = {
             'id': self.event.pk,
             'project': self.project.pk,
@@ -121,15 +125,54 @@ class TestProjectEvent(
             'extra_data': {'test_key': 'test_val'},
             'sodar_uuid': self.event.sodar_uuid,
         }
+        self.assertEqual(model_to_dict(self.event), expected)
 
+    def test_initialization_no_user(self):
+        """Test ProjectEvent initialization with no user"""
+        self.event = self._make_event(
+            project=self.project,
+            app='projectroles',
+            user=None,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        expected = {
+            'id': self.event.pk,
+            'project': self.project.pk,
+            'app': 'projectroles',
+            'user': None,
+            'event_name': 'test_event',
+            'description': 'description',
+            'classified': False,
+            'extra_data': {'test_key': 'test_val'},
+            'sodar_uuid': self.event.sodar_uuid,
+        }
         self.assertEqual(model_to_dict(self.event), expected)
 
     def test__str__(self):
+        """Test ProjectEvent __str__()"""
         expected = 'TestProject: test_event/owner'
         self.assertEqual(str(self.event), expected)
 
+    def test__str__no_user(self):
+        """Test ProjectEvent __str__() with no user"""
+        self.event.user = None
+        self.event.save()
+        expected = 'TestProject: test_event'
+        self.assertEqual(str(self.event), expected)
+
     def test__repr__(self):
-        expected = "ProjectEvent('TestProject', 'test_event', " "'owner')"
+        """Test ProjectEventStatus __repr__()"""
+        expected = "ProjectEvent('TestProject', 'test_event', 'owner')"
+        self.assertEqual(repr(self.event), expected)
+
+    def test__repr__no_user(self):
+        """Test ProjectEventStatus __repr__() with no user"""
+        self.event.user = None
+        self.event.save()
+        expected = "ProjectEvent('TestProject', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
 
@@ -159,6 +202,7 @@ class TestProjectEventObjectRef(
         )
 
     def test_initialization(self):
+        """Test ProjectEventObject initialization"""
         expected = {
             'id': self.obj_ref.pk,
             'event': self.event.pk,
@@ -172,10 +216,12 @@ class TestProjectEventObjectRef(
         self.assertEqual(model_to_dict(self.obj_ref), expected)
 
     def test__str__(self):
+        """Test ProjectEventObject __str__()"""
         expected = 'TestProject: test_event/owner (test_name)'
         self.assertEqual(str(self.obj_ref), expected)
 
     def test__repr__(self):
+        """Test ProjectEventObject __repr__()"""
         expected = (
             "ProjectEventObjectRef('TestProject', 'test_event', "
             "'owner', 'test_name')"
@@ -250,6 +296,7 @@ class TestProjectEventStatus(
         )
 
     def test_initialization(self):
+        """Test ProjectEventStatus init"""
         expected = {
             'id': self.event_status_ok.pk,
             'event': self.event.pk,
@@ -257,16 +304,53 @@ class TestProjectEventStatus(
             'description': 'OK',
             'extra_data': {'test_key': 'test_val'},
         }
+        self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
+    def test_initialization_no_user(self):
+        """Test ProjectEventStatus without user"""
+        expected = {
+            'id': self.event_status_ok.pk,
+            'event': self.event.pk,
+            'status_type': 'OK',
+            'description': 'OK',
+            'extra_data': {'test_key': 'test_val'},
+        }
+        self.event = self._make_event(
+            project=self.project,
+            app='projectroles',
+            user=None,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
         self.assertEqual(model_to_dict(self.event_status_ok), expected)
 
     def test__str__(self):
+        """Test ProjectEventStatus __str__()"""
         expected = 'TestProject: test_event/owner (OK)'
         self.assertEqual(str(self.event_status_ok), expected)
 
+    def test__str__no_user(self):
+        """Test __str__() with no user"""
+        self.event.user = None
+        self.event.save()
+        expected = 'TestProject: test_event (OK)'
+        self.assertEqual(str(self.event_status_ok), expected)
+
     def test__repr__(self):
+        """Test ProjectEventStatus __repr__()"""
         expected = (
-            "ProjectEventStatus('TestProject', 'test_event', " "'owner', 'OK')"
+            "ProjectEventStatus('TestProject', 'test_event', 'owner', 'OK')"
+        )
+        self.assertEqual(repr(self.event_status_ok), expected)
+
+    def test__repr__no_user(self):
+        """Test __repr__() with no user"""
+        self.event.user = None
+        self.event.save()
+        expected = (
+            "ProjectEventStatus('TestProject', 'test_event', 'N/A', 'OK')"
         )
         self.assertEqual(repr(self.event_status_ok), expected)
 

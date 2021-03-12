@@ -1,4 +1,4 @@
-"""Tests for views in the timeline app"""
+"""View tests for the timeline app"""
 
 from django.urls import reverse
 

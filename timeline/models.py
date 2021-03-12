@@ -61,11 +61,12 @@ class ProjectEvent(models.Model):
         max_length=255, help_text='App from which the event was triggered'
     )
 
-    #: User who initiated the event
+    #: User who initiated the event (optional)
     user = models.ForeignKey(
         AUTH_USER_MODEL,
+        null=True,
         # related_name='events',
-        help_text='User who initiated the event',
+        help_text='User who initiated the event (optional)',
         on_delete=models.CASCADE,
     )
 
@@ -99,13 +100,18 @@ class ProjectEvent(models.Model):
     objects = ProjectEventManager()
 
     def __str__(self):
-        return '{}: {}/{}'.format(
-            self.project.title, self.event_name, self.user.username
+        return '{}: {}{}'.format(
+            self.project.title,
+            self.event_name,
+            ('/' + self.user.username) if self.user else '',
         )
 
     def __repr__(self):
-        values = (self.project.title, self.event_name, self.user.username)
-
+        values = (
+            self.project.title,
+            self.event_name,
+            self.user.username if self.user else 'N/A',
+        )
         return 'ProjectEvent({})'.format(', '.join(repr(v) for v in values))
 
     def get_current_status(self):
@@ -165,14 +171,11 @@ class ProjectEvent(models.Model):
         status = ProjectEventStatus()
         status.event = self
         status.status_type = status_type
-
         status.description = (
             status_desc if status_desc else DEFAULT_MESSAGES[status_type]
         )
-
         if extra_data:
             status.extra_data = extra_data
-
         status.save()
         return status
 
@@ -278,10 +281,10 @@ class ProjectEventStatus(models.Model):
     )
 
     def __str__(self):
-        return '{}: {}/{} ({})'.format(
+        return '{}: {}{} ({})'.format(
             self.event.project.title,
             self.event.event_name,
-            self.event.user.username,
+            '/' + self.event.user.username if self.event.user else '',
             self.status_type,
         )
 
@@ -289,7 +292,7 @@ class ProjectEventStatus(models.Model):
         values = (
             self.event.project.title,
             self.event.event_name,
-            self.event.user.username,
+            self.event.user.username if self.event.user else 'N/A',
             self.status_type,
         )
         return 'ProjectEventStatus({})'.format(

@@ -110,7 +110,7 @@ class TimelineAPI:
         :param project: Project object
         :param app_name: ID string of app from which event was invoked (NOTE:
             should correspond to member "name" in app plugin!)
-        :param user: User invoking the event
+        :param user: User invoking the event or None
         :param event_name: Event ID string (must match schema)
         :param description: Description of status change (may include {object
             label} references)
@@ -143,16 +143,13 @@ class TimelineAPI:
         event.event_name = event_name
         event.description = description
         event.classified = classified
-
         if extra_data:
             event.extra_data = extra_data
-
         event.save()
 
         # Always add "INIT" status when creating, except for "INFO"
         if status_type != 'INFO':
             event.set_status('INIT')
-
         # Add additional status if set (use if e.g. event is immediately "OK")
         if status_type:
             event.set_status(status_type, status_desc, status_extra_data)
@@ -169,10 +166,8 @@ class TimelineAPI:
         :return: QuerySet
         """
         events = ProjectEvent.objects.filter(project=project)
-
         if not classified:
             events = events.filter(classified=False)
-
         return events
 
     @staticmethod
@@ -203,7 +198,6 @@ class TimelineAPI:
                 ref_obj = ProjectEventObjectRef.objects.get(
                     event=event, label=r
                 )
-
             except ProjectEventObjectRef.DoesNotExist:
                 refs[r] = unknown_label
                 continue
@@ -230,7 +224,6 @@ class TimelineAPI:
                 try:
                     user = User.objects.get(sodar_uuid=ref_obj.object_uuid)
                     refs[r] = '{} {}'.format(get_user_html(user), history_link)
-
                 except User.DoesNotExist:
                     refs[r] = unknown_label
 
@@ -258,7 +251,6 @@ class TimelineAPI:
                     link_data = app_plugin.get_object_link(
                         ref_obj.object_model, ref_obj.object_uuid
                     )
-
                 except Exception:
                     link_data = None
 
@@ -274,7 +266,6 @@ class TimelineAPI:
                         TimelineAPI._get_label(link_data['label']),
                         history_link,
                     )
-
                 else:
                     refs[r] = TimelineAPI._get_not_found_label(
                         ref_obj, history_link

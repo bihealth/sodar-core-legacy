@@ -21,6 +21,7 @@ Release Highlights
 - Project upgraded to Django v3.1
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
+- Allow Timeline evens without user
 
 Breaking Changes
 ================

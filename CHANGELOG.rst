@@ -29,6 +29,8 @@ Changed
     - Upgraded versioneer (#656)
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
+- **Timeline**
+    - Make ``ProjectEvent.user`` field optional (#119)
 
 Fixed
 -----
