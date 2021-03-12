@@ -313,24 +313,22 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(form.initial['type'], PROJECT_TYPE_CATEGORY)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertEqual(form.initial['owner'], self.user)
 
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
-        self.category = self._make_project(
+        category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as = self._make_assignment(
-            self.category, self.user, self.role_owner
-        )
-
+        self._make_assignment(category, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.user_new = self.make_user('newuser')
+        self.make_user('newuser')
 
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.category.sodar_uuid},
+                    kwargs={'project': category.sodar_uuid},
                 )
             )
 
@@ -355,26 +353,41 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub_project(self):
-        """Test rendering of Project creation form if creating a subproject under a project (should fail with redirect)"""
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
-        )
-        self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
-        )
-
+        """Test rendering if creating a subproject under a project (should fail with redirect)"""
+        project = self._make_project('TestProject', PROJECT_TYPE_PROJECT, None)
+        self._make_assignment(project, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.user_new = self.make_user('newuser')
+        self.make_user('newuser')
 
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid},
+                    kwargs={'project': project.sodar_uuid},
                 )
             )
 
         self.assertEqual(response.status_code, 302)
+
+    def test_render_parent_owner(self):
+        """Test rendering with parent owner as initial value"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        user_new = self.make_user('newuser')
+        self._make_assignment(category, user_new, self.role_owner)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertEqual(form.initial['owner'], user_new)
 
     def test_create_top_level_category(self):
         """Test creation of top level category"""

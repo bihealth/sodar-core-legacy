@@ -27,6 +27,8 @@ Changed
     - Use Material Design Icons as default icon set (#54)
     - Bump minimum Python version requirement to v3.7 (#121)
     - Upgraded versioneer (#656)
+- **Projectroles**
+    - Set parent owner as initial owner in project form (#667)
 
 Fixed
 -----
