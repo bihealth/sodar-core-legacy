@@ -1,10 +1,8 @@
 from django import forms
 from django.utils import timezone
 
-from pagedown.widgets import PagedownWidget
-
 # Projectroles dependency
-from projectroles.forms import SODARModelForm
+from projectroles.forms import SODARModelForm, SODARPagedownWidget
 
 from adminalerts.models import AdminAlert
 
@@ -36,7 +34,7 @@ class AdminAlertForm(SODARModelForm):
         )
 
         # Set description widget with preview
-        self.fields['description'].widget = PagedownWidget(
+        self.fields['description'].widget = SODARPagedownWidget(
             attrs={'show_preview': True}
         )
 

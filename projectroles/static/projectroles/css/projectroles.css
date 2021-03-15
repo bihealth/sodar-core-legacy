@@ -540,27 +540,6 @@ a.sodar-nav-link-last {
   border-bottom-left-radius: 0;
 }
 
-/* Pagedown and JSON setting textarea height modification */
-/* ("rows" attribute does not work) */
-textarea.wmd-input,
-textarea.sodar-json-input {
-  height: 175px;
-  min-height: 175px;
-  resize: vertical;
-}
-
-/* Pagedown layout fixes */
-div.wmd-panel {
-  margin-left: 0;
-  margin-right: 0;
-  width: 100%;
-  resize: vertical;
-}
-
-div.wmd-button-bar {
-  background-color: #fff;
-}
-
 /* Select2 autocomplete field tweaks */
 span.select2-container {
   width: 100% !important;

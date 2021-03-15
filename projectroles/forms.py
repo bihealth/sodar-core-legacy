@@ -98,6 +98,11 @@ class SODARModelForm(SODARFormMixin, forms.ModelForm):
     """Override of Django model form with SODAR Core specific helpers."""
 
 
+class SODARPagedownWidget(PagedownWidget):
+    class Media:
+        css = {'all': ['projectroles/css/pagedown.css']}
+
+
 # User autocompletion ----------------------------------------------------------
 
 
@@ -463,7 +468,7 @@ class ProjectForm(SODARModelForm):
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
         # Set readme widget with preview
-        self.fields['readme'].widget = PagedownWidget(
+        self.fields['readme'].widget = SODARPagedownWidget(
             attrs={'show_preview': True}
         )
 

@@ -538,6 +538,12 @@ JS file instead of ``autocomplete_light/select2.js``. See the
 ``django-autocomplete-light`` documentation for more information on how to
 customize your autocomplete-widget.
 
+Markdown
+--------
+
+For fields supporting markdown, it is recommended to use the
+``SODARPagedownWidget`` found in ``projectroles.models``.
+
 
 Specific Views and Templates
 ============================

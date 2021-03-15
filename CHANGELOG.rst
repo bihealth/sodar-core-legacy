@@ -35,10 +35,13 @@ Changed
 Fixed
 -----
 
+- **Adminalerts**
+    - Pagedown widget breaking CSS layout in Firefox (#659)
 - **Bgjobs**
     - Plugin queries in template tag module root (#653)
 - **Projectroles**
     - Description line spacing in project header (#632)
+    - Pagedown widget breaking CSS layout in Firefox (#659)
 
 Removed
 -------
