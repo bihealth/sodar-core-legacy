@@ -151,6 +151,30 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         # Assert project column count
         self.assertEqual(response.context['project_col_count'], 4)
 
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_render_anon(self):
+        """Test to ensure the home view renders correctly with anonymous access"""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the project list is provided in the view context
+        self.assertIsNotNone(response.context['project_list'])
+        self.assertEqual(len(response.context['project_list']), 0)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_render_anon_public_project(self):
+        """Test to ensure the home view renders correctly with anonymous access and public project"""
+        self.project.set_public()
+
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the project list is provided in the view context
+        self.assertIsNotNone(response.context['project_list'])
+        self.assertEqual(
+            response.context['project_list'][1].pk, self.project.pk
+        )
+
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search results view"""
@@ -403,6 +427,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
         }
 
         # Add settings values
@@ -431,6 +456,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
             'full_title': 'TestCategory',
             'sodar_uuid': project.sodar_uuid,
         }
@@ -477,6 +503,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
         }
 
         # Add settings values
@@ -500,6 +527,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.sodar_uuid,
             'owner': self.user.sodar_uuid,
             'description': 'description',
+            'public_guest_access': False,
         }
 
         # Add settings values
@@ -535,6 +563,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
             'full_title': 'TestCategory / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
@@ -679,6 +708,7 @@ class TestProjectUpdateView(
             'parent': new_category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'public_guest_access': False,
             'full_title': new_category.title + ' / ' + 'updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
@@ -797,6 +827,7 @@ class TestProjectUpdateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'public_guest_access': False,
             'full_title': 'updated title',
             'sodar_uuid': self.category.sodar_uuid,
         }

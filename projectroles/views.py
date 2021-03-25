@@ -79,6 +79,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
@@ -97,6 +98,8 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_NAME = 'projectroles'
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 PROJECT_COLUMN_COUNT = 2  # Default columns
+MSG_NO_AUTH = 'User not authorized for requested action'
+MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
 
 
 # Access Django user model
@@ -107,6 +110,53 @@ app_settings = AppSettingAPI()
 
 
 # General mixins ---------------------------------------------------------------
+
+
+class LoginRequiredMixin(AccessMixin):
+    """
+    Customized variant of the one from ``django.contrib.auth.mixins``.
+    Allows disabling by overriding function ``is_login_required``.
+    """
+
+    def is_login_required(self):
+        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False) or getattr(
+            settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
+        ):
+            return False
+        return True
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.is_login_required() and not request.user.is_authenticated:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class LoggedInPermissionMixin(PermissionRequiredMixin):
+    """Mixin for handling redirection for both unlogged users and authenticated
+    users without permissions"""
+
+    def has_permission(self):
+        """
+        Override for this mixin also to work with admin users without a
+        permission object.
+        """
+        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
+            return True
+        try:
+            return super().has_permission()
+        except AttributeError:
+            if self.request.user.is_superuser:
+                return True
+        return False
+
+    def handle_no_permission(self):
+        """Override to redirect user"""
+        if self.request.user.is_authenticated:
+            messages.error(self.request, MSG_NO_AUTH)
+            return redirect(reverse('home'))
+        else:
+            messages.error(self.request, MSG_NO_AUTH_LOGIN)
+            return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectAccessMixin:
@@ -128,7 +178,6 @@ class ProjectAccessMixin:
         """
         request = request or getattr(self, 'request')
         kwargs = kwargs or getattr(self, 'kwargs')
-
         # Ensure kwargs can be accessed
         if kwargs is None:
             raise ImproperlyConfigured('View kwargs are not accessible')
@@ -150,14 +199,11 @@ class ProjectAccessMixin:
             if re.match(r'[0-9a-f-]+', v):
                 try:
                     app_name = resolve(request.path).app_name
-
                     if app_name.find('.') != -1:
                         app_name = app_name.split('.')[0]
-
                     model = apps.get_model(app_name, k)
                     uuid_kwarg = k
                     break
-
                 except LookupError:
                     pass
 
@@ -166,49 +212,15 @@ class ProjectAccessMixin:
 
         try:
             obj = model.objects.get(sodar_uuid=kwargs[uuid_kwarg])
-
             if hasattr(obj, 'project'):
                 return obj.project
-
             # Some objects may have a get_project() func instead of foreignkey
             elif hasattr(obj, 'get_project') and callable(
                 getattr(obj, 'get_project', None)
             ):
                 return obj.get_project()
-
         except model.DoesNotExist:
             return None
-
-
-class LoggedInPermissionMixin(PermissionRequiredMixin):
-    """Mixin for handling redirection for both unlogged users and authenticated
-    users without permissions"""
-
-    def has_permission(self):
-        """Override has_permission() for this mixin also to work with admin
-        users without a permission object"""
-        if KIOSK_MODE:
-            return True
-
-        try:
-            return super().has_permission()
-
-        except AttributeError:
-            if self.request.user.is_superuser:
-                return True
-
-        return False
-
-    def handle_no_permission(self):
-        """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated:
-            messages.error(
-                self.request, 'User not authorized for requested action'
-            )
-            return redirect(reverse('home'))
-
-        else:
-            return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
@@ -221,13 +233,11 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
     def has_permission(self):
         """Overrides for project permission access"""
         project = self.get_project()
-
         # Override permissions for superuser, owner or delegate
         perm_override = (
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-
         if not perm_override and app_settings.get_app_setting(
             'projectroles', 'ip_restrict', project
         ):
@@ -250,22 +260,18 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 if '/' in record:
                     if client_address in ip_network(record):
                         break
-                else:
-                    if client_address == ip_address(record):
-                        break
+                elif client_address == ip_address(record):
+                    break
             else:
                 return False
 
         # Disable project app access for categories unless specifically enabled
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
-
             if request_url.app_name != APP_NAME:
                 app_plugin = get_app_plugin(request_url.app_name)
-
                 if app_plugin and app_plugin.category_enable:
                     return True
-
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked
@@ -278,18 +284,14 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         """Override ``get_queryset()`` to filter down to the currently selected
         object."""
         qs = super().get_queryset(*args, **kwargs)
-
         if qs.model == ProjectAccessMixin.project_class:
             return qs
-
         elif hasattr(qs.model, 'get_project_filter_key'):
             return qs.filter(
                 **{qs.model.get_project_filter_key(): self.get_project()}
             )
-
         elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
             return qs.filter(project=self.get_project())
-
         else:
             raise AttributeError(
                 'Model does not have "project" member, get_project() function '
@@ -318,7 +320,8 @@ class ProjectModifyPermissionMixin(
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated:
+        project = self.get_project()
+        if project and project.is_remote():
             messages.error(
                 self.request,
                 'Modifications are not allowed for remote {}'.format(
@@ -326,8 +329,11 @@ class ProjectModifyPermissionMixin(
                 ),
             )
             return redirect(reverse('home'))
-
+        elif self.request.user.is_authenticated:
+            messages.error(self.request, MSG_NO_AUTH)
+            return redirect(reverse('home'))
         else:
+            messages.error(self.request, MSG_NO_AUTH_LOGIN)
             return redirect_to_login(self.request.get_full_path())
 
 
@@ -339,27 +345,22 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
         """Override has_permission to check perms depending on role"""
         if not super().has_permission():
             return False
-
         try:
             obj = RoleAssignment.objects.get(
                 sodar_uuid=self.kwargs['roleassignment']
             )
-
             if obj.role.name == PROJECT_ROLE_OWNER:
                 return False
-
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
                 return self.request.user.has_perm(
                     'projectroles.update_project_delegate',
                     self.get_permission_object(),
                 )
-
             else:
                 return self.request.user.has_perm(
                     'projectroles.update_project_members',
                     self.get_permission_object(),
                 )
-
         except RoleAssignment.DoesNotExist:
             return False
 
@@ -375,13 +376,11 @@ class HTTPRefererMixin:
     def get(self, request, *args, **kwargs):
         if 'HTTP_REFERER' in request.META:
             referer = request.META['HTTP_REFERER']
-
             if (
                 'real_referer' not in request.session
                 or referer != request.build_absolute_uri()
             ):
                 request.session['real_referer'] = referer
-
         return super().get(request, *args, **kwargs)
 
 
@@ -408,10 +407,8 @@ class ProjectContextMixin(
         # Project
         if hasattr(self, 'object') and isinstance(self.object, Project):
             context['project'] = self.get_object()
-
         elif hasattr(self, 'object') and hasattr(self.object, 'project'):
             context['project'] = self.object.project
-
         else:
             context['project'] = self.get_project()
 
@@ -435,15 +432,22 @@ class ProjectListContextMixin:
         :param user: User for which the projects are visible
         :param parent: Project object or None
         """
-        project_list = []
-        flat_list = []
-
         if user.is_superuser:
             project_list = Project.objects.filter(
                 parent=parent, submit_status='OK'
             ).order_by('title')
-
-        elif not user.is_anonymous:
+        elif user.is_anonymous:
+            allow_anon = getattr(
+                settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
+            )
+            if not allow_anon:
+                return None
+            project_list = [
+                p
+                for p in Project.objects.filter(parent=parent).order_by('title')
+                if p.public_guest_access or p.has_public_children()
+            ]
+        else:
             project_list = [
                 p
                 for p in Project.objects.filter(
@@ -454,16 +458,22 @@ class ProjectListContextMixin:
 
         def _append_projects(project):
             lst = [project]
-
             for c in project.get_children():
-                if user.is_superuser or c.has_role(user, include_children=True):
+                if (
+                    user.is_authenticated
+                    and (
+                        user.is_superuser
+                        or c.has_role(user, include_children=True)
+                    )
+                    or user.is_anonymous
+                    and c.public_guest_access
+                ):
                     lst += _append_projects(c)
-
             return lst
 
+        flat_list = []
         for p in project_list:
             flat_list += _append_projects(p)
-
         return flat_list
 
     def _get_custom_cols(self, user, project_list):
@@ -529,21 +539,6 @@ class CurrentUserFormMixin:
         return kwargs
 
 
-class LoginRequiredMixin(AccessMixin):
-    """Customized variant of the one from ``django.contrib.auth.mixins``.
-    Allows disabling by overriding function ``is_login_required``.
-    """
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.is_login_required() and not request.user.is_authenticated:
-            return self.handle_no_permission()
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def is_login_required(self):
-        return False if KIOSK_MODE else True
-
-
 # Base Project Views -----------------------------------------------------------
 
 
@@ -575,25 +570,27 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         if self.request.user.is_superuser:
             context['role'] = None
-
-        else:
+        elif self.request.user.is_authenticated:
             try:
                 role_as = RoleAssignment.objects.get(
                     user=self.request.user, project=self.object
                 )
                 context['role'] = role_as.role
-
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
+        elif self.object.public_guest_access:
+            context['role'] = Role.objects.filter(
+                name=PROJECT_ROLE_GUEST
+            ).first()
+        else:
+            context['role'] = None
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             context['target_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).order_by('site__name')
-
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
             context['peer_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
@@ -923,6 +920,7 @@ class ProjectModifyMixin:
             'parent_uuid': str(project.parent.sodar_uuid)
             if project.parent
             else '',
+            'public_guest_access': project.public_guest_access,
             'owner_username': owner.username,
             'owner_uuid': str(owner.sodar_uuid),
             'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
@@ -1040,10 +1038,12 @@ class ProjectModifyMixin:
             )
             project.type = data.get('type') or old_project.type
             project.readme = data.get('readme') or old_project.readme
-
             # NOTE: Must do this as parent can exist but be None
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent
+            )
+            project.public_guest_access = (
+                data.get('public_guest_access') or False
             )
 
         else:
@@ -1053,6 +1053,7 @@ class ProjectModifyMixin:
                 type=data.get('type'),
                 readme=data.get('readme'),
                 parent=data.get('parent'),
+                public_guest_access=data.get('public_guest_access') or False,
             )
 
         use_taskflow = (

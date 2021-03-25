@@ -22,6 +22,7 @@ Release Highlights
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
 - Allow Timeline evens without user
+- Allow public guest access to projects for authenticated and anonymous users
 
 Breaking Changes
 ================
@@ -72,6 +73,39 @@ System Prerequisites
 
 Third party Python package requirements have been upgraded. See the
 ``requirements`` directory for up-to-date package versions.
+
+Context Processor Required for Site Apps
+----------------------------------------
+
+If you intend to include any site apps to your projects, you now need to include
+a context processor to your site set up. Please add the following line to
+``base.py`` under ``TEMPLATES``:
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'OPTIONS': {
+                'context_processors': {
+                    'projectroles.context_processors.site_app_processor'
+                }
+            }
+        }
+
+REST API Updates
+----------------
+
+The following changes have been made to REST API views:
+
+- ``public_guest_access`` parameter added to project API views.
+
+REST API Backwards Compatibility
+--------------------------------
+
+This version of SODAR Core no longer guarantees REST API backwards compatibility
+with versions <1.0.0. API views *may* still work if omitting accept header
+versioning, but it is recommended to review changes and update your scripts
+accordingly.
 
 Site Icons Updated
 ------------------
@@ -153,6 +187,15 @@ icons, add the ``spin`` class provided in ``projectroles.css``.
 Once you have updated all your icons, you can remove the Font Awesome CSS
 include from your base template if you are not directly importing it from
 ``base_site.html``.
+
+Public Guest Access Support
+---------------------------
+
+This version adds public guest access support for projects. By setting
+``PROJECTROLES_ALLOW_ANONYMOUS`` true, this can be extended to anonymous users.
+For your views to properly support anonymous access, please use the override of
+``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
+original mixin supplied in Django.
 
 
 v0.9.1 (2021-03-05)

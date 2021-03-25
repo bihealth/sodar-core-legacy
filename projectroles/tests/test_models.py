@@ -67,6 +67,7 @@ class ProjectMixin:
         description='',
         submit_status=SUBMIT_STATUS_OK,
         readme=None,
+        public_guest_access=False,
         sodar_uuid=None,
     ):
         """Make and save a Project"""
@@ -77,6 +78,7 @@ class ProjectMixin:
             'submit_status': submit_status,
             'description': description,
             'readme': readme,
+            'public_guest_access': public_guest_access,
         }
         if sodar_uuid:
             values['sodar_uuid'] = sodar_uuid
@@ -304,6 +306,7 @@ class TestProject(ProjectMixin, TestCase):
             'full_title': 'TestCategoryTop / TestProjectSub',
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
+            'public_guest_access': False,
         }
         model_dict = model_to_dict(self.project_sub)
         # HACK: Can't compare markupfields like this. Better solution?
@@ -319,6 +322,41 @@ class TestProject(ProjectMixin, TestCase):
         """Test Project __repr__()"""
         expected = "Project('TestProjectSub', 'PROJECT', " "'TestCategoryTop')"
         self.assertEqual(repr(self.project_sub), expected)
+
+    def test_validate_parent(self):
+        """Test parent ForeignKey validation: project can't be its own
+        parent"""
+        with self.assertRaises(ValidationError):
+            project_tmp = self.project_top
+            project_tmp.parent = project_tmp
+            project_tmp.save()
+
+    def test_validate_title(self):
+        """Test title validation: title can't be equal between subproject and
+        parent"""
+        with self.assertRaises(ValidationError):
+            self._make_project(
+                title='TestCategoryTop',
+                type=PROJECT_TYPE_PROJECT,
+                parent=self.category_top,
+            )
+
+    def test_validate_parent_type(self):
+        """Test parent type validation"""
+        with self.assertRaises(ValidationError):
+            self._make_project(
+                title='FailProject',
+                type=PROJECT_TYPE_PROJECT,
+                parent=self.project_top,
+            )
+
+    def test_get_absolute_url(self):
+        """Test get_absolute_url()"""
+        expected_url = reverse(
+            'projectroles:detail',
+            kwargs={'project': self.project_sub.sodar_uuid},
+        )
+        self.assertEqual(self.project_sub.get_absolute_url(), expected_url)
 
     def test_get_children_top(self):
         """Test children getting function for top category"""
@@ -356,40 +394,15 @@ class TestProject(ProjectMixin, TestCase):
         """Test Project.is_revoked() without remote projects"""
         self.assertEqual(self.project_sub.is_revoked(), False)
 
-    def test_validate_parent(self):
-        """Test parent ForeignKey validation: project can't be its own
-        parent"""
-        with self.assertRaises(ValidationError):
-            project_tmp = self.project_top
-            project_tmp.parent = project_tmp
-            project_tmp.save()
-
-    def test_validate_title(self):
-        """Test title validation: title can't be equal between subproject and
-        parent"""
-        with self.assertRaises(ValidationError):
-            self._make_project(
-                title='TestCategoryTop',
-                type=PROJECT_TYPE_PROJECT,
-                parent=self.category_top,
-            )
-
-    def test_validate_parent_type(self):
-        """Test parent type validation"""
-        with self.assertRaises(ValidationError):
-            self._make_project(
-                title='FailProject',
-                type=PROJECT_TYPE_PROJECT,
-                parent=self.project_top,
-            )
-
-    def test_get_absolute_url(self):
-        """Test get_absolute_url()"""
-        expected_url = reverse(
-            'projectroles:detail',
-            kwargs={'project': self.project_sub.sodar_uuid},
-        )
-        self.assertEqual(self.project_sub.get_absolute_url(), expected_url)
+    def test_set_public(self):
+        """Test Project.set_public()"""
+        self.assertFalse(self.project_sub.public_guest_access)
+        self.project_sub.set_public()  # Default = true
+        self.assertTrue(self.project_sub.public_guest_access)
+        self.project_sub.set_public(False)
+        self.assertFalse(self.project_sub.public_guest_access)
+        self.project_sub.set_public(True)
+        self.assertTrue(self.project_sub.public_guest_access)
 
 
 class TestRole(TestCase):

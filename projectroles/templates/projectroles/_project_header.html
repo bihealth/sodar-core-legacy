@@ -17,17 +17,19 @@
   <h2 class="sodar-pr-content-title">{{ project.title }}</h2>
 
   {# Project starring/unstarring #}
-  <a role="link" class="btn btn-link mr-2 sodar-pr-btn-title sodar-pr-btn-star"
-     href="#" id="sodar-pr-link-project-star"
-     star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
-     title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
-     data-toggle="tooltip" data-placement="top">
-    {% if project_starred %}
-      <i class="iconify text-warning" data-icon="mdi:star" height="26"></i>
-    {% else %}
-      <i class="iconify text-muted" data-icon="mdi:star-outline" height="26"></i>
-    {% endif %}
-  </a>
+  {% if request.user.is_authenticated %}
+    <a role="link" class="btn btn-link mr-2 sodar-pr-btn-title sodar-pr-btn-star"
+       href="#" id="sodar-pr-link-project-star"
+       star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
+       title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
+       data-toggle="tooltip" data-placement="top">
+      {% if project_starred %}
+        <i class="iconify text-warning" data-icon="mdi:star" height="26"></i>
+      {% else %}
+        <i class="iconify text-muted" data-icon="mdi:star-outline" height="26"></i>
+      {% endif %}
+    </a>
+  {% endif %}
 
   {# Project copy uuid #}
   {% if enable_uuid_copy %}

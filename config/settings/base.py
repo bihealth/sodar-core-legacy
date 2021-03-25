@@ -202,6 +202,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 # Site context processors
                 'projectroles.context_processors.urls_processor',
+                'projectroles.context_processors.site_app_processor',
             ],
         },
     }
@@ -547,6 +548,9 @@ PROJECTROLES_DEFAULT_ADMIN = env.str('PROJECTROLES_DEFAULT_ADMIN', 'admin')
 PROJECTROLES_ALLOW_LOCAL_USERS = env.bool(
     'PROJECTROLES_ALLOW_LOCAL_USERS', False
 )
+
+# Allow unauthenticated users to access public projects if set true
+PROJECTROLES_ALLOW_ANONYMOUS = env.bool('PROJECTROLES_ALLOW_ANONYMOUS', False)
 
 # General projectroles settings
 PROJECTROLES_DISABLE_CATEGORIES = env.bool(

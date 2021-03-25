@@ -8,6 +8,9 @@
 {# Local variables #}
 {% get_django_setting 'SITE_TITLE' as site_title %}
 {% get_django_setting 'SITE_SUBTITLE' as site_subtitle %}
+{% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
+{% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 
 <div class="m-b-1 sodar-titlebar-container">
@@ -36,8 +39,7 @@
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
         {# Search #}
-        {% if request.user.is_authenticated %}
-          {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+        {% if request.user.is_authenticated or allow_anon %}
           {% if enable_search %}
             <li class="nav-item">
               <a class="btn btn-info mr-2" role="button"
@@ -82,8 +84,9 @@
         </li>
 
         {# User dropdown menu #}
-        {% include 'projectroles/_site_titlebar_dropdown.html' %}
-
+        {% if not kiosk_mode %}
+          {% include 'projectroles/_site_titlebar_dropdown.html' %}
+        {% endif %}
       </ul>
     </div>
 

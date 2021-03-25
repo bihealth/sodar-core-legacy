@@ -3,7 +3,8 @@
 import os
 import uuid
 
-from django.shortcuts import reverse
+from django.test import override_settings
+from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.tests.test_permissions_api import (
@@ -30,7 +31,6 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
 
     def setUp(self):
         super().setUp()
-
         self.folder = self._make_folder(
             name='folder',
             project=self.project,
@@ -57,6 +57,19 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_list_anon(self):
+        """Test permissions for folder listing with anonymous access"""
+        url = reverse(
+            'filesfolders:api_folder_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_folder_create(self):
         """Test permissions for folder creation"""
@@ -103,6 +116,28 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_cleanup,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='POST', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_create_anon(self):
+        """Test permissions for folder creation with anonymous access"""
+        url = reverse(
+            'filesfolders:api_folder_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        request_data = {
+            'name': 'New Folder',
+            'flag': 'IMPORTANT',
+            'description': 'Folder\'s description',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=request_data
+        )
 
     def test_folder_retrieve(self):
         """Test permissions for folder retrieval"""
@@ -110,7 +145,6 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             'filesfolders:api_folder_retrieve_update_destroy',
             kwargs={'folder': self.folder.sodar_uuid},
         )
-
         good_users = [
             self.superuser,
             self.owner_as.user,
@@ -123,6 +157,19 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_retrieve_anon(self):
+        """Test permissions for folder retrieval with anonymous access"""
+        url = reverse(
+            'filesfolders:api_folder_retrieve_update_destroy',
+            kwargs={'folder': self.folder.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_folder_update_put(self):
         """Test permissions for folder updating with PUT"""
@@ -157,6 +204,28 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         self.assert_response_api(
             url, good_users, 200, method='PUT', data=request_data, knox=True
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='PUT', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_update_put_anon(self):
+        """Test permissions for folder updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_folder_retrieve_update_destroy',
+            kwargs={'folder': self.folder.sodar_uuid},
+        )
+        request_data = {
+            'name': 'UPDATED Folder',
+            'flag': 'FLAG',
+            'description': 'UPDATED Description',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PUT', data=request_data
+        )
 
     def test_folder_update_patch(self):
         """Test permissions for folder updating with PATCH"""
@@ -186,6 +255,24 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
         )
         self.assert_response_api(
             url, good_users, 200, method='PATCH', data=request_data, knox=True
+        )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='PATCH', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_update_patch_anon(self):
+        """Test permissions for folder updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_folder_retrieve_update_destroy',
+            kwargs={'folder': self.folder.sodar_uuid},
+        )
+        request_data = {'name': 'UPDATED Folder'}
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PATCH', data=request_data
         )
 
     def test_folder_destroy(self):
@@ -231,6 +318,20 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_make_folder,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 403, method='DELETE')
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_destroy_anon(self):
+        """Test permissions for folder destroying with anonymous access"""
+        obj_uuid = uuid.uuid4()
+        url = reverse(
+            'filesfolders:api_folder_retrieve_update_destroy',
+            kwargs={'folder': obj_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 401, method='DELETE')
 
 
 class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
@@ -238,7 +339,6 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
 
     def setUp(self):
         super().setUp()
-
         self.file_content = bytes('content'.encode('utf-8'))
         self.file = self._make_file(
             name='file.txt',
@@ -251,7 +351,6 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             public_url=True,
             secret=SECRET,
         )
-
         self.new_file_name = 'New File'
         self.request_data = {
             'name': self.new_file_name,
@@ -284,6 +383,19 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_list_anon(self):
+        """Test permissions for file listing with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_file_create(self):
         """Test permissions for file creation"""
@@ -295,10 +407,8 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         # NOTE: Must call this for ALL requests to seek the file
         def _cleanup():
             file = File.objects.filter(name=self.new_file_name).first()
-
             if file:
                 file.delete()
-
             self.request_data['file'].seek(0)
 
         good_users = [
@@ -345,7 +455,34 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_cleanup,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.user_no_roles,
+            403,
+            method='POST',
+            format='multipart',
+            data=self.request_data,
+        )
+        self.request_data['file'].close()
 
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_create_anon(self):
+        """Test permissions for file creation with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='POST',
+            format='multipart',
+            data=self.request_data,
+        )
         self.request_data['file'].close()
 
     def test_file_retrieve(self):
@@ -354,7 +491,6 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             'filesfolders:api_file_retrieve_update_destroy',
             kwargs={'file': self.file.sodar_uuid},
         )
-
         good_users = [
             self.superuser,
             self.owner_as.user,
@@ -363,10 +499,23 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             self.guest_as.user,
         ]
         bad_users = [self.user_no_roles]
-        self.assert_response_api(url, good_users, 200, method='GET')
+        self.assert_response_api(url, good_users, 200)
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_retrieve_anon(self):
+        """Test permissions for file retrieval with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_retrieve_update_destroy',
+            kwargs={'file': self.file.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_file_update_put(self):
         """Test permissions for file updating with PUT"""
@@ -433,6 +582,40 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_cleanup,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.user_no_roles,
+            403,
+            method='PUT',
+            format='multipart',
+            data=self.request_data,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_update_put_anon(self):
+        """Test permissions for file updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_retrieve_update_destroy',
+            kwargs={'file': self.file.sodar_uuid},
+        )
+        self.request_data.update(
+            {
+                'name': 'UPDATED Folder',
+                'flag': 'FLAG',
+                'description': 'UPDATED Description',
+            }
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='PUT',
+            format='multipart',
+            data=self.request_data,
+        )
 
     def test_file_update_patch(self):
         """Test permissions for file updating with PATCH"""
@@ -493,6 +676,34 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_cleanup,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.user_no_roles,
+            403,
+            method='PATCH',
+            format='multipart',
+            data=self.request_data,
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_update_patch_anon(self):
+        """Test permissions for file updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_retrieve_update_destroy',
+            kwargs={'file': self.file.sodar_uuid},
+        )
+        self.request_data.update({'name': 'UPDATED Folder'})
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='PATCH',
+            format='multipart',
+            data=self.request_data,
+        )
 
     def test_file_destroy(self):
         """Test permissions for file destroying with DELETE"""
@@ -541,13 +752,36 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
             cleanup_method=_make_file,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.user_no_roles,
+            403,
+            method='DELETE',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_destroy_anon(self):
+        """Test permissions for file destroying with anonymous access"""
+        obj_uuid = uuid.uuid4()
+        url = reverse(
+            'filesfolders:api_file_retrieve_update_destroy',
+            kwargs={'file': obj_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='DELETE',
+        )
 
     def test_file_serve(self):
         """Test permissions for file serving"""
         url = reverse(
             'filesfolders:api_file_serve', kwargs={'file': self.file.sodar_uuid}
         )
-
         good_users = [
             self.superuser,
             self.owner_as.user,
@@ -560,6 +794,18 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_serve_anon(self):
+        """Test permissions for file serving with anonymous access"""
+        url = reverse(
+            'filesfolders:api_file_serve', kwargs={'file': self.file.sodar_uuid}
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
 
 class TestHyperLinkAPIPermissions(
@@ -569,7 +815,6 @@ class TestHyperLinkAPIPermissions(
 
     def setUp(self):
         super().setUp()
-
         self.hyperlink = self._make_hyperlink(
             name='Link',
             url='http://www.google.com/',
@@ -597,6 +842,19 @@ class TestHyperLinkAPIPermissions(
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_list_anon(self):
+        """Test permissions for hyperlink listing with anonymous access"""
+        url = reverse(
+            'filesfolders:api_hyperlink_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_hyperlink_create(self):
         """Test permissions for hyperlink creation"""
@@ -644,6 +902,29 @@ class TestHyperLinkAPIPermissions(
             cleanup_method=_cleanup,
             knox=True,
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='POST', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_create_anon(self):
+        """Test permissions for hyperlink creation with anonymous access"""
+        url = reverse(
+            'filesfolders:api_hyperlink_list_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        request_data = {
+            'name': 'New HyperLink',
+            'flag': 'IMPORTANT',
+            'description': 'HyperLink\'s description',
+            'url': 'http://www.cubi.bihealth.org',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='POST', data=request_data
+        )
 
     def test_hyperlink_retrieve(self):
         """Test permissions for hyperlink retrieval"""
@@ -651,7 +932,6 @@ class TestHyperLinkAPIPermissions(
             'filesfolders:api_hyperlink_retrieve_update_destroy',
             kwargs={'hyperlink': self.hyperlink.sodar_uuid},
         )
-
         good_users = [
             self.superuser,
             self.owner_as.user,
@@ -664,6 +944,19 @@ class TestHyperLinkAPIPermissions(
         self.assert_response_api(url, bad_users, 403)
         self.assert_response_api(url, self.anonymous, 401)
         self.assert_response_api(url, good_users, 200, knox=True)
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(url, self.user_no_roles, 200)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_retrieve_anon(self):
+        """Test permissions for hyperlink retrieval with anonymous access"""
+        url = reverse(
+            'filesfolders:api_hyperlink_retrieve_update_destroy',
+            kwargs={'hyperlink': self.hyperlink.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(url, self.anonymous, 200)
 
     def test_hyperlink_update_put(self):
         """Test permissions for hyperlink updating with PUT"""
@@ -699,6 +992,29 @@ class TestHyperLinkAPIPermissions(
         self.assert_response_api(
             url, good_users, 200, method='PUT', data=request_data, knox=True
         )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='PUT', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_update_put_anon(self):
+        """Test permissions for hyperlink updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_hyperlink_retrieve_update_destroy',
+            kwargs={'hyperlink': self.hyperlink.sodar_uuid},
+        )
+        request_data = {
+            'name': 'UPDATED HyperLink',
+            'flag': 'FLAG',
+            'description': 'UPDATED Description',
+            'url': 'http://www.bihealth.org',
+        }
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PUT', data=request_data
+        )
 
     def test_hyperlink_update_patch(self):
         """Test permissions for hyperlink updating with PATCH"""
@@ -728,6 +1044,24 @@ class TestHyperLinkAPIPermissions(
         )
         self.assert_response_api(
             url, good_users, 200, method='PATCH', data=request_data, knox=True
+        )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.user_no_roles, 403, method='PATCH', data=request_data
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_update_patch_anon(self):
+        """Test permissions for hyperlink updating with anonymous access"""
+        url = reverse(
+            'filesfolders:api_hyperlink_retrieve_update_destroy',
+            kwargs={'hyperlink': self.hyperlink.sodar_uuid},
+        )
+        request_data = {'name': 'UPDATED Hyperlink'}
+        self.project.set_public()
+        self.assert_response_api(
+            url, self.anonymous, 401, method='PATCH', data=request_data
         )
 
     def test_hyperlink_destroy(self):
@@ -777,4 +1111,28 @@ class TestHyperLinkAPIPermissions(
             method='DELETE',
             cleanup_method=_make_hyperlink,
             knox=True,
+        )
+        # Test public project
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.user_no_roles,
+            403,
+            method='DELETE',
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_destroy_anon(self):
+        """Test permissions for hyperlink destroying with anonymous access"""
+        obj_uuid = uuid.uuid4()
+        url = reverse(
+            'filesfolders:api_hyperlink_retrieve_update_destroy',
+            kwargs={'hyperlink': obj_uuid},
+        )
+        self.project.set_public()
+        self.assert_response_api(
+            url,
+            self.anonymous,
+            401,
+            method='DELETE',
         )

@@ -351,6 +351,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'parent',
             'description',
             'readme',
+            'public_guest_access',
             'submit_status',
             'owner',
             'roles',

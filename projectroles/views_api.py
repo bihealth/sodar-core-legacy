@@ -77,21 +77,11 @@ CORE_API_MEDIA_TYPE = 'application/vnd.bihealth.sodar-core+json'
 CORE_API_DEFAULT_VERSION = re.match(
     r'^([0-9.]+)(?:[+|\-][\S]+)?$', core_version
 )[1]
-CORE_API_ALLOWED_VERSIONS = [
-    '0.7.2',
-    '0.8.0',
-    '0.8.1',
-    '0.8.2',
-    '0.8.3',
-    '0.8.4',
-    '0.9.0',
-    '0.9.1',
-]
+CORE_API_ALLOWED_VERSIONS = ['0.9.1', '1.0.0']
 
 
 # Access Django user model
 User = auth.get_user_model()
-
 
 # App Settings
 app_settings = AppSettingAPI()
@@ -119,7 +109,14 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         """
         project = self.get_project(request=request, kwargs=view.kwargs)
 
-        if not project or not request.user or not request.user.is_authenticated:
+        if (
+            not project
+            or not request.user
+            or (
+                request.user.is_anonymous
+                and not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
+            )
+        ):
             return False
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
@@ -381,6 +378,7 @@ class ProjectRetrieveAPIView(
     - ``description``: Project description (string)
     - ``parent``: Parent category UUID (string or null)
     - ``readme``: Project readme (string, supports markdown)
+    - ``public_guest_access``: Guest access for all users (boolean)
     - ``roles``: Project role assignments (dict, assignment UUID as key)
     - ``sodar_uuid``: Project UUID (string)
     - ``submit_status``: Project creation status (string)
@@ -407,6 +405,7 @@ class ProjectCreateAPIView(ProjectAccessMixin, CreateAPIView):
     - ``parent``: Parent category UUID (string)
     - ``description``: Projcet description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
+    - ``public_guest_access``: Guest access for all users (boolean)
     - ``owner``: User UUID of the project owner (string)
     """
 
@@ -439,6 +438,7 @@ class ProjectUpdateAPIView(
     - ``parent``: Parent category UUID (string)
     - ``description``: Projcet description (string, optional)
     - ``readme``: Project readme (string, optional, supports markdown)
+    - ``public_guest_access``: Guest access for all users (boolean)
     - ``owner``: User UUID of the project owner (string)
     """
 

@@ -91,12 +91,13 @@ Under ``DATABASES``, the setting below is recommended:
 Templates
 =========
 
-Under ``TEMPLATES['OPTIONS']['context_processors']``, add the projectroles URLs
-processor:
+Under ``TEMPLATES['OPTIONS']['context_processors']``, add the required
+projectroles processors:
 
 .. code-block:: python
 
     'projectroles.context_processors.urls_processor',
+    'projectroles.context_processors.site_app_processor',
 
 
 Email
@@ -250,6 +251,8 @@ The following projectroles settings are **optional**:
   *without* user authentication in order to e.g. demonstrate features in a
   kiosk-style deployment. Also hides and/or disables views not intended to be
   used in this mode (bool)
+* ``PROJECTROLES_ALLOW_ANONYMOUS``: If true, allow anonymous users to access the
+  site and all projects where ``public_guest_access`` is set true (bool)
 
 Example:
 

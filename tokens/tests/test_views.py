@@ -1,11 +1,14 @@
+"""View tests for the tokens app"""
+
+from knox.models import AuthToken
+
 from test_plus.test import TestCase
 
 from django.urls import reverse
-from knox.models import AuthToken
 
 
-class UserTokenListViewTest(TestCase):
-    """Test the UserTokenListView"""
+class TestUserTokenListView(TestCase):
+    """Tests for UserTokenListView"""
 
     def setUp(self):
         self.user = self.make_user()
@@ -13,14 +16,14 @@ class UserTokenListViewTest(TestCase):
     def make_token(self):
         self.tokens = [AuthToken.objects.create(self.user, None)]
 
-    def testListEmpty(self):
+    def test_list_empty(self):
         """Test that rendering the list view without any tokens works"""
         with self.login(self.user):
             response = self.get('tokens:list')
         self.response_200(response)
         self.assertEqual(len(response.context["object_list"]), 0)
 
-    def testListOne(self):
+    def test_list_one(self):
         """Test that rendering the list view with one token works"""
         self.make_token()
         with self.login(self.user):
@@ -29,20 +32,20 @@ class UserTokenListViewTest(TestCase):
         self.assertEqual(len(response.context["object_list"]), 1)
 
 
-class UserTokenCreateViewTest(TestCase):
-    """Test the UserTokenCreateView"""
+class TestUserTokenCreateView(TestCase):
+    """Tests for UserTokenCreateView"""
 
     def setUp(self):
         self.user = self.make_user()
 
-    def testGet(self):
+    def test_get(self):
         """Test that showing the creation form works"""
         with self.login(self.user):
             response = self.get('tokens:create')
         self.response_200(response)
         self.assertIsNotNone(response.context["form"])
 
-    def testPostSuccessNoTtl(self):
+    def test_post_success_no_ttl(self):
         """Test creating an authentication token with TTL=0 works"""
         self.assertEqual(AuthToken.objects.count(), 0)
         with self.login(self.user):
@@ -50,7 +53,7 @@ class UserTokenCreateViewTest(TestCase):
         self.response_200(response)
         self.assertEqual(AuthToken.objects.count(), 1)
 
-    def testPostSuccessWithTtl(self):
+    def test_post_success_with_ttl(self):
         """Test creating an authentication token with TTL != 0 works"""
         self.assertEqual(AuthToken.objects.count(), 0)
         with self.login(self.user):
@@ -59,21 +62,21 @@ class UserTokenCreateViewTest(TestCase):
         self.assertEqual(AuthToken.objects.count(), 1)
 
 
-class UserTokenDeleteViewTest(TestCase):
-    """Test the UserTokenDeleteView"""
+class TestUserTokenDeleteView(TestCase):
+    """Tests for UserTokenDeleteView"""
 
     def setUp(self):
         self.user = self.make_user()
         AuthToken.objects.create(user=self.user)
         self.token = AuthToken.objects.first()
 
-    def testGet(self):
+    def test_get(self):
         """Test that showing the deletion form works"""
         with self.login(self.user):
             response = self.get('tokens:delete', pk=self.token.pk)
         self.response_200(response)
 
-    def testPostSuccess(self):
+    def test_post_success(self):
         """Test that deleting a token works"""
         self.assertEqual(AuthToken.objects.count(), 1)
         with self.login(self.user):

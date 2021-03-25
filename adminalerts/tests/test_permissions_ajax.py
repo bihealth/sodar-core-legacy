@@ -1,5 +1,6 @@
 """Tests for Ajax view permissions in the adminalerts app"""
 
+from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -41,3 +42,12 @@ class TestAdminAlertPermissions(AdminAlertMixin, TestPermissionBase):
         bad_users = [self.anonymous, self.regular_user]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_active_toggle_anon(self):
+        """Test permissions for AdminAlert activation API view with anonymous access"""
+        url = reverse(
+            'adminalerts:ajax_active_toggle',
+            kwargs={'adminalert': self.alert.sodar_uuid},
+        )
+        self.assert_response(url, self.anonymous, 403, method='POST')

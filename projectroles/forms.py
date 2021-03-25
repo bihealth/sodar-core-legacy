@@ -229,7 +229,15 @@ class ProjectForm(SODARModelForm):
 
     class Meta:
         model = Project
-        fields = ['title', 'type', 'parent', 'owner', 'description', 'readme']
+        fields = [
+            'title',
+            'type',
+            'parent',
+            'owner',
+            'description',
+            'readme',
+            'public_guest_access',
+        ]
 
     def _get_parent_choices(self, instance, user):
         """

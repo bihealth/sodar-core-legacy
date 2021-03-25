@@ -1,13 +1,13 @@
 """UI views for the timeline Django app"""
 
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import ListView
 
 # Projectroles dependency
 from projectroles.models import Project
 from projectroles.utils import get_display_name
 from projectroles.views import (
+    LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,

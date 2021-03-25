@@ -74,6 +74,10 @@ class ProjectStarringAjaxView(SODARBaseProjectAjaxView):
     permission_required = 'projectroles.view_project'
 
     def post(self, request, *args, **kwargs):
+        # HACK: Manually refuse access to anonymous as this view is an exception
+        if request.user.is_anonymous:
+            return Response({'detail': 'Anonymous access denied'}, status=401)
+
         project = self.get_project()
         user = request.user
         timeline = get_backend_api('timeline_backend')

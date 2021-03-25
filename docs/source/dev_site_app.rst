@@ -48,6 +48,17 @@ use project predicates in this one. Example:
     # Allow viewing data
     rules.add_perm('{APP_NAME}.view_data', rules.is_authenticated)
 
+If you allow anonymous users on your site and want to enable anonymous access to
+your site app, use the ``is_allowed_anonymous`` predicate:
+
+.. code-block:: python
+
+    from projectroles import rules as pr_rules
+    rules.add_perm(
+        '{APP_NAME}.view_data',
+        rules.is_authenticated | pr_rules.is_allowed_anonymous
+    )
+
 
 SiteAppPlugin
 =============

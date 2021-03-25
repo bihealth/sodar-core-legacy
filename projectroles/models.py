@@ -120,6 +120,13 @@ class Project(models.Model):
         help_text='Project README (optional, supports markdown)',
     )
 
+    #: Public guest access
+    public_guest_access = models.BooleanField(
+        default=False,
+        help_text='Allow public guest access for the project, also including '
+        'unauthenticated users if allowed on the site',
+    )
+
     #: Status of project creation
     submit_status = models.CharField(
         max_length=64,
@@ -229,6 +236,16 @@ class Project(models.Model):
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
 
+    # TODO: Add tests
+    def has_public_children(self):
+        """
+        Return True if the project has any children with public guest access.
+        """
+        for child in self.get_children():
+            if child.public_guest_access:
+                return True
+            child.has_public_children()
+
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
         ret = 0
@@ -279,20 +296,34 @@ class Project(models.Model):
         Return True if user is owner in this project or inherits ownership from
         a parent category.
         """
-        return True if user in [a.user for a in self.get_owners()] else False
+        if user.is_authenticated and user in [
+            a.user for a in self.get_owners()
+        ]:
+            return True
+        return False
 
     def is_delegate(self, user):
         """
         Return True if user is delegate in this project.
         """
-        return True if user in [a.user for a in self.get_delegates()] else False
+        if (
+            user
+            and user.is_authenticated
+            and user in [a.user for a in self.get_delegates()]
+        ):
+            return True
+        return False
 
     def is_owner_or_delegate(self, user):
         """
         Return True if user is either an owner or a delegate in this project.
         Includes inherited owner relationships.
         """
-        return self.is_owner(user) or self.is_delegate(user)
+        return (
+            user
+            and user.is_authenticated
+            and (self.is_owner(user) or self.is_delegate(user))
+        )
 
     def get_delegates(self, exclude_inherited=False):
         """Return RoleAssignments for delegates"""
@@ -329,15 +360,22 @@ class Project(models.Model):
     def has_role(self, user, include_children=False):
         """
         Return whether user has roles in Project. If include_children is
-        True, return True if user has roles in ANY child project. Also return
-        True if user inherits owner permissions from a parent category.
+        True, return True if user has roles in ANY child project. Returns
+        True if user inherits owner permissions from a parent category, or if
+        public access is allowed for the project.
         """
-        if self.is_owner(user) or self.roles.filter(user=user).count() > 0:
+        if (
+            self.public_guest_access
+            or self.is_owner(user)
+            or self.roles.filter(user=user).count() > 0
+        ):
             return True
+
         if include_children:
             for child in self.children.all():
                 if child.has_role(user, include_children=True):
                     return True
+
         return False
 
     def get_parents(self):
@@ -384,8 +422,10 @@ class Project(models.Model):
         return None
 
     def is_remote(self):
-        """Return True if current project has been retrieved from a remote
-        SODAR site"""
+        """
+        Return True if current project has been retrieved from a remote
+        SODAR site.
+        """
         if (
             settings.PROJECTROLES_SITE_MODE
             == SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -408,6 +448,11 @@ class Project(models.Model):
             ):
                 return True
         return False
+
+    def set_public(self, public=True):
+        """Helper for setting value of public_guest_access"""
+        self.public_guest_access = public
+        self.save()
 
 
 # Role -------------------------------------------------------------------------

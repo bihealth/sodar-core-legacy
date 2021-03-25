@@ -28,17 +28,18 @@ PROJECTROLES_APP_SETTINGS = {
     #:
     #: Example ::
     #:
-    #:         'example_setting': {
-    #:             'scope': 'PROJECT',  # PROJECT/USER
-    #:             'type': 'STRING',  # STRING/INTEGER/BOOLEAN
-    #:             'default': 'example',
-    #:             'label': 'Project setting',  # Optional, defaults to name/key
-    #:             'placeholder': 'Enter example setting here',  # Optional
-    #:             'description': 'Example project setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
-    #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Allow editing in target site forms if True
-    #:         }
+    #:     'example_setting': {
+    #:         'scope': 'PROJECT',  # PROJECT/USER
+    #:         'type': 'STRING',  # STRING/INTEGER/BOOLEAN
+    #:         'default': 'example',
+    #:         'label': 'Project setting',  # Optional, defaults to name/key
+    #:         'placeholder': 'Enter example setting here',  # Optional
+    #:         'description': 'Example project setting',  # Optional
+    #:         'options': ['example', 'example2'],  # Optional, only for
+    #:                    settings of type STRING or INTEGER
+    #:         'user_modifiable': True,  # Optional, show/hide in forms
+    #:         'local': False,  # Allow editing in target site forms if True
+    #:     }
     'ip_restrict': {
         'scope': 'PROJECT',
         'type': 'BOOLEAN',
@@ -286,21 +287,18 @@ class AppSettingAPI:
         :return: String or None
         :raise: KeyError if nothing is found with setting_name
         """
-        try:
-            val = AppSetting.objects.get_setting_value(
-                app_name, setting_name, project=project, user=user
-            )
-
-        except AppSetting.DoesNotExist:
+        if not user or user.is_authenticated:
+            try:
+                val = AppSetting.objects.get_setting_value(
+                    app_name, setting_name, project=project, user=user
+                )
+            except AppSetting.DoesNotExist:
+                val = cls.get_default_setting(app_name, setting_name, post_safe)
+        else:  # Anonymous user
             val = cls.get_default_setting(app_name, setting_name, post_safe)
-
         # Handle post_safe for dict values (JSON)
-        if post_safe and isinstance(
-            val,
-            (dict, list),
-        ):
+        if post_safe and isinstance(val, (dict, list)):
             return json.dumps(val)
-
         return val
 
     @classmethod

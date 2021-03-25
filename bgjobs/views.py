@@ -1,18 +1,19 @@
 from django.conf import settings
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.shortcuts import redirect
 from django.urls import reverse
 from django.views.generic import TemplateView, ListView
 
+from bgjobs.models import BackgroundJob
+
+# Projectroles dependency
 from projectroles.views import (
+    LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectContextMixin,
     ProjectPermissionMixin,
 )
 from projectroles.plugins import get_backend_api
-
-from .models import BackgroundJob
 
 
 # Local variables

@@ -295,12 +295,16 @@ your view classes to add projectroles functionality. These can be found in the
 
 The most commonly used mixins:
 
+- ``LoginRequiredMixin``: Override of the standard Django mixin
+  which may also allow anonymous guests if so configured in SODAR Core. If you
+  plan on supporting anonymous users on your site, you **must** use this
+  mixing instead of the original one in Django.
 - ``LoggedInPermissionMixin``: Ensure correct redirection of users on no
-  permissions
+  permissions.
 - ``ProjectPermissionMixin``: Provides a ``Project`` object for permission
-  checking based on URL kwargs
+  checking based on URL kwargs.
 - ``ProjectContextMixin``: Provides a ``Project`` object into the view context
-  based on URL kwargs
+  based on URL kwargs.
 
 See ``example_project_app.views.ExampleView`` for an example.
 

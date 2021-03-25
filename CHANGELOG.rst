@@ -16,6 +16,16 @@ Added
 - **Projectroles**
     - ``geticons`` management command for retrieving Iconify icons (#54)
     - ``spin`` class in ``projectroles.css`` for spinning icon support (#54)
+    - Optional public guest access for projects (#574)
+    - ``public_guest_access`` and ``set_public()`` in ``Project`` model (#574)
+    - Enable allowing anonymous access to site (#574)
+    - ``PROJECTROLES_ALLOW_ANONYMOUS`` site setting (#574)
+    - ``is_allowed_anonymous`` predicate in ``rules`` (#574)
+    - ``site_app_processor`` in ``context_processors`` (#574)
+- **Timeline**
+    - Permission tests (#144)
+- **Tokens**
+    - Permission tests
 
 Changed
 -------
@@ -27,10 +37,13 @@ Changed
     - Use Material Design Icons as default icon set (#54)
     - Bump minimum Python version requirement to v3.7 (#121)
     - Upgraded versioneer (#656)
+    - Update views, mixins and tags for anonymous user access (#574)
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
 - **Timeline**
     - Make ``ProjectEvent.user`` field optional (#119)
+- **Tokens**
+    - Refactor view tests
 
 Fixed
 -----
@@ -48,6 +61,8 @@ Removed
 
 - **General**
     - Font Awesome support without Iconify (#54)
+- **Projectroles**
+    - ``get_site_app()`` template tag (#574)
 
 
 v0.9.1 (2021-03-05)

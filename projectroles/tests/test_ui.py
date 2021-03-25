@@ -269,30 +269,24 @@ class TestUIBase(
             user_button = self.selenium.find_element_by_id(
                 'sodar-navbar-user-dropdown'
             )
-
             user_button.click()
-
             # Wait for element to be visible
             WebDriverWait(self.selenium, self.wait_time).until(
                 ec.presence_of_element_located(
-                    (By.ID, 'sodar-navbar-link-logout')
+                    (By.ID, 'sodar-navbar-user-legend')
                 )
             )
-
             try:
                 signout_button = self.selenium.find_element_by_id(
                     'sodar-navbar-link-logout'
                 )
                 signout_button.click()
-
                 # Wait for redirect
                 WebDriverWait(self.selenium, self.wait_time).until(
                     ec.presence_of_element_located((By.ID, 'sodar-form-login'))
                 )
-
             except NoSuchElementException:
                 pass
-
         except NoSuchElementException:
             pass
 
@@ -301,19 +295,15 @@ class TestUIBase(
         ########
 
         self.selenium.get(self.build_selenium_url(url))
-
         # Submit user data into form
         field_user = self.selenium.find_element_by_id('sodar-login-username')
         # field_user.send_keys(user.username)
         field_user.send_keys(user.username)
-
         field_pass = self.selenium.find_element_by_id('sodar-login-password')
         field_pass.send_keys('password')
-
         self.selenium.find_element_by_xpath(
-            '//button[contains(., "Log In")]'
+            '//button[contains(., "Login")]'
         ).click()
-
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(

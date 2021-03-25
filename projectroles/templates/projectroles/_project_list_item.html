@@ -53,8 +53,7 @@
     {% endif %}
   {% endfor %}
   <td>
-    {% autoescape off %}
-      {% get_user_role_html p request.user %}
-    {% endautoescape %}
+    {% get_user_role_html p request.user as user_role_html %}
+    {{ user_role_html | safe }}
   </td>
 </tr>
