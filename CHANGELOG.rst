@@ -40,6 +40,7 @@ Changed
     - Update views, mixins and tags for anonymous user access (#574)
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
+    - Always show Django admin warning (#677)
 - **Timeline**
     - Make ``ProjectEvent.user`` field optional (#119)
 - **Tokens**

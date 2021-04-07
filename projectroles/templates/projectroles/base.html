@@ -102,8 +102,7 @@
   <script type="text/javascript" src="{% static 'projectroles/js/projectroles.js' %}"></script>
 
   {# Django admin link warning #}
-  {% check_backend 'taskflow' as taskflow_enabled %}
-  {% if request.user.is_superuser and taskflow_enabled %}
+  {% if request.user.is_superuser %}
     {% get_admin_warning as admin_warning %}
     <script type="text/javascript">
         $(document).ready(function() {

@@ -396,10 +396,9 @@ def get_sidebar_app_legend(title):
 def get_admin_warning():
     """Return Django admin warning HTML"""
     ret = (
-        '<p class="text-danger">SODAR Taskflow is '
-        'enabled. Modifications made in the Django admin view '
-        'are <strong>not</strong> automatically mirrored in '
-        'remote systems managed by SODAR Taskflow.</p>'
+        '<p class="text-danger">Editing database objects other than users '
+        'directly in the Django admin view is <strong>not</strong> '
+        'recommended!</p>'
     )
     ret += (
         '<p class="text-danger">Actions taken in the admin view may '

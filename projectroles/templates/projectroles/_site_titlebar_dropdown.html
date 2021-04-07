@@ -86,20 +86,12 @@
 
     {# Admin link #}
     {% if request.user.is_superuser %}
-      {% check_backend 'taskflow' as taskflow_enabled %}
-      {% if taskflow_enabled %}
-        <a class="dropdown-item"
-           href="#"
-           id="sodar-navbar-link-admin-warning"
-           data-toggle="modal" data-target="#sodar-modal">
-          <i class="iconify" data-icon="mdi:cogs"></i> Django Admin
-        </a>
-      {% else %}
-        <a class="dropdown-item" href="{% url 'admin:index' %}"
-           id="sodar-navbar-link-admin" target="_blank">
-          <i class="iconify" data-icon="mdi:cogs"></i> Django Admin
-        </a>
-      {% endif %}
+      <a class="dropdown-item"
+         href="#"
+         id="sodar-navbar-link-admin-warning"
+         data-toggle="modal" data-target="#sodar-modal">
+        <i class="iconify" data-icon="mdi:cogs"></i> Django Admin
+      </a>
       <div class="dropdown-divider"></div>
     {% endif %}
 
