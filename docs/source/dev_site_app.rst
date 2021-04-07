@@ -95,8 +95,12 @@ Implementing the following is **optional**:
 
 - ``app_settings``: Implement if project or user specific settings for the app
   are needed. See the plugin point definition for an example.
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_messages()``: Implement if your site app needs to display site-wide
   messages for users.
+- ``get_statistics()``: Return statistics for the siteinfo app. See details in
+  :ref:`the siteinfo documentation <app_siteinfo>`.
 
 
 Views

@@ -55,6 +55,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Display application for categories in addition to projects
     category_enable = True
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['TIMELINE_PAGINATION']
+
     def get_statistics(self):
         return {
             'event_count': {

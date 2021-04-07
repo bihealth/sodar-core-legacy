@@ -70,6 +70,8 @@ Implementing the following is **optional**:
 
 - ``javascript_url``: Path to on demand includeable Javascript file
 - ``css_url``: Path to on demand includeable CSS file
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
 

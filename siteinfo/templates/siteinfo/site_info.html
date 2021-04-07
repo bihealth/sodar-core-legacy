@@ -2,7 +2,7 @@
 
 {% load projectroles_common_tags %}
 
-{% block title %}Site Info{% endblock %}
+{% block title %}Site Info{% endblock title %}
 
 {% block projectroles %}
 <div class="row sodar-subtitle-container">
@@ -18,151 +18,214 @@
       ({{ site_subtitle }})
     {% endif %}
   </h2>
+    <div class="ml-auto">
+    <nav>
+    <div class="nav nav-pills" id="nav-tab" role="tablist">
+      <a class="nav-link active" id="nav-tab-general" data-toggle="tab"
+         href="#nav-general" role="tab">
+        <i class="iconify" data-icon="mdi:information"></i>
+        General
+      </a>
+      <a class="nav-link" id="nav-tab-apps" data-toggle="tab"
+         href="#nav-apps" role="tab">
+        <i class="iconify" data-icon="mdi:application"></i>
+        Apps
+      </a>
+      <a class="nav-link" id="nav-tab-settings" data-toggle="tab"
+         href="#nav-settings" role="tab">
+        <i class="iconify" data-icon="mdi:tune"></i>
+        Settings
+      </a>
+    </div>
+  </nav>
+    </div>
 </div>
 
 <div class="container-fluid sodar-page-container">
-
-  {# Project Statistics #}
-  <div class="card" id="sodar-si-project-stats-card">
-    <div class="card-header">
-      <h4>
-        <i class="iconify" data-icon="mdi:rhombus-split"></i>
-        Project Statistics
-      </h4>
+  <div class="tab-content" id="nav-tabContent">
+    {# General #}
+    <div class="tab-pane active" id="nav-general" role="tabpanel">
+      <h3 class="mb-4">
+        <i class="iconify" data-icon="mdi:information"></i> General
+      </h3>
+      {# Project Statistics #}
+      <div class="card" id="sodar-si-project-stats-card">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:rhombus-split"></i>
+            Project Statistics
+          </h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-md-3">Projects</dt>
+            <dd class="col-md-9">{{ project_count }}</dd>
+            <dt class="col-md-3">Categories</dt>
+            <dd class="col-md-9">{{ category_count }}</dd>
+          </dl>
+        </div>
+      </div>
+      {# User Statistics #}
+      <div class="card" id="sodar-si-user-stats-card">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:account-group"></i>
+            User Statistics
+          </h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-md-3">Total Users</dt>
+            <dd class="col-md-9">{{ user_total_count }}</dd>
+            <dt class="col-md-3"> LDAP Users</dt>
+            <dd class="col-md-9">{{ user_ldap_count }}</dd>
+            <dt class="col-md-3"> Local/System Users</dt>
+            <dd class="col-md-9">{{ user_local_count }}</dd>
+            <dt class="col-md-3"> Administrators</dt>
+            <dd class="col-md-9">{{ user_admin_count }}</dd>
+          </dl>
+        </div>
+      </div>
+      {# Project App Statistics #}
+      {% for plugin, pl_data in project_plugins.items %}
+        {% include 'siteinfo/_app_stats.html' %}
+      {% endfor %}
+      {# Site app Statistics #}
+      {% for plugin, pl_data in site_plugins.items %}
+        {% include 'siteinfo/_app_stats.html' %}
+      {% endfor %}
+      {# Backend Statistics #}
+      {% for plugin, pl_data in backend_plugins.items %}
+        {% include 'siteinfo/_app_stats.html' %}
+      {% endfor %}
+      {# Basic Site Info #}
+      <div class="card" id="sodar-si-basic-card">
+        <div class="card-header">
+          <h4><i class="iconify" data-icon="mdi:information"></i> Basic Info</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-md-3">Site Title</dt>
+            <dd class="col-md-9">{{ site_title }}</dd>
+            <dt class="col-md-3">Site Subtitle</dt>
+            <dd class="col-md-9">{{ site_subtitle }}</dd>
+            <dt class="col-md-3">Site Instance</dt>
+            <dd class="col-md-9">{{ site_instance_title }}</dd>
+            <dt class="col-md-3">Site Version</dt>
+            <dd class="col-md-9">{% site_version %}</dd>
+            <dt class="col-md-3">SODAR Core Version</dt>
+            <dd class="col-md-9">{% core_version %}</dd>
+          </dl>
+        </div>
+      </div>
+      {# Remote Site Info #}
+      <div class="card" id="sodar-si-remote-card">
+        <div class="card-header">
+          <h4><i class="iconify" data-icon="mdi:earth"></i> Remote Site Info</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            <dt class="col-md-3">Site Mode</dt>
+            <dd class="col-md-9">{{ site_mode }}</dd>
+            {% if site_mode == 'SOURCE' %}
+              <dt class="col-md-3">Target Sites</dt>
+              <dd class="col-md-9"><a href="{% url 'projectroles:remote_sites' %}">{{ site_target_count }}</a></dd>
+            {% endif %}
+          </dl>
+        </div>
+      </div>
     </div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-md-3">Projects</dt>
-        <dd class="col-md-9">{{ project_count }}</dd>
-        <dt class="col-md-3">Categories</dt>
-        <dd class="col-md-9">{{ category_count }}</dd>
-      </dl>
+    {# Apps #}
+    <div class="tab-pane" id="nav-apps" role="tabpanel">
+      <h3 class="mb-4">
+        <i class="iconify" data-icon="mdi:application"></i> Apps
+      </h3>
+      {# Enabled Project Apps #}
+      <div class="card" id="sodar-si-project-apps-card">
+        <div class="card-header">
+          <h4><i class="iconify" data-icon="mdi:cube"></i> Project Apps</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            {% for plugin in project_plugins.keys %}
+            <dt class="col-md-3">
+              <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+              {{ plugin.title }}
+            </dt>
+            <dd class="col-md-9">{{ plugin.description }}</dd>
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+      {# Enabled Site Apps #}
+      <div class="card" id="sodar-si-site-apps-card">
+        <div class="card-header">
+          <h4><i class="iconify" data-icon="mdi:sitemap"></i> Site Apps</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            {% for plugin in site_plugins %}
+            <dt class="col-md-3">
+              <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+              {{ plugin.title }}
+            </dt>
+            <dd class="col-md-9">{{ plugin.description }}</dd>
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+      {# Enabled Backend Apps #}
+      <div class="card" id="sodar-si-site-apps-card">
+        <div class="card-header">
+          <h4><i class="iconify" data-icon="mdi:server"></i> Backend Apps</h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            {% for plugin in backend_plugins.keys %}
+            <dt class="col-md-3">
+              <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+              {{ plugin.title }}
+            </dt>
+            <dd class="col-md-9">{{ plugin.description }}</dd>
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+    </div>
+    {# Settings #}
+    <div class="tab-pane" id="nav-settings" role="tabpanel">
+      <h3 class="mb-4">
+        <i class="iconify" data-icon="mdi:tune"></i> Settings
+      </h3>
+      {# Core settings #}
+      <div class="card" id="sodar-si-settings-card-core">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:information"></i>
+            SODAR Core Settings
+          </h4>
+        </div>
+        <div class="card-body">
+          <dl class="row">
+            {% for k, v in settings_core.items %}
+              {% include 'siteinfo/_settings_item.html' %}
+            {% endfor %}
+          </dl>
+        </div>
+      </div>
+      {# Project app settings #}
+      {% for plugin, pl_data in project_plugins.items %}
+        {% include 'siteinfo/_plugin_settings.html' %}
+      {% endfor %}
+      {# Site app settings #}
+      {% for plugin, pl_data in site_plugins.items %}
+        {% include 'siteinfo/_plugin_settings.html' %}
+      {% endfor %}
+      {# Backend plugin settings #}
+      {% for plugin, pl_data in backend_plugins.items %}
+        {% include 'siteinfo/_plugin_settings.html' %}
+      {% endfor %}
     </div>
   </div>
-
-  {# User Statistics #}
-  <div class="card" id="sodar-si-user-stats-card">
-    <div class="card-header">
-      <h4>
-        <i class="iconify" data-icon="mdi:account-group"></i>
-        User Statistics
-      </h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-md-3">Total Users</dt>
-        <dd class="col-md-9">{{ user_total_count }}</dd>
-        <dt class="col-md-3"> LDAP Users</dt>
-        <dd class="col-md-9">{{ user_ldap_count }}</dd>
-        <dt class="col-md-3"> Local/System Users</dt>
-        <dd class="col-md-9">{{ user_local_count }}</dd>
-        <dt class="col-md-3"> Administrators</dt>
-        <dd class="col-md-9">{{ user_admin_count }}</dd>
-      </dl>
-    </div>
-  </div>
-
-  {# Project App Statistics #}
-  {% for plugin, pl_data in project_plugins.items %}
-    {% include 'siteinfo/_app_stats.html' %}
-  {% endfor %}
-
-  {# Backend Statistics #}
-  {% for plugin, pl_data in backend_plugins.items %}
-    {% include 'siteinfo/_app_stats.html' %}
-  {% endfor %}
-
-  {# Basic Site Info #}
-  <div class="card" id="sodar-si-basic-card">
-    <div class="card-header">
-      <h4><i class="iconify" data-icon="mdi:information"></i> Basic Info</h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-md-3">Site Title</dt>
-        <dd class="col-md-9">{{ site_title }}</dd>
-        <dt class="col-md-3">Site Subtitle</dt>
-        <dd class="col-md-9">{{ site_subtitle }}</dd>
-        <dt class="col-md-3">Site Instance</dt>
-        <dd class="col-md-9">{{ site_instance_title }}</dd>
-        <dt class="col-md-3">Site Version</dt>
-        <dd class="col-md-9">{% site_version %}</dd>
-        <dt class="col-md-3">SODAR Core Version</dt>
-        <dd class="col-md-9">{% core_version %}</dd>
-      </dl>
-    </div>
-  </div>
-
-  {# Remote Site Info #}
-  <div class="card" id="sodar-si-remote-card">
-    <div class="card-header">
-      <h4><i class="iconify" data-icon="mdi:earth"></i> Remote Site Info</h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        <dt class="col-md-3">Site Mode</dt>
-        <dd class="col-md-9">{{ site_mode }}</dd>
-        {% if site_mode == 'SOURCE' %}
-          <dt class="col-md-3">Target Sites</dt>
-          <dd class="col-md-9"><a href="{% url 'projectroles:remote_sites' %}">{{ site_target_count }}</a></dd>
-        {% endif %}
-      </dl>
-    </div>
-  </div>
-
-  {# Enabled Project Apps #}
-  <div class="card" id="sodar-si-project-apps-card">
-    <div class="card-header">
-      <h4><i class="iconify" data-icon="mdi:cube"></i> Project Apps</h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        {% for plugin in project_plugins.keys %}
-        <dt class="col-md-3">
-          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
-          {{ plugin.title }}
-        </dt>
-        <dd class="col-md-9">{{ plugin.description }}</dd>
-        {% endfor %}
-      </dl>
-    </div>
-  </div>
-
-  {# Enabled Site Apps #}
-  <div class="card" id="sodar-si-site-apps-card">
-    <div class="card-header">
-      <h4><i class="iconify" data-icon="mdi:sitemap"></i> Site Apps</h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        {% for plugin in site_plugins %}
-        <dt class="col-md-3">
-          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
-          {{ plugin.title }}
-        </dt>
-        <dd class="col-md-9">{{ plugin.description }}</dd>
-        {% endfor %}
-      </dl>
-    </div>
-  </div>
-
-  {# Enabled Backend Apps #}
-  <div class="card" id="sodar-si-site-apps-card">
-    <div class="card-header">
-      <h4><i class="iconify" data-icon="mdi:server"></i> Backend Apps</h4>
-    </div>
-    <div class="card-body">
-      <dl class="row">
-        {% for plugin in backend_plugins.keys %}
-        <dt class="col-md-3">
-          <i class="iconify" data-icon="{{ plugin.icon }}"></i>
-          {{ plugin.title }}
-        </dt>
-        <dd class="col-md-9">{{ plugin.description }}</dd>
-        {% endfor %}
-      </dl>
-    </div>
-  </div>
-
 </div>
 {% endblock projectroles %}

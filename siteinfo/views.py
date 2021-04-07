@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import ParseResult
 
 from django.conf import settings
 from django.contrib import auth
@@ -17,10 +18,40 @@ SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
+# Local constants
+CORE_SETTINGS = [
+    'PROJECTROLES_ALLOW_ANONYMOUS',
+    'PROJECTROLES_ALLOW_LOCAL_USERS',
+    'PROJECTROLES_CUSTOM_JS_INCLUDES',
+    'PROJECTROLES_CUSTOM_CSS_INCLUDES',
+    'PROJECTROLES_DEFAULT_ADMIN',
+    'PROJECTROLES_DELEGATE_LIMIT',
+    'PROJECTROLES_DISABLE_CATEGORIES',
+    'PROJECTROLES_DISABLE_CDN_INCLUDES',
+    'PROJECTROLES_EMAIL_SENDER_REPLY',
+    'PROJECTROLES_ENABLE_SEARCH',
+    'PROJECTROLES_HELP_HIGHLIGHT_DAYS',
+    'PROJECTROLES_HIDE_APP_LINKS',
+    'PROJECTROLES_INLINE_HEAD_INCLUDE',
+    'PROJECTROLES_INVITE_EXPIRY_DAYS',
+    'PROJECTROLES_KIOSK_MODE',
+    'PROJECTROLES_SEARCH_PAGINATION',
+    'PROJECTROLES_SECRET_LENGTH',
+    'PROJECTROLES_SEND_EMAIL',
+    'PROJECTROLES_SITE_MODE',
+    'PROJECTROLES_TARGET_CREATE',
+    'SITE_TITLE',
+    'SITE_SUBTITLE',
+    'SITE_INSTANCE_TITLE',
+    'SODAR_API_ALLOWED_VERSIONS',
+    'SODAR_API_DEFAULT_VERSION',
+    'SODAR_API_DEFAULT_HOST',
+    'SODAR_API_MEDIA_TYPE',
+]
+
 
 # Access Django user model
 User = auth.get_user_model()
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +61,34 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
 
     permission_required = 'siteinfo.view_info'
     template_name = 'siteinfo/site_info.html'
+
+    @classmethod
+    def _get_settings(cls, keys):
+        ret = {}
+        for k in keys:
+            if hasattr(settings, k):
+                v = getattr(settings, k)
+                if isinstance(v, ParseResult):
+                    v = v.geturl()
+                ret[k] = {'value': v, 'set': True}
+            else:
+                ret[k] = {'set': False}
+        return ret
+
+    @classmethod
+    def _get_plugin_stats(cls, p_list):
+        ret = {}
+        for p in p_list:
+            try:
+                ret[p] = {'stats': p.get_statistics(), 'settings': {}}
+                if p.info_settings:
+                    ret[p]['settings'] = cls._get_settings(p.info_settings)
+            except Exception as ex:
+                ret[p] = {'error': str(ex)}
+                logger.error(
+                    'Exception in {}.get_statistics(): {}'.format(p.name, ex)
+                )
+        return ret
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -57,25 +116,12 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         # App plugins
         project_plugins = get_active_plugins('project_app')
         backend_plugins = get_active_plugins('backend')
-        context['site_plugins'] = get_active_plugins('site_app')
+        site_plugins = get_active_plugins('site_app')
 
         # Plugin statistics
-        def _get_plugin_stats(p_list):
-            p_stats = {}
-            for p in p_list:
-                try:
-                    p_stats[p] = {'stats': p.get_statistics()}
-                except Exception as ex:
-                    p_stats[p] = {'error': str(ex)}
-                    logger.error(
-                        'Exception in {}.get_statistics(): {}'.format(
-                            p.name, ex
-                        )
-                    )
-            return p_stats
-
-        context['project_plugins'] = _get_plugin_stats(project_plugins)
-        context['backend_plugins'] = _get_plugin_stats(backend_plugins)
+        context['project_plugins'] = self._get_plugin_stats(project_plugins)
+        context['site_plugins'] = self._get_plugin_stats(site_plugins)
+        context['backend_plugins'] = self._get_plugin_stats(backend_plugins)
 
         # Basic site info
         context['site_title'] = settings.SITE_TITLE
@@ -90,4 +136,7 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
                 mode=SITE_MODE_TARGET
             ).count()
 
+        # Core settings
+        context['settings_core'] = self._get_settings(CORE_SETTINGS)
+        # TODO: Add LDAP/SAML settings?
         return context

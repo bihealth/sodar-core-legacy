@@ -48,6 +48,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Position in plugin ordering
     plugin_ordering = 100
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['BGJOBS_PAGINATION']
+
 
 class BackgroundJobsPluginPoint(PluginPoint):
     """Definition of a plugin point for registering background job types with

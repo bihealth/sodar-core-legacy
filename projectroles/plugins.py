@@ -38,9 +38,11 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+    #:             'options': ['example', 'example2'],  # Optional, only for
+    #:             settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target site
+    #:             'local': False,  # Optional, show/hide in forms on target
+    #:             site
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
@@ -109,6 +111,10 @@ class ProjectAppPluginPoint(PluginPoint):
     #: Display application for categories in addition to projects
     # TODO: Override this in your app plugin if needed
     category_enable = False
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
 
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
@@ -245,6 +251,10 @@ class BackendPluginPoint(PluginPoint):
     # TODO: Implement this in your backend plugin if applicable
     css_url = None
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
+
     def get_api(self):
         """Return API entry point object."""
         # TODO: Implement this in your backend plugin
@@ -291,13 +301,29 @@ class SiteAppPluginPoint(PluginPoint):
     #:             'default': 'example',
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example user setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+    #:             'options': ['example', 'example2'],  # Optional, only for
+    #:             settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target site
+    #:             'local': False,  # Optional, show/hide in forms on target
+    #:             site
     #:         }
     #:     }
     # TODO: Define user specific settings in your app plugin, example above
     app_settings = {}
+
+    #: List of names for plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
+
+    def get_statistics(self):
+        """
+        Return app statistics as a dict. Should take the form of
+        {id: {label, value, url (optional), description (optional)}}.
+
+        :return: Dict
+        """
+        # TODO: Implement this in your app plugin
+        return {}
 
     def get_messages(self, user=None):
         """

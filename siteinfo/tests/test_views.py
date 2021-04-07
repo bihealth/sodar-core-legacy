@@ -32,3 +32,4 @@ class TestSiteInfoView(TestViewsBase):
             self.assertIsNotNone(response.context['project_plugins'])
             self.assertIsNotNone(response.context['site_plugins'])
             self.assertIsNotNone(response.context['backend_plugins'])
+            self.assertIsNotNone(response.context['settings_core'])

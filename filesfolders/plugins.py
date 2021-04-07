@@ -95,6 +95,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         },
     }
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = [
+        'FILESFOLDERS_LINK_BAD_REQUEST_MSG',
+        'FILESFOLDERS_MAX_ARCHIVE_SIZE',
+        'FILESFOLDERS_MAX_UPLOAD_SIZE',
+        'FILESFOLDERS_SERVE_AS_ATTACHMENT',
+        'FILESFOLDERS_SHOW_LIST_COLUMNS',
+    ]
+
     def get_taskflow_sync_data(self):
         """
         Return data for synchronizing taskflow operations.

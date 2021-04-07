@@ -213,6 +213,8 @@ Implementing the following is **optional**:
   categories. Defaults to ``False`` and should only be overridden when required.
   For an example of a project app enabled in categories, see
   :ref:`Timeline <app_timeline>`.
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_taskflow_sync_data()``: Applicable only if working with
   ``sodar_taskflow`` and iRODS
 - ``get_object_link()``: If Django models are associated with the app. Used e.g.

@@ -4,9 +4,8 @@ from django.utils import timezone
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
 
-
-from .models import AdminAlert
-from .urls import urlpatterns
+from adminalerts.models import AdminAlert
+from adminalerts.urls import urlpatterns
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -32,6 +31,17 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for displaying the app
     app_permission = 'adminalerts.create_alert'
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['ADMINALERTS_PAGINATION']
+
+    def get_statistics(self):
+        return {
+            'alert_count': {
+                'label': 'Alerts',
+                'value': AdminAlert.objects.all().count(),
+            }
+        }
 
     def get_messages(self, user=None):
         """

@@ -13,6 +13,8 @@ v1.0.0 (WIP)
 Added
 -----
 
+- **Adminalerts**
+    - ``get_statistics()`` implementation
 - **Projectroles**
     - ``geticons`` management command for retrieving Iconify icons (#54)
     - ``spin`` class in ``projectroles.css`` for spinning icon support (#54)
@@ -22,6 +24,10 @@ Added
     - ``PROJECTROLES_ALLOW_ANONYMOUS`` site setting (#574)
     - ``is_allowed_anonymous`` predicate in ``rules`` (#574)
     - ``site_app_processor`` in ``context_processors`` (#574)
+    - ``get_statistics()`` in ``SiteAppPluginPoint``
+    - ``info_settings`` in app plugins (#671)
+- **Siteinfo**
+    - Display selected Django settings in UI (#671)
 - **Timeline**
     - Permission tests (#144)
 - **Tokens**
@@ -41,6 +47,8 @@ Changed
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)
+- **Siteinfo**
+    - Tabbed layout in site info view
 - **Timeline**
     - Make ``ProjectEvent.user`` field optional (#119)
 - **Tokens**
