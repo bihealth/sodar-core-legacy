@@ -615,7 +615,7 @@ class TestRoleAssignment(ProjectMixin, RoleAssignmentMixin, TestCase):
             }
         ]
 
-        if settings.PROJECTROLES_DELEGATE_LIMIT != 1:
+        if getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1) != 1:
             assignment_d1 = self._make_assignment(
                 self.project_top, self.user_dan, self.role_delegate
             )

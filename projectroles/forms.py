@@ -765,7 +765,7 @@ class RoleAssignmentForm(SODARModelForm):
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
@@ -846,7 +846,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             raise forms.ValidationError('Selected role does not exist')
 
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
@@ -980,7 +980,7 @@ class ProjectInviteForm(SODARModelForm):
         # Delegate checks
         role = self.cleaned_data.get('role')
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to invite delegate
             if not self.current_user.has_perm(

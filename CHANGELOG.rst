@@ -55,6 +55,7 @@ Fixed
 - **Projectroles**
     - Description line spacing in project header (#632)
     - Pagedown widget breaking CSS layout in Firefox (#659)
+    - Crash by missing optional ``PROJECTROLES_DELEGATE_LIMIT`` setting (#676)
 
 Removed
 -------

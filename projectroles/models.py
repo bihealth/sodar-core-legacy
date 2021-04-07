@@ -589,7 +589,7 @@ class RoleAssignment(models.Model):
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
             if (
                 self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
                 and del_limit != 0
