@@ -235,12 +235,12 @@ def get_backend_include(backend_name, include_type='js'):
 
 
 @register.simple_tag
-def get_history_dropdown(project, obj):
+def get_history_dropdown(obj, project=None):
     """Return link to object timeline events within project"""
     timeline = get_backend_api('timeline_backend')
     if not timeline:
         return ''
-    url = timeline.get_object_url(project.sodar_uuid, obj)
+    url = timeline.get_object_url(obj, project)
     return (
         '<a class="dropdown-item" href="{}">\n'
         '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
@@ -320,7 +320,10 @@ def get_remote_icon(project, request):
 
 @register.simple_tag
 def get_visible_projects(projects, can_view_hidden_projects=False):
-    """Return all projects that are either visible by user display or by view hidden permission"""
+    """
+    Return all projects that are either visible by user display or by view
+    hidden permission.
+    """
     return [
         p for p in projects if p.site.user_display or can_view_hidden_projects
     ]

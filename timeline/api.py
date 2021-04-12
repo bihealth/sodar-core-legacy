@@ -49,7 +49,6 @@ class TimelineAPI:
     def _get_project_desc(ref_obj, request=None):
         """Get description HTML for special case: Project model"""
         project = Project.objects.filter(sodar_uuid=ref_obj.object_uuid).first()
-
         if (
             project
             and request
@@ -61,19 +60,16 @@ class TimelineAPI:
                 ),
                 TimelineAPI._get_label(project.title),
             )
-
         elif project:
             return '<span class="text-danger">{}</span>'.format(
                 TimelineAPI._get_label(project.title)
             )
-
         return ref_obj.name
 
     @staticmethod
     def _get_remote_site_desc(ref_obj, history_link, request=None):
         """Get description HTML for special case: RemoteSite model"""
         site = RemoteSite.objects.filter(sodar_uuid=ref_obj.object_uuid).first()
-
         if site and request and request.user.is_superuser:
             return '<a href="{}">{}</a> {}'.format(
                 reverse(
@@ -83,10 +79,8 @@ class TimelineAPI:
                 site.name,
                 history_link,
             )
-
         elif site:
             return site.name
-
         return TimelineAPI._get_not_found_label(ref_obj, history_link)
 
     # API functions ------------------------------------------------------------
@@ -107,7 +101,7 @@ class TimelineAPI:
         """
         Create and save a timeline event.
 
-        :param project: Project object
+        :param project: Project object or None
         :param app_name: ID string of app from which event was invoked (NOTE:
             should correspond to member "name" in app plugin!)
         :param user: User invoking the event or None
@@ -203,14 +197,15 @@ class TimelineAPI:
                 continue
 
             # Get history link
-            history_url = reverse(
-                'timeline:list_object',
-                kwargs={
-                    'project': event.project.sodar_uuid,
-                    'object_model': ref_obj.object_model,
-                    'object_uuid': ref_obj.object_uuid,
-                },
-            )
+            url_name = 'timeline:list_object_site'
+            url_kwargs = {
+                'object_model': ref_obj.object_model,
+                'object_uuid': ref_obj.object_uuid,
+            }
+            if event.project:
+                url_name = 'timeline:list_object'
+                url_kwargs['project'] = event.project.sodar_uuid
+            history_url = reverse(url_name, kwargs=url_kwargs)
             history_link = (
                 '<a href="{}" class="sodar-tl-object-link">'
                 '<i class="iconify" '
@@ -274,36 +269,37 @@ class TimelineAPI:
         return event.description.format(**refs)
 
     @staticmethod
-    def get_object_url(project_uuid, obj):
+    def get_object_url(obj, project=None):
         """
         Return the URL for a timeline event object history.
 
-        :param project_uuid: UUID of the related project
         :param obj: Django database object
+        :param project: Related Project object or None
         :return: String
         """
-        return reverse(
-            'timeline:list_object',
-            kwargs={
-                'project': project_uuid,
-                'object_model': obj.__class__.__name__,
-                'object_uuid': obj.sodar_uuid,
-            },
-        )
+        url_name = 'timeline:list_object_site'
+        url_kwargs = {
+            'object_model': obj.__class__.__name__,
+            'object_uuid': obj.sodar_uuid,
+        }
+        if project:
+            url_name = 'timeline:list_object'
+            url_kwargs['project'] = project.sodar_uuid
+        return reverse(url_name, kwargs=url_kwargs)
 
     @staticmethod
-    def get_object_link(project_uuid, obj):
+    def get_object_link(obj, project=None):
         """
         Return an inline HTML icon link for a timeline event object history.
 
-        :param project_uuid: UUID of the related project
         :param obj: Django database object
+        :param project: Related Project object or None
         :return: String (contains HTML)
         """
         return (
             '<a href="{}" class="sodar-tl-object-link">'
             '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i>'
-            '</a>'.format(TimelineAPI.get_object_url(project_uuid, obj))
+            '</a>'.format(TimelineAPI.get_object_url(obj, project))
         )
 
     @staticmethod

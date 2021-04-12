@@ -16,7 +16,7 @@
        href="{% url 'projectroles:role_delete' roleassignment=assignment_id %}">
       <i class="iconify" data-icon="mdi:account-remove"></i> Remove Member
     </a>
-    {% get_history_dropdown project=project obj=user as history_item %}
+    {% get_history_dropdown obj=user project=project as history_item %}
       {{ history_item|safe }}
   </div>
 </div>

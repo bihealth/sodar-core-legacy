@@ -21,8 +21,10 @@ Release Highlights
 - Project upgraded to Django v3.1
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
-- Allow Timeline evens without user
+- Site-wide timeline events
+- Timeline evens without user
 - Allow public guest access to projects for authenticated and anonymous users
+- Display Django settings in Site Info app
 
 Breaking Changes
 ================
@@ -196,6 +198,14 @@ This version adds public guest access support for projects. By setting
 For your views to properly support anonymous access, please use the override of
 ``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
 original mixin supplied in Django.
+
+Timeline API Changes
+--------------------
+
+The signatures for ``get_object_url()`` and ``get_object_link()`` helpers have
+changed. They now expect the object itself as first argument, followed by an
+optional ``Project`` object. The same also applies for
+``get_history_dropdown()`` in projectroles common template tags.
 
 
 v0.9.1 (2021-03-05)

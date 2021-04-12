@@ -13,7 +13,7 @@
     <a class="dropdown-item text-danger" href="{% url 'filesfolders:folder_delete' item=item.sodar_uuid %}">
       <i class="iconify" data-icon="mdi:close-thick"></i> Delete Folder
     </a>
-    {% get_history_dropdown project=folder.project obj=folder as history_item %}
+    {% get_history_dropdown obj=folder project=folder.project as history_item %}
     {{ history_item|safe }}
   </div>
 </div>

@@ -13,7 +13,7 @@
     <a class="dropdown-item text-danger" href="{% url 'filesfolders:hyperlink_delete' item=link.sodar_uuid %}">
       <i class="iconify" data-icon="mdi:close-thick"></i> Delete Link
     </a>
-    {% get_history_dropdown project=link.project obj=link as history_item %}
+    {% get_history_dropdown obj=link project=link.project as history_item %}
     {{ history_item|safe }}
   </div>
 </div>

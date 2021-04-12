@@ -287,7 +287,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
             },
         )
         self.assertEqual(
-            c_tags.get_history_dropdown(self.project, self.user),
+            c_tags.get_history_dropdown(self.user, self.project),
             '<a class="dropdown-item" href="{}">\n'
             '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
             'History</a>\n'.format(url),

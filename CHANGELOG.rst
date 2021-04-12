@@ -26,10 +26,12 @@ Added
     - ``site_app_processor`` in ``context_processors`` (#574)
     - ``get_statistics()`` in ``SiteAppPluginPoint``
     - ``info_settings`` in app plugins (#671)
+    - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
 - **Siteinfo**
     - Display selected Django settings in UI (#671)
 - **Timeline**
     - Permission tests (#144)
+    - Site app plugin for site-wide events (#668)
 - **Tokens**
     - Permission tests
 
@@ -47,10 +49,12 @@ Changed
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)
+    - Modify signature of ``get_history_dropdown()`` template tag (#668)
 - **Siteinfo**
     - Tabbed layout in site info view
 - **Timeline**
-    - Make ``ProjectEvent.user`` field optional (#119)
+    - Make ``project`` and ``user`` fields in ``ProjectEvent`` optional (#119, #668)
+    - Modify signatures of ``get_object_url()`` and ``get_object_link()`` helpers (#668)
 - **Tokens**
     - Refactor view tests
 

@@ -13,7 +13,7 @@
        href="{% url 'projectroles:role_owner_transfer' project=project.sodar_uuid %}">
       <i class="iconify" data-icon="mdi:account-switch"></i> Transfer Ownership
     </a>
-    {% get_history_dropdown project=project obj=user as history_item %}
+    {% get_history_dropdown obj=user project=project as history_item %}
       {{ history_item|safe }}
   </div>
 </div>

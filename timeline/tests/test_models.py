@@ -127,6 +127,30 @@ class TestProjectEvent(
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
+    def test_initialization_no_project(self):
+        """Test ProjectEvent initialization with no project"""
+        self.event = self._make_event(
+            project=None,
+            app='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        expected = {
+            'id': self.event.pk,
+            'project': None,
+            'app': 'projectroles',
+            'user': self.user_owner.pk,
+            'event_name': 'test_event',
+            'description': 'description',
+            'classified': False,
+            'extra_data': {'test_key': 'test_val'},
+            'sodar_uuid': self.event.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.event), expected)
+
     def test_initialization_no_user(self):
         """Test ProjectEvent initialization with no user"""
         self.event = self._make_event(
@@ -151,28 +175,58 @@ class TestProjectEvent(
         }
         self.assertEqual(model_to_dict(self.event), expected)
 
-    def test__str__(self):
+    def test_str(self):
         """Test ProjectEvent __str__()"""
         expected = 'TestProject: test_event/owner'
         self.assertEqual(str(self.event), expected)
 
-    def test__str__no_user(self):
+    def test_str_no_user(self):
         """Test ProjectEvent __str__() with no user"""
         self.event.user = None
         self.event.save()
         expected = 'TestProject: test_event'
         self.assertEqual(str(self.event), expected)
 
-    def test__repr__(self):
+    def test_str_no_project(self):
+        """Test ProjectEvent __str__() with no project"""
+        self.event.project = None
+        self.event.save()
+        expected = 'test_event/owner'
+        self.assertEqual(str(self.event), expected)
+
+    def test_str_no_project_no_user(self):
+        """Test ProjectEvent __str__() with no project or user"""
+        self.event.project = None
+        self.event.user = None
+        self.event.save()
+        expected = 'test_event'
+        self.assertEqual(str(self.event), expected)
+
+    def test_repr(self):
         """Test ProjectEventStatus __repr__()"""
         expected = "ProjectEvent('TestProject', 'test_event', 'owner')"
         self.assertEqual(repr(self.event), expected)
 
-    def test__repr__no_user(self):
+    def test_repr_no_user(self):
         """Test ProjectEventStatus __repr__() with no user"""
         self.event.user = None
         self.event.save()
         expected = "ProjectEvent('TestProject', 'test_event', 'N/A')"
+        self.assertEqual(repr(self.event), expected)
+
+    def test_repr_no_project(self):
+        """Test ProjectEventStatus __repr__() with no project"""
+        self.event.project = None
+        self.event.save()
+        expected = "ProjectEvent('N/A', 'test_event', 'owner')"
+        self.assertEqual(repr(self.event), expected)
+
+    def test_repr_no_project_no_user(self):
+        """Test ProjectEventStatus __repr__() with no project or user"""
+        self.event.project = None
+        self.event.user = None
+        self.event.save()
+        expected = "ProjectEvent('N/A', 'test_event', 'N/A')"
         self.assertEqual(repr(self.event), expected)
 
 

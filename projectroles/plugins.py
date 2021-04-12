@@ -420,18 +420,23 @@ def change_plugin_status(name, status, plugin_type='app'):
     plugin.save()
 
 
-def get_app_plugin(plugin_name):
+def get_app_plugin(plugin_name, plugin_type=None):
     """
     Return active app plugin.
 
     :param plugin_name: Plugin name (string)
-    :return: ProjectAppPlugin object or None if not found
+    :param plugin_type: Plugin type (string or None for all types)
+    :return: Plugin object or None if not found
     """
-    for k, v in PLUGIN_TYPES.items():
+    if plugin_type:
+        plugin_types = [PLUGIN_TYPES[plugin_type]]
+    else:
+        plugin_types = PLUGIN_TYPES.values()
+    for t in plugin_types:
         try:
-            return eval(v).get_plugin(plugin_name)
+            return eval(t).get_plugin(plugin_name)
         except Exception:
-            pass  # TODO refactor
+            pass
 
 
 def get_backend_api(plugin_name, force=False, **kwargs):

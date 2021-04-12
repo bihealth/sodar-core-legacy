@@ -1,6 +1,7 @@
 {% extends 'projectroles/project_base.html' %}
 
 {% load rules %}
+{% load static %}
 {% load timeline_tags %}
 {% load projectroles_common_tags %}
 
@@ -11,71 +12,8 @@
 
 {% block css %}
   {{ block.super }}
-  <style type="text/css">
-
-    /* Main table */
-    table#sodar-tl-table tbody tr td:nth-child(1) {
-      white-space: nowrap;
-    }
-
-    table#sodar-tl-table tbody tr td:nth-child(5) {
-      width: 100%;
-    }
-
-    /* Detail table */
-    table#sodar-tl-table-detail tbody tr td:nth-child(1) {
-      white-space: nowrap;
-    }
-
-    table#sodar-tl-table-detail tbody tr td:nth-child(2) {
-      max-width: 300px;
-      white-space: normal;
-    }
-
-    a.sodar-tl-link-detail:hover {
-        text-decoration: underline;
-    }
-
-    a.sodar-tl-link-extra {
-      cursor: pointer;
-    }
-
-    .popover {
-      font-size: 100%; /* Fix for Bootstrap 4.4 */
-    }
-
-    /* Responsive modifications */
-    @media screen and (max-width: 1200px) {
-      .table#sodar-tl-table thead tr th:nth-child(2),
-      .table#sodar-tl-table tbody tr td:nth-child(2) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 1000px) {
-      .table#sodar-tl-table thead tr th:nth-child(3),
-      .table#sodar-tl-table tbody tr td:nth-child(3) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 800px) {
-      .table#sodar-tl-table tbody tr td:nth-child(1) {
-        white-space: normal;
-      }
-      .table#sodar-tl-table thead tr th:nth-child(4),
-      .table#sodar-tl-table tbody tr td:nth-child(4) {
-        display: none;
-      }
-    }
-
-    @media screen and (max-width: 500px) {
-      .table#sodar-tl-table thead tr th:nth-child(6),
-      .table#sodar-tl-table tbody tr td:nth-child(6) {
-          display: none;
-      }
-    }
-  </style>
+  <!-- Timeline CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'timeline/css/timeline.css' %}" />
 {% endblock css %}
 
 {% block projectroles_extend %}
@@ -85,7 +23,7 @@
   <div class="row sodar-subtitle-container bg-white sticky-top">
     <h3><i class="iconify" data-icon="mdi:clock-time-eight"></i> {{ timeline_title }}</h3>
     {% if timeline_mode == 'object' %}
-      <div class="input-group sodar-header-input-group ml-auto mt-1">
+      <div class="ml-auto">
         <a href="{% url 'timeline:list_project' project=project.sodar_uuid %}"
            class="btn btn-secondary ml-auto"
            role="button">
@@ -135,7 +73,7 @@
       tourEnabled = true;
 
       tour.addStep('event_list', {
-          title: 'Event List',
+          title: 'Project Event List',
           text: 'This is the list of events for the ' +
               '{% get_display_name "PROJECT" %}' + ' or object, organized by ' +
               'newest first.',

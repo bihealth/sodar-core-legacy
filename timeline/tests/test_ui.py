@@ -23,12 +23,13 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
-class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
-    """Tests for the timeline list view UI"""
+class TestProjectListView(
+    ProjectEventMixin, ProjectEventStatusMixin, TestUIBase
+):
+    """Tests for the timeline project list view UI"""
 
     def setUp(self):
         super().setUp()
-
         self.timeline = get_backend_api('timeline_backend')
 
         # Init default event
@@ -54,7 +55,7 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_render(self):
-        """Test visibility of events in the timeline event list"""
+        """Test visibility of events in project event list"""
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -62,14 +63,13 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             (self.contributor_as.user, 1),
             (self.guest_as.user, 1),
         ]
-
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_render_no_user(self):
-        """Test rendering with an event without n user"""
+        """Test rendering with an event without user"""
         self.event.user = None
         expected = [
             (self.superuser, 2),
@@ -78,15 +78,13 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             (self.contributor_as.user, 1),
             (self.guest_as.user, 1),
         ]
-
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
         self.assert_element_count(expected, url, 'sodar-tl-list-event')
 
     def test_render_object(self):
-        """Test visibility of object related events events in the timeline event list"""
-
+        """Test visibility of object related events in project list"""
         # Add user as an object reference
         self.ref_obj = self.event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
@@ -94,7 +92,6 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         self.classified_ref_obj = self.classified_event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
-
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -102,7 +99,6 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             (self.contributor_as.user, 1),
             (self.guest_as.user, 1),
         ]
-
         url = reverse(
             'timeline:list_object',
             kwargs={
@@ -122,7 +118,6 @@ class TestListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             (self.contributor_as.user, 1),
             (self.guest_as.user, 1),
         ]
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
@@ -158,7 +153,7 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_extra_data_badge(self):
-        """Test visibility of extra data badges to open a model in the timeline event list"""
+        """Test visibility of extra data badges in project event list"""
         expected = [
             (self.superuser, 1),
             (self.owner_as.user, 1),
@@ -169,7 +164,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_count(
             expected,
             url,
@@ -179,7 +173,7 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         )
 
     def test_status_extra_data_only_badge(self):
-        """Test visibility when event only has extra data in one of its states."""
+        """Test visibility when event only has extra data in one of its states"""
         self.event_with_status = self.timeline.add_event(
             project=self.project,
             app_name='projectroles',
@@ -190,7 +184,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             status_extra_data={'acclerator': 'railgun'},
             status_type="OK",
         )
-
         expected = [
             (self.superuser, 2),
             (self.owner_as.user, 2),
@@ -201,7 +194,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         url = reverse(
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_count(
             expected,
             url,
@@ -210,14 +202,12 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             path='//table/tbody/tr/td/',
         )
 
-    def test_object_event_extra_data(self):
-        """Test visibility of object related events events in the timeline event list"""
-
+    def test_object_extra_data(self):
+        """Test visibility of object related extra data in project list"""
         # Add user as an object reference
         self.ref_obj = self.event.add_object(
             obj=self.superuser, label='user', name=self.superuser.username
         )
-
         expected = [
             (self.superuser, 1),
             (self.owner_as.user, 1),
@@ -233,7 +223,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
                 'object_uuid': self.ref_obj.object_uuid,
             },
         )
-
         self.assert_element_count(
             expected,
             url,
@@ -254,7 +243,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_count(
             expected,
             url,
@@ -292,7 +280,6 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             status_extra_data={'acclerator': 'railgun'},
             status_type='OK',
         )
-
         expected = [
             (self.superuser, 1),
             (self.owner_as.user, 1),
@@ -304,7 +291,73 @@ class TestExtraDataView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
             'timeline:list_project', kwargs={'project': self.project.sodar_uuid}
         )
         data = collect_extra_data(self.event_with_status)[0]
-
         self.assert_element_count(
             expected, url, '{}-{}'.format(data[0], data[2].pk), attribute='id'
         )
+
+
+class TestSiteListView(ProjectEventMixin, ProjectEventStatusMixin, TestUIBase):
+    """Tests for the timeline site-wide list view UI"""
+
+    def setUp(self):
+        super().setUp()
+        self.timeline = get_backend_api('timeline_backend')
+
+        # Init default event
+        self.event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='OK',
+        )
+
+        # Init classified event
+        self.classified_event = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.superuser,
+            event_name='classified_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            classified=True,
+        )
+
+    def test_render(self):
+        """Test visibility of events in the site-wide event list"""
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
+        ]
+        url = reverse('timeline:list_site')
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')
+
+    def test_render_object(self):
+        """Test visibility of object related events in site-wide event list"""
+        # Add user as an object reference
+        self.ref_obj = self.event.add_object(
+            obj=self.superuser, label='user', name=self.superuser.username
+        )
+        self.classified_ref_obj = self.classified_event.add_object(
+            obj=self.superuser, label='user', name=self.superuser.username
+        )
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 1),
+            (self.delegate_as.user, 1),
+            (self.contributor_as.user, 1),
+            (self.guest_as.user, 1),
+        ]
+        url = reverse(
+            'timeline:list_object_site',
+            kwargs={
+                'object_model': self.ref_obj.object_model,
+                'object_uuid': self.ref_obj.object_uuid,
+            },
+        )
+        self.assert_element_count(expected, url, 'sodar-tl-list-event')

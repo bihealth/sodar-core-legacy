@@ -288,9 +288,20 @@ class TestTimelineAPI(
                 'object_uuid': self.user_owner.sodar_uuid,
             },
         )
-        url = self.timeline.get_object_url(
-            self.project.sodar_uuid, self.user_owner
+        url = self.timeline.get_object_url(self.user_owner, self.project)
+        self.assertEqual(expected_url, url)
+
+    def test_get_object_url_no_project(self):
+        """Test get_object_url() without project"""
+
+        expected_url = reverse(
+            'timeline:list_object_site',
+            kwargs={
+                'object_model': self.user_owner.__class__.__name__,
+                'object_uuid': self.user_owner.sodar_uuid,
+            },
         )
+        url = self.timeline.get_object_url(self.user_owner, None)
         self.assertEqual(expected_url, url)
 
     def test_get_object_link(self):
@@ -304,7 +315,18 @@ class TestTimelineAPI(
                 'object_uuid': self.user_owner.sodar_uuid,
             },
         )
-        link = self.timeline.get_object_link(
-            self.project.sodar_uuid, self.user_owner
+        link = self.timeline.get_object_link(self.user_owner, self.project)
+        self.assertIn(expected_url, link)
+
+    def test_get_object_link_no_project(self):
+        """Test get_object_link() without project"""
+
+        expected_url = reverse(
+            'timeline:list_object_site',
+            kwargs={
+                'object_model': self.user_owner.__class__.__name__,
+                'object_uuid': self.user_owner.sodar_uuid,
+            },
         )
+        link = self.timeline.get_object_link(self.user_owner, None)
         self.assertIn(expected_url, link)
