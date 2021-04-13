@@ -690,7 +690,7 @@ class ProjectSearchResultsView(
 
         for plugin in search_apps:
             # Deprecation protection for search changes in v0.9 (#609)
-            # TODO: Remove protection in v1.0 (#618)
+            # TODO: Remove protection in v0.10 (#618)
             search_kwargs = {
                 'user': self.request.user,
                 'search_type': search_type,
@@ -705,7 +705,7 @@ class ProjectSearchResultsView(
                     'Deprecated search() implementation in plugin '
                     '"{}"'.format(plugin.name)
                 )
-                logger.warning(msg + ': to be removed in v1.0')
+                logger.warning(msg + ': to be removed in v0.10')
                 if len(search_terms) > 1:
                     messages.warning(
                         self.request,

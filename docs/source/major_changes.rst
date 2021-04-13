@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v1.0.0 (WIP)
-************
+v0.10.0 (WIP)
+*************
 
 Release Highlights
 ==================
@@ -105,7 +105,7 @@ REST API Backwards Compatibility
 --------------------------------
 
 This version of SODAR Core no longer guarantees REST API backwards compatibility
-with versions <1.0.0. API views *may* still work if omitting accept header
+with versions <0.10. API views *may* still work if omitting accept header
 versioning, but it is recommended to review changes and update your scripts
 accordingly.
 
@@ -118,7 +118,7 @@ changed from Font Awesome to `Material Design Icons <https://materialdesignicons
 It is however possible to use other icon sets supported by Iconify for your own
 SODAR Core apps.
 
-To make your icons work with SODAR Core v1.0+, you will need to take the
+To make your icons work with SODAR Core v0.10+, you will need to take the
 following steps.
 
 First, make sure ``django-iconify`` is installed. Add
@@ -279,7 +279,7 @@ The following third party JS/CSS requirements have been updated:
 .. note::
 
     This is the last major update of SODAR Core based on and supporting Django
-    v1.11, which is now out of long term support. From v1.0 onwards, SODAR Core
+    v1.11, which is now out of long term support. From v0.10 onwards, SODAR Core
     based sites must be implemented on Django v3.x+.
 
 ProjectAppPlugin Search Updates
