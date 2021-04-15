@@ -836,13 +836,6 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
         result = Project.objects.find(['sub', 'xxx'])
         self.assertEqual(len(result), 2)
 
-    def test_find_old_implementation(self):
-        """Test find() with deprecated old implementation (see #618)"""
-        result = Project.objects.find('Test', project_type=None)
-        self.assertEqual(len(result), 2)
-        result = Project.objects.find('ThisFails', project_type=None)
-        self.assertEqual(len(result), 0)
-
 
 class TestProjectSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase

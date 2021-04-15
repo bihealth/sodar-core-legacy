@@ -6,7 +6,7 @@
   {# Name & link column #}
   <td>
     <div class="sodar-overflow-container">
-      {% highlight_search_term item.name search_term as item_display_name %}
+      {% highlight_search_term item.name search_terms as item_display_name %}
       <a
         {% if item|get_class == 'HyperLink' %}
           href="{{ item.url }}" target="_blank"
@@ -60,7 +60,7 @@
   <td>
     <div class="sodar-overflow-container">
       {% autoescape off %}
-        {% highlight_search_term item.description search_term %}
+        {% highlight_search_term item.description search_terms %}
       {% endautoescape %}
     </div>
   </td>

@@ -1,6 +1,5 @@
 """UI views for the projectroles app"""
 
-import inspect
 import json
 import logging
 import re
@@ -656,7 +655,6 @@ class ProjectSearchResultsView(
 
         context['search_input'] = search_input
         context['search_terms'] = search_terms
-        context['search_term'] = search_terms[0]  # Deprecation prot. (#618)
         context['search_type'] = search_type
         context['search_keywords'] = search_keywords
 
@@ -689,29 +687,12 @@ class ProjectSearchResultsView(
         context['app_search_data'] = []
 
         for plugin in search_apps:
-            # Deprecation protection for search changes in v0.9 (#609)
-            # TODO: Remove protection in v0.10 (#618)
             search_kwargs = {
                 'user': self.request.user,
                 'search_type': search_type,
+                'search_terms': search_terms,
                 'keywords': search_keywords,
             }
-
-            if 'search_terms' in inspect.signature(plugin.search).parameters:
-                search_kwargs['search_terms'] = search_terms
-            else:  # Old style search
-                search_kwargs['search_term'] = search_terms[0]
-                msg = (
-                    'Deprecated search() implementation in plugin '
-                    '"{}"'.format(plugin.name)
-                )
-                logger.warning(msg + ': to be removed in v0.10')
-                if len(search_terms) > 1:
-                    messages.warning(
-                        self.request,
-                        msg + ': unable to search for multiple terms',
-                    )
-
             context['app_search_data'].append(
                 {
                     'plugin': plugin,

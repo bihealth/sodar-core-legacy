@@ -77,6 +77,8 @@ Removed
     - Font Awesome support without Iconify (#54)
 - **Projectroles**
     - ``get_site_app()`` template tag (#574)
+    - Deprecated search functionality with a single ``search_term`` (#618)
+    - Deprecated ``get_full_title()`` method from ``Project`` model (#620)
 
 
 v0.9.1 (2021-03-05)

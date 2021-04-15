@@ -56,10 +56,6 @@ class ProjectManager(models.Manager):
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        # Deprecation protection (#609, #618)
-        if not isinstance(search_terms, list):
-            search_terms = [search_terms]
-
         projects = super().get_queryset().order_by('title')
         if project_type:
             projects = projects.filter(type=project_type)
@@ -388,19 +384,6 @@ class Project(models.Model):
             ret.append(parent)
             parent = parent.parent
         return reversed(ret)
-
-    def get_full_title(self):
-        """
-        Return full title of project with path.
-
-        NOTE: Deprecated, will be removed in the next major release (#620)
-        NOTE: Use Project.full_title instead!
-        """
-        logger.warning(
-            'Project.get_full_title() is deprecated, to be removed in v0.10! '
-            'Please use Project.full_title instead.'
-        )
-        return str(self)
 
     def get_source_site(self):
         """Return source site or None if this is a locally defined project"""

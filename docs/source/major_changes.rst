@@ -190,14 +190,16 @@ Once you have updated all your icons, you can remove the Font Awesome CSS
 include from your base template if you are not directly importing it from
 ``base_site.html``.
 
-Public Guest Access Support
+Deprecated Features Removed
 ---------------------------
 
-This version adds public guest access support for projects. By setting
-``PROJECTROLES_ALLOW_ANONYMOUS`` true, this can be extended to anonymous users.
-For your views to properly support anonymous access, please use the override of
-``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
-original mixin supplied in Django.
+The following previously deprecated features have been removed in this release:
+
+- ``Project.get_full_title()`` has been removed. Use ``Project.full_title``
+  instead.
+- Old style search with a single ``search_term`` argument has been removed. Make
+  sure your search implementation expects and uses a ``search_terms`` list
+  instead.
 
 Timeline API Changes
 --------------------
@@ -206,6 +208,15 @@ The signatures for ``get_object_url()`` and ``get_object_link()`` helpers have
 changed. They now expect the object itself as first argument, followed by an
 optional ``Project`` object. The same also applies for
 ``get_history_dropdown()`` in projectroles common template tags.
+
+Public Guest Access Support
+---------------------------
+
+This version adds public guest access support for projects. By setting
+``PROJECTROLES_ALLOW_ANONYMOUS`` true, this can be extended to anonymous users.
+For your views to properly support anonymous access, please use the override of
+``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
+original mixin supplied in Django.
 
 
 v0.9.1 (2021-03-05)
