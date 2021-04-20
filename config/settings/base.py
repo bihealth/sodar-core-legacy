@@ -81,6 +81,8 @@ LOCAL_APPS = [
     'userprofile.apps.UserprofileConfig',
     # Admin Alerts site app
     'adminalerts.apps.AdminalertsConfig',
+    # App Alerts site app
+    'appalerts.apps.AppalertsConfig',
     # Site Info site app
     'siteinfo.apps.SiteinfoConfig',
     # API Tokens site app
@@ -203,6 +205,7 @@ TEMPLATES = [
                 # Site context processors
                 'projectroles.context_processors.urls_processor',
                 'projectroles.context_processors.site_app_processor',
+                'projectroles.context_processors.app_alerts_processor',
             ],
         },
     }
@@ -521,7 +524,9 @@ SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = env.list(
-    'ENABLED_BACKEND_PLUGINS', None, ['timeline_backend', 'example_backend_app']
+    'ENABLED_BACKEND_PLUGINS',
+    None,
+    ['appalerts_backend', 'timeline_backend', 'example_backend_app'],
 )
 
 # SODAR API settings

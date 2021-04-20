@@ -85,6 +85,7 @@ This repository provides the following installable Django apps:
   dynamic app content management. All other apps require the integration of
   projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
+- **appalerts**: Site app and backend for raising alerts to users from apps.
 - **bgjobs**: Project app for managing background jobs.
 - **filesfolders**: Storage and management of small files.
 - **siteinfo**: Site app for displaying site information and statistics for

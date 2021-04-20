@@ -14,6 +14,9 @@ from django.contrib.messages import get_messages
 
 from test_plus.test import TestCase
 
+# Appalerts dependency
+from appalerts.models import AppAlert
+
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -2023,8 +2026,11 @@ class TestRoleAssignmentCreateView(
 
     def test_create_assignment(self):
         """Test RoleAssignment creation"""
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_create').count(), 0
+        )
 
         # Issue POST request
         values = {
@@ -2041,7 +2047,7 @@ class TestRoleAssignmentCreateView(
                 values,
             )
 
-        # Assert RoleAssignment state after creation
+        # Assert object state after creation
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
@@ -2054,6 +2060,9 @@ class TestRoleAssignmentCreateView(
             'sodar_uuid': role_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(role_as), expected)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_create').count(), 1
+        )
 
         # Assert redirect
         with self.login(self.user):
@@ -2339,8 +2348,11 @@ class TestRoleAssignmentUpdateView(
     def test_update_assignment(self):
         """Test RoleAssignment updating"""
 
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 0
+        )
 
         values = {
             'project': self.role_as.project.sodar_uuid,
@@ -2356,7 +2368,7 @@ class TestRoleAssignmentUpdateView(
                 values,
             )
 
-        # Assert RoleAssignment state after update
+        # Assert object state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
@@ -2369,6 +2381,9 @@ class TestRoleAssignmentUpdateView(
             'sodar_uuid': role_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(role_as), expected)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_update').count(), 1
+        )
 
         # Assert redirect
         with self.login(self.user):
@@ -2564,8 +2579,11 @@ class TestRoleAssignmentDeleteView(
     def test_delete_assignment(self):
         """Test RoleAssignment deleting"""
 
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -2575,8 +2593,11 @@ class TestRoleAssignmentDeleteView(
                 )
             )
 
-        # Assert RoleAssignment state after update
+        # Assert object states after update
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(
+            AppAlert.objects.filter(alert_name='role_delete').count(), 1
+        )
 
         # Assert redirect
         with self.login(self.user):

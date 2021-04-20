@@ -15,7 +15,7 @@ class SiteAppPlugin(SiteAppPluginPoint):
     name = 'adminalerts'
 
     #: Title (used in templates)
-    title = 'Alerts'
+    title = 'Admin Alerts'
 
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns

@@ -71,7 +71,7 @@ class LiveUserMixin:
     """Mixin for creating users to work with LiveServerTestCase"""
 
     @classmethod
-    def _make_user(cls, user_name, superuser):
+    def _make_user(cls, user_name, superuser=False):
         """Make user, superuser if superuser=True"""
         kwargs = {
             'username': user_name,
@@ -79,13 +79,10 @@ class LiveUserMixin:
             'email': '{}@example.com'.format(user_name),
             'is_active': True,
         }
-
         if superuser:
             user = User.objects.create_superuser(**kwargs)
-
         else:
             user = User.objects.create_user(**kwargs)
-
         user.save()
         return user
 

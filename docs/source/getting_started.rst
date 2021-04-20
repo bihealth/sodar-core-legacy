@@ -36,6 +36,7 @@ The following Django apps will be installed when installing the
 - **projectroles**: Base app for project access management and dynamic app
   content management. All other apps require the integration of projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
+- **appalerts**: Site app and backend for raising alerts to users from apps.
 - **bgjobs**: Project app for managing background jobs.
 - **siteinfo**: Site app for displaying site information and statistics for
   administrators.

@@ -457,6 +457,27 @@ a.sodar-pr-btn-copy-secret i {
   position: relative;
 }
 
+
+/* App alert badge */
+#sodar-app-alert-badge {
+    line-height: 36px !important;
+    font-size: 125%;
+}
+
+#sodar-app-alert-badge a:link,
+#sodar-app-alert-badge a:visited {
+    color: #fff !important;
+}
+
+#sodar-app-alert-icon {
+  animation: blink 1.5s ease-in infinite;
+}
+
+@keyframes blink {
+  from, to { opacity: 1 }
+  50% { opacity: 0 }
+}
+
 /* Badge group */
 .badge-group {
     padding: 2px;

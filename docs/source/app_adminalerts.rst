@@ -65,7 +65,7 @@ In the Django URL configuration file, add the following line under
 
     urlpatterns = [
         # ...
-        url(r'^alerts/', include('adminalerts.urls')),
+        url(r'^alerts/admin/', include('adminalerts.urls')),
     ]
 
 Migrate Database and Register Plugin
@@ -89,8 +89,8 @@ output:
 Usage
 =====
 
-When logged in as a superuser, you can find the "Alerts" option in your user
-dropdown menu in the top right corner of the site. Using the UI, you can add,
-modify and delete alerts shown to users.
+When logged in as a superuser, you can find the "Admin Alerts" option in your
+user dropdown menu in the top right corner of the site. Using the UI, you can
+add, modify and delete alerts shown to users.
 
 This application is not available for users with a non-superuser status.

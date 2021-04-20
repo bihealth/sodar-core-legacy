@@ -4,7 +4,7 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
 
-from .urls import urlpatterns
+from example_project_app.urls import urlpatterns
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):

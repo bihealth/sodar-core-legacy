@@ -1,6 +1,6 @@
 """Context processors for the projectroles app"""
 
-from projectroles.plugins import get_active_plugins
+from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.urls import urlpatterns
 
 
@@ -33,3 +33,18 @@ def site_app_processor(request):
             if not a.app_permission or request.user.has_perm(a.app_permission)
         ],
     }
+
+
+def app_alerts_processor(request):
+    """
+    Context processor for checking app alert status.
+    """
+    if request.user and request.user.is_authenticated:
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            return {
+                'app_alerts': app_alerts.get_model()
+                .objects.filter(user=request.user, active=True)
+                .count()
+            }
+    return {'app_alerts': 0}

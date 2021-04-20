@@ -71,9 +71,10 @@ LOGGING['handlers']['console']['level'] = 'CRITICAL'
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
+    'appalerts_backend',
+    'sodar_cache',
     'timeline_backend',
     'example_backend_app',
-    'sodar_cache',
 ]
 
 # Projectroles app settings
@@ -81,6 +82,10 @@ PROJECTROLES_SITE_MODE = 'SOURCE'
 PROJECTROLES_SEND_EMAIL = True
 PROJECTROLES_SEARCH_PAGINATION = 10
 PROJECTROLES_ALLOW_ANONYMOUS = False
+
+
+# Example site/app settings
+EXAMPLE_PROJECT_APP_ALERTS = False
 
 
 # UI test settings

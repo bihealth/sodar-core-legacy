@@ -1344,6 +1344,7 @@ class RoleAssignmentModifyMixin:
         """
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
+        app_alerts = get_backend_api('appalerts_backend')
         action = 'update' if instance else 'create'
         tl_event = None
         user = data.get('user')
@@ -1399,10 +1400,34 @@ class RoleAssignmentModifyMixin:
             role_as.role = role
 
         role_as.save()
-        if SEND_EMAIL:
-            email.send_role_change_mail(action, project, user, role, request)
+
         if tl_event:
             tl_event.set_status('OK')
+        if SEND_EMAIL:
+            email.send_role_change_mail(action, project, user, role, request)
+        if app_alerts:
+            if action == 'create':
+                alert_msg = (
+                    'Membership granted in project "{}" with the '
+                    'role of "{}".'.format(project.title, role.name)
+                )
+            else:
+                alert_msg = (
+                    'Your role in project "{}" has been changed '
+                    'to "{}".'.format(project.title, role.name)
+                )
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='role_' + action,
+                user=user,
+                message=alert_msg,
+                level='INFO',
+                url=reverse(
+                    'projectroles:detail',
+                    kwargs={'project': project.sodar_uuid},
+                ),
+            )
+
         return role_as
 
 
@@ -1476,7 +1501,7 @@ class RoleAssignmentDeleteMixin:
     def delete_assignment(self, request, instance):
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
-
+        app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
         project = instance.project
         user = instance.user
@@ -1500,13 +1525,11 @@ class RoleAssignmentDeleteMixin:
         if use_taskflow:
             if tl_event:
                 tl_event.set_status('SUBMIT')
-
             flow_data = {
                 'username': user.username,
                 'user_uuid': str(user.sodar_uuid),
                 'role_pk': role.pk,
             }
-
             try:
                 taskflow.submit(
                     project_uuid=project.sodar_uuid,
@@ -1515,25 +1538,31 @@ class RoleAssignmentDeleteMixin:
                     request=request,
                 )
                 instance = None
-
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
-
                 raise ex
 
         # Local save without Taskflow
         else:
             instance.delete()
 
-        if SEND_EMAIL:
-            email.send_role_change_mail('delete', project, user, None, request)
-
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
 
         if tl_event:
             tl_event.set_status('OK')
+        if SEND_EMAIL:
+            email.send_role_change_mail('delete', project, user, None, request)
+        if app_alerts:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='role_delete',
+                user=user,
+                message='Your membership in project "{}" has been '
+                'removed.'.format(project.title),
+                level='INFO',
+            )
 
         return instance
 
