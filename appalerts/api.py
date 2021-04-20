@@ -19,7 +19,14 @@ class AppAlertAPI:
 
     @classmethod
     def add_alert(
-        cls, app_name, alert_name, user, message, level, url=None, project=None
+        cls,
+        app_name,
+        alert_name,
+        user,
+        message,
+        level='INFO',
+        url=None,
+        project=None,
     ):
         """
         Create an AppAlert.

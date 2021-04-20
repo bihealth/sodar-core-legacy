@@ -99,6 +99,9 @@ KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
+ALERT_MSG_ROLE_CHANGE = (
+    'Membership granted in project "{project}" with the ' 'role of "{role}".'
+)
 
 
 # Access Django user model
@@ -993,6 +996,91 @@ class ProjectModifyMixin:
                 validate=False,
             )  # Already validated in form
 
+    @classmethod
+    def _notify_users(
+        cls, project, action, owner, old_data, old_parent, request
+    ):
+        """
+        Notify users about project creation and update. Displays app alerts
+        and/or sends emails depending on the site configuration.
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        # Create alerts and send emails
+        owner_as = RoleAssignment.objects.get_assignment(owner, project)
+        # Owner change notification
+        if request.user != owner and (
+            action == 'create' or old_data['owner'] != owner
+        ):
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=owner_as.role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    action,
+                    project,
+                    owner,
+                    owner_as.role,
+                    request,
+                )
+        # Project creation/moving for parent category owner
+        if (
+            project.parent
+            and project.parent.get_owner().user != owner_as.user
+            and project.parent.get_owner().user != request.user
+        ):
+            parent_owner = project.parent.get_owner().user
+            if action == 'create' and request.user != parent_owner:
+                if app_alerts:
+                    app_alerts.add_alert(
+                        app_name=APP_NAME,
+                        alert_name='project_create_parent',
+                        user=parent_owner,
+                        message='New {} created under category '
+                        '"{}": "{}".'.format(
+                            project.type.lower(),
+                            project.parent.title,
+                            project.title,
+                        ),
+                        url=reverse(
+                            'projectroles:detail',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        project=project,
+                    )
+                if SEND_EMAIL:
+                    email.send_project_create_mail(project, request)
+
+            elif old_parent and request.user != parent_owner:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='project_move_parent',
+                    user=parent_owner,
+                    message='{} moved under category '
+                    '"{}": "{}".'.format(
+                        project.type.capitalize(),
+                        project.parent.title,
+                        project.title,
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+                if SEND_EMAIL:
+                    email.send_project_move_mail(project, request)
+
     def modify_project(self, data, request, instance=None):
         """
         Create or update a Project, either locally or using the SODAR Taskflow.
@@ -1013,7 +1101,6 @@ class ProjectModifyMixin:
 
         if instance:
             project = instance
-
             # In case of a PATCH request, get existing obj to fill out fields
             old_project = Project.objects.get(sodar_uuid=instance.sodar_uuid)
             old_data = self._get_old_project_data(old_project)  # Store old data
@@ -1031,7 +1118,6 @@ class ProjectModifyMixin:
             project.public_guest_access = (
                 data.get('public_guest_access') or False
             )
-
         else:
             project = Project(
                 title=data.get('title'),
@@ -1058,7 +1144,6 @@ class ProjectModifyMixin:
             # See: https://stackoverflow.com/a/60331668
             with transaction.atomic():
                 project.save()  # Always save locally if creating (to get UUID)
-
         else:
             project.submit_status = SUBMIT_STATUS_OK
 
@@ -1067,13 +1152,10 @@ class ProjectModifyMixin:
             project.save()
 
         owner = data.get('owner')
-
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
-
         # Get settings
         project_settings = self._get_app_settings(data, instance)
-
         # Create timeline event
         tl_event = self._create_timeline_event(
             project, action, owner, old_data, project_settings, request
@@ -1100,7 +1182,6 @@ class ProjectModifyMixin:
                 old_parent,
                 tl_event,
             )
-
         # Local save without Taskflow
         else:
             self._handle_local_save(project, owner, project_settings)
@@ -1122,32 +1203,13 @@ class ProjectModifyMixin:
                     'plugin "{}": {}'.format(p.name, ex)
                 )
 
-        # Send emails
-        if SEND_EMAIL:
-            owner_as = RoleAssignment.objects.get_assignment(owner, project)
-            # Owner change notification
-            if not instance or old_data['owner'] != owner:
-                email.send_role_change_mail(
-                    action,
-                    project,
-                    owner,
-                    owner_as.role,
-                    request,
-                )
-
-            # Project creation/moving for parent category owner
-            if (
-                project.parent
-                and project.parent.get_owner().user != owner_as.user
-                and project.parent.get_owner().user != request.user
-            ):
-                if not instance:
-                    email.send_project_create_mail(project, request)
-                elif old_parent:
-                    email.send_project_move_mail(project, request)
-
         if tl_event:
             tl_event.set_status('OK')
+
+        # Create app alerts and/or send emails
+        self._notify_users(
+            project, action, owner, old_data, old_parent, request
+        )
 
         return project
 
@@ -1419,30 +1481,27 @@ class RoleAssignmentModifyMixin:
 
         if tl_event:
             tl_event.set_status('OK')
-        if SEND_EMAIL:
-            email.send_role_change_mail(action, project, user, role, request)
-        if app_alerts:
-            if action == 'create':
-                alert_msg = (
-                    'Membership granted in project "{}" with the '
-                    'role of "{}".'.format(project.title, role.name)
+
+        if request.user != user:
+            if app_alerts:
+                alert_msg = ALERT_MSG_ROLE_CHANGE.format(
+                    project=project.title, role=role.name
                 )
-            else:
-                alert_msg = (
-                    'Your role in project "{}" has been changed '
-                    'to "{}".'.format(project.title, role.name)
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_' + action,
+                    user=user,
+                    message=alert_msg,
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
                 )
-            app_alerts.add_alert(
-                app_name=APP_NAME,
-                alert_name='role_' + action,
-                user=user,
-                message=alert_msg,
-                level='INFO',
-                url=reverse(
-                    'projectroles:detail',
-                    kwargs={'project': project.sodar_uuid},
-                ),
-            )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    action, project, user, role, request
+                )
 
         return role_as
 
@@ -1568,8 +1627,6 @@ class RoleAssignmentDeleteMixin:
 
         if tl_event:
             tl_event.set_status('OK')
-        if SEND_EMAIL:
-            email.send_role_change_mail('delete', project, user, None, request)
         if app_alerts:
             app_alerts.add_alert(
                 app_name=APP_NAME,
@@ -1577,8 +1634,10 @@ class RoleAssignmentDeleteMixin:
                 user=user,
                 message='Your membership in project "{}" has been '
                 'removed.'.format(project.title),
-                level='INFO',
+                project=project,
             )
+        if SEND_EMAIL:
+            email.send_role_change_mail('delete', project, user, None, request)
 
         return instance
 
@@ -1767,34 +1826,66 @@ class RoleAssignmentOwnerTransferMixin:
         :param old_owner_role: Role object for the previous owner's new role
         :return:
         """
+        app_alerts = get_backend_api('appalerts_backend')
         old_owner = old_owner_as.user
+        owner_role = Role.objects.get(name=PROJECT_ROLE_OWNER)
         tl_event = self._create_timeline_event(old_owner, new_owner, project)
 
         try:
             self._handle_transfer(
                 project, old_owner_as, new_owner, old_owner_role
             )
-
         except Exception as ex:
             if tl_event:
                 tl_event.set_status('FAILED', str(ex))
-
             raise ex
-
-        if SEND_EMAIL:
-            email.send_role_change_mail(
-                'update', project, old_owner, old_owner_role, self.request
-            )
-            email.send_role_change_mail(
-                'update',
-                project,
-                new_owner,
-                Role.objects.get(name=PROJECT_ROLE_OWNER),
-                self.request,
-            )
 
         if tl_event:
             tl_event.set_status('OK')
+
+        if self.request.user != old_owner:
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=old_owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=old_owner_role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    'update', project, old_owner, old_owner_role, self.request
+                )
+
+        if self.request.user != new_owner:
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=new_owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=owner_role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    'update',
+                    project,
+                    new_owner,
+                    owner_role,
+                    self.request,
+                )
 
 
 class RoleAssignmentOwnerTransferView(
@@ -2139,6 +2230,7 @@ class ProjectInviteProcessMixin:
     def create_assignment(self, invite, user, timeline=None):
         """Create role assignment for invited user"""
         taskflow = get_backend_api('taskflow')
+        app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
 
         if timeline:
@@ -2193,7 +2285,22 @@ class ProjectInviteProcessMixin:
             if tl_event:
                 tl_event.set_status('OK')
 
-        # ..notify the issuer by email..
+        # ..notify the issuer by alert and email..
+        if app_alerts:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='invite_accept',
+                user=invite.issuer,
+                message='Invitation sent to "{}" for project "{}" with the '
+                'role "{}" was accepted.'.format(
+                    user.email, invite.project.title, invite.role.name
+                ),
+                url=reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                ),
+                project=invite.project,
+            )
         if SEND_EMAIL:
             email.send_accept_note(invite, self.request, user)
 

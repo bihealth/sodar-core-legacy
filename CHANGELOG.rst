@@ -30,6 +30,7 @@ Added
     - ``info_settings`` in app plugins (#671)
     - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
     - ``handle_project_update()`` in ``ProjectAppPlugin`` (#387, #675)
+    - App alerts for project and role updates (#642, #692)
 - **Siteinfo**
     - Display selected Django settings in UI (#671)
 - **Timeline**
@@ -50,6 +51,7 @@ Changed
     - Upgraded versioneer (#656)
     - Update views, mixins and tags for anonymous user access (#574)
     - Upgrade recommended development OS version to Ubuntu v20.04 (#640)
+    - Do not send redundant emails to users initiating updates (#693)
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)

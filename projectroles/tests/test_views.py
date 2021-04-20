@@ -333,7 +333,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(reverse('projectroles:create'))
 
         self.assertEqual(response.status_code, 200)
-
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
@@ -418,7 +417,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
     def test_create_top_level_category(self):
         """Test creation of top level category"""
-
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 0)
 
@@ -432,7 +430,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -450,7 +447,9 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.first()
         self.assertIsNotNone(project)
-        self.assertEqual(len(mail.outbox), 1)
+        # Same user so no alerts or emails
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -463,7 +462,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'full_title': 'TestCategory',
             'sodar_uuid': project.sodar_uuid,
         }
-
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
@@ -474,7 +472,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         owner_as = RoleAssignment.objects.get(
             project=project, role=self.role_owner
         )
-
         expected = {
             'id': owner_as.pk,
             'project': project.pk,
@@ -482,7 +479,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'user': self.user.pk,
             'sodar_uuid': owner_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(owner_as), expected)
 
         # Assert redirect
@@ -508,7 +504,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -532,7 +527,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -551,13 +545,13 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         # Assert response
         self.assertEqual(response.status_code, 302)
-
         # Assert Project state after creation
         self.assertEqual(Project.objects.all().count(), 2)
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
         self.assertIsNotNone(project)
-        # 2 mails should be send, for the project and for the category
-        self.assertEqual(len(mail.outbox), 2)
+        # No alerts or emails should be sent as the same user triggered this
+        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -570,16 +564,13 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'full_title': 'TestCategory / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
-
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
-
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
             project=project, role=self.role_owner
         )
-
         expected = {
             'id': owner_as.pk,
             'project': project.pk,
@@ -587,7 +578,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'user': self.user.pk,
             'sodar_uuid': owner_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
@@ -701,7 +691,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
         self.assertIsNotNone(self.project)
-        # No mail should be send, cause the owner has not changed
+        # No alert or mail, because the owner has not changed
+        self.assertEqual(AppAlert.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -715,7 +706,6 @@ class TestProjectUpdateView(
             'full_title': new_category.title + ' / ' + 'updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
-
         model_dict = model_to_dict(self.project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
@@ -820,7 +810,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 2)
         self.category.refresh_from_db()
         self.assertIsNotNone(self.category)
-        # Ensure no email is sent (owner not updated)
+        # Ensure no alert or email (owner not updated)
+        self.assertEqual(AppAlert.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -2705,7 +2696,35 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
+        self.assertEqual(AppAlert.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_transfer_as_old_owner(self):
+        """Test ownership transfer as old owner (should only create one mail)"""
+
+        with self.login(self.user_owner):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                    'new_owner': self.user_new.sodar_uuid,
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        self.assertEqual(AppAlert.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_transfer_ownership_inherited(self):
         """Test ownership transfer to an inherited owner"""
@@ -2731,6 +2750,7 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
+        self.assertEqual(AppAlert.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
 
