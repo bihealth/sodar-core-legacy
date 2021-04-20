@@ -725,6 +725,7 @@ class ProjectModifyMixin:
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
+            'public_guest_access': project.public_guest_access,
         }
 
     @staticmethod
@@ -795,6 +796,10 @@ class ProjectModifyMixin:
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
+
+        if old_data['public_guest_access'] != project.public_guest_access:
+            extra_data['public_guest_access'] = project.public_guest_access
+            upd_fields.append('public_guest_access')
 
         # Settings
         for k, v in project_settings.items():
@@ -1105,6 +1110,18 @@ class ProjectModifyMixin:
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
+        # Call for additional actions for project update in plugins
+        # NOTE: This is a WIP feature to be altered/expanded in a later release
+        app_plugins = get_active_plugins(plugin_type='project_app')
+        for p in app_plugins:
+            try:
+                p.handle_project_update(project, old_data)
+            except Exception as ex:
+                logger.error(
+                    'Exception when calling handle_project_update() for app '
+                    'plugin "{}": {}'.format(p.name, ex)
+                )
+
         # Send emails
         if SEND_EMAIL:
             owner_as = RoleAssignment.objects.get_assignment(owner, project)
@@ -1126,7 +1143,6 @@ class ProjectModifyMixin:
             ):
                 if not instance:
                     email.send_project_create_mail(project, request)
-
                 elif old_parent:
                     email.send_project_move_mail(project, request)
 

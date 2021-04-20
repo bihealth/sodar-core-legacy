@@ -226,6 +226,9 @@ Implementing the following is **optional**:
 - ``get_project_list_value()``: A function which **must** be implemented if
   ``project_list_columns`` are defined, to retrieve a column cell value for a
   specific project.
+- ``handle_project_update()``: A function for enabling carrying out specific
+  tasks within your app when the project is updated in projectroles. This is a
+  work-in-progress functionality to be expanded later.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create

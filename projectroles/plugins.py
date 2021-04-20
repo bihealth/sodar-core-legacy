@@ -231,6 +231,17 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
+    def handle_project_update(self, project, old_data):
+        """
+        Perform actions to handle project update.
+        # NOTE: This is a WIP feature to be altered/expanded in a later release
+
+        :param project: Current project (Project)
+        :param old_data: Old project data prior to update (dict)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""

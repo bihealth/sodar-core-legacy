@@ -29,6 +29,7 @@ Added
     - ``get_statistics()`` in ``SiteAppPluginPoint``
     - ``info_settings`` in app plugins (#671)
     - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
+    - ``handle_project_update()`` in ``ProjectAppPlugin`` (#387, #675)
 - **Siteinfo**
     - Display selected Django settings in UI (#671)
 - **Timeline**
