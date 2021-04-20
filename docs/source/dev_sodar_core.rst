@@ -28,7 +28,7 @@ Installation
 ============
 
 Instructions on how to install a local development version of SODAR Core are
-detailed here. Ubuntu 16.04 LTS (Xenial) is the supported OS at this time.
+detailed here. Ubuntu 20.04 LTS (Focal) is the supported OS at this time.
 Later Ubuntu versions and Centos 7 have also been proven to to work, but some
 system dependencies may vary for different OS versions or distributions.
 

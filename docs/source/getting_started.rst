@@ -56,7 +56,7 @@ Major requirements for integrating projectroles and other SODAR Core apps into
 your Django site are listed below. For a complete requirement list, see the
 ``requirements`` and ``utility`` directories in the repository.
 
-- Ubuntu (16.04 Xenial recommended and supported) / CentOS 7
+- Ubuntu (20.04 Focal recommended and supported) / CentOS 7
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
 - Python >=3.7 (**NOTE:** Python 3.6 no longer supported in SODAR Core v0.10+)

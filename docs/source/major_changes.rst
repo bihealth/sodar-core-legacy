@@ -30,8 +30,8 @@ Release Highlights
 Breaking Changes
 ================
 
-Python Version Requirements
----------------------------
+System Prerequisites
+--------------------
 
 Python version requirements have been upgraded as follows:
 
@@ -42,6 +42,11 @@ Python version requirements have been upgraded as follows:
 
 It is recommended to always use the most recent minor version of a Python
 release.
+
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
+
+**Ubuntu 20.04 Focal** is now the recommended OS version for development.
 
 Django v3.1 Upgrade
 -------------------
@@ -70,12 +75,6 @@ Common known issues:
 In the future, the goal is to keep SODAR Core at the latest stable major version
 of Django, except for potential cases in which a critical third party package
 has not yet been updated to support a new release.
-
-System Prerequisites
---------------------
-
-Third party Python package requirements have been upgraded. See the
-``requirements`` directory for up-to-date package versions.
 
 New Context Processors Required
 -------------------------------

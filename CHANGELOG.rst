@@ -48,6 +48,7 @@ Changed
     - Bump minimum Python version requirement to v3.7 (#121)
     - Upgraded versioneer (#656)
     - Update views, mixins and tags for anonymous user access (#574)
+    - Upgrade recommended development OS version to Ubuntu v20.04 (#640)
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)
