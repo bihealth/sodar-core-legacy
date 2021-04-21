@@ -76,7 +76,7 @@ setup(
     zip_safe=False,
     classifiers=[
         'Framework :: Django',
-        'Framework :: Django :: 3.1',
+        'Framework :: Django :: 3.2',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',

@@ -5,7 +5,7 @@ For more information on this file, see
 https://docs.djangoproject.com/en/dev/topics/settings/
 
 For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.11/ref/settings/
+https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 import environ
 import os
@@ -152,6 +152,9 @@ DATABASES = {
     'default': env.db('DATABASE_URL', default='postgres:///sodar_core')
 }
 DATABASES['default']['ATOMIC_REQUESTS'] = False
+
+# Set default auto field (for Django 3.2+)
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Set django-db-file-storage as the default storage (for filesfolders)
 DEFAULT_FILE_STORAGE = 'db_file_storage.storage.DatabaseFileStorage'

@@ -18,7 +18,7 @@ Release Highlights
 
 - Release for major breaking platform-level updates
 - Minimum Python version requirement upgraded to 3.7
-- Project upgraded to Django v3.1
+- Project upgraded to Django v3.2
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
 - Appalerts app for app-generated user alerts
@@ -48,15 +48,15 @@ Third party Python package requirements have been upgraded. See the
 
 **Ubuntu 20.04 Focal** is now the recommended OS version for development.
 
-Django v3.1 Upgrade
+Django v3.2 Upgrade
 -------------------
 
-This release updates SODAR Core from Django v1.11 to v3.1. This is a breaking
+This release updates SODAR Core from Django v1.11 to v3.2. This is a breaking
 change which causes many updates and also requires updating several
 dependencies.
 
 To upgrade, please update the Django requirement along with your site's other
-Python requirements to match ones in `requirements/*.txt`. See
+Python requirements to match ones in ``requirements/*.txt``. See
 `Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
 for details about what has been deprecated in Django and which changes are
 mandatory.
@@ -71,6 +71,8 @@ Common known issues:
 - Replace imports from ``django.core.urlresolvers`` with ``django.urls``.
 - Replace ``django.contrib.postgres.fields.JSONField`` with
   ``django.db.models.JSONField``.
+- Add ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` in
+  ``config/settings/base.py`` to get rid of database migration warnings.
 
 In the future, the goal is to keep SODAR Core at the latest stable major version
 of Django, except for potential cases in which a critical third party package
@@ -104,14 +106,6 @@ The following changes have been made to REST API views:
 
 - ``public_guest_access`` parameter added to project API views.
 
-REST API Backwards Compatibility
---------------------------------
-
-This version of SODAR Core no longer guarantees REST API backwards compatibility
-with versions <0.10. API views *may* still work if omitting accept header
-versioning, but it is recommended to review changes and update your scripts
-accordingly.
-
 Site Icons Updated
 ------------------
 
@@ -126,8 +120,8 @@ following steps.
 
 First, make sure ``django-iconify`` is installed. Add
 ``dj_iconify.apps.DjIconifyConfig`` to your Django site settings under
-``THIRD_PARTY_APPS`` and ``dj_iconify.urls`` to your site URLs. See SODAR Core
-or SODAR Django Site settings for an example.
+``THIRD_PARTY_APPS`` and ``dj_iconify.urls`` to your site URLs in
+``config/urls.py``. See SODAR Core or SODAR Django Site settings for an example.
 
 You will also need to set ``ICONIFY_JSON_ROOT`` in the base Django settings.
 

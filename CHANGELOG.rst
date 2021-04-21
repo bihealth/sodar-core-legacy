@@ -43,7 +43,7 @@ Changed
 -------
 
 - **General**
-    - Upgrade project to Django v3.1.7 (#194)
+    - Upgrade project to Django v3.2 (#194, #695)
     - Upgrade Python dependencies (#194, #678, #685)
     - Use Iconify for icons (#54)
     - Use Material Design Icons as default icon set (#54)

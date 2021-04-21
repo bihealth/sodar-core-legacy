@@ -60,7 +60,7 @@ your Django site are listed below. For a complete requirement list, see the
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
 - Python >=3.7 (**NOTE:** Python 3.6 no longer supported in SODAR Core v0.10+)
-- Django 3.1
+- Django 3.2
 - PostgreSQL >=9.6 and psycopg2-binary
 - Bootstrap 4.x
 - JQuery 3.3.x
