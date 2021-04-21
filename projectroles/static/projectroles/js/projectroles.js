@@ -174,12 +174,12 @@ $(document).ready(function () {
             if (data === 1) {
                 $('#sodar-pr-link-project-star').html(
                     '<i class="iconify text-warning" ' +
-                    'data-icon="mdi:star" height="26"></i>'
+                    'data-icon="mdi:star" height="30"></i>'
                 ).attr('data-original-title', 'Unstar');
             } else {
                 $('#sodar-pr-link-project-star').html(
                     '<i class="iconify text-muted" ' +
-                    'data-icon="mdi:star-outline" height="26"></i>'
+                    'data-icon="mdi:star-outline" height="30"></i>'
                 ).attr('data-original-title', 'Star');
             }
         }).fail(function () {

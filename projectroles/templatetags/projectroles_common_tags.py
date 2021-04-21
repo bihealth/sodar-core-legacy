@@ -296,13 +296,13 @@ def get_info_link(content, html=False):
 def get_remote_icon(project, request):
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:
-        try:
-            remote_project = RemoteProject.objects.get(
-                project=project, site__mode=SITE_MODE_SOURCE
-            )
+        remote_project = RemoteProject.objects.filter(
+            project=project, site__mode=SITE_MODE_SOURCE
+        ).first()
+        if remote_project:
             return (
                 '<i class="iconify {} mx-1 '
-                'sodar-pr-remote-project-icon" data-icon="mdi:earth" '
+                'sodar-pr-remote-project-icon" data-icon="mdi:cloud" '
                 'title="{} project from '
                 '{}" data-toggle="tooltip" data-placement="top">'
                 '</i>'.format(
@@ -311,10 +311,6 @@ def get_remote_icon(project, request):
                     remote_project.site.name,
                 )
             )
-
-        except RemoteProject.DoesNotExist:
-            pass
-
     return ''
 
 

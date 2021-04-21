@@ -24,9 +24,9 @@
        title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
        data-toggle="tooltip" data-placement="top">
       {% if project_starred %}
-        <i class="iconify text-warning" data-icon="mdi:star" height="26"></i>
+        <i class="iconify text-warning" data-icon="mdi:star" height="30"></i>
       {% else %}
-        <i class="iconify text-muted" data-icon="mdi:star-outline" height="26"></i>
+        <i class="iconify text-muted" data-icon="mdi:star-outline" height="30"></i>
       {% endif %}
     </a>
   {% endif %}
@@ -38,7 +38,7 @@
        data-clipboard-text="{{ project.sodar_uuid }}"
        title="Copy UUID to clipboard" data-toggle="tooltip" data-placement="top">
       <i class="iconify text-muted"
-         data-icon="mdi:clipboard-text-multiple-outline" data-height="26">
+         data-icon="mdi:clipboard-text-multiple-outline" data-height="30">
       </i>
     </a>
   {% endif %}
@@ -49,13 +49,25 @@
       {{ project.description }}
     {% endif %}
   </div>
+
+  {# Remote status #}
   {% if project.is_remote and request.user.is_superuser %}
-    <div class="ml-auto">
-      <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
-         data-icon="mdi:earth" data-height="26"
-         title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %} {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
+    <div class="ml-auto"
+         title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %}
+                {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
          data-toggle="tooltip" data-placement="left">
+      <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
+         data-icon="mdi:cloud" data-height="30">
       </i>
+    </div>
+  {% endif %}
+
+  {# Public access status #}
+  {% if project.public_guest_access %}
+    <div class="ml-auto"
+         title="Public guest access"
+         data-toggle="tooltip" data-placement="left">
+      <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
     </div>
   {% endif %}
 

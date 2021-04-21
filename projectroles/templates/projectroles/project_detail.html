@@ -25,7 +25,7 @@
         <div class="card" id="sodar-pr-details-card-remote">
           <div class="card-header">
             <h4>
-              <i class="iconify" data-icon="mdi:earth"></i>
+              <i class="iconify" data-icon="mdi:cloud"></i>
               {% get_display_name object.type title=True %} on Other Sites
             </h4>
           </div>
@@ -37,7 +37,7 @@
                 title="{% if rp.site.description %}{{ rp.site.description }}{% endif %}"
                 data-toggle="tooltip"
                 target="_blank">
-                <i class="iconify" data-icon="mdi:earth"></i> {{ rp.site.name }}
+                <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ rp.site.name }}
               </a>
             {% endfor %}
           </div>
@@ -46,7 +46,7 @@
       {% elif object.is_remote %}
         <div class="card" id="sodar-pr-details-card-remote">
           <div class="card-header">
-            <h4><i class="iconify" data-icon="mdi:earth"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
+            <h4><i class="iconify" data-icon="mdi:cloud"></i> {% get_display_name object.type title=True %} on Other Sites</h4>
           </div>
           <div class="card-body pb-2 mr-2">
             <a class="btn btn-info mb-1 sodar-pr-link-remote sodar-pr-link-remote-master"
@@ -55,7 +55,7 @@
                 title="{% if object.get_source_site.description %}{{ object.get_source_site.description }}{% endif %}"
                 data-toggle="tooltip"
                 target="_blank">
-              <i class="iconify" data-icon="mdi:earth"></i> {{ object.get_source_site.name }} (Master Project)
+              <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ object.get_source_site.name }} (Master Project)
             </a>
             {% get_visible_projects peer_projects can_view_hidden_projects as visible_peer_projects %}
             {% for peer_p in visible_peer_projects %}
@@ -65,7 +65,7 @@
                   title="{% if peer_p.site.description %}{{ peer_p.site.description }}{% endif %}"
                   data-toggle="tooltip"
                   target="_blank">
-                <i class="iconify" data-icon="mdi:earth"></i> {{ peer_p.site.name }}
+                <i class="iconify" data-icon="mdi:cloud-outline"></i> {{ peer_p.site.name }}
               </a>
             {% endfor %}
           </div>
