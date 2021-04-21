@@ -14,9 +14,6 @@ from django.contrib.messages import get_messages
 
 from test_plus.test import TestCase
 
-# Appalerts dependency
-from appalerts.models import AppAlert
-
 from projectroles.app_settings import AppSettingAPI
 from projectroles.models import (
     Project,
@@ -327,6 +324,12 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project creation view"""
 
+    def setUp(self):
+        super().setUp()
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
+
     def test_render_top(self):
         """Test rendering of top level category creation form"""
         with self.login(self.user):
@@ -448,7 +451,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         project = Project.objects.first()
         self.assertIsNotNone(project)
         # Same user so no alerts or emails
-        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -550,7 +553,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
         self.assertIsNotNone(project)
         # No alerts or emails should be sent as the same user triggered this
-        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -600,6 +603,9 @@ class TestProjectUpdateView(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render_project(self):
         """Test rendering of Project updating form with an existing project"""
@@ -692,7 +698,7 @@ class TestProjectUpdateView(
         self.project.refresh_from_db()
         self.assertIsNotNone(self.project)
         # No alert or mail, because the owner has not changed
-        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -811,7 +817,7 @@ class TestProjectUpdateView(
         self.category.refresh_from_db()
         self.assertIsNotNone(self.category)
         # Ensure no alert or email (owner not updated)
-        self.assertEqual(AppAlert.objects.count(), 0)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -1973,8 +1979,11 @@ class TestRoleAssignmentCreateView(
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-
         self.user_new = self.make_user('guest')
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
         """Test rendering of RoleAssignment creation form"""
@@ -2020,7 +2029,10 @@ class TestRoleAssignmentCreateView(
         # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_create').count(), 0
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            0,
         )
 
         # Issue POST request
@@ -2052,7 +2064,10 @@ class TestRoleAssignmentCreateView(
         }
         self.assertEqual(model_to_dict(role_as), expected)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_create').count(), 1
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            1,
         )
 
         # Assert redirect
@@ -2305,6 +2320,10 @@ class TestRoleAssignmentUpdateView(
             self.project, self.user_new, self.role_guest
         )
 
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
+
     def test_render(self):
         """Test rendering of RoleAssignment updating form"""
         with self.login(self.user):
@@ -2342,7 +2361,10 @@ class TestRoleAssignmentUpdateView(
         # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_update').count(), 0
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            0,
         )
 
         values = {
@@ -2373,7 +2395,10 @@ class TestRoleAssignmentUpdateView(
         }
         self.assertEqual(model_to_dict(role_as), expected)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_update').count(), 1
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            1,
         )
 
         # Assert redirect
@@ -2548,12 +2573,15 @@ class TestRoleAssignmentDeleteView(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Create guest user and role
         self.user_new = self.make_user('guest')
         self.role_as = self._make_assignment(
             self.project, self.user_new, self.role_guest
         )
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
         """Test rendering of the RoleAssignment deletion confirmation form"""
@@ -2573,7 +2601,10 @@ class TestRoleAssignmentDeleteView(
         # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_delete').count(), 0
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            0,
         )
 
         with self.login(self.user):
@@ -2587,7 +2618,10 @@ class TestRoleAssignmentDeleteView(
         # Assert object states after update
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
         self.assertEqual(
-            AppAlert.objects.filter(alert_name='role_delete').count(), 1
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            1,
         )
 
         # Assert redirect
@@ -2665,12 +2699,15 @@ class TestRoleAssignmentOwnerTransferView(
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-
         # Create guest user and role
         self.user_new = self.make_user('guest')
         self.role_as = self._make_assignment(
             self.project, self.user_new, self.role_guest
         )
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_transfer_ownership(self):
         """Test ownership transfer"""
@@ -2696,7 +2733,7 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
-        self.assertEqual(AppAlert.objects.count(), 2)
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
     def test_transfer_as_old_owner(self):
@@ -2723,7 +2760,7 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
-        self.assertEqual(AppAlert.objects.count(), 1)
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
 
     def test_transfer_ownership_inherited(self):
@@ -2750,7 +2787,7 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
-        self.assertEqual(AppAlert.objects.count(), 2)
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
 
