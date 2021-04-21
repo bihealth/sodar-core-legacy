@@ -539,7 +539,7 @@ user selection field:
     {% block css %}
       {{ block.super }}
       <!-- Select2 theme -->
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+      <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
     {% endblock css %}
 
 If using a customized widget with its own Javascript, include the corresponding

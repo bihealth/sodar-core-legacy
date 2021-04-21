@@ -58,6 +58,7 @@ Changed
     - Always show Django admin warning (#677)
     - Modify signature of ``get_history_dropdown()`` template tag (#668)
     - Add default ``superuser`` value to ``LiveUserMixin._make_user()``
+    - Include ``select2`` CSS locally (#457)
 - **Siteinfo**
     - Tabbed layout in site info view
 - **Timeline**
