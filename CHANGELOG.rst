@@ -52,6 +52,7 @@ Changed
     - Update views, mixins and tags for anonymous user access (#574)
     - Upgrade recommended development OS version to Ubuntu v20.04 (#640)
     - Do not send redundant emails to users initiating updates (#693)
+    - Get all app settings from environment
 - **Projectroles**
     - Set parent owner as initial owner in project form (#667)
     - Always show Django admin warning (#677)
@@ -68,6 +69,8 @@ Changed
 Fixed
 -----
 
+- **General**
+    - All app settings not properly frozen in test config (#688)
 - **Adminalerts**
     - Pagedown widget breaking CSS layout in Firefox (#659)
 - **Bgjobs**
