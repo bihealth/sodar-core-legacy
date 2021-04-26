@@ -142,7 +142,7 @@ class TimelineAPI:
         event.save()
 
         # Always add "INIT" status when creating, except for "INFO"
-        if status_type != 'INFO':
+        if status_type not in ['INFO', 'INIT']:
             event.set_status('INIT')
         # Add additional status if set (use if e.g. event is immediately "OK")
         if status_type:

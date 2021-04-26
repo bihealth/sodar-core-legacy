@@ -130,6 +130,39 @@ class TestTimelineAPI(
         }
         self.assertEqual(model_to_dict(status), expected_status)
 
+    def test_add_event_custom_init(self):
+        """Test adding an event with custom INIT status"""
+        custom_init_desc = 'Custom init'
+
+        # Assert precondition
+        self.assertEqual(ProjectEvent.objects.all().count(), 0)
+        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+            status_type='INIT',
+            status_desc=custom_init_desc,
+        )
+
+        # Assert object status after insert
+        self.assertEqual(ProjectEvent.objects.all().count(), 1)
+        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
+        # Test Init status
+        status = event.get_current_status()
+        expected_status = {
+            'id': status.pk,
+            'event': event.pk,
+            'status_type': 'INIT',
+            'description': custom_init_desc,
+            'extra_data': {},
+        }
+        self.assertEqual(model_to_dict(status), expected_status)
+
     def test_add_event_no_user(self):
         """Test adding an event with no user"""
 

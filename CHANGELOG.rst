@@ -64,6 +64,7 @@ Changed
 - **Timeline**
     - Make ``project`` and ``user`` fields in ``ProjectEvent`` optional (#119, #668)
     - Modify signatures of ``get_object_url()`` and ``get_object_link()`` helpers (#668)
+    - Allow custom ``INIT`` status data (#700)
 - **Tokens**
     - Refactor view tests
 
@@ -80,6 +81,8 @@ Fixed
     - Description line spacing in project header (#632)
     - Pagedown widget breaking CSS layout in Firefox (#659)
     - Crash by missing optional ``PROJECTROLES_DELEGATE_LIMIT`` setting (#676)
+- **Timeline**
+    - Double status added when calling ``add_event()`` with ``INIT`` type (#700)
 
 Removed
 -------
