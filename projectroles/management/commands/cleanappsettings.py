@@ -3,7 +3,7 @@ import logging
 from django.core.management.base import BaseCommand
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.models import AppSetting, Project
+from projectroles.models import AppSetting
 
 logger = logging.getLogger(__name__)
 
@@ -11,24 +11,9 @@ logger = logging.getLogger(__name__)
 app_settings = AppSettingAPI()
 
 
-def get_api_settings():
-    return {
-        project: [
-            app_setting
-            for app_setting in app_settings.get_all_settings(project)
-        ]
-        for project in Project.objects.filter(type='PROJECT')
-    }
-
-
-def get_db_settings():
-    return AppSetting.objects.filter(user=None)
-
-
-def is_setting_undefined(db_setting, api_settings):
-    return get_setting_str(db_setting) not in api_settings.get(
-        db_setting.project, []
-    )
+# Local constants
+START_MSG = 'Checking database for undefined app settings..'
+END_MSG = 'OK'
 
 
 def get_setting_str(db_setting):
@@ -43,10 +28,6 @@ def get_setting_str(db_setting):
     )
 
 
-def get_undefined_settings(api_settings, db_settings):
-    return [s for s in db_settings if is_setting_undefined(s, api_settings)]
-
-
 class Command(BaseCommand):
     help = 'Cleans up undefined app settings from the database.'
 
@@ -54,14 +35,21 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        api_settings = get_api_settings()
-        db_settings = get_db_settings()
-        ghosts = get_undefined_settings(api_settings, db_settings)
-
-        for ghost in ghosts:
-            logger.info(
-                'Removing undefined app setting: {}'.format(
-                    get_setting_str(ghost)
+        logger.info(START_MSG)
+        db_settings = AppSetting.objects.filter(user=None)
+        for s in db_settings:
+            def_kwargs = {'name': s.name}
+            if s.app_plugin:
+                def_kwargs['plugin'] = s.app_plugin.get_plugin()
+            else:
+                def_kwargs['app_name'] = 'projectroles'
+            try:
+                app_settings.get_setting_def(**def_kwargs)
+            except ValueError:
+                logger.info(
+                    'Deleting "{}" from project "{}"'.format(
+                        get_setting_str(s), s.project.title
+                    )
                 )
-            )
-            ghost.delete()
+                s.delete()
+        logger.info(END_MSG)

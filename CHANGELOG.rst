@@ -60,6 +60,7 @@ Changed
     - Modify signature of ``get_history_dropdown()`` template tag (#668)
     - Add default ``superuser`` value to ``LiveUserMixin._make_user()``
     - Include ``select2`` CSS locally (#457)
+    - Refactor ``cleanappsettings`` (#673)
 - **Siteinfo**
     - Tabbed layout in site info view
 - **Timeline**
@@ -82,6 +83,7 @@ Fixed
     - Description line spacing in project header (#632)
     - Pagedown widget breaking CSS layout in Firefox (#659)
     - Crash by missing optional ``PROJECTROLES_DELEGATE_LIMIT`` setting (#676)
+    - ``cleanappsettings`` deleting defined app settings (#673)
 - **Timeline**
     - Double status added when calling ``add_event()`` with ``INIT`` type (#700)
 
