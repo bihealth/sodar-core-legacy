@@ -45,6 +45,7 @@ Changed
 - **General**
     - Upgrade project to Django v3.2 (#194, #695)
     - Upgrade Python dependencies (#194, #678, #685)
+    - GitHub repo renamed to ``sodar-core`` (#699)
     - Use Iconify for icons (#54)
     - Use Material Design Icons as default icon set (#54)
     - Bump minimum Python version requirement to v3.7 (#121)

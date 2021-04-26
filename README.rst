@@ -1,8 +1,8 @@
 SODAR Core
 ^^^^^^^^^^
 
-.. image:: https://github.com/bihealth/sodar_core/workflows/build/badge.svg
-    :target: https://github.com/bihealth/sodar_core/actions?query=workflow%3ABuild
+.. image:: https://github.com/bihealth/sodar-core/workflows/build/badge.svg
+    :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
 .. image:: https://api.codacy.com/project/badge/Grade/404e8515825548b1aa5a44dbe3d45ece
     :target: https://www.codacy.com/app/bihealth/sodar_core
@@ -109,7 +109,7 @@ installation is forthcoming.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.9.1#egg=django-sodar-core
+    pip install -e git+https://github.com/bihealth/sodar-core.git@v0.9.1#egg=django-sodar-core
 
 Please note that This package installs a collection Django apps to
 be used in a Django web site project. See

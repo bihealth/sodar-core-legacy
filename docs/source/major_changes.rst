@@ -215,6 +215,16 @@ For your views to properly support anonymous access, please use the override of
 ``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
 original mixin supplied in Django.
 
+GitHub Repository Renamed
+-------------------------
+
+The GitHub repository for the project has been renamed from ``sodar_core`` to
+``sodar-core``. Otherwise the URL remains the same:
+`<https://github.com/bihealth/sodar-core/>`_
+
+GitHub should redirect from the old name indefinitely. However, just to be sure
+it is recommend to update your site's dependencies.
+
 
 v0.9.1 (2021-03-05)
 *******************

@@ -83,8 +83,8 @@ the environment, install Python requirements for the project:
 
 .. code-block:: console
 
-    $ git clone https://github.com/bihealth/sodar_core.git
-    $ cd sodar_core
+    $ git clone https://github.com/bihealth/sodar-core.git
+    $ cd sodar-core
     $ python3.x -m venv .venv
     $ source .venv/bin/activate
     $ utility/install_python_dependencies.sh

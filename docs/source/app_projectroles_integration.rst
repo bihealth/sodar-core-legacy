@@ -86,7 +86,7 @@ desired release tag.
 .. code-block:: console
 
     -e git+https://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+https://github.com/bihealth/sodar_core.git@v0.9.1#egg=django-sodar-core
+    -e git+https://github.com/bihealth/sodar-core.git@v0.9.1#egg=django-sodar-core
 
 Install the requirements for development:
 
