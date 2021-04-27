@@ -76,7 +76,7 @@ Ready to contribute? Here's how to set up SODAR Core for local development.
     $ git checkout -b name-of-your-bugfix-or-feature dev
 
    Make sure you base your changes on the ``dev`` branch, which is the current
-   active development branch. The ``master`` branch is intended for merging
+   active development branch. The ``main`` branch is intended for merging
    stable releases only. Now you can make your changes locally.
 
 5. When you're done making changes, make sure to apply proper formatting using

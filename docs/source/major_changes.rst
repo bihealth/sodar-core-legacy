@@ -73,6 +73,7 @@ Common known issues:
   ``django.db.models.JSONField``.
 - Add ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` in
   ``config/settings/base.py`` to get rid of database migration warnings.
+- Replace ``{% load staticfiles %}`` with ``{% load static %}``.
 
 In the future, the goal is to keep SODAR Core at the latest stable major version
 of Django, except for potential cases in which a critical third party package
@@ -172,9 +173,9 @@ element. Enter the collection and icon name into the ``data-icon`` attribute.
 
 Example:
 
-.. code-block:: django
+.. code-block:: HTML
 
-    <span class="iconify" data-icon="mdi:home"></span>
+    <i class="iconify" data-icon="mdi:home"></i>
 
 Also make sure to modify the ``icon`` attribute of your app plugins to include
 the full ``collection:name`` syntax for Iconify icons.
@@ -186,6 +187,17 @@ icons, add the ``spin`` class provided in ``projectroles.css``.
 Once you have updated all your icons, you can remove the Font Awesome CSS
 include from your base template if you are not directly importing it from
 ``base_site.html``.
+
+In certain client side Javascript implementations in which icons are loaded or
+replaced dynamically, you may have to refer to these URLs as a direct ``img``
+element:
+
+.. code-block:: HTML
+
+    <img src="/icons/mdi/home.svg" />
+
+For modifiers such as color and size when using ``img`` tags,
+`see here <https://docs.iconify.design/implementations/css.html>`_.
 
 Deprecated Features Removed
 ---------------------------
@@ -215,7 +227,7 @@ For your views to properly support anonymous access, please use the override of
 ``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
 original mixin supplied in Django.
 
-GitHub Repository Renamed
+GitHub Repository Updates
 -------------------------
 
 The GitHub repository for the project has been renamed from ``sodar_core`` to
@@ -224,6 +236,8 @@ The GitHub repository for the project has been renamed from ``sodar_core`` to
 
 GitHub should redirect from the old name indefinitely. However, just to be sure
 it is recommend to update your site's dependencies.
+
+Additionally, the former ``master`` branch has been renamed to ``main``.
 
 
 v0.9.1 (2021-03-05)

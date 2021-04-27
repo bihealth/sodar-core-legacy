@@ -26,7 +26,7 @@ SODAR Core
 SODAR Core is a framework for Django web application development.
 
 It was conceived to facilitate the creation of scientific data management and
-analysis web applications (but can be useful in other contexts as well).
+analysis web applications, but can be useful in other contexts as well.
 In that it is similar to the CMS or ecommerce frameworks that you can find
 `Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
 
@@ -57,7 +57,7 @@ been made available as open source:
 Quickstart
 ==========
 
-SODAR Core can only be used from within Django projects.  The easiest way to
+SODAR Core can only be used from within Django projects. The easiest way to
 start out is following the `For the Impatient
 <https://sodar-core.readthedocs.io/en/latest/for_the_impatient.html>`__
 section in our documentation.
@@ -115,3 +115,19 @@ Please note that This package installs a collection Django apps to
 be used in a Django web site project. See
 `SODAR Core documentation <https://sodar-core.readthedocs.io/en/latest/?badge=latest>`_
 for detailed documentation on use, integration and development.
+
+
+Repository
+==========
+
+The branches of the SODAR Core repository are organized as follows:
+
+- ``main``: The latest stable release.
+- ``dev``: The current development branch. Most recent features go here, but
+  stability is not guaranteed.
+
+When including SODAR Core in your Django project, it is highly recommended to
+freeze your dependency to a specific release tag or commit ID. The project is
+under development and breaking changes may be introduced frequently.
+
+Contributions should always be based on the ``dev`` branch.

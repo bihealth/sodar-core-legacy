@@ -87,7 +87,10 @@
           <tr>
             <td class="bg-faded font-italic text-center text-danger"
                 colspan="{{ project_col_count }}">
-              No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
+              No {% get_display_name 'PROJECT' title=False plural=True %}
+              available: access must be granted by
+              {% get_display_name 'PROJECT' title=False plural=False %}
+              personnel or a superuser
             </td>
           </tr>
         {% endif %}

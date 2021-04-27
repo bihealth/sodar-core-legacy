@@ -23,7 +23,7 @@ is strongly recommended to use
 `sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as the
 template. The repository contains a minimal :term:`Django site<Django Site>`
 pre-configured with projectroles and other
-:term:`SODAR Core apps<SODAR Core App>`. The master branch of this project
+:term:`SODAR Core apps<SODAR Core App>`. The ``main`` branch of this project
 always integrates the latest stable release of SODAR Core and projectroles.
 
 To set up your site with this template, clone the repository and follow the
