@@ -21,6 +21,7 @@ venv/
 *.stTheme.cache
 
 # Built distribution files
+build/
 dist/
 
 # workspace files are user-specific

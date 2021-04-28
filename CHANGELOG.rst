@@ -7,6 +7,23 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **General**
+    - Upgrade django-debug-toolbar to v3.2.1 (#706)
+
+Fixed
+-----
+
+- **General**
+    - Add ``build/`` to ``.gitignore`` (#707)
+    - Invalid operating system qualifier in ``setup.py`` (#708)
+
+
 v0.10.0 (2021-04-28)
 ====================
 

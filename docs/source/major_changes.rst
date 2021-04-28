@@ -10,6 +10,21 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.1 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Make project available in PyPI
+- Fix minor issues detected in v0.10.0
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.10.0 (2021-04-28)
 ********************
 
@@ -25,7 +40,6 @@ Release Highlights
 - Timeline events without user
 - Allow public guest access to projects for authenticated and anonymous users
 - Display Django settings in Site Info app
-- Make project available in PyPI
 
 Breaking Changes
 ================
