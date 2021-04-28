@@ -11,14 +11,13 @@ detailed in this document.
 Installation
 ============
 
-The ``django-sodar-core`` package can be installed from GitHub using pip as
-follows. It is strongly recommended to specify a version tag, as the package is
-under active development and breaking changes can be expected. PyPI install is
-forthcoming.
+The ``django-sodar-core`` package can be installed into your Django project
+from PyPI as follows. It is strongly recommended to specify a version tag, as
+the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar_core.git@v0.9.1#egg=django-sodar-core
+    pip install django-sodar-core==0.10.0
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a
@@ -36,6 +35,7 @@ The following Django apps will be installed when installing the
 - **projectroles**: Base app for project access management and dynamic app
   content management. All other apps require the integration of projectroles.
 - **adminalerts**: Site app for displaying site-wide messages to all users.
+- **appalerts**: Site app and backend for raising alerts to users from apps.
 - **bgjobs**: Project app for managing background jobs.
 - **siteinfo**: Site app for displaying site information and statistics for
   administrators.
@@ -55,11 +55,11 @@ Major requirements for integrating projectroles and other SODAR Core apps into
 your Django site are listed below. For a complete requirement list, see the
 ``requirements`` and ``utility`` directories in the repository.
 
-- Ubuntu (16.04 Xenial recommended and supported) / CentOS 7
+- Ubuntu (20.04 Focal recommended and supported) / CentOS 7
 - System library requirements (see the ``utility`` directory and/or your own
   Django project)
-- Python >=3.6 (**NOTE:** Python 3.5 no longer supported)
-- Django 1.11 (**NOTE:** 2.x not currently supported)
+- Python >=3.7 (**NOTE:** Python 3.6 no longer supported in SODAR Core v0.10+)
+- Django 3.2
 - PostgreSQL >=9.6 and psycopg2-binary
 - Bootstrap 4.x
 - JQuery 3.3.x

@@ -60,7 +60,7 @@ The following variables and functions are **mandatory**:
 
 - ``name``: App name (ideally should correspond to the app package name)
 - ``title``: Printable app title
-- ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
+- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
 - ``description``: Verbose description of app
 - ``get_api()``: Function for retrieving the API class for the backend, to be
   implemented
@@ -70,6 +70,8 @@ Implementing the following is **optional**:
 
 - ``javascript_url``: Path to on demand includeable Javascript file
 - ``css_url``: Path to on demand includeable CSS file
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
 

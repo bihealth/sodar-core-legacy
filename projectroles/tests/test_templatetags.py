@@ -287,9 +287,10 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
             },
         )
         self.assertEqual(
-            c_tags.get_history_dropdown(self.project, self.user),
-            '<a class="dropdown-item" href="{}">\n<i class="fa fa-fw '
-            'fa-clock-o"></i> History</a>\n'.format(url),
+            c_tags.get_history_dropdown(self.user, self.project),
+            '<a class="dropdown-item" href="{}">\n'
+            '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
+            'History</a>\n'.format(url),
         )
 
     def test_highlight_search_term(self):
@@ -306,14 +307,15 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         self.assertEqual(
             c_tags.get_info_link('content'),
             '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
-            'data-trigger="focus" data-placement="top" data-content="content" '
-            '><i class="fa fa-info-circle text-info"></i></a>',
+            'data-trigger="focus" data-placement="top" data-content="content" >'
+            '<i class="iconify text-info" data-icon="mdi:information"></i></a>',
         )
         self.assertEqual(
             c_tags.get_info_link('content', html=True),
             '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
             'data-trigger="focus" data-placement="top" data-content="content" '
-            'data-html="true"><i class="fa fa-info-circle text-info"></i></a>',
+            'data-html="true">'
+            '<i class="iconify text-info" data-icon="mdi:information"></i></a>',
         )
 
     # TODO: Test get_remote_icon() (need to set up remote projects)
@@ -459,10 +461,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             len(settings.ENABLED_BACKEND_PLUGINS),
         )
 
-    def test_get_site_apps(self):
-        """Test get_site_apps()"""
-        self.assertEqual(len(tags.get_site_apps()), 7)
-
     # TODO: Test get_site_app_messages() (set up admin alert)
 
     def test_has_star(self):
@@ -544,6 +542,10 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.get_user_role_html(self.project, user_no_roles),
             '<span class="text-muted">N/A</span>',
         )
+        self.project.set_public()
+
+        # TODO: Test for authenticated user in a public guest access project
+        # TODO: Test for anonymous user
 
     def test_is_inherited_owner(self):
         """Test is_inherited_owner()"""
@@ -581,7 +583,8 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         set_tag_state(self.project, self.user, name=PROJECT_TAG_STARRED)
         self.assertEqual(
             tags.get_star(self.project, self.user),
-            '<i class="fa fa-star text-warning sodar-tag-starred"></i>',
+            '<i class="iconify text-warning sodar-tag-starred" '
+            'data-icon="mdi:star"></i>',
         )
         self.assertEqual(tags.get_star(self.project, user_no_roles), '')
 

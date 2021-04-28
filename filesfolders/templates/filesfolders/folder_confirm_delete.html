@@ -15,7 +15,8 @@
 <div class="container-fluid sodar-page-container">
   {% if object.children.count > 0 or object.files.count > 0 or object.links.count > 0 %}
   <div class="alert alert-danger" role="alert">
-    <strong>Error:</strong> Unable to delete a non-empty folder. Please delete files and subfolders and try again.
+    <strong>Error:</strong> Unable to delete a non-empty folder. Please delete
+    files and subfolders and try again.
   </div>
 
   <div class="row">
@@ -27,7 +28,7 @@
         <a role="button" class="btn btn-secondary"
             href="{% url 'filesfolders:list' project=object.project.sodar_uuid %}">
       {% endif %}
-        <i class="fa fa-arrow-circle-left"></i> Cancel
+        <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
       </a>
     </div>
   </div>
@@ -48,10 +49,10 @@
           <a role="button" class="btn btn-secondary"
              href="{% url 'filesfolders:list' project=object.project.sodar_uuid %}">
         {% endif %}
-          <i class="fa fa-arrow-circle-left"></i> Cancel
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
         </a>
         <button type="submit" class="btn btn-danger">
-          <i class="fa fa-close"></i> Delete
+          <i class="iconify" data-icon="mdi:close-thick"></i> Delete
         </button>
       </div>
     </div>

@@ -19,12 +19,14 @@ basic concepts regarding the use of this app.
 Logging In
 ==========
 
-Apart from specific public or token-enabled views, user login is **mandatory**
-for using a SODAR Core based Django site.
+Unless anonymous access is specifically set on the site, apart from specific
+public or token-enabled views, user login is **mandatory** for using a SODAR
+Core based Django site.
 
 One can either log in using a local Django user or, if LDAP/AD is enabled, their
 LDAP/AD credentials from a supported site. In the latter case, the user domain
-must be appended to the user name in form of ``user@DOMAIN``.
+must be appended to the user name in form of ``user@DOMAIN``. Single sign-on
+with SAML can also be made available.
 
 .. figure:: _static/app_projectroles/sodar_login.png
     :align: center
@@ -165,6 +167,19 @@ target category or superuser status.
 
     For remote project synchronized from another SODAR Core based site, you can
     only edit local application settings in this view.
+
+Public Guest Access
+-------------------
+
+From the project create/update view, setting *Public Guest Access* will give
+everyone in the system read-only guest access in the project without
+specifically granting it.
+
+.. warning::
+
+    If the site has been configured to allow in anonymous users, this will also
+    make the project available to anyone who can access the site in your
+    network! Please use this feature carefully.
 
 App Settings
 ------------

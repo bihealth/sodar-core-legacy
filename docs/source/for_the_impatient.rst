@@ -54,8 +54,8 @@ PostgreSQL
     administrative user.
 
 Development Essentials
-    We assume that you have ``git``, Python 3.6, and other essential tools
-    installed.
+    We assume that you have ``git``, Python 3.7 or above, and other essential
+    tools installed.
     If you are using a mainstream Unix-like distribution (Mac qualifies) then
     you should be good to go.
 
@@ -109,25 +109,25 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install -e git+https://github.com/bihealth/sodar_core.git@v0.9.1#egg=django-sodar-core
+    $ pip install django-sodar-core==0.10.0
 
 
 Download Example Site
 =====================
 
 We maintain a Git repository with a django project using the latest SODAR Core
-version here on GitHub: `sodar_django_site <https://github.com/bihealth/sodar_django_site>`_.
+version here on GitHub: `sodar-django-site <https://github.com/bihealth/sodar-django-site>`_.
 We will use this to get hit the ground running.
 See :ref:`app_projectroles_integration` on other ways to get started with SODAR
 Core.
 
 .. code-block:: bash
 
-    $ git clone https://github.com/bihealth/sodar_django_site.git  sodar_django_site
-    $ cd sodar_django_site
+    $ git clone https://github.com/bihealth/sodar-django-site.git  sodar-django-site
+    $ cd sodar-django-site
 
 From here on, we assume that you are located (a) within the
-``sodar_django_site`` directory and (b) have done
+``sodar-django-site`` directory and (b) have done
 ``source ~/miniconda3/bin/activate`` such that ``which python`` shows
 ``~/miniconda3/bin/python``.
 
@@ -145,7 +145,7 @@ The next step is to perform some configuration.
 SODAR Core is built on the `12 factor app <https://12factor.net/>`_ principles.
 Configuration is done using environment variables.
 For development, they are read from the ``.env`` file in your
-``sodar_django_site`` checkout.
+``sodar-django-site`` checkout.
 We are shipping an example setting file that you should copy and then edit.
 
 .. code-block:: bash
@@ -158,17 +158,17 @@ The default value for this is shown below.
 
 .. code-block:: bash
 
-    DATABASE_URL="postgres://sodar_django_site:sodar_django_site@127.0.0.1/sodar_django_site"
+    DATABASE_URL="postgres://sodar-django-site:sodar-django-site@127.0.0.1/sodar-django-site"
 
 To keep it simple, you can use the following commands to create the correct
 database, user, and set the password.
 
 .. code-block:: bash
 
-    $ sudo -u postgres createuser -ds sodar_django_site -W
+    $ sudo -u postgres createuser -ds sodar-django-site -W
     [sudo] password for USER: <enter your password>
-    Password: <enter: sodar_django_site>
-    $ sudo -u postgres createdb --owner=sodar_django_site sodar_django_site
+    Password: <enter: sodar-django-site>
+    $ sudo -u postgres createdb --owner=sodar-django-site sodar-django-site
 
 Now, we have to make sure that the environment file is read:
 
@@ -270,7 +270,7 @@ of actions in the timeline app:
 
 .. note::
 
-    By default, ``sodar_django_site`` will store the files in the PostgreSQL
+    By default, ``sodar-django-site`` will store the files in the PostgreSQL
     database but you can easily configure it to use other storage backends,
     e.g., the S3 protocol, with the
     `django-storage <https://django-storages.readthedocs.io/en/latest/>`_
@@ -305,7 +305,7 @@ apps:
 Going on From Here
 ==================
 
-- You can now start exploring your ``sodar_django_site`` and play around with
+- You can now start exploring your ``sodar-django-site`` and play around with
   it.
 - You can read the :ref`user_stories` section to learn how SODAR Core based
   applications are built.

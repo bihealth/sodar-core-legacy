@@ -148,7 +148,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             )
             return
         user = users.first()
-        del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+        del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
         if (
             role == self.del_role

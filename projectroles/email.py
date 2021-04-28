@@ -184,6 +184,7 @@ You can access the project at the following link:
 def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
     """
     Return the invite content header.
+
     :param project: Project object
     :param issuer: User object
     :param role_name: Display name of the Role object
@@ -192,7 +193,6 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
     :return: string
     """
     body = MESSAGE_HEADER_NO_RECIPIENT.format(site_title=SITE_TITLE)
-
     body += MESSAGE_INVITE_BODY.format(
         issuer_name=issuer.get_full_name(),
         issuer_email=issuer.email,
@@ -203,28 +203,27 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
         site_title=SITE_TITLE,
         project_label=get_display_name(project.type),
     )
-
     if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         body += NO_REPLY_NOTE
-
     return body
 
 
 def get_invite_message(message=None):
     """
     Return the message from invite issuer, of empty string if not set.
+
     :param message: Optional user message as string
     :return: string
     """
     if message and len(message) > 0:
         return MESSAGE_INVITE_ISSUER.format(message)
-
     return ''
 
 
 def get_email_footer():
     """
     Return the invite content footer.
+
     :return: string
     """
     return MESSAGE_FOOTER.format(
@@ -236,7 +235,8 @@ def get_email_footer():
 
 def get_invite_subject(project):
     """
-    Return invite email subject
+    Return invite email subject.
+
     :param project: Project object
     :return: string
     """
@@ -251,7 +251,8 @@ def get_invite_subject(project):
 
 def get_role_change_subject(change_type, project):
     """
-    Return role change email subject
+    Return role change email subject.
+
     :param change_type: Change type ('create', 'update', 'delete')
     :param project: Project object
     :return: String
@@ -261,16 +262,12 @@ def get_role_change_subject(change_type, project):
         'project': project.title,
         'project_label': get_display_name(project.type),
     }
-
     if change_type == 'create':
         subject += SUBJECT_ROLE_CREATE.format(**subject_kwargs)
-
     elif change_type == 'update':
         subject += SUBJECT_ROLE_UPDATE.format(**subject_kwargs)
-
     elif change_type == 'delete':
         subject += SUBJECT_ROLE_DELETE.format(**subject_kwargs)
-
     return subject
 
 
@@ -278,7 +275,8 @@ def get_role_change_body(
     change_type, project, user_name, role_name, issuer, project_url
 ):
     """
-    Return role change email body
+    Return role change email body.
+
     :param change_type: Change type ('create', 'update', 'delete')
     :param project: Project object
     :param user_name: Name of target user
@@ -321,14 +319,14 @@ def get_role_change_body(
 
     if not issuer.email and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         body += NO_REPLY_NOTE
-
     body += get_email_footer()
     return body
 
 
 def send_mail(subject, message, recipient_list, request, reply_to=None):
     """
-    Wrapper for send_mail() with logging and error messaging
+    Wrapper for send_mail() with logging and error messaging.
+
     :param subject: Message subject (string)
     :param message: Message body (string)
     :param recipient_list: Recipients of email (list)
@@ -355,10 +353,8 @@ def send_mail(subject, message, recipient_list, request, reply_to=None):
     except Exception as ex:
         error_msg = 'Error sending email: {}'.format(str(ex))
         logger.error(error_msg)
-
         if DEBUG:
             raise ex
-
         messages.error(request, error_msg)
         return 0
 
@@ -369,6 +365,7 @@ def send_mail(subject, message, recipient_list, request, reply_to=None):
 def send_role_change_mail(change_type, project, user, role, request):
     """
     Send email to user when their role in a project has been changed.
+
     :param change_type: Change type ('create', 'update', 'delete')
     :param project: Project object
     :param user: User object
@@ -379,7 +376,6 @@ def send_role_change_mail(change_type, project, user, role, request):
     project_url = request.build_absolute_uri(
         reverse('projectroles:detail', kwargs={'project': project.sodar_uuid})
     )
-
     subject = get_role_change_subject(change_type, project)
     message = get_role_change_body(
         change_type=change_type,
@@ -389,7 +385,6 @@ def send_role_change_mail(change_type, project, user, role, request):
         issuer=request.user,
         project_url=project_url,
     )
-
     reply_to = [request.user.email] if request.user.email else None
     return send_mail(subject, message, [user.email], request, reply_to)
 
@@ -397,12 +392,12 @@ def send_role_change_mail(change_type, project, user, role, request):
 def send_invite_mail(invite, request):
     """
     Send an email invitation to user not yet registered in the system.
+
     :param invite: ProjectInvite object
     :param request: HTTP request
     :return: Amount of sent email (int)
     """
     invite_url = build_invite_url(invite, request)
-
     message = get_invite_body(
         project=invite.project,
         issuer=invite.issuer,
@@ -414,9 +409,7 @@ def send_invite_mail(invite, request):
     )
     message += get_invite_message(invite.message)
     message += get_email_footer()
-
     subject = get_invite_subject(invite.project)
-
     reply_to = [invite.issuer.email] if invite.issuer.email else None
     return send_mail(subject, message, [invite.email], request, reply_to)
 
@@ -425,6 +418,7 @@ def send_accept_note(invite, request, user):
     """
     Send a notification email to the issuer of an invitation when a user
     accepts the invitation.
+
     :param invite: ProjectInvite object
     :param request: HTTP request
     :return: Amount of sent email (int)
@@ -438,7 +432,6 @@ def send_accept_note(invite, request, user):
             project=invite.project.title,
         )
     )
-
     message = MESSAGE_HEADER.format(
         recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
     )
@@ -453,9 +446,7 @@ def send_accept_note(invite, request, user):
 
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
-
     message += get_email_footer()
-
     return send_mail(subject, message, [invite.issuer.email], request)
 
 
@@ -476,7 +467,6 @@ def send_expiry_note(invite, request, user_name):
             user_name=user_name, project=invite.project.title
         )
     )
-
     message = MESSAGE_HEADER.format(
         recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
     )
@@ -492,9 +482,7 @@ def send_expiry_note(invite, request, user_name):
 
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
-
     message += get_email_footer()
-
     return send_mail(subject, message, [invite.issuer.email], request)
 
 
@@ -510,7 +498,6 @@ def send_project_create_mail(project, request):
     parent = project.parent
     parent_owner = project.parent.get_owner() if project.parent else None
     project_owner = project.get_owner()
-
     if not parent or not parent_owner or parent_owner.user == request.user:
         return 0
 
@@ -519,7 +506,6 @@ def send_project_create_mail(project, request):
         project=project.title,
         user_name=request.user.get_full_name(),
     )
-
     message = MESSAGE_HEADER.format(
         recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
     )
@@ -538,7 +524,6 @@ def send_project_create_mail(project, request):
         ),
     )
     message += get_email_footer()
-
     return send_mail(
         subject,
         message,
@@ -560,7 +545,6 @@ def send_project_move_mail(project, request):
     parent = project.parent
     parent_owner = project.parent.get_owner() if project.parent else None
     project_owner = project.get_owner()
-
     if not parent or not parent_owner or parent_owner.user == request.user:
         return 0
 
@@ -569,7 +553,6 @@ def send_project_move_mail(project, request):
         project=project.title,
         user_name=request.user.get_full_name(),
     )
-
     message = MESSAGE_HEADER.format(
         recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
     )
@@ -588,7 +571,6 @@ def send_project_move_mail(project, request):
         ),
     )
     message += get_email_footer()
-
     return send_mail(
         subject,
         message,
@@ -604,6 +586,7 @@ def send_generic_mail(
     """
     Send a notification email to the issuer of an invitation when a user
     attempts to accept an expired invitation.
+
     :param subject_body: Subject body without prefix (string)
     :param message_body: Message body before header or footer (string)
     :param recipient_list: Recipients (list of User objects or email strings)
@@ -618,7 +601,6 @@ def send_generic_mail(
         if isinstance(recipient, User):
             recp_name = recipient.get_full_name()
             recp_email = recipient.email
-
         else:
             recp_name = 'recipient'
             recp_email = recipient
@@ -627,12 +609,9 @@ def send_generic_mail(
             recipient=recp_name, site_title=SITE_TITLE
         )
         message += message_body
-
         if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
-
         message += get_email_footer()
-
         ret += send_mail(subject, message, [recp_email], request, reply_to)
 
     return ret

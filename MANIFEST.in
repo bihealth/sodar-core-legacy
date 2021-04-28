@@ -1,7 +1,25 @@
 include LICENSE
 include README.rst
-recursive-include projectroles/static *
-recursive-include projectroles/templates *
 
+recursive-include projectroles *
+recursive-include adminalerts *
+recursive-include appalerts *
+recursive-include bgjobs *
+recursive-include filesfolders *
+recursive-include siteinfo *
+recursive-include sodarcache *
+recursive-include taskflowbackend *
+recursive-include timeline *
+recursive-include tokens *
+recursive-include userprofile *
+
+recursive-exclude */tests/__pycache__ *
+recursive-exclude */__pycache__ *
+recursive-exclude */migrations/__pycache__ *
+recursive-exclude */templatetags/__pycache__ *
+recursive-exclude */management/__pycache__ *
+recursive-exclude */management/commands/__pycache__ *
+
+include requirements/base.txt
 include versioneer.py
 include projectroles/_version.py

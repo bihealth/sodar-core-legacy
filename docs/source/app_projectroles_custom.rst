@@ -92,11 +92,21 @@ documentation links or linking to external sites. Example:
     </li>
 
 
-Site Icon
+Site Logo
 =========
 
-An optional site icon can be placed into ``{STATIC}/images/logo_navbar.png`` to
+An optional site logo can be placed into ``{STATIC}/images/logo_navbar.png`` to
 be displayed in the default Projectroles title bar.
+
+
+Custom Icon Collections
+=======================
+
+To use icons other than the default `Material Design Icons <https://materialdesignicons.com>`_
+collection, download the corresponding collection JSON file from the
+`Iconify JSON repository <https://github.com/iconify/collections-json/tree/master/json>`_
+into `{SITE_NAME}/static/iconify/json`. After that run `collectstatic` and the
+icons will be available using the collection identifier.
 
 
 Project Breadcrumb

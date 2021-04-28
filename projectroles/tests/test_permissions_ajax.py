@@ -35,6 +35,19 @@ class TestProjectViews(TestProjectPermissionBase):
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200, method='POST')
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_starring_ajax_anon(self):
+        """Test permissions for project starring Ajax view with anonymous access"""
+        url = reverse(
+            'projectroles:ajax_star',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 401, method='POST')
 
     def test_starring_ajax_category(self):
         """Test permissions for project starring Ajax view under category"""
@@ -52,6 +65,19 @@ class TestProjectViews(TestProjectPermissionBase):
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200, method='POST')
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_starring_ajax_category_anon(self):
+        """Test permissions for category starring Ajax view with anonymous access"""
+        url = reverse(
+            'projectroles:ajax_star',
+            kwargs={'project': self.category.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 401, method='POST')
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
     def test_user_autocomplete_ajax(self):

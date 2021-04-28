@@ -28,7 +28,7 @@ Installation
 ============
 
 Instructions on how to install a local development version of SODAR Core are
-detailed here. Ubuntu 16.04 LTS (Xenial) is the supported OS at this time.
+detailed here. Ubuntu 20.04 LTS (Focal) is the supported OS at this time.
 Later Ubuntu versions and Centos 7 have also been proven to to work, but some
 system dependencies may vary for different OS versions or distributions.
 
@@ -43,7 +43,7 @@ system of choice.
 System Installation
 -------------------
 
-First you need to install OS dependencies, PostgreSQL 9.6 and Python3.6.
+First you need to install OS dependencies, PostgreSQL >=9.6 and Python >=3.7.
 
 .. code-block:: console
 
@@ -83,10 +83,9 @@ the environment, install Python requirements for the project:
 
 .. code-block:: console
 
-    $ git clone https://github.com/bihealth/sodar_core.git
-    $ cd sodar_core
-    $ pip install virtualenv
-    $ virtualenv -p python3.6 .venv
+    $ git clone https://github.com/bihealth/sodar-core.git
+    $ cd sodar-core
+    $ python3.x -m venv .venv
     $ source .venv/bin/activate
     $ utility/install_python_dependencies.sh
 

@@ -3,7 +3,10 @@
 {% if pl_data.stats or pl_data.error %}
   <div class="card" id="sodar-si-{{ plugin.name }}-app-stats-card">
     <div class="card-header">
-      <h4><i class="fa fa-{{ plugin.icon }}"></i> {{ plugin.title }} Statistics</h4>
+      <h4>
+        <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+        {{ plugin.title }} Statistics
+      </h4>
     </div>
     <div class="card-body">
       <dl class="row">

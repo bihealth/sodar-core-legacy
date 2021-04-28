@@ -51,7 +51,7 @@ to set up a fresh app generated in the standard way with
 
 It is also assumed that apps are more or less created according to best
 practices defined by `Two Scoops <https://www.twoscoopspress.com/>`_, with the
-use of `Class-Based Views <https://docs.djangoproject.com/en/1.11/topics/class-based-views/>`_
+use of `Class-Based Views <https://docs.djangoproject.com/en/3.2/topics/class-based-views//>`_
 being a requirement.
 
 
@@ -94,7 +94,7 @@ To provide a unique identifier for objects in the SODAR context, add a
 
     When updating an existing Django model with an existing database, the
     ``sodar_uuid`` field needs to be populated. See
-    `instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+    `instructions in Django documentation <https://docs.djangoproject.com/en/3.2/howto/writing-migrations/#migrations-that-add-unique-fields>`_
     on how to create the required migrations.
 
 Model Example
@@ -186,7 +186,7 @@ The following variables and functions are **mandatory**:
   some functionality may not work as expected)
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
+- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
 - ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
   **must** take the project ``sodar_uuid`` as a kwarg named ``project``)
 - ``description``: Verbose description of app
@@ -213,6 +213,8 @@ Implementing the following is **optional**:
   categories. Defaults to ``False`` and should only be overridden when required.
   For an example of a project app enabled in categories, see
   :ref:`Timeline <app_timeline>`.
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_taskflow_sync_data()``: Applicable only if working with
   ``sodar_taskflow`` and iRODS
 - ``get_object_link()``: If Django models are associated with the app. Used e.g.
@@ -224,6 +226,9 @@ Implementing the following is **optional**:
 - ``get_project_list_value()``: A function which **must** be implemented if
   ``project_list_columns`` are defined, to retrieve a column cell value for a
   specific project.
+- ``handle_project_update()``: A function for enabling carrying out specific
+  tasks within your app when the project is updated in projectroles. This is a
+  work-in-progress functionality to be expanded later.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
@@ -295,12 +300,16 @@ your view classes to add projectroles functionality. These can be found in the
 
 The most commonly used mixins:
 
+- ``LoginRequiredMixin``: Override of the standard Django mixin
+  which may also allow anonymous guests if so configured in SODAR Core. If you
+  plan on supporting anonymous users on your site, you **must** use this
+  mixing instead of the original one in Django.
 - ``LoggedInPermissionMixin``: Ensure correct redirection of users on no
-  permissions
+  permissions.
 - ``ProjectPermissionMixin``: Provides a ``Project`` object for permission
-  checking based on URL kwargs
+  checking based on URL kwargs.
 - ``ProjectContextMixin``: Provides a ``Project`` object into the view context
-  based on URL kwargs
+  based on URL kwargs.
 
 See ``example_project_app.views.ExampleView`` for an example.
 
@@ -530,13 +539,19 @@ user selection field:
     {% block css %}
       {{ block.super }}
       <!-- Select2 theme -->
-      <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+      <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
     {% endblock css %}
 
 If using a customized widget with its own Javascript, include the corresponding
 JS file instead of ``autocomplete_light/select2.js``. See the
 ``django-autocomplete-light`` documentation for more information on how to
 customize your autocomplete-widget.
+
+Markdown
+--------
+
+For fields supporting markdown, it is recommended to use the
+``SODARPagedownWidget`` found in ``projectroles.models``.
 
 
 Specific Views and Templates

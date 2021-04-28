@@ -15,8 +15,9 @@ TASKFLOW_TEST_MODE = True  # Important! Make taskflow use a test iRODS server
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
-    'taskflow',
+    'appalerts_backend',
+    'sodar_cache',
     'timeline_backend',
     'example_backend_app',
-    'sodar_cache',
+    'taskflow',
 ]

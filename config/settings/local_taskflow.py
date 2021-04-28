@@ -8,8 +8,9 @@ TASKFLOW_BACKEND_PORT = env.int('TASKFLOW_BACKEND_PORT', 5005)
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
-    'taskflow',
+    'appalerts_backend',
+    'sodar_cache',
     'timeline_backend',
     'example_backend_app',
-    'sodar_cache',
+    'taskflow',
 ]

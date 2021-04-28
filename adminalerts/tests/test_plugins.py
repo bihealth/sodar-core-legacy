@@ -10,7 +10,7 @@ from .test_models import AdminAlertMixin
 
 
 PLUGIN_NAME = 'adminalerts'
-PLUGIN_TITLE = 'Alerts'
+PLUGIN_TITLE = 'Admin Alerts'
 PLUGIN_URL_ID = 'adminalerts:list'
 
 

@@ -1,4 +1,4 @@
-"""Tests for views in the timeline app"""
+"""View tests for the timeline app"""
 
 from django.urls import reverse
 
@@ -72,8 +72,8 @@ class TestViewsBase(
         )
 
 
-class TestProjectListView(TestViewsBase):
-    """Tests for the timeline project list view"""
+class TestProjectEventListView(TestViewsBase):
+    """Tests for the timeline project event list view"""
 
     def test_render(self):
         """Test rendering the list view for a project"""
@@ -85,6 +85,10 @@ class TestProjectListView(TestViewsBase):
                 )
             )
             self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['object_list']), 1)
+            self.assertEqual(
+                response.context['object_list'].first(), self.event
+            )
 
     def test_render_category(self):
         """Test rendering the list view for a category"""
@@ -98,8 +102,8 @@ class TestProjectListView(TestViewsBase):
             self.assertEqual(response.status_code, 200)
 
 
-class TestObjectListView(TestViewsBase):
-    """Tests for the timeline object list view"""
+class TestProjectObjectListView(TestViewsBase):
+    """Tests for the timeline project object list view"""
 
     def setUp(self):
         super().setUp()
@@ -123,3 +127,69 @@ class TestObjectListView(TestViewsBase):
                 )
             )
             self.assertEqual(response.status_code, 200)
+
+
+class TestSiteEventListView(TestViewsBase):
+    """Tests for the timeline site-wide event list view"""
+
+    def setUp(self):
+        super().setUp()
+        self.event_site = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+        )
+
+    def test_render(self):
+        """Test rendering the site-wide list view"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:list_site',
+                )
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['object_list']), 1)
+            self.assertEqual(
+                response.context['object_list'].first(), self.event_site
+            )
+
+
+class TestSiteObjectListView(TestViewsBase):
+    """Tests for the timeline site-wide objectlist view"""
+
+    def setUp(self):
+        super().setUp()
+        self.event_site = self.timeline.add_event(
+            project=None,
+            app_name='projectroles',
+            user=self.user,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+        )
+        # Add user as an object reference
+        self.ref_obj = self.event_site.add_object(
+            obj=self.user, label='user', name=self.user.username
+        )
+
+    def test_render(self):
+        """Test rendering the site-wide list view"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'timeline:list_object_site',
+                    kwargs={
+                        'object_model': self.ref_obj.object_model,
+                        'object_uuid': self.ref_obj.object_uuid,
+                    },
+                )
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(len(response.context['object_list']), 1)
+            self.assertEqual(
+                response.context['object_list'].first(), self.event_site
+            )

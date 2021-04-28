@@ -119,6 +119,7 @@ HTML / Javascript / CSS / Bootstrap 4
 
     app_projectroles
     app_adminalerts
+    app_appalerts
     app_bgjobs
     app_filesfolders
     app_userprofile

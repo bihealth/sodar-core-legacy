@@ -13,10 +13,20 @@ urls_ui = [
         name='list_project',
     ),
     url(
+        regex=r'^site$',
+        view=views.SiteTimelineView.as_view(),
+        name='list_site',
+    ),
+    url(
         regex=r'^(?P<project>[0-9a-f-]+)/(?P<object_model>[\w-]+)/'
         r'(?P<object_uuid>[0-9a-f-]+)$',
-        view=views.ObjectTimelineView.as_view(),
+        view=views.ProjectObjectTimelineView.as_view(),
         name='list_object',
+    ),
+    url(
+        regex=r'^site/(?P<object_model>[\w-]+)/(?P<object_uuid>[0-9a-f-]+)$',
+        view=views.SiteObjectTimelineView.as_view(),
+        name='list_object_site',
     ),
 ]
 

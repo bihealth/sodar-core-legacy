@@ -73,7 +73,9 @@ class TestTaskflowBase(
 ):
     """Base class for testing UI views with taskflow"""
 
-    def _make_project_taskflow(self, title, type, parent, owner, description):
+    def _make_project_taskflow(
+        self, title, type, parent, owner, description, public_guest_access=False
+    ):
         """Make Project with taskflow for UI view tests"""
         post_data = dict(self.request_data)
         post_data.update(
@@ -83,6 +85,7 @@ class TestTaskflowBase(
                 'parent': parent.sodar_uuid if parent else None,
                 'owner': owner.sodar_uuid,
                 'description': description,
+                'public_guest_access': public_guest_access,
             }
         )
         post_data.update(
@@ -632,6 +635,7 @@ class TestProjectCreateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
             'full_title': self.category.title + ' / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
@@ -684,6 +688,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         request_data['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
         request_data['readme'] = 'updated readme'
         request_data['parent'] = str(self.category.sodar_uuid)
+        request_data['public_guest_access'] = True
         request_data.update(
             app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
@@ -709,6 +714,7 @@ class TestProjectUpdateView(TestTaskflowBase):
             'parent': self.category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'public_guest_access': True,
             'full_title': self.category.title + ' / updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }

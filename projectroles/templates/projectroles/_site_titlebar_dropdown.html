@@ -2,21 +2,21 @@
 {% load rules %}
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
+{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 
-{# Responsive replacement for user dopdown #}
+{# Responsive replacement for user dropdown #}
 
 {# Admin link #}
 {% if request.user.is_superuser %}
   <li class="nav-item sodar-navbar-alt-item">
     <a class="nav-link" href="{% url 'admin:index' %}"
        id="sodar-navbar-link-admin" target="_blank">
-      <i class="fa fa-fw fa-gears"></i> Admin
+      <i class="iconify" data-icon="mdi:cogs"></i> Admin
     </a>
   </li>
 {% endif %}
 
 {# Site-wide apps #}
-{% get_site_apps as site_apps %}
 {% for plugin in site_apps %}
   {% has_perm plugin.app_permission request.user as can_view_app %}
   {% if not plugin.app_permission or can_view_app %}
@@ -24,7 +24,7 @@
       <a class="nav-link"
          href="{% url plugin.entry_point_url_id %}"
          id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-        <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}</a>
+        <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}</a>
     </li>
   {% endif %}
 {% endfor %}
@@ -35,7 +35,15 @@
     <a class="nav-link text-danger"
        href="{% url 'logout' %}"
        id="sodar-alt-nav-link-sign-out">
-      <i class="fa fa-fw fa-sign-out"></i> Log Out
+      <i class="iconify" data-icon="mdi:logout-variant"></i> Logout
+    </a>
+  </li>
+{% elif not kiosk_mode %}
+  <li class="nav-item sodar-navbar-alt-item">
+    <a class="nav-link text-white"
+       href="{% url 'login' %}"
+       id="sodar-alt-nav-link-sign-in">
+      <i class="iconify" data-icon="mdi:login-variant"></i> Login
     </a>
   </li>
 {% endif %}
@@ -43,60 +51,63 @@
 {# Actual user dropdown #}
 
 <li class="nav-item sodar-navbar-user-dropdown">
-  <a class="nav-link sodar-nav-link-last dropdown-toggle {% if not request.user.is_authenticated %}disabled{% endif %}"
-     id="sodar-navbar-user-dropdown{% if not request.user.is_authenticated %}-disabled{% endif %}"
+  <a class="nav-link sodar-nav-link-last dropdown-toggle"
+     id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
-    <i class="fa fa-fw fa-user"></i>
+    <i class="iconify" data-icon="mdi:user"></i>
   </a>
   <div class="dropdown-menu dropdown-menu-right sodar-navbar-user-dropdown">
-    <div class="dropdown-header">
-      {% if request.user.name %}
-        {{ request.user.name }}<br />
+    <div class="dropdown-header" id="sodar-navbar-user-legend">
+      {% if request.user.is_authenticated %}
+        {% if request.user.name %}
+          {{ request.user.name }}<br />
+        {% endif %}
+        {{ request.user.username }}
+      {% else %}
+        Anonymous
       {% endif %}
-      {{ request.user.username }}</div>
-
+    </div>
     <div class="dropdown-divider"></div>
 
     {# Site-wide apps #}
+    {% for plugin in site_apps %}
+      {% has_perm plugin.app_permission request.user as can_view_app %}
+      {% if not plugin.app_permission or can_view_app %}
+        <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
+           href="{% url plugin.entry_point_url_id %}"
+           id="sodar-navbar-siteapp-link-{{ plugin.name }}">
+          <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}
+        </a>
+      {% endif %}
+    {% endfor %}
     {% if site_apps|length > 0 %}
-      {% for plugin in site_apps %}
-        {% has_perm plugin.app_permission request.user as can_view_app %}
-        {% if not plugin.app_permission or can_view_app %}
-          <a class="dropdown-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}"
-             href="{% url plugin.entry_point_url_id %}"
-             id="sodar-navbar-siteapp-link-{{ plugin.name }}">
-            <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}
-          </a>
-        {% endif %}
-      {% endfor %}
-
       <div class="dropdown-divider"></div>
     {% endif %}
 
     {# Admin link #}
     {% if request.user.is_superuser %}
-      {% check_backend 'taskflow' as taskflow_enabled %}
-      {% if taskflow_enabled %}
-        <a class="dropdown-item"
-           href="#"
-           id="sodar-navbar-link-admin-warning"
-           data-toggle="modal" data-target="#sodar-modal">
-          <i class="fa fa-fw fa-gears"></i> Django Admin
-        </a>
-      {% else %}
-        <a class="dropdown-item" href="{% url 'admin:index' %}"
-           id="sodar-navbar-link-admin" target="_blank">
-          <i class="fa fa-fw fa-gears"></i> Django Admin
-        </a>
-      {% endif %}
+      <a class="dropdown-item"
+         href="#"
+         id="sodar-navbar-link-admin-warning"
+         data-toggle="modal" data-target="#sodar-modal">
+        <i class="iconify" data-icon="mdi:cogs"></i> Django Admin
+      </a>
       <div class="dropdown-divider"></div>
     {% endif %}
 
-    {# Log out link #}
-    <a class="dropdown-item text-danger"
-       href="{% url 'logout' %}"
-       id="sodar-navbar-link-logout">
-      <i class="fa fa-fw fa-sign-out"></i> Log Out
-    </a>
+    {# Log out / log in links #}
+    {% if request.user.is_authenticated %}
+      <a class="dropdown-item text-danger"
+         href="{% url 'logout' %}"
+         id="sodar-navbar-link-logout">
+        <i class="iconify" data-icon="mdi:logout-variant"></i> Logout
+      </a>
+    {% else %}
+      <a class="dropdown-item text-primary"
+         href="{% url 'login' %}"
+         id="sodar-navbar-link-login">
+        <i class="iconify" data-icon="mdi:login-variant"></i> Login
+      </a>
+    {% endif %}
   </div>
 </li>

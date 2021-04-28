@@ -18,7 +18,7 @@
 {% has_perm 'bgjobs.clear_all_jobs' request.user project as can_clear_all_jobs %}
 
 <div class="row sodar-subtitle-container">
-  <h3><i class="fa fa-tasks"></i> Background Jobs</h3>
+  <h3><i class="iconify" data-icon="mdi:server"></i> Background Jobs</h3>
   {% if can_clear_own_jobs or can_clear_all_jobs %}
     {% include 'bgjobs/_list_buttons.html' %}
   {% endif %}

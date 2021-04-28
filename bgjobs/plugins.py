@@ -20,7 +20,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     title = 'Background Jobs'
     urls = urlpatterns
 
-    icon = 'tasks'
+    #: Iconify icon
+    icon = 'mdi:server'
 
     entry_point_url_id = 'bgjobs:list'
 
@@ -47,6 +48,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Position in plugin ordering
     plugin_ordering = 100
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['BGJOBS_PAGINATION']
+
 
 class BackgroundJobsPluginPoint(PluginPoint):
     """Definition of a plugin point for registering background job types with
@@ -69,8 +73,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'tasks'
+    #: Iconify icon
+    icon = 'mdi:server'
 
     #: Description string
     description = 'Site-wide background jobs'

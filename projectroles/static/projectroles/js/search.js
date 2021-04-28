@@ -17,8 +17,10 @@ $(document).ready(function() {
             info: false,
             language: {
                 paginate: {
-                    previous: '<i class="fa fa-arrow-circle-left text-primary"></i> Prev',
-                    next: '<i class="fa fa-arrow-circle-right text-primary"></i> Next'
+                    previous: '<i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-left-circle"></i> Prev',
+                    next: '<i class="iconify text-primary" ' +
+                        'data-icon="mdi:arrow-right-circle"></i> Next'
                 }
             },
             dom: 'tp',
@@ -26,7 +28,8 @@ $(document).ready(function() {
                 // Highlight pagination
                 var currentPage = $(this).DataTable().page.info().page;
 
-                $(this).closest('.card-body').find('.sodar-paginate-button').each(function() {
+                $(this).closest('.card-body').find(
+                    '.sodar-paginate-button').each(function() {
                     var btnPage = parseInt($(this).text());
 
                     if (btnPage === currentPage + 1) {

@@ -30,6 +30,8 @@ urlpatterns = [
     url(r'^logout/$', auth_views.logout_then_login, name='logout'),
     # Auth
     url(r'api/auth/', include('knox.urls')),
+    # Iconify SVG icons
+    url(r'icons/', include('dj_iconify.urls')),
     # Projectroles URLs
     url(r'^project/', include('projectroles.urls')),
     # Timeline URLs
@@ -41,7 +43,9 @@ urlpatterns = [
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
     # Admin Alerts URLs
-    url(r'^alerts/', include('adminalerts.urls')),
+    url(r'^alerts/admin/', include('adminalerts.urls')),
+    # App Alerts URLs
+    url(r'^alerts/app/', include('appalerts.urls')),
     # Site Info URLs
     url(r'^siteinfo/', include('siteinfo.urls')),
     # API Tokens URLs

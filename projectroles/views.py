@@ -1,6 +1,5 @@
 """UI views for the projectroles app"""
 
-import inspect
 import json
 import logging
 import re
@@ -79,6 +78,7 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
+PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
@@ -97,6 +97,11 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 APP_NAME = 'projectroles'
 KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 PROJECT_COLUMN_COUNT = 2  # Default columns
+MSG_NO_AUTH = 'User not authorized for requested action'
+MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
+ALERT_MSG_ROLE_CHANGE = (
+    'Membership granted in project "{project}" with the ' 'role of "{role}".'
+)
 
 
 # Access Django user model
@@ -107,6 +112,53 @@ app_settings = AppSettingAPI()
 
 
 # General mixins ---------------------------------------------------------------
+
+
+class LoginRequiredMixin(AccessMixin):
+    """
+    Customized variant of the one from ``django.contrib.auth.mixins``.
+    Allows disabling by overriding function ``is_login_required``.
+    """
+
+    def is_login_required(self):
+        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False) or getattr(
+            settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
+        ):
+            return False
+        return True
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.is_login_required() and not request.user.is_authenticated:
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+
+class LoggedInPermissionMixin(PermissionRequiredMixin):
+    """Mixin for handling redirection for both unlogged users and authenticated
+    users without permissions"""
+
+    def has_permission(self):
+        """
+        Override for this mixin also to work with admin users without a
+        permission object.
+        """
+        if getattr(settings, 'PROJECTROLES_KIOSK_MODE', False):
+            return True
+        try:
+            return super().has_permission()
+        except AttributeError:
+            if self.request.user.is_superuser:
+                return True
+        return False
+
+    def handle_no_permission(self):
+        """Override to redirect user"""
+        if self.request.user.is_authenticated:
+            messages.error(self.request, MSG_NO_AUTH)
+            return redirect(reverse('home'))
+        else:
+            messages.error(self.request, MSG_NO_AUTH_LOGIN)
+            return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectAccessMixin:
@@ -128,7 +180,6 @@ class ProjectAccessMixin:
         """
         request = request or getattr(self, 'request')
         kwargs = kwargs or getattr(self, 'kwargs')
-
         # Ensure kwargs can be accessed
         if kwargs is None:
             raise ImproperlyConfigured('View kwargs are not accessible')
@@ -150,14 +201,11 @@ class ProjectAccessMixin:
             if re.match(r'[0-9a-f-]+', v):
                 try:
                     app_name = resolve(request.path).app_name
-
                     if app_name.find('.') != -1:
                         app_name = app_name.split('.')[0]
-
                     model = apps.get_model(app_name, k)
                     uuid_kwarg = k
                     break
-
                 except LookupError:
                     pass
 
@@ -166,49 +214,15 @@ class ProjectAccessMixin:
 
         try:
             obj = model.objects.get(sodar_uuid=kwargs[uuid_kwarg])
-
             if hasattr(obj, 'project'):
                 return obj.project
-
             # Some objects may have a get_project() func instead of foreignkey
             elif hasattr(obj, 'get_project') and callable(
                 getattr(obj, 'get_project', None)
             ):
                 return obj.get_project()
-
         except model.DoesNotExist:
             return None
-
-
-class LoggedInPermissionMixin(PermissionRequiredMixin):
-    """Mixin for handling redirection for both unlogged users and authenticated
-    users without permissions"""
-
-    def has_permission(self):
-        """Override has_permission() for this mixin also to work with admin
-        users without a permission object"""
-        if KIOSK_MODE:
-            return True
-
-        try:
-            return super().has_permission()
-
-        except AttributeError:
-            if self.request.user.is_superuser:
-                return True
-
-        return False
-
-    def handle_no_permission(self):
-        """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated:
-            messages.error(
-                self.request, 'User not authorized for requested action'
-            )
-            return redirect(reverse('home'))
-
-        else:
-            return redirect_to_login(self.request.get_full_path())
 
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
@@ -221,13 +235,11 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
     def has_permission(self):
         """Overrides for project permission access"""
         project = self.get_project()
-
         # Override permissions for superuser, owner or delegate
         perm_override = (
             self.request.user.is_superuser
             or project.is_owner_or_delegate(self.request.user)
         )
-
         if not perm_override and app_settings.get_app_setting(
             'projectroles', 'ip_restrict', project
         ):
@@ -250,22 +262,18 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 if '/' in record:
                     if client_address in ip_network(record):
                         break
-                else:
-                    if client_address == ip_address(record):
-                        break
+                elif client_address == ip_address(record):
+                    break
             else:
                 return False
 
         # Disable project app access for categories unless specifically enabled
         if project and project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
-
             if request_url.app_name != APP_NAME:
                 app_plugin = get_app_plugin(request_url.app_name)
-
                 if app_plugin and app_plugin.category_enable:
                     return True
-
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked
@@ -278,18 +286,14 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         """Override ``get_queryset()`` to filter down to the currently selected
         object."""
         qs = super().get_queryset(*args, **kwargs)
-
         if qs.model == ProjectAccessMixin.project_class:
             return qs
-
         elif hasattr(qs.model, 'get_project_filter_key'):
             return qs.filter(
                 **{qs.model.get_project_filter_key(): self.get_project()}
             )
-
         elif hasattr(qs.model, 'project') or hasattr(qs.model, 'get_project'):
             return qs.filter(project=self.get_project())
-
         else:
             raise AttributeError(
                 'Model does not have "project" member, get_project() function '
@@ -318,7 +322,8 @@ class ProjectModifyPermissionMixin(
 
     def handle_no_permission(self):
         """Override handle_no_permission to redirect user"""
-        if self.request.user.is_authenticated:
+        project = self.get_project()
+        if project and project.is_remote():
             messages.error(
                 self.request,
                 'Modifications are not allowed for remote {}'.format(
@@ -326,8 +331,11 @@ class ProjectModifyPermissionMixin(
                 ),
             )
             return redirect(reverse('home'))
-
+        elif self.request.user.is_authenticated:
+            messages.error(self.request, MSG_NO_AUTH)
+            return redirect(reverse('home'))
         else:
+            messages.error(self.request, MSG_NO_AUTH_LOGIN)
             return redirect_to_login(self.request.get_full_path())
 
 
@@ -339,27 +347,22 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
         """Override has_permission to check perms depending on role"""
         if not super().has_permission():
             return False
-
         try:
             obj = RoleAssignment.objects.get(
                 sodar_uuid=self.kwargs['roleassignment']
             )
-
             if obj.role.name == PROJECT_ROLE_OWNER:
                 return False
-
             elif obj.role.name == PROJECT_ROLE_DELEGATE:
                 return self.request.user.has_perm(
                     'projectroles.update_project_delegate',
                     self.get_permission_object(),
                 )
-
             else:
                 return self.request.user.has_perm(
                     'projectroles.update_project_members',
                     self.get_permission_object(),
                 )
-
         except RoleAssignment.DoesNotExist:
             return False
 
@@ -375,13 +378,11 @@ class HTTPRefererMixin:
     def get(self, request, *args, **kwargs):
         if 'HTTP_REFERER' in request.META:
             referer = request.META['HTTP_REFERER']
-
             if (
                 'real_referer' not in request.session
                 or referer != request.build_absolute_uri()
             ):
                 request.session['real_referer'] = referer
-
         return super().get(request, *args, **kwargs)
 
 
@@ -408,10 +409,8 @@ class ProjectContextMixin(
         # Project
         if hasattr(self, 'object') and isinstance(self.object, Project):
             context['project'] = self.get_object()
-
         elif hasattr(self, 'object') and hasattr(self.object, 'project'):
             context['project'] = self.object.project
-
         else:
             context['project'] = self.get_project()
 
@@ -435,15 +434,22 @@ class ProjectListContextMixin:
         :param user: User for which the projects are visible
         :param parent: Project object or None
         """
-        project_list = []
-        flat_list = []
-
         if user.is_superuser:
             project_list = Project.objects.filter(
                 parent=parent, submit_status='OK'
             ).order_by('title')
-
-        elif not user.is_anonymous():
+        elif user.is_anonymous:
+            allow_anon = getattr(
+                settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
+            )
+            if not allow_anon:
+                return None
+            project_list = [
+                p
+                for p in Project.objects.filter(parent=parent).order_by('title')
+                if p.public_guest_access or p.has_public_children()
+            ]
+        else:
             project_list = [
                 p
                 for p in Project.objects.filter(
@@ -454,16 +460,22 @@ class ProjectListContextMixin:
 
         def _append_projects(project):
             lst = [project]
-
             for c in project.get_children():
-                if user.is_superuser or c.has_role(user, include_children=True):
+                if (
+                    user.is_authenticated
+                    and (
+                        user.is_superuser
+                        or c.has_role(user, include_children=True)
+                    )
+                    or user.is_anonymous
+                    and c.public_guest_access
+                ):
                     lst += _append_projects(c)
-
             return lst
 
+        flat_list = []
         for p in project_list:
             flat_list += _append_projects(p)
-
         return flat_list
 
     def _get_custom_cols(self, user, project_list):
@@ -529,21 +541,6 @@ class CurrentUserFormMixin:
         return kwargs
 
 
-class LoginRequiredMixin(AccessMixin):
-    """Customized variant of the one from ``django.contrib.auth.mixins``.
-    Allows disabling by overriding function ``is_login_required``.
-    """
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.is_login_required() and not request.user.is_authenticated:
-            return self.handle_no_permission()
-
-        return super().dispatch(request, *args, **kwargs)
-
-    def is_login_required(self):
-        return False if KIOSK_MODE else True
-
-
 # Base Project Views -----------------------------------------------------------
 
 
@@ -575,25 +572,27 @@ class ProjectDetailView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         if self.request.user.is_superuser:
             context['role'] = None
-
-        else:
+        elif self.request.user.is_authenticated:
             try:
                 role_as = RoleAssignment.objects.get(
                     user=self.request.user, project=self.object
                 )
                 context['role'] = role_as.role
-
             except RoleAssignment.DoesNotExist:
                 context['role'] = None
+        elif self.object.public_guest_access:
+            context['role'] = Role.objects.filter(
+                name=PROJECT_ROLE_GUEST
+            ).first()
+        else:
+            context['role'] = None
 
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             context['target_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_TARGET
             ).order_by('site__name')
-
         elif settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET:
             context['peer_projects'] = RemoteProject.objects.filter(
                 project_uuid=self.object.sodar_uuid, site__mode=SITE_MODE_PEER
@@ -659,7 +658,6 @@ class ProjectSearchResultsView(
 
         context['search_input'] = search_input
         context['search_terms'] = search_terms
-        context['search_term'] = search_terms[0]  # Deprecation prot. (#618)
         context['search_type'] = search_type
         context['search_keywords'] = search_keywords
 
@@ -692,29 +690,12 @@ class ProjectSearchResultsView(
         context['app_search_data'] = []
 
         for plugin in search_apps:
-            # Deprecation protection for search changes in v0.9 (#609)
-            # TODO: Remove protection in v0.10 (#618)
             search_kwargs = {
                 'user': self.request.user,
                 'search_type': search_type,
+                'search_terms': search_terms,
                 'keywords': search_keywords,
             }
-
-            if 'search_terms' in inspect.signature(plugin.search).parameters:
-                search_kwargs['search_terms'] = search_terms
-            else:  # Old style search
-                search_kwargs['search_term'] = search_terms[0]
-                msg = (
-                    'Deprecated search() implementation in plugin '
-                    '"{}"'.format(plugin.name)
-                )
-                logger.warning(msg + ': to be removed in v0.10')
-                if len(search_terms) > 1:
-                    messages.warning(
-                        self.request,
-                        msg + ': unable to search for multiple terms',
-                    )
-
             context['app_search_data'].append(
                 {
                     'plugin': plugin,
@@ -747,6 +728,7 @@ class ProjectModifyMixin:
             'description': project.description,
             'readme': project.readme.raw,
             'owner': project.get_owner().user,
+            'public_guest_access': project.public_guest_access,
         }
 
     @staticmethod
@@ -817,6 +799,10 @@ class ProjectModifyMixin:
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
+
+        if old_data['public_guest_access'] != project.public_guest_access:
+            extra_data['public_guest_access'] = project.public_guest_access
+            upd_fields.append('public_guest_access')
 
         # Settings
         for k, v in project_settings.items():
@@ -923,6 +909,7 @@ class ProjectModifyMixin:
             'parent_uuid': str(project.parent.sodar_uuid)
             if project.parent
             else '',
+            'public_guest_access': project.public_guest_access,
             'owner_username': owner.username,
             'owner_uuid': str(owner.sodar_uuid),
             'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
@@ -1009,6 +996,91 @@ class ProjectModifyMixin:
                 validate=False,
             )  # Already validated in form
 
+    @classmethod
+    def _notify_users(
+        cls, project, action, owner, old_data, old_parent, request
+    ):
+        """
+        Notify users about project creation and update. Displays app alerts
+        and/or sends emails depending on the site configuration.
+        """
+        app_alerts = get_backend_api('appalerts_backend')
+        # Create alerts and send emails
+        owner_as = RoleAssignment.objects.get_assignment(owner, project)
+        # Owner change notification
+        if request.user != owner and (
+            action == 'create' or old_data['owner'] != owner
+        ):
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=owner_as.role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    action,
+                    project,
+                    owner,
+                    owner_as.role,
+                    request,
+                )
+        # Project creation/moving for parent category owner
+        if (
+            project.parent
+            and project.parent.get_owner().user != owner_as.user
+            and project.parent.get_owner().user != request.user
+        ):
+            parent_owner = project.parent.get_owner().user
+            if action == 'create' and request.user != parent_owner:
+                if app_alerts:
+                    app_alerts.add_alert(
+                        app_name=APP_NAME,
+                        alert_name='project_create_parent',
+                        user=parent_owner,
+                        message='New {} created under category '
+                        '"{}": "{}".'.format(
+                            project.type.lower(),
+                            project.parent.title,
+                            project.title,
+                        ),
+                        url=reverse(
+                            'projectroles:detail',
+                            kwargs={'project': project.sodar_uuid},
+                        ),
+                        project=project,
+                    )
+                if SEND_EMAIL:
+                    email.send_project_create_mail(project, request)
+
+            elif old_parent and request.user != parent_owner:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='project_move_parent',
+                    user=parent_owner,
+                    message='{} moved under category '
+                    '"{}": "{}".'.format(
+                        project.type.capitalize(),
+                        project.parent.title,
+                        project.title,
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+                if SEND_EMAIL:
+                    email.send_project_move_mail(project, request)
+
     def modify_project(self, data, request, instance=None):
         """
         Create or update a Project, either locally or using the SODAR Taskflow.
@@ -1029,7 +1101,6 @@ class ProjectModifyMixin:
 
         if instance:
             project = instance
-
             # In case of a PATCH request, get existing obj to fill out fields
             old_project = Project.objects.get(sodar_uuid=instance.sodar_uuid)
             old_data = self._get_old_project_data(old_project)  # Store old data
@@ -1040,12 +1111,13 @@ class ProjectModifyMixin:
             )
             project.type = data.get('type') or old_project.type
             project.readme = data.get('readme') or old_project.readme
-
             # NOTE: Must do this as parent can exist but be None
             project.parent = (
                 data['parent'] if 'parent' in data else old_project.parent
             )
-
+            project.public_guest_access = (
+                data.get('public_guest_access') or False
+            )
         else:
             project = Project(
                 title=data.get('title'),
@@ -1053,6 +1125,7 @@ class ProjectModifyMixin:
                 type=data.get('type'),
                 readme=data.get('readme'),
                 parent=data.get('parent'),
+                public_guest_access=data.get('public_guest_access') or False,
             )
 
         use_taskflow = (
@@ -1071,7 +1144,6 @@ class ProjectModifyMixin:
             # See: https://stackoverflow.com/a/60331668
             with transaction.atomic():
                 project.save()  # Always save locally if creating (to get UUID)
-
         else:
             project.submit_status = SUBMIT_STATUS_OK
 
@@ -1080,13 +1152,10 @@ class ProjectModifyMixin:
             project.save()
 
         owner = data.get('owner')
-
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
-
         # Get settings
         project_settings = self._get_app_settings(data, instance)
-
         # Create timeline event
         tl_event = self._create_timeline_event(
             project, action, owner, old_data, project_settings, request
@@ -1113,7 +1182,6 @@ class ProjectModifyMixin:
                 old_parent,
                 tl_event,
             )
-
         # Local save without Taskflow
         else:
             self._handle_local_save(project, owner, project_settings)
@@ -1123,33 +1191,25 @@ class ProjectModifyMixin:
             project.submit_status = SUBMIT_STATUS_OK
             project.save()
 
-        # Send emails
-        if SEND_EMAIL:
-            owner_as = RoleAssignment.objects.get_assignment(owner, project)
-            # Owner change notification
-            if not instance or old_data['owner'] != owner:
-                email.send_role_change_mail(
-                    action,
-                    project,
-                    owner,
-                    owner_as.role,
-                    request,
+        # Call for additional actions for project update in plugins
+        # NOTE: This is a WIP feature to be altered/expanded in a later release
+        app_plugins = get_active_plugins(plugin_type='project_app')
+        for p in app_plugins:
+            try:
+                p.handle_project_update(project, old_data)
+            except Exception as ex:
+                logger.error(
+                    'Exception when calling handle_project_update() for app '
+                    'plugin "{}": {}'.format(p.name, ex)
                 )
-
-            # Project creation/moving for parent category owner
-            if (
-                project.parent
-                and project.parent.get_owner().user != owner_as.user
-                and project.parent.get_owner().user != request.user
-            ):
-                if not instance:
-                    email.send_project_create_mail(project, request)
-
-                elif old_parent:
-                    email.send_project_move_mail(project, request)
 
         if tl_event:
             tl_event.set_status('OK')
+
+        # Create app alerts and/or send emails
+        self._notify_users(
+            project, action, owner, old_data, old_parent, request
+        )
 
         return project
 
@@ -1362,6 +1422,7 @@ class RoleAssignmentModifyMixin:
         """
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
+        app_alerts = get_backend_api('appalerts_backend')
         action = 'update' if instance else 'create'
         tl_event = None
         user = data.get('user')
@@ -1417,10 +1478,31 @@ class RoleAssignmentModifyMixin:
             role_as.role = role
 
         role_as.save()
-        if SEND_EMAIL:
-            email.send_role_change_mail(action, project, user, role, request)
+
         if tl_event:
             tl_event.set_status('OK')
+
+        if request.user != user:
+            if app_alerts:
+                alert_msg = ALERT_MSG_ROLE_CHANGE.format(
+                    project=project.title, role=role.name
+                )
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_' + action,
+                    user=user,
+                    message=alert_msg,
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    action, project, user, role, request
+                )
+
         return role_as
 
 
@@ -1494,7 +1576,7 @@ class RoleAssignmentDeleteMixin:
     def delete_assignment(self, request, instance):
         timeline = get_backend_api('timeline_backend')
         taskflow = get_backend_api('taskflow')
-
+        app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
         project = instance.project
         user = instance.user
@@ -1518,13 +1600,11 @@ class RoleAssignmentDeleteMixin:
         if use_taskflow:
             if tl_event:
                 tl_event.set_status('SUBMIT')
-
             flow_data = {
                 'username': user.username,
                 'user_uuid': str(user.sodar_uuid),
                 'role_pk': role.pk,
             }
-
             try:
                 taskflow.submit(
                     project_uuid=project.sodar_uuid,
@@ -1533,25 +1613,31 @@ class RoleAssignmentDeleteMixin:
                     request=request,
                 )
                 instance = None
-
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
-
                 raise ex
 
         # Local save without Taskflow
         else:
             instance.delete()
 
-        if SEND_EMAIL:
-            email.send_role_change_mail('delete', project, user, None, request)
-
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
 
         if tl_event:
             tl_event.set_status('OK')
+        if app_alerts:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='role_delete',
+                user=user,
+                message='Your membership in project "{}" has been '
+                'removed.'.format(project.title),
+                project=project,
+            )
+        if SEND_EMAIL:
+            email.send_role_change_mail('delete', project, user, None, request)
 
         return instance
 
@@ -1740,34 +1826,66 @@ class RoleAssignmentOwnerTransferMixin:
         :param old_owner_role: Role object for the previous owner's new role
         :return:
         """
+        app_alerts = get_backend_api('appalerts_backend')
         old_owner = old_owner_as.user
+        owner_role = Role.objects.get(name=PROJECT_ROLE_OWNER)
         tl_event = self._create_timeline_event(old_owner, new_owner, project)
 
         try:
             self._handle_transfer(
                 project, old_owner_as, new_owner, old_owner_role
             )
-
         except Exception as ex:
             if tl_event:
                 tl_event.set_status('FAILED', str(ex))
-
             raise ex
-
-        if SEND_EMAIL:
-            email.send_role_change_mail(
-                'update', project, old_owner, old_owner_role, self.request
-            )
-            email.send_role_change_mail(
-                'update',
-                project,
-                new_owner,
-                Role.objects.get(name=PROJECT_ROLE_OWNER),
-                self.request,
-            )
 
         if tl_event:
             tl_event.set_status('OK')
+
+        if self.request.user != old_owner:
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=old_owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=old_owner_role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    'update', project, old_owner, old_owner_role, self.request
+                )
+
+        if self.request.user != new_owner:
+            if app_alerts:
+                app_alerts.add_alert(
+                    app_name=APP_NAME,
+                    alert_name='role_update',
+                    user=new_owner,
+                    message=ALERT_MSG_ROLE_CHANGE.format(
+                        project=project.title, role=owner_role.name
+                    ),
+                    url=reverse(
+                        'projectroles:detail',
+                        kwargs={'project': project.sodar_uuid},
+                    ),
+                    project=project,
+                )
+            if SEND_EMAIL:
+                email.send_role_change_mail(
+                    'update',
+                    project,
+                    new_owner,
+                    owner_role,
+                    self.request,
+                )
 
 
 class RoleAssignmentOwnerTransferView(
@@ -2112,6 +2230,7 @@ class ProjectInviteProcessMixin:
     def create_assignment(self, invite, user, timeline=None):
         """Create role assignment for invited user"""
         taskflow = get_backend_api('taskflow')
+        app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
 
         if timeline:
@@ -2166,7 +2285,22 @@ class ProjectInviteProcessMixin:
             if tl_event:
                 tl_event.set_status('OK')
 
-        # ..notify the issuer by email..
+        # ..notify the issuer by alert and email..
+        if app_alerts:
+            app_alerts.add_alert(
+                app_name=APP_NAME,
+                alert_name='invite_accept',
+                user=invite.issuer,
+                message='Invitation sent to "{}" for project "{}" with the '
+                'role "{}" was accepted.'.format(
+                    user.email, invite.project.title, invite.role.name
+                ),
+                url=reverse(
+                    'projectroles:detail',
+                    kwargs={'project': invite.project.sodar_uuid},
+                ),
+                project=invite.project,
+            )
         if SEND_EMAIL:
             email.send_accept_note(invite, self.request, user)
 
@@ -2199,7 +2333,7 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
             return redirect(reverse('home'))
 
         if (
-            not user.is_anonymous()
+            not user.is_anonymous
             and user.is_authenticated
             and user.email == invite.email
             and self.user_role_exists(invite, user, timeline)

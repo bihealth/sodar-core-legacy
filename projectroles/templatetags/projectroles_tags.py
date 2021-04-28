@@ -22,6 +22,7 @@ HELP_HIGHLIGHT_DAYS = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
 
 # SODAR Constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
@@ -55,13 +56,6 @@ def sodar_constant(value):
 def get_backend_plugins():
     """Get active backend plugins"""
     return get_active_plugins('backend')
-
-
-# TODO: Refactor into get_plugins(type)
-@register.simple_tag
-def get_site_apps():
-    """Get active site apps"""
-    return get_active_plugins('site_app')
 
 
 @register.simple_tag
@@ -188,26 +182,25 @@ def get_project_column_value(col, project):
     return col['data'].get(str(project.sodar_uuid))
 
 
-# TODO: Update tests
 @register.simple_tag
 def get_user_role_html(project, user):
     """Return user role HTML"""
     if user.is_superuser:
         return '<span class="text-danger">Superuser</span>'
-
-    role_as = RoleAssignment.objects.filter(project=project, user=user).first()
-
-    if project.is_owner(user):
-        if role_as and role_as.role.name == PROJECT_ROLE_OWNER:
-            return 'Owner'
-
-        return '<span class="text-muted">Owner</span> {}'.format(
-            get_info_link('Ownership inherited from parent category')
-        )
-
-    if role_as:
-        return role_as.role.name.split(' ')[1].capitalize()
-
+    elif user.is_authenticated:
+        role_as = RoleAssignment.objects.filter(
+            project=project, user=user
+        ).first()
+        if project.is_owner(user):
+            if role_as and role_as.role.name == PROJECT_ROLE_OWNER:
+                return 'Owner'
+            return '<span class="text-muted">Owner</span> {}'.format(
+                get_info_link('Ownership inherited from parent category')
+            )
+        if role_as:
+            return role_as.role.name.split(' ')[1].capitalize()
+    elif user.is_anonymous and project.public_guest_access:
+        return 'Guest'
     return '<span class="text-muted">N/A</span>'
 
 
@@ -258,7 +251,10 @@ def get_star(project, user):
     if user.has_perm('projectroles.view_project', project) and get_tag_state(
         project, user, PROJECT_TAG_STARRED
     ):
-        return '<i class="fa fa-star text-warning sodar-tag-starred"></i>'
+        return (
+            '<i class="iconify text-warning sodar-tag-starred" '
+            'data-icon="mdi:star"></i>'
+        )
     return ''
 
 
@@ -400,10 +396,9 @@ def get_sidebar_app_legend(title):
 def get_admin_warning():
     """Return Django admin warning HTML"""
     ret = (
-        '<p class="text-danger">SODAR Taskflow is '
-        'enabled. Modifications made in the Django admin view '
-        'are <strong>not</strong> automatically mirrored in '
-        'remote systems managed by SODAR Taskflow.</p>'
+        '<p class="text-danger">Editing database objects other than users '
+        'directly in the Django admin view is <strong>not</strong> '
+        'recommended!</p>'
     )
     ret += (
         '<p class="text-danger">Actions taken in the admin view may '
@@ -413,7 +408,7 @@ def get_admin_warning():
     ret += (
         '<p><a class="btn btn-danger pull-right" role="button" '
         'target="_blank" href="{}">'
-        '<i class="fa fa-gears"></i> Continue to Django Admin'
+        '<i class="iconify" data-icon="mdi:cogs"></i> Continue to Django Admin'
         '</a></p>'.format(reverse('admin:index'))
     )
     return ret

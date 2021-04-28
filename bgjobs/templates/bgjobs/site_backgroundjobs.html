@@ -15,7 +15,7 @@
 {% has_perm 'bgjobs.site_view_data' request.user project as can_view_data %}
 
 <div class="row sodar-subtitle-container">
-  <h2><i class="fa fa-tasks"></i> Background Jobs</h2>
+  <h2><i class="iconify" data-icon="mdi:server"></i> Background Jobs</h2>
   {% if can_clear_own_jobs or can_clear_all_jobs %}
     {% include 'bgjobs/_list_buttons.html' %}
   {% endif %}

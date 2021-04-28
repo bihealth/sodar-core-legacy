@@ -44,8 +44,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         }
     }
 
-    #: FontAwesome icon ID string
-    icon = 'file'
+    #: Iconify icon
+    icon = 'mdi:file'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'filesfolders:list'
@@ -94,6 +94,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'align': 'right',
         },
     }
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = [
+        'FILESFOLDERS_LINK_BAD_REQUEST_MSG',
+        'FILESFOLDERS_MAX_ARCHIVE_SIZE',
+        'FILESFOLDERS_MAX_UPLOAD_SIZE',
+        'FILESFOLDERS_SERVE_AS_ATTACHMENT',
+        'FILESFOLDERS_SHOW_LIST_COLUMNS',
+    ]
 
     def get_taskflow_sync_data(self):
         """

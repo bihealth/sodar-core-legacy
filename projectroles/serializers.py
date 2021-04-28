@@ -155,7 +155,7 @@ class RoleAssignmentValidateMixin:
     def validate(self, attrs):
         project = self.context['project']
         current_user = self.context['request'].user
-        del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+        del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
         # Validation for remote sites and projects
         if project.is_remote():
@@ -351,6 +351,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
             'parent',
             'description',
             'readme',
+            'public_guest_access',
             'submit_status',
             'owner',
             'roles',

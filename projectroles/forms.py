@@ -98,12 +98,19 @@ class SODARModelForm(SODARFormMixin, forms.ModelForm):
     """Override of Django model form with SODAR Core specific helpers."""
 
 
+class SODARPagedownWidget(PagedownWidget):
+    class Media:
+        css = {'all': ['projectroles/css/pagedown.css']}
+
+
 # User autocompletion ----------------------------------------------------------
 
 
 class SODARUserAutocompleteWidget(autocomplete.ModelSelect2):
-    """Custom Select widget for user field autocompletion which uses the SODAR
-    User class sodar_uuid instead of pk"""
+    """
+    Custom Select widget for user field autocompletion which uses the SODAR
+    User class sodar_uuid instead of pk.
+    """
 
     # Override function to use sodar_uuid instead of pk
     def filter_choices_to_render(self, selected_choices):
@@ -222,7 +229,15 @@ class ProjectForm(SODARModelForm):
 
     class Meta:
         model = Project
-        fields = ['title', 'type', 'parent', 'owner', 'description', 'readme']
+        fields = [
+            'title',
+            'type',
+            'parent',
+            'owner',
+            'description',
+            'readme',
+            'public_guest_access',
+        ]
 
     def _get_parent_choices(self, instance, user):
         """
@@ -254,9 +269,9 @@ class ProjectForm(SODARModelForm):
                 roles__in=RoleAssignment.objects.filter(
                     user=user,
                     role__name__in=[
-                        'project owner',
-                        'project delegate',
-                        'project contributor',
+                        PROJECT_ROLE_OWNER,
+                        PROJECT_ROLE_DELEGATE,
+                        PROJECT_ROLE_CONTRIBUTOR,
                     ],
                 )
             )
@@ -308,7 +323,7 @@ class ProjectForm(SODARModelForm):
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
-                name = 'projectroles'
+                name = APP_NAME
                 p_settings = self.app_settings.get_setting_defs(
                     APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
                 )
@@ -344,7 +359,6 @@ class ProjectForm(SODARModelForm):
                                 project=self.instance,
                             )
                         )
-
                     else:
                         self.initial[s_field] = json.dumps(
                             self.app_settings.get_default_setting(
@@ -439,7 +453,6 @@ class ProjectForm(SODARModelForm):
 
         # Access parent project if present
         parent_project = None
-
         if project:
             parent_project = Project.objects.filter(sodar_uuid=project).first()
 
@@ -462,24 +475,21 @@ class ProjectForm(SODARModelForm):
 
         # Modify ModelChoiceFields to use sodar_uuid
         self.fields['parent'].to_field_name = 'sodar_uuid'
-
         # Set readme widget with preview
-        self.fields['readme'].widget = PagedownWidget(show_preview=True)
+        self.fields['readme'].widget = SODARPagedownWidget(
+            attrs={'show_preview': True}
+        )
 
         # Updating an existing project
         if self.instance.pk:
             # Set readme value as raw markdown
             self.initial['readme'] = self.instance.readme.raw
-
             # Hide project type selection
             self.fields['type'].widget = forms.HiddenInput()
-
             # Set hidden project field for autocomplete
             self.initial['project'] = self.instance
-
             # Set owner value
             self.initial['owner'] = self.instance.get_owner().user.sodar_uuid
-
             # Hide owner widget if updating (changed in member modification UI)
             self.fields['owner'].widget = forms.HiddenInput()
 
@@ -505,7 +515,6 @@ class ProjectForm(SODARModelForm):
         else:
             # Set hidden project field for autocomplete
             self.initial['project'] = None
-
             # Hide parent selection
             self.fields['parent'].widget = forms.HiddenInput()
 
@@ -513,9 +522,8 @@ class ProjectForm(SODARModelForm):
             if parent_project:
                 # Parent must be current parent
                 self.initial['parent'] = parent_project.sodar_uuid
-
-                # Set current user as initial value
-                self.initial['owner'] = self.current_user.sodar_uuid
+                # Set owner of parent category as initial owner
+                self.initial['owner'] = parent_project.get_owner().user
 
                 # If current user is not parent owner, disable owner select
                 if (
@@ -529,15 +537,14 @@ class ProjectForm(SODARModelForm):
                 # Force project type
                 if settings.PROJECTROLES_DISABLE_CATEGORIES:
                     self.initial['type'] = PROJECT_TYPE_PROJECT
-
                 else:
                     self.initial['type'] = PROJECT_TYPE_CATEGORY
-
                 # Hide project type selection
                 self.fields['type'].widget = forms.HiddenInput()
-
                 # Set up parent field
                 self.initial['parent'] = None
+                # Set current user as initial owner
+                self.initial['owner'] = self.current_user
 
         if self.instance.is_remote():
             self.fields['title'].widget = forms.HiddenInput()
@@ -562,7 +569,6 @@ class ProjectForm(SODARModelForm):
                     'parent',
                     'You do not have permission to place a category under root',
                 )
-
             elif (
                 self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
                 and not settings.PROJECTROLES_DISABLE_CATEGORIES
@@ -639,7 +645,6 @@ class ProjectForm(SODARModelForm):
                         self.cleaned_data[s_field] = json.loads(
                             self.cleaned_data.get(s_field)
                         )
-
                     except json.JSONDecodeError as err:
                         # TODO: Shouldn't we use add_error() instead?
                         raise forms.ValidationError(
@@ -647,8 +652,9 @@ class ProjectForm(SODARModelForm):
                         )
 
                 elif s_val['type'] == 'INTEGER':
-                    # when field is a select/dropdown, the information of the datatype gets lost.
-                    # we need to convert that here, otherwise subsequent checks will fail.
+                    # When the field is a select/dropdown the information of
+                    # the datatype gets lost. We need to convert that here,
+                    # otherwise subsequent checks will fail.
                     self.cleaned_data[s_field] = int(self.cleaned_data[s_field])
 
                 if not self.app_settings.validate_setting(
@@ -759,7 +765,7 @@ class RoleAssignmentForm(SODARModelForm):
 
         # Delegate checks
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
@@ -840,7 +846,7 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             raise forms.ValidationError('Selected role does not exist')
 
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to set delegate
             if not self.current_user.has_perm(
@@ -974,7 +980,7 @@ class ProjectInviteForm(SODARModelForm):
         # Delegate checks
         role = self.cleaned_data.get('role')
         if role.name == PROJECT_ROLE_DELEGATE:
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
 
             # Ensure current user has permission to invite delegate
             if not self.current_user.has_perm(

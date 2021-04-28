@@ -4,7 +4,7 @@ from django.urls import reverse
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import ProjectAppPluginPoint
 
-from .urls import urlpatterns
+from example_project_app.urls import urlpatterns
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -189,8 +189,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         },
     }
 
-    #: FontAwesome icon ID string
-    icon = 'rocket'
+    #: Iconify icon
+    icon = 'mdi:rocket-launch'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'example_project_app:example'

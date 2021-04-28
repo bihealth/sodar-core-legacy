@@ -9,17 +9,17 @@
 <div class="btn-group sodar-list-btn-group" id="sodar-ff-file-buttons-{{ file.sodar_uuid }}">
   <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
       type="button" data-toggle="dropdown" aria-expanded="false">
-    <i class="fa fa-cog"></i>
+    <i class="iconify" data-icon="mdi:cog"></i>
   </button>
   <div class="dropdown-menu dropdown-menu-right">
     {% if can_update_all or file.owner == request.user and can_update_own %}
       <a class="dropdown-item" href="{% url 'filesfolders:file_update' item=file.sodar_uuid %}">
-        <i class="fa fa-fw fa-pencil"></i> Update File
+        <i class="iconify" data-icon="mdi:lead-pencil"></i> Update File
       </a>
       <a class="dropdown-item text-danger" href="{% url 'filesfolders:file_delete' item=file.sodar_uuid %}">
-        <i class="fa fa-fw fa-close"></i> Delete File
+        <i class="iconify" data-icon="mdi:close-thick"></i> Delete File
       </a>
-      {% get_history_dropdown project=file.project obj=file as history_item %}
+      {% get_history_dropdown obj=file project=file.project as history_item %}
       {{ history_item|safe }}
     {% endif %}
   </div>

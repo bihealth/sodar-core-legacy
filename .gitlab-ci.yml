@@ -1,4 +1,4 @@
-image: python:3.6
+image: python:3.8
 
 services:
   - postgres:9.6
@@ -20,13 +20,16 @@ before_script:
 
   - sh ./utility/install_os_gitlab.sh
   - sh ./utility/install_chrome_gitlab.sh
-  - pip3 install virtualenv
-  - virtualenv env
-  - source env/bin/activate
-  - sh ./utility/install_python_dependencies.sh
+  - python3 -m venv ./env
+  - source ./env/bin/activate
+  # - sh ./utility/install_python_dependencies.sh
+  - pip3 install wheel==0.36.2
+  - pip3 install -r ./requirements/local.txt
+  - pip3 install -r ./requirements/test.txt
 
 all_tests:
   script:
+    - python3 manage.py geticons
     - python3 manage.py collectstatic --noinput
     - coverage run --source="." manage.py test -v 2 --settings=config.settings.test
     - coverage report

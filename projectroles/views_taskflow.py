@@ -87,6 +87,9 @@ class TaskflowProjectUpdateAPIView(BaseTaskflowAPIView):
             project.title = request.data['title']
             project.description = request.data.get('description') or ''
             project.readme.raw = request.data['readme']
+            project.public_guest_access = (
+                request.data.get('public_guest_access') or False
+            )
             project.save()
 
         except Project.DoesNotExist as ex:

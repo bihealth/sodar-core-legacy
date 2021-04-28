@@ -16,8 +16,8 @@ class SiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'umbrella'
+    #: Iconify icon
+    icon = 'mdi:rocket-launch-outline'
 
     #: Description string
     description = 'Example site-wide app'

@@ -7,6 +7,100 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.0 (2021-04-28)
+====================
+
+Added
+-----
+
+- **General**
+    - Installation via PyPI (#293)
+- **Adminalerts**
+    - ``get_statistics()`` implementation
+- **Appalerts**
+    - Add site app and backend for app alerts (#642)
+- **Projectroles**
+    - ``geticons`` management command for retrieving Iconify icons (#54)
+    - ``spin`` class in ``projectroles.css`` for spinning icon support (#54)
+    - Optional public guest access for projects (#574)
+    - ``public_guest_access`` and ``set_public()`` in ``Project`` model (#574)
+    - Enable allowing anonymous access to site (#574)
+    - ``PROJECTROLES_ALLOW_ANONYMOUS`` site setting (#574)
+    - ``is_allowed_anonymous`` predicate in ``rules`` (#574)
+    - ``site_app_processor`` in ``context_processors`` (#574)
+    - ``get_statistics()`` in ``SiteAppPluginPoint``
+    - ``info_settings`` in app plugins (#671)
+    - ``plugin_type`` argument in ``get_app_plugin()`` (#309)
+    - ``handle_project_update()`` in ``ProjectAppPlugin`` (#387, #675)
+    - App alerts for project and role updates (#642, #692)
+- **Siteinfo**
+    - Display selected Django settings in UI (#671)
+- **Timeline**
+    - Permission tests (#144)
+    - Site app plugin for site-wide events (#668)
+- **Tokens**
+    - Permission tests
+
+Changed
+-------
+
+- **General**
+    - Upgrade project to Django v3.2 (#194, #695)
+    - Upgrade Python dependencies (#194, #678, #685)
+    - Rename GitHub repo to ``sodar-core`` (#699)
+    - Rename ``master`` branch to ``main``
+    - Use Iconify for icons (#54)
+    - Use Material Design Icons as default icon set (#54)
+    - Bump minimum Python version requirement to v3.7 (#121)
+    - Upgraded versioneer (#656)
+    - Update views, mixins and tags for anonymous user access (#574)
+    - Upgrade recommended development OS version to Ubuntu v20.04 (#640)
+    - Do not send redundant emails to users initiating updates (#693)
+    - Get all app settings from environment
+- **Projectroles**
+    - Set parent owner as initial owner in project form (#667)
+    - Always show Django admin warning (#677)
+    - Modify signature of ``get_history_dropdown()`` template tag (#668)
+    - Add default ``superuser`` value to ``LiveUserMixin._make_user()``
+    - Include ``select2`` CSS locally (#457)
+    - Refactor ``cleanappsettings`` (#673)
+- **Siteinfo**
+    - Tabbed layout in site info view
+- **Timeline**
+    - Make ``project`` and ``user`` fields in ``ProjectEvent`` optional (#119, #668)
+    - Modify signatures of ``get_object_url()`` and ``get_object_link()`` helpers (#668)
+    - Allow custom ``INIT`` status data (#700)
+- **Tokens**
+    - Refactor view tests
+
+Fixed
+-----
+
+- **General**
+    - All app settings not properly frozen in test config (#688)
+- **Adminalerts**
+    - Pagedown widget breaking CSS layout in Firefox (#659)
+- **Bgjobs**
+    - Plugin queries in template tag module root (#653)
+- **Projectroles**
+    - Description line spacing in project header (#632)
+    - Pagedown widget breaking CSS layout in Firefox (#659)
+    - Crash by missing optional ``PROJECTROLES_DELEGATE_LIMIT`` setting (#676)
+    - ``cleanappsettings`` deleting defined app settings (#673)
+- **Timeline**
+    - Double status added when calling ``add_event()`` with ``INIT`` type (#700)
+
+Removed
+-------
+
+- **General**
+    - Font Awesome support without Iconify (#54)
+- **Projectroles**
+    - ``get_site_app()`` template tag (#574)
+    - Deprecated search functionality with a single ``search_term`` (#618)
+    - Deprecated ``get_full_title()`` method from ``Project`` model (#620)
+
+
 v0.9.1 (2021-03-05)
 ===================
 

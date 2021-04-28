@@ -16,7 +16,9 @@
         <div class="sodar-alert-top-content">
           {% comment %}
           {% if message.dismissable %}
-            <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+            <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
+              <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
+            </a>
           {% endif %}
           {% endcomment %}
           {{ message.content | safe }}
@@ -30,7 +32,9 @@
     <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %} alert-dismissable fade show sodar-alert-top">
       <div class="sodar-alert-top-content">
         {{ message }}
-        <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link"><i class="fa fa-close text-muted"></i></a>
+        <a href="#" data-dismiss="alert" class="pull-right sodar-alert-close-link">
+          <i class="iconify text-muted" data-icon="mdi:close-thick"></i>
+        </a>
       </div>
     </div>
   {% endfor %}

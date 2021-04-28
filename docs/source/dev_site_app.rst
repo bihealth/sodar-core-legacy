@@ -48,6 +48,17 @@ use project predicates in this one. Example:
     # Allow viewing data
     rules.add_perm('{APP_NAME}.view_data', rules.is_authenticated)
 
+If you allow anonymous users on your site and want to enable anonymous access to
+your site app, use the ``is_allowed_anonymous`` predicate:
+
+.. code-block:: python
+
+    from projectroles import rules as pr_rules
+    rules.add_perm(
+        '{APP_NAME}.view_data',
+        rules.is_authenticated | pr_rules.is_allowed_anonymous
+    )
+
 
 SiteAppPlugin
 =============
@@ -74,7 +85,7 @@ The following variables and functions are **mandatory**:
 - ``name``: App name (ideally should correspond to the app package name)
 - ``title``: Printable app title
 - ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Font Awesome 4.7 icon name (without the ``fa-*`` prefix)
+- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
 - ``entry_point_url_id``: View ID for the app entry point
 - ``description``: Verbose description of app
 - ``app_permission``: Basic permission for viewing app data in project (see
@@ -84,8 +95,12 @@ Implementing the following is **optional**:
 
 - ``app_settings``: Implement if project or user specific settings for the app
   are needed. See the plugin point definition for an example.
+- ``info_settings``: List of names for app-specific Django settings to be
+  displayed for administrators in the siteinfo app.
 - ``get_messages()``: Implement if your site app needs to display site-wide
   messages for users.
+- ``get_statistics()``: Return statistics for the siteinfo app. See details in
+  :ref:`the siteinfo documentation <app_siteinfo>`.
 
 
 Views

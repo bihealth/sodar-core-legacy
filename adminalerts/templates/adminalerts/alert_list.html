@@ -89,11 +89,11 @@
 {% block projectroles %}
 
 <div class="row sodar-subtitle-container bg-white sticky-top">
-  <h2><i class="fa fa-exclamation-triangle"></i> Admin Alerts</h2>
+  <h2><i class="iconify" data-icon="mdi:alert"></i> Admin Alerts</h2>
 
   <a role="button" class="btn btn-primary ml-auto"
      href="{% url 'adminalerts:create' %}">
-    <i class="fa fa-plus"></i> Create Alert
+    <i class="iconify" data-icon="mdi:plus-bold"></i> Create Alert
   </a>
 </div>
 
@@ -142,16 +142,16 @@
                   <div class="btn-group sodar-list-btn-group" id="sodar-aa-alert-buttons-{{ a.pk }}">
                     <button class="btn btn-secondary dropdown-toggle sodar-list-dropdown"
                             type="button" data-toggle="dropdown" aria-expanded="false">
-                      <i class="fa fa-cog"></i>
+                      <i class="iconify" data-icon="mdi:cog"></i>
                     </button>
                     <div class="dropdown-menu dropdown-menu-right">
                       <a class="dropdown-item"
                          href="{% url 'adminalerts:update' adminalert=a.sodar_uuid %}">
-                        <i class="fa fa-fw fa-pencil"></i> Update Alert
+                        <i class="iconify" data-icon="mdi:lead-pencil"></i> Update Alert
                       </a>
                       <a class="dropdown-item text-danger"
                          href="{% url 'adminalerts:delete' adminalert=a.sodar_uuid %}">
-                        <i class="fa fa-fw fa-close"></i> Delete Alert
+                        <i class="iconify" data-icon="mdi:close-thick"></i> Delete Alert
                       </a>
                     </div>
                   </div>

@@ -151,6 +151,30 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         # Assert project column count
         self.assertEqual(response.context['project_col_count'], 4)
 
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_render_anon(self):
+        """Test to ensure the home view renders correctly with anonymous access"""
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the project list is provided in the view context
+        self.assertIsNotNone(response.context['project_list'])
+        self.assertEqual(len(response.context['project_list']), 0)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_render_anon_public_project(self):
+        """Test to ensure the home view renders correctly with anonymous access and public project"""
+        self.project.set_public()
+
+        response = self.client.get(reverse('home'))
+        self.assertEqual(response.status_code, 200)
+
+        # Assert the project list is provided in the view context
+        self.assertIsNotNone(response.context['project_list'])
+        self.assertEqual(
+            response.context['project_list'][1].pk, self.project.pk
+        )
+
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for the project search results view"""
@@ -300,37 +324,40 @@ class TestProjectDetailView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
     """Tests for Project creation view"""
 
+    def setUp(self):
+        super().setUp()
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
+
     def test_render_top(self):
         """Test rendering of top level category creation form"""
         with self.login(self.user):
             response = self.client.get(reverse('projectroles:create'))
 
         self.assertEqual(response.status_code, 200)
-
         # Assert form field values
         form = response.context['form']
         self.assertIsNotNone(form)
         self.assertEqual(form.initial['type'], PROJECT_TYPE_CATEGORY)
         self.assertIsInstance(form.fields['type'].widget, HiddenInput)
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertEqual(form.initial['owner'], self.user)
 
     def test_render_sub(self):
         """Test rendering of Project creation form if creating a subproject"""
-        self.category = self._make_project(
+        category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        self.owner_as = self._make_assignment(
-            self.category, self.user, self.role_owner
-        )
-
+        self._make_assignment(category, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.user_new = self.make_user('newuser')
+        self.make_user('newuser')
 
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.category.sodar_uuid},
+                    kwargs={'project': category.sodar_uuid},
                 )
             )
 
@@ -355,30 +382,44 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
 
     def test_render_sub_project(self):
-        """Test rendering of Project creation form if creating a subproject under a project (should fail with redirect)"""
-        self.project = self._make_project(
-            'TestProject', PROJECT_TYPE_PROJECT, None
-        )
-        self.owner_as = self._make_assignment(
-            self.project, self.user, self.role_owner
-        )
-
+        """Test rendering if creating a subproject under a project (should fail with redirect)"""
+        project = self._make_project('TestProject', PROJECT_TYPE_PROJECT, None)
+        self._make_assignment(project, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.user_new = self.make_user('newuser')
+        self.make_user('newuser')
 
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'projectroles:create',
-                    kwargs={'project': self.project.sodar_uuid},
+                    kwargs={'project': project.sodar_uuid},
                 )
             )
 
         self.assertEqual(response.status_code, 302)
 
+    def test_render_parent_owner(self):
+        """Test rendering with parent owner as initial value"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        user_new = self.make_user('newuser')
+        self._make_assignment(category, user_new, self.role_owner)
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                )
+            )
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertEqual(form.initial['owner'], user_new)
+
     def test_create_top_level_category(self):
         """Test creation of top level category"""
-
         # Assert precondition
         self.assertEqual(Project.objects.all().count(), 0)
 
@@ -390,8 +431,8 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -409,7 +450,9 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(Project.objects.all().count(), 1)
         project = Project.objects.first()
         self.assertIsNotNone(project)
-        self.assertEqual(len(mail.outbox), 1)
+        # Same user so no alerts or emails
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -418,10 +461,10 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
             'full_title': 'TestCategory',
             'sodar_uuid': project.sodar_uuid,
         }
-
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
@@ -432,7 +475,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         owner_as = RoleAssignment.objects.get(
             project=project, role=self.role_owner
         )
-
         expected = {
             'id': owner_as.pk,
             'project': project.pk,
@@ -440,7 +482,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'user': self.user.pk,
             'sodar_uuid': owner_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(owner_as), expected)
 
         # Assert redirect
@@ -464,8 +505,8 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'owner': self.user.sodar_uuid,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -487,8 +528,8 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.sodar_uuid,
             'owner': self.user.sodar_uuid,
             'description': 'description',
+            'public_guest_access': False,
         }
-
         # Add settings values
         values.update(
             app_settings.get_all_defaults(
@@ -507,13 +548,13 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
         # Assert response
         self.assertEqual(response.status_code, 302)
-
         # Assert Project state after creation
         self.assertEqual(Project.objects.all().count(), 2)
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
         self.assertIsNotNone(project)
-        # 2 mails should be send, for the project and for the category
-        self.assertEqual(len(mail.outbox), 2)
+        # No alerts or emails should be sent as the same user triggered this
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
+        self.assertEqual(len(mail.outbox), 0)
 
         expected = {
             'id': project.pk,
@@ -522,19 +563,17 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'parent': category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'description',
+            'public_guest_access': False,
             'full_title': 'TestCategory / TestProject',
             'sodar_uuid': project.sodar_uuid,
         }
-
         model_dict = model_to_dict(project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
-
         # Assert owner role assignment
         owner_as = RoleAssignment.objects.get(
             project=project, role=self.role_owner
         )
-
         expected = {
             'id': owner_as.pk,
             'project': project.pk,
@@ -542,7 +581,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'user': self.user.pk,
             'sodar_uuid': owner_as.sodar_uuid,
         }
-
         self.assertEqual(model_to_dict(owner_as), expected)
 
 
@@ -565,6 +603,9 @@ class TestProjectUpdateView(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render_project(self):
         """Test rendering of Project updating form with an existing project"""
@@ -656,7 +697,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 3)
         self.project.refresh_from_db()
         self.assertIsNotNone(self.project)
-        # No mail should be send, cause the owner has not changed
+        # No alert or mail, because the owner has not changed
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -666,10 +708,10 @@ class TestProjectUpdateView(
             'parent': new_category.pk,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'public_guest_access': False,
             'full_title': new_category.title + ' / ' + 'updated title',
             'sodar_uuid': self.project.sodar_uuid,
         }
-
         model_dict = model_to_dict(self.project)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
@@ -774,7 +816,8 @@ class TestProjectUpdateView(
         self.assertEqual(Project.objects.all().count(), 2)
         self.category.refresh_from_db()
         self.assertIsNotNone(self.category)
-        # Ensure no email is sent (owner not updated)
+        # Ensure no alert or email (owner not updated)
+        self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
         expected = {
@@ -784,6 +827,7 @@ class TestProjectUpdateView(
             'parent': None,
             'submit_status': SUBMIT_STATUS_OK,
             'description': 'updated description',
+            'public_guest_access': False,
             'full_title': 'updated title',
             'sodar_uuid': self.category.sodar_uuid,
         }
@@ -1935,8 +1979,11 @@ class TestRoleAssignmentCreateView(
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-
         self.user_new = self.make_user('guest')
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
         """Test rendering of RoleAssignment creation form"""
@@ -1979,8 +2026,14 @@ class TestRoleAssignmentCreateView(
 
     def test_create_assignment(self):
         """Test RoleAssignment creation"""
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            0,
+        )
 
         # Issue POST request
         values = {
@@ -1997,7 +2050,7 @@ class TestRoleAssignmentCreateView(
                 values,
             )
 
-        # Assert RoleAssignment state after creation
+        # Assert object state after creation
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
@@ -2010,6 +2063,12 @@ class TestRoleAssignmentCreateView(
             'sodar_uuid': role_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(role_as), expected)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_create'
+            ).count(),
+            1,
+        )
 
         # Assert redirect
         with self.login(self.user):
@@ -2261,6 +2320,10 @@ class TestRoleAssignmentUpdateView(
             self.project, self.user_new, self.role_guest
         )
 
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
+
     def test_render(self):
         """Test rendering of RoleAssignment updating form"""
         with self.login(self.user):
@@ -2295,8 +2358,14 @@ class TestRoleAssignmentUpdateView(
     def test_update_assignment(self):
         """Test RoleAssignment updating"""
 
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            0,
+        )
 
         values = {
             'project': self.role_as.project.sodar_uuid,
@@ -2312,7 +2381,7 @@ class TestRoleAssignmentUpdateView(
                 values,
             )
 
-        # Assert RoleAssignment state after update
+        # Assert object state after update
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=self.user_new
@@ -2325,6 +2394,12 @@ class TestRoleAssignmentUpdateView(
             'sodar_uuid': role_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(role_as), expected)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_update'
+            ).count(),
+            1,
+        )
 
         # Assert redirect
         with self.login(self.user):
@@ -2498,12 +2573,15 @@ class TestRoleAssignmentDeleteView(
         self.owner_as = self._make_assignment(
             self.project, self.user, self.role_owner
         )
-
         # Create guest user and role
         self.user_new = self.make_user('guest')
         self.role_as = self._make_assignment(
             self.project, self.user_new, self.role_guest
         )
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_render(self):
         """Test rendering of the RoleAssignment deletion confirmation form"""
@@ -2520,8 +2598,14 @@ class TestRoleAssignmentDeleteView(
     def test_delete_assignment(self):
         """Test RoleAssignment deleting"""
 
-        # Assert precondition
+        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            0,
+        )
 
         with self.login(self.user):
             response = self.client.post(
@@ -2531,8 +2615,14 @@ class TestRoleAssignmentDeleteView(
                 )
             )
 
-        # Assert RoleAssignment state after update
+        # Assert object states after update
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
+        self.assertEqual(
+            self.app_alert_model.objects.filter(
+                alert_name='role_delete'
+            ).count(),
+            1,
+        )
 
         # Assert redirect
         with self.login(self.user):
@@ -2609,12 +2699,15 @@ class TestRoleAssignmentOwnerTransferView(
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
         )
-
         # Create guest user and role
         self.user_new = self.make_user('guest')
         self.role_as = self._make_assignment(
             self.project, self.user_new, self.role_guest
         )
+
+        app_alerts = get_backend_api('appalerts_backend')
+        if app_alerts:
+            self.app_alert_model = app_alerts.get_model()
 
     def test_transfer_ownership(self):
         """Test ownership transfer"""
@@ -2640,7 +2733,35 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_transfer_as_old_owner(self):
+        """Test ownership transfer as old owner (should only create one mail)"""
+
+        with self.login(self.user_owner):
+            response = self.client.post(
+                reverse(
+                    'projectroles:role_owner_transfer',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                data={
+                    'project': self.project.sodar_uuid,
+                    'old_owner_role': self.role_guest.pk,
+                    'new_owner': self.user_new.sodar_uuid,
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.project.get_owner().user, self.user_new)
+        self.assertEqual(
+            RoleAssignment.objects.get(
+                project=self.project, user=self.user_owner
+            ).role,
+            self.role_guest,
+        )
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
 
     def test_transfer_ownership_inherited(self):
         """Test ownership transfer to an inherited owner"""
@@ -2666,6 +2787,7 @@ class TestRoleAssignmentOwnerTransferView(
             ).role,
             self.role_guest,
         )
+        self.assertEqual(self.app_alert_model.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
 

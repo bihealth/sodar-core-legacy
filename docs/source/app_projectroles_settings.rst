@@ -12,7 +12,7 @@ These settings are usually found in ``config/settings/*.py``, with
 ``config/settings/base.py`` being the default configuration other files may
 override or extend.
 
-If your site is based on ``sodar_django_site``, mandatory settings are already
+If your site is based on ``sodar-django-site``, mandatory settings are already
 set to their default values. In that case, you only need to modify or customize
 them where applicable.
 
@@ -62,6 +62,7 @@ following apps need to be included in the list in order for SODAR Core to work:
         'projectroles.apps.ProjectrolesConfig',
         'dal',
         'dal_select2',
+        'dj_iconify.apps.DjIconifyConfig',
     ]
 
 
@@ -90,12 +91,13 @@ Under ``DATABASES``, the setting below is recommended:
 Templates
 =========
 
-Under ``TEMPLATES['OPTIONS']['context_processors']``, add the projectroles URLs
-processor:
+Under ``TEMPLATES['OPTIONS']['context_processors']``, add the required
+projectroles processors:
 
 .. code-block:: python
 
     'projectroles.context_processors.urls_processor',
+    'projectroles.context_processors.site_app_processor',
 
 
 Email
@@ -135,6 +137,18 @@ The following settings remain in your auth configuration:
     AUTH_USER_MODEL = 'users.User'
     LOGIN_REDIRECT_URL = 'home'
     LOGIN_URL = 'login'
+
+
+Icons
+=====
+
+The ``ICONIFY_JSON_ROOT`` setting must point to the appropriate path within
+your static files directory in order to make icons work on your SODAR Core based
+site.
+
+.. code-block:: python
+
+    ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
 
 
 Django REST Framework
@@ -237,6 +251,8 @@ The following projectroles settings are **optional**:
   *without* user authentication in order to e.g. demonstrate features in a
   kiosk-style deployment. Also hides and/or disables views not intended to be
   used in this mode (bool)
+* ``PROJECTROLES_ALLOW_ANONYMOUS``: If true, allow anonymous users to access the
+  site and all projects where ``public_guest_access`` is set true (bool)
 
 Example:
 
@@ -558,7 +574,6 @@ Example:
     ]
     PROJECTROLES_CUSTOM_CSS_INCLUDES = [
         STATIC_ROOT + '/your/path/bootstrap.min.css',
-        STATIC_ROOT + '/your/path/font-awesome.min.css',
         # ...
     ]
 

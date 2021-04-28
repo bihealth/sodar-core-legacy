@@ -8,7 +8,7 @@
 
 <div class="btn-group sodar-sidebar-alt-btn pull-left collapse" role="group" id="sodar-pr-sidebar-alt-btn">
   <button class="btn btn-dark dropdown-toggle btn-sm" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    <i class="fa fa-bars"></i>
+    <i class="iconify mt-1" data-icon="mdi:menu" data-height="16"></i>
   </button>
   <div class="dropdown-menu">
 
@@ -17,7 +17,7 @@
         href="{% url 'home' %}"
         title="Home"
         id="sodar-pr-alt-link-home">
-      <i class="fa fa-fw fa-home"></i> Home
+      <i class="iconify" data-icon="mdi:home"></i> Home
     </a>
 
     {# Project stuff #}
@@ -28,7 +28,12 @@
           href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
           title="Overview"
           id="sodar-pr-alt-link-overview">
-        <i class="fa fa-fw fa-cube{% if project.type == PROJECT_TYPE_CATEGORY %}s{% endif %}"></i> Overview
+        {% if project.type == PROJECT_TYPE_CATEGORY %}
+          <i class="iconify" data-icon="mdi:rhombus-split"></i>
+        {% else %}
+          <i class="iconify" data-icon="mdi:cube"></i>
+        {% endif %}
+        Overview
       </a>
 
       {# App plugins #}
@@ -39,7 +44,7 @@
              href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
              title="{{ plugin.title }}"
              id="sodar-pr-alt-link-app-plugin-{{ plugin.name }}">
-            <i class="fa fa-fw fa-{{ plugin.icon }}"></i> {{ plugin.title }}
+            <i class="iconify" data-icon="{{ plugin.icon }}"></i> {{ plugin.title }}
           </a>
         {% endif %}
       {% endfor %}
@@ -50,7 +55,7 @@
            href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
            title="Members"
            id="sodar-pr-alt-link-project-roles">
-          <i class="fa fa-fw fa-users"></i> Members
+         <i class="iconify" data-icon="mdi:account-multiple"></i> Members
         </a>
       {% endif %}
       {% if can_update_project %}
@@ -58,7 +63,7 @@
            href="{% url 'projectroles:update' project=project.sodar_uuid %}"
            title="Update {% get_display_name 'PROJECT' title=True %}"
            id="sodar-pr-alt-link-project-update">
-          <i class="fa fa-fw fa-pencil"></i> Update {% get_display_name project.type title=True %}
+          <i class="iconify" data-icon="mdi:lead-pencil"></i> Update {% get_display_name project.type title=True %}
         </a>
      {% endif %}
 
@@ -72,14 +77,14 @@
          <a class="dropdown-item"
             href="{% url 'projectroles:create' project=project.sodar_uuid %}"
             id="sodar-pr-alt-link-project-create">
-           <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'PROJECT' title=True %} or {% get_display_name 'CATEGORY' title=True %}
+           <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'PROJECT' title=True %} or {% get_display_name 'CATEGORY' title=True %}
          </a>
       {% endif %}
     {% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
       <a class="dropdown-item"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-alt-link-project-create">
-       <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'PROJECT' title=True %}
+       <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'PROJECT' title=True %}
      </a>
     {% elif request.resolver_match.url_name == 'home' or request.resolver_match.url_name == 'create' and not project %}
       {% has_perm 'projectroles.create_project' request.user as can_create_project %}
@@ -87,7 +92,7 @@
         <a class="dropdown-item"
            href="{% url 'projectroles:create' %}"
            id="sodar-pr-alt-link-home-create">
-          <i class="fa fa-fw fa-plus"></i> Create {% get_display_name 'CATEGORY' title=True %}
+          <i class="iconify" data-icon="mdi:plus-thick"></i> Create {% get_display_name 'CATEGORY' title=True %}
         </a>
       {% endif %}
     {% endif %}

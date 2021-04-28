@@ -4,7 +4,6 @@ from django.conf import settings
 
 from projectroles.models import RoleAssignment, SODAR_CONSTANTS
 
-
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
@@ -31,10 +30,8 @@ def is_project_owner(user, obj):
 def is_project_delegate(user, obj):
     """Whether or not the user has the role of project delegate"""
     assignment = RoleAssignment.objects.get_assignment(user, obj)
-
     if assignment:
         return assignment.role.name == PROJECT_ROLE_DELEGATE
-
     return False
 
 
@@ -42,41 +39,54 @@ def is_project_delegate(user, obj):
 def is_project_contributor(user, obj):
     """Whether or not the user has the role of project contributor"""
     assignment = RoleAssignment.objects.get_assignment(user, obj)
-
     if assignment:
         return assignment.role.name == PROJECT_ROLE_CONTRIBUTOR
-
     return False
 
 
 @rules.predicate
 def is_project_guest(user, obj):
-    """Whether or not the user has the role of project guest"""
+    """
+    Whether or not the user has the role of project guest. Also returns true if
+    project has public guest access.
+    """
+    if obj.public_guest_access:
+        return True
     assignment = RoleAssignment.objects.get_assignment(user, obj)
-
     if assignment:
         return assignment.role.name == PROJECT_ROLE_GUEST
-
     return False
 
 
 @rules.predicate
 def has_project_role(user, obj):
-    """Whether or not the user has any role in the project"""
+    """
+    Whether or not the user has any role in the project. Also returns true if
+    project has public guest access.
+    """
+    if obj.public_guest_access:
+        return True
     if RoleAssignment.objects.get_assignment(user, obj) or (
         obj and obj.is_owner(user)
     ):
         return True
-
     return False
 
 
 @rules.predicate
 def has_category_child_role(user, obj):
-    """Whether or not the user has any role in any child project under the
-    current one, if the current project is a category"""
-    return obj.type == PROJECT_TYPE_CATEGORY and obj.has_role(
-        user, include_children=True
+    """
+    Whether or not the user has any role in any child project under the
+    current one, if the current project is a category. Also returns true if
+    user is anonymous and category includes children with public guest access.
+    """
+    return obj.type == PROJECT_TYPE_CATEGORY and (
+        (user.is_authenticated and obj.has_role(user, include_children=True))
+        or (
+            user.is_anonymous
+            and getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
+            and obj.has_public_children()
+        )
     )
 
 
@@ -99,8 +109,19 @@ def can_create_projects(user, obj):
         not settings.PROJECTROLES_TARGET_CREATE or (obj and obj.is_remote())
     ):
         return False
-
     return True
+
+
+@rules.predicate
+def is_allowed_anonymous(user):
+    """Return True if user is anonymous and allowed by site"""
+    if (
+        not user
+        or user.is_anonymous
+        and getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
+    ):
+        return True
+    return False
 
 
 # Combined predicates ----------------------------------------------------------

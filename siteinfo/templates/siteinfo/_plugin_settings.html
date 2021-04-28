@@ -1,0 +1,17 @@
+{% if pl_data.settings %}
+  <div class="card" id="sodar-si-core-settings-card-app-{{ plugin.name }}">
+    <div class="card-header">
+      <h4>
+        <i class="iconify" data-icon="{{ plugin.icon }}"></i>
+          {{ plugin.title }} Settings
+      </h4>
+    </div>
+    <div class="card-body">
+      <dl class="row">
+        {% for k, v in pl_data.settings.items %}
+          {% include 'siteinfo/_settings_item.html' %}
+        {% endfor %}
+      </dl>
+    </div>
+  </div>
+{% endif %}

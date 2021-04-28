@@ -73,26 +73,28 @@ class BackgroundJob(models.Model):
     date_modified = models.DateTimeField(
         auto_now=True, help_text='DateTime of last modification'
     )
-
-    #: The UUID for this job.
+    #: The UUID for this job
     sodar_uuid = models.UUIDField(
         default=uuid_object.uuid4, unique=True, help_text='BG Job SODAR UUID'
     )
-    #: The project that this job belongs to.  Set to ``None`` for global background
-    #: jobs.
+    #: The project this job belongs to. Set to None for global background jobs.
     project = models.ForeignKey(
-        Project, null=True, help_text='Project in which this objects belongs'
+        Project,
+        null=True,
+        help_text='Project in which this objects belongs',
+        on_delete=models.CASCADE,
     )
     #: The user initiating the job.
     user = models.ForeignKey(
-        AUTH_USER_MODEL, null=False, related_name='background_jobs'
+        AUTH_USER_MODEL,
+        null=False,
+        related_name='background_jobs',
+        on_delete=models.CASCADE,
     )
-
     #: Specializing string of the job.
     job_type = models.CharField(
         max_length=512, null=False, help_text='Type of the job'
     )
-
     #: A human-readable name for this job.
     name = models.CharField(max_length=512)
     #: An optional, extend description for this job.
@@ -131,6 +133,7 @@ class BackgroundJobLogEntry(models.Model):
         BackgroundJob,
         related_name='log_entries',
         help_text='Owning background job',
+        on_delete=models.CASCADE,
     )
 
     #: The entry's log level.
@@ -155,7 +158,10 @@ class JobModelMessageMixin:
 
     @contextlib.contextmanager
     def marks(self):
-        """Return a context manager that allows to run tasks between start and success/error marks."""
+        """
+        Return a context manager that allows to run tasks between start and
+        success/error marks.
+        """
         self.mark_start()
         try:
             yield

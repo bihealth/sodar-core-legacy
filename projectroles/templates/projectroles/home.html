@@ -33,15 +33,19 @@
 
   <div class="card" id="sodar-pr-project-list">
     <div class="card-header">
-      <h4><i class="fa fa-globe"></i> Available {% get_display_name 'PROJECT' title=True plural=True %}
+      <h4>
+        <i class="iconify" data-icon="mdi:earth"></i>
+        Available {% get_display_name 'PROJECT' title=True plural=True %}
         <div class="input-group sodar-header-input-group pull-right">
-          <div class="input-group-prepend">
-            <button class="btn btn-secondary"
-                    type="submit" id="sodar-pr-project-list-link-star"
-                    data-filter-mode="0">
-              <i class="fa fa-star-o"></i> Starred
-            </button>
-          </div>
+          {% if request.user.is_authenticated %}
+            <div class="input-group-prepend">
+              <button class="btn btn-secondary"
+                      type="submit" id="sodar-pr-project-list-link-star"
+                      data-filter-mode="0">
+                <i class="iconify" data-icon="mdi:star-outline"></i> Starred
+              </button>
+            </div>
+          {% endif %}
           <input class="form-control"
                  type="text" placeholder="Filter"
                  aria-label="Filter {% get_display_name 'PROJECT' title=False plural=True %}"
@@ -83,7 +87,10 @@
           <tr>
             <td class="bg-faded font-italic text-center text-danger"
                 colspan="{{ project_col_count }}">
-              No {% get_display_name 'PROJECT' title=False plural=True %} available: access must be granted by {% get_display_name 'PROJECT' title=False plural=True %} personnel or a superuser
+              No {% get_display_name 'PROJECT' title=False plural=True %}
+              available: access must be granted by
+              {% get_display_name 'PROJECT' title=False plural=False %}
+              personnel or a superuser
             </td>
           </tr>
         {% endif %}

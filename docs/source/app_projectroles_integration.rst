@@ -20,10 +20,10 @@ SODAR Django Site Template (Recommended)
 
 When setting up a new :term:`SODAR Core based site<SODAR Core Based Site>`, it
 is strongly recommended to use
-`sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as the
+`sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ as the
 template. The repository contains a minimal :term:`Django site<Django Site>`
 pre-configured with projectroles and other
-:term:`SODAR Core apps<SODAR Core App>`. The master branch of this project
+:term:`SODAR Core apps<SODAR Core App>`. The ``main`` branch of this project
 always integrates the latest stable release of SODAR Core and projectroles.
 
 To set up your site with this template, clone the repository and follow the
@@ -41,24 +41,16 @@ Cookiecutter-Django
 ===================
 
 If the SODAR Django site template does not suit your needs, it is also possible
-to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+to set up your site using `cookiecutter-django <https://github.com/pydanny/cookiecutter-django/>`_.
 In this case, follow the instructions in the following section as if you were
 integrating SODAR Core to an existing Django site.
 
-.. warning::
-
-    Currently, SODAR Core only supports Django 1.11.x, while the latest versions
-    of cookiecutter-django set up Django 2.0.x by default. It is strongly
-    recommended to use Django 1.11 LTS for time being. Compatibility with 2.0 and
-    upwards is not guaranteed! Integration into the last official
-    `1.11 release <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_
-    of cookiecutter-django has been tested and verified to be working.
-
 .. note::
 
-    The latest cookiecutter-django 1.11 release has dependencies which are
-    already out of date. Please update them to match the requirements of the
-    django-sodar-core package.
+    The project was created using an old version of the cookiecutter script and
+    evolved from there. This means the site created by the version currently may
+    differ in several ways from how SODAR Core is set up. This method is
+    recommended only for experienced Django developers.
 
 .. note::
 
@@ -83,19 +75,18 @@ chapter.
 
 .. warning::
 
-    The rest of this section assumes that your Django project has been set up
-    sing a `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
-    Otherwise details such as directory structures and settings variables may
-    differ.
+    The rest of this section was originally written for the
+    `1.11 release of cookiecutter-django <https://github.com/pydanny/cookiecutter-django/releases/tag/1.11.10>`_.
+    Some details such as directory structures and settings variables may differ.
 
 First, add the ``django-plugins`` and ``django-sodar-core`` package requirements
 into your ``requirements/base.txt`` file. Make sure you are pointing to the
-desired release tag.
+desired release tag or commit ID.
 
 .. code-block:: console
 
-    -e git+https://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+https://github.com/bihealth/sodar_core.git@v0.9.1#egg=django-sodar-core
+    -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
+    django-sodar-core==0.10.0
 
 Install the requirements for development:
 
@@ -108,7 +99,7 @@ you will have to resolve them before continuing.
 
 .. hint::
 
-    You can always refer to either the ``sodar_django_site`` repository or
+    You can always refer to either the ``sodar-django-site`` repository or
     ``example_site`` in the SODAR Core repository for a working example of a
     Cookiecutter-based Django site integrating SODAR Core. However, note that
     some aspects of the site configuration may vary depending on the
@@ -178,7 +169,7 @@ Populating UUIDs for Existing Users
 
 When integrating projectroles into an existing site with existing users, the
 ``sodar_uuid`` field needs to be populated. See
-`instructions in Django documentation <https://docs.djangoproject.com/en/1.11/howto/writing-migrations/#migrations-that-add-unique-fields>`_
+`instructions in Django documentation <https://docs.djangoproject.com/en/3.1/howto/writing-migrations/#migrations-that-add-unique-fields>`_
 on how to create the required migrations.
 
 Synchronizing User Groups for Existing Users
@@ -298,6 +289,40 @@ corresponding files found in the ``{SITE_NAME}/templates/`` directory. You have
 the options of extending or replacing content on the templates, or simply
 implementing your own.
 
+
+Site Icons
+==========
+
+SODAR Core uses `Iconify <https://iconify.design/>`_ to include icons on the
+site. SODAR Core apps use the `Material Design Icons <https://materialdesignicons.com>`_
+icon collection, however other collections can be added to your site.
+
+To enable the icons on your site, run the following management commands:
+
+.. code-block:: console
+
+    $ ./manage.py geticons
+    $ ./manage.py collectstatic
+
+If you want to use additional icon collections, you can add them using the
+``-c`` argument as displayed in the following example:
+
+.. code-block:: console
+
+    $ ./manage.py geticons -c carbon clarity
+
+You can view the supported icon collections
+`here <https://github.com/iconify/collections-json/tree/master/json>`_.
+
+The Iconify JSON files are rather large and potentially frequently updated, so
+it is recommended to ignore them in your Git setup and instead retrieve them
+dynamically for CI and deployment. Before committing your code, it is
+recommended to update your ``.gitignore`` file with the following lines:
+
+.. code-block::
+
+    */static/iconify/*.json
+    */static/iconify/json/*.json
 
 All Done!
 =========

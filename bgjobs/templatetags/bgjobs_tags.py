@@ -12,17 +12,6 @@ def get_details_backgroundjobs(project):
     return BackgroundJob.objects.filter(project=project).order_by('-pk')[:5]
 
 
-#: Global map from job specialization name to model class.
-JOB_SPECS = {}
-
-# Setup the global map.
-for plugin in BackgroundJobsPluginPoint.get_plugins():
-    assert not (
-        set(plugin.job_specs) & set(JOB_SPECS)
-    ), 'Registering model twice!'
-    JOB_SPECS.update(plugin.job_specs)
-
-
 @register.filter
 def specialize_job(bg_job):
     """Given a ``BackgroundJob``, return the specialized job if any.
@@ -30,7 +19,16 @@ def specialize_job(bg_job):
     Specialized job models are linked back to the ``BackgroundJob`` through a
     ``OneToOneField`` named ``bg_job``.
     """
-    klass = JOB_SPECS.get(bg_job.job_type)
+    # Global map from job specialization name to model class.
+    job_specs = {}
+    # Setup the global map.
+    for plugin in BackgroundJobsPluginPoint.get_plugins():
+        assert not (
+            set(plugin.job_specs) & set(job_specs)
+        ), 'Registering model twice!'
+        job_specs.update(plugin.job_specs)
+
+    klass = job_specs.get(bg_job.job_type)
     if not klass:
         return bg_job
     else:

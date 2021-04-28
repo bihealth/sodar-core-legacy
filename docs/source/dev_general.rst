@@ -64,6 +64,36 @@ used. An example can be seen below:
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
 
+Using Icons
+===========
+
+To use icons in your apps, use the ``iconify``class along with the collection
+and icon name into the ``data-icon`` attribute. See
+`Iconify <https://docs.iconify.design/implementations/css.html>`_ and
+`django-iconify <https://edugit.org/AlekSIS/libs/django-iconify/-/blob/master/README.rst>`_
+documentation for further information.
+
+Example:
+
+.. code-block:: HTML
+
+    <i class="iconify" data-icon="mdi:home"></i>
+
+Also make sure to modify the ``icon`` attribute of your app plugins to include
+the full ``collection:name`` syntax for Iconify icons.
+
+In certain client side Javascript implementations in which icons are loaded or
+replaced dynamically, you may have to refer to these URLs as a direct ``img``
+element:
+
+.. code-block:: HTML
+
+    <img src="/icons/mdi/home.svg" />
+
+For modifiers such as color and size when using ``img`` tags,
+`see here <https://docs.iconify.design/implementations/css.html>`_.
+
+
 Testing
 =======
 

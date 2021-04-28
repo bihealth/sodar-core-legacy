@@ -4,9 +4,8 @@ from django.utils import timezone
 # Projectroles dependency
 from projectroles.plugins import SiteAppPluginPoint
 
-
-from .models import AdminAlert
-from .urls import urlpatterns
+from adminalerts.models import AdminAlert
+from adminalerts.urls import urlpatterns
 
 
 class SiteAppPlugin(SiteAppPluginPoint):
@@ -16,13 +15,13 @@ class SiteAppPlugin(SiteAppPluginPoint):
     name = 'adminalerts'
 
     #: Title (used in templates)
-    title = 'Alerts'
+    title = 'Admin Alerts'
 
     #: App URLs (will be included in settings by djangoplugins)
     urls = urlpatterns
 
-    #: FontAwesome icon ID string
-    icon = 'exclamation-triangle'
+    #: Iconify icon
+    icon = 'mdi:alert'
 
     #: Description string
     description = 'Administrator alerts to be shown for users'
@@ -32,6 +31,17 @@ class SiteAppPlugin(SiteAppPluginPoint):
 
     #: Required permission for displaying the app
     app_permission = 'adminalerts.create_alert'
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['ADMINALERTS_PAGINATION']
+
+    def get_statistics(self):
+        return {
+            'alert_count': {
+                'label': 'Alerts',
+                'value': AdminAlert.objects.all().count(),
+            }
+        }
 
     def get_messages(self, user=None):
         """
@@ -45,13 +55,15 @@ class SiteAppPlugin(SiteAppPluginPoint):
         ).order_by('-pk')
 
         for a in alerts:
-            content = '<i class="fa fa-exclamation-triangle"></i> ' + a.message
+            content = (
+                '<i class="iconify" data-icon="mdi:alert"></i> ' + a.message
+            )
 
             if a.description.raw and user and user.is_authenticated:
                 content += (
                     '<span class="pull-right"><a href="{}" class="text-info">'
-                    '<i class="fa fa-arrow-circle-right"></i> '
-                    'Details</a>'.format(
+                    '<i class="iconify" data-icon="mdi:arrow-right-circle">'
+                    '</i> Details</a>'.format(
                         reverse(
                             'adminalerts:detail',
                             kwargs={'adminalert': a.sodar_uuid},

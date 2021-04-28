@@ -6,7 +6,6 @@ from django.apps import apps
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, Group
 from django.contrib.auth.signals import user_logged_in
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q
@@ -57,10 +56,6 @@ class ProjectManager(models.Manager):
         :param project_type: Project type or None
         :return: QuerySet of Project objects
         """
-        # Deprecation protection (#609, #618)
-        if not isinstance(search_terms, list):
-            search_terms = [search_terms]
-
         projects = super().get_queryset().order_by('title')
         if project_type:
             projects = projects.filter(type=project_type)
@@ -101,6 +96,7 @@ class Project(models.Model):
         null=True,
         related_name='children',
         help_text='Parent category if nested',
+        on_delete=models.CASCADE,
     )
 
     #: Short project description
@@ -118,6 +114,13 @@ class Project(models.Model):
         blank=True,
         markup_type='markdown',
         help_text='Project README (optional, supports markdown)',
+    )
+
+    #: Public guest access
+    public_guest_access = models.BooleanField(
+        default=False,
+        help_text='Allow public guest access for the project, also including '
+        'unauthenticated users if allowed on the site',
     )
 
     #: Status of project creation
@@ -229,6 +232,16 @@ class Project(models.Model):
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
 
+    # TODO: Add tests
+    def has_public_children(self):
+        """
+        Return True if the project has any children with public guest access.
+        """
+        for child in self.get_children():
+            if child.public_guest_access:
+                return True
+            child.has_public_children()
+
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
         ret = 0
@@ -279,20 +292,34 @@ class Project(models.Model):
         Return True if user is owner in this project or inherits ownership from
         a parent category.
         """
-        return True if user in [a.user for a in self.get_owners()] else False
+        if user.is_authenticated and user in [
+            a.user for a in self.get_owners()
+        ]:
+            return True
+        return False
 
     def is_delegate(self, user):
         """
         Return True if user is delegate in this project.
         """
-        return True if user in [a.user for a in self.get_delegates()] else False
+        if (
+            user
+            and user.is_authenticated
+            and user in [a.user for a in self.get_delegates()]
+        ):
+            return True
+        return False
 
     def is_owner_or_delegate(self, user):
         """
         Return True if user is either an owner or a delegate in this project.
         Includes inherited owner relationships.
         """
-        return self.is_owner(user) or self.is_delegate(user)
+        return (
+            user
+            and user.is_authenticated
+            and (self.is_owner(user) or self.is_delegate(user))
+        )
 
     def get_delegates(self, exclude_inherited=False):
         """Return RoleAssignments for delegates"""
@@ -329,15 +356,22 @@ class Project(models.Model):
     def has_role(self, user, include_children=False):
         """
         Return whether user has roles in Project. If include_children is
-        True, return True if user has roles in ANY child project. Also return
-        True if user inherits owner permissions from a parent category.
+        True, return True if user has roles in ANY child project. Returns
+        True if user inherits owner permissions from a parent category, or if
+        public access is allowed for the project.
         """
-        if self.is_owner(user) or self.roles.filter(user=user).count() > 0:
+        if (
+            self.public_guest_access
+            or self.is_owner(user)
+            or self.roles.filter(user=user).count() > 0
+        ):
             return True
+
         if include_children:
             for child in self.children.all():
                 if child.has_role(user, include_children=True):
                     return True
+
         return False
 
     def get_parents(self):
@@ -350,19 +384,6 @@ class Project(models.Model):
             ret.append(parent)
             parent = parent.parent
         return reversed(ret)
-
-    def get_full_title(self):
-        """
-        Return full title of project with path.
-
-        NOTE: Deprecated, will be removed in the next major release (#620)
-        NOTE: Use Project.full_title instead!
-        """
-        logger.warning(
-            'Project.get_full_title() is deprecated, to be removed in v0.10! '
-            'Please use Project.full_title instead.'
-        )
-        return str(self)
 
     def get_source_site(self):
         """Return source site or None if this is a locally defined project"""
@@ -384,8 +405,10 @@ class Project(models.Model):
         return None
 
     def is_remote(self):
-        """Return True if current project has been retrieved from a remote
-        SODAR site"""
+        """
+        Return True if current project has been retrieved from a remote
+        SODAR site.
+        """
         if (
             settings.PROJECTROLES_SITE_MODE
             == SODAR_CONSTANTS['SITE_MODE_TARGET']
@@ -408,6 +431,11 @@ class Project(models.Model):
             ):
                 return True
         return False
+
+    def set_public(self, public=True):
+        """Helper for setting value of public_guest_access"""
+        self.public_guest_access = public
+        self.save()
 
 
 # Role -------------------------------------------------------------------------
@@ -461,6 +489,7 @@ class RoleAssignment(models.Model):
         Project,
         related_name='roles',
         help_text='Project in which role is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: User for whom role is assigned
@@ -468,11 +497,15 @@ class RoleAssignment(models.Model):
         AUTH_USER_MODEL,
         related_name='roles',
         help_text='User for whom role is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: Role to be assigned
     role = models.ForeignKey(
-        Role, related_name='assignments', help_text='Role to be assigned'
+        Role,
+        related_name='assignments',
+        help_text='Role to be assigned',
+        on_delete=models.CASCADE,
     )
 
     #: RoleAssignment SODAR UUID
@@ -539,7 +572,7 @@ class RoleAssignment(models.Model):
         # No validation if the project is a remote one
         if not (self.project.is_remote()):
             # Get project delegate limit
-            del_limit = settings.PROJECTROLES_DELEGATE_LIMIT
+            del_limit = getattr(settings, 'PROJECTROLES_DELEGATE_LIMIT', 1)
             if (
                 self.role.name == SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
                 and del_limit != 0
@@ -607,6 +640,7 @@ class AppSetting(models.Model):
         unique=False,
         related_name='settings',
         help_text='App to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Project to which the setting belongs
@@ -616,6 +650,7 @@ class AppSetting(models.Model):
         blank=True,
         related_name='settings',
         help_text='Project to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Project to which the setting belongs
@@ -625,6 +660,7 @@ class AppSetting(models.Model):
         blank=True,
         related_name='user_settings',
         help_text='User to which the setting belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Name of the setting
@@ -647,7 +683,7 @@ class AppSetting(models.Model):
     )
 
     #: Optional JSON value for the setting
-    value_json = JSONField(
+    value_json = models.JSONField(
         null=True, default=dict, help_text='Optional JSON value for the setting'
     )
 
@@ -736,11 +772,15 @@ class ProjectInvite(models.Model):
         null=False,
         related_name='invites',
         help_text='Project to which the person is invited',
+        on_delete=models.CASCADE,
     )
 
     #: Role assigned to the person
     role = models.ForeignKey(
-        Role, null=False, help_text='Role assigned to the person'
+        Role,
+        null=False,
+        help_text='Role assigned to the person',
+        on_delete=models.CASCADE,
     )
 
     #: User who issued the invite
@@ -749,6 +789,7 @@ class ProjectInvite(models.Model):
         null=False,
         related_name='issued_invites',
         help_text='User who issued the invite',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of invite creation
@@ -815,6 +856,7 @@ class ProjectUserTag(models.Model):
         null=False,
         related_name='tags',
         help_text='Project in which the tag is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: User for whom the tag is assigned
@@ -823,6 +865,7 @@ class ProjectUserTag(models.Model):
         null=False,
         related_name='project_tags',
         help_text='User for whom the tag is assigned',
+        on_delete=models.CASCADE,
     )
 
     #: Name of tag to be assigned
@@ -970,6 +1013,7 @@ class RemoteProject(models.Model):
         blank=True,
         null=True,
         help_text='Related project object (if created locally)',
+        on_delete=models.CASCADE,
     )
 
     #: Related remote SODAR site
@@ -978,6 +1022,7 @@ class RemoteProject(models.Model):
         null=False,
         related_name='projects',
         help_text='Remote SODAR site',
+        on_delete=models.CASCADE,
     )
 
     #: Project access level

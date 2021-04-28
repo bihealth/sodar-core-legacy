@@ -176,7 +176,11 @@ h2.sodar-pr-content-title {
 }
 
 .sodar-pr-content-title-secondary {
-  line-height: 40px;
+  margin-top: 6px;
+}
+
+.sodar-pr-content-title-secondary:first-line {
+  line-height: 30px;
 }
 
 .sodar-subtitle-container h3 {
@@ -404,10 +408,6 @@ a.sodar-pr-btn-title {
   padding: 0;
 }
 
-a.sodar-pr-btn-star i {
-  font-size: 30px;
-}
-
 a.sodar-pr-btn-copy-uuid i {
   padding-top: 3px;
   font-size: 24px;
@@ -455,6 +455,27 @@ a.sodar-pr-btn-copy-secret i {
   line-height: normal;
   padding-bottom: 8px;
   position: relative;
+}
+
+
+/* App alert badge */
+#sodar-app-alert-badge {
+    line-height: 36px !important;
+    font-size: 125%;
+}
+
+#sodar-app-alert-badge a:link,
+#sodar-app-alert-badge a:visited {
+    color: #fff !important;
+}
+
+#sodar-app-alert-icon {
+  animation: blink 1.5s ease-in infinite;
+}
+
+@keyframes blink {
+  from, to { opacity: 1 }
+  50% { opacity: 0 }
 }
 
 /* Badge group */
@@ -538,23 +559,6 @@ a.sodar-nav-link-last {
   border-left: 0;
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
-}
-
-/* Pagedown and JSON setting textarea height modification */
-/* ("rows" attribute does not work) */
-textarea.wmd-input,
-textarea.sodar-json-input {
-  height: 175px;
-  min-height: 175px;
-  resize: vertical;
-}
-
-/* Pagedown layout fixes */
-div.wmd-panel {
-  margin-left: 0;
-  margin-right: 0;
-  width: 100%;
-  resize: vertical;
 }
 
 /* Select2 autocomplete field tweaks */
@@ -657,6 +661,17 @@ div#sodar-modal div.modal-dialog{
   color: #dfdfdf;
 }
 
+a#sodar-pr-link-project-star {
+  outline: 0;
+  border: none;
+  width: 26px;
+}
+
+a#sodar-pr-link-project-star:focus,
+a#sodar-pr-link-project-star:active {
+  box-shadow: none;
+}
+
 .sodar-search-highlight {
   font-weight: bold;
 }
@@ -679,6 +694,22 @@ pre#sodar-email-body {
 .sodar-code-input {
   font-family: monospace;
   font-size: 85%;
+}
+
+.spin {
+  animation-name: spin-anim;
+  animation-duration: 2500ms;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+
+@keyframes spin-anim {
+  from {
+    transform:rotate(0deg);
+  }
+  to {
+    transform:rotate(360deg);
+  }
 }
 
 

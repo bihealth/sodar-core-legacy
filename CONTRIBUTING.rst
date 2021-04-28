@@ -14,7 +14,7 @@ Types of Contributions
 Report Bugs
 -----------
 
-Report bugs at https://github.com/bihealth/sodar_core/issues.
+Report bugs at https://github.com/bihealth/sodar-core/issues.
 
 If you are reporting a bug, please include:
 
@@ -44,7 +44,7 @@ articles, and such.
 Submit Feedback
 ---------------
 
-The best way to send feedback is to file an issue at https://github.com/bihealth/sodar_core/issues.
+The best way to send feedback is to file an issue at https://github.com/bihealth/sodar-core/issues.
 
 If you are proposing a feature:
 
@@ -56,19 +56,19 @@ If you are proposing a feature:
 Get Started!
 ============
 
-Ready to contribute? Here's how to set up ``sodar_core`` for local development.
+Ready to contribute? Here's how to set up SODAR Core for local development.
 
-1. Fork the ``sodar_core`` repo on GitHub.
+1. Fork the ``sodar-core`` repo on GitHub.
 2. Clone your fork locally::
 
-    $ git clone git@github.com:your_name_here/sodar_core.git
+    $ git clone git@github.com:your_name_here/sodar-core.git
 
 3. Install your local copy into a virtualenv. Assuming you have
    virtualenvwrapper installed, this is how you set up your fork for local
    development::
 
-    $ mkvirtualenv sodar_core
-    $ cd sodar_core/
+    $ mkvirtualenv sodar-core
+    $ cd sodar-core/
     $ python setup.py develop
 
 4. Create a branch for local development::
@@ -76,18 +76,18 @@ Ready to contribute? Here's how to set up ``sodar_core`` for local development.
     $ git checkout -b name-of-your-bugfix-or-feature dev
 
    Make sure you base your changes on the ``dev`` branch, which is the current
-   active development branch. The ``master`` branch is intended for merging
+   active development branch. The ``main`` branch is intended for merging
    stable releases only. Now you can make your changes locally.
 
 5. When you're done making changes, make sure to apply proper formatting using
    Black and the settings specified in the accompanying ``black.sh`` script.
    Next, check that your changes pass flake8 and the tests. It is recommended to
-   use the accompanying ``test.sh`` script to ensure the correct Django
-   configuration is used. For testing other Python versions use tox::
+   use the ``Makefile`` to ensure the correct Django configuration is used. For
+   testing other Python versions use tox::
 
     $ ./black.sh
     $ flake8 .
-    $ ./test.sh
+    $ make test
     $ tox
 
    To get flake8 and tox, just pip install them into your virtualenv.
@@ -112,10 +112,10 @@ Before you submit a pull request, check that it meets these guidelines:
 4. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in ``CHANGELOG.rst``.
-5. The pull request should work for Python 3.6 and preferably for 3.7. Check
-   https://github.com/bihealth/sodar_core/actions
+5. The pull request should work for Python version 3.7, 3.8 and 3.9. Check
+   https://github.com/bihealth/sodar-core/actions
    and make sure that the tests pass for supported Python versions.
-   The 1.11 branch of Django does not currently support Python 3.8.
+   From v1.0 onwards SODAR Core no longer supports Python 3.6.
 
 Deploying
 =========

@@ -2,12 +2,16 @@
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
-from projectroles.plugins import ProjectAppPluginPoint, BackendPluginPoint
+from projectroles.plugins import (
+    ProjectAppPluginPoint,
+    BackendPluginPoint,
+    SiteAppPluginPoint,
+)
 from projectroles.utils import get_display_name
 
-from .api import TimelineAPI
-from .models import ProjectEvent
-from .urls import urlpatterns
+from timeline.api import TimelineAPI
+from timeline.models import ProjectEvent
+from timeline.urls import urlpatterns
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
@@ -26,8 +30,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
     # Properties defined in ProjectAppPluginPoint -----------------------
 
-    #: FontAwesome icon ID string
-    icon = 'clock-o'
+    #: Iconify icon
+    icon = 'mdi:clock-time-eight'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     entry_point_url_id = 'timeline:list_project'
@@ -55,6 +59,9 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
     #: Display application for categories in addition to projects
     category_enable = True
 
+    #: Names of plugin specific Django settings to display in siteinfo
+    info_settings = ['TIMELINE_PAGINATION']
+
     def get_statistics(self):
         return {
             'event_count': {
@@ -73,8 +80,8 @@ class BackendPlugin(BackendPluginPoint):
     #: Title (used in templates)
     title = 'Timeline Backend'
 
-    #: FontAwesome icon ID string
-    icon = 'clock-o'
+    #: Iconify icon
+    icon = 'mdi:clock-time-eight-outline'
 
     #: Description string
     description = 'Timeline backend for modifying events'
@@ -82,3 +89,28 @@ class BackendPlugin(BackendPluginPoint):
     def get_api(self, **kwargs):
         """Return API entry point object."""
         return TimelineAPI()
+
+
+class SiteAppPlugin(SiteAppPluginPoint):
+    """Projectroles plugin for registering the app"""
+
+    #: Name (slug-safe, used in URLs)
+    name = 'timeline_site'
+
+    #: Title (used in templates)
+    title = 'Site-Wide Events'
+
+    #: App URLs (will be included in settings by djangoplugins)
+    urls = urlpatterns
+
+    #: Iconify icon
+    icon = 'mdi:clock-time-eight'
+
+    #: Description string
+    description = 'Timeline of Site-Wide Events'
+
+    #: Entry point URL ID
+    entry_point_url_id = 'timeline:list_site'
+
+    #: Required permission for displaying the app
+    app_permission = 'timeline.view_site_timeline'

@@ -38,9 +38,11 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             'label': 'Project setting',  # Optional, defaults to name/key
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example project setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+    #:             'options': ['example', 'example2'],  # Optional, only for
+    #:             settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target site
+    #:             'local': False,  # Optional, show/hide in forms on target
+    #:             site
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
@@ -49,9 +51,9 @@ class ProjectAppPluginPoint(PluginPoint):
     # DEPRECATED, will be removed in the next SODAR Core release
     project_settings = {}
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your app plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Entry point URL ID (must take project sodar_uuid as "project" argument)
     # TODO: Implement this in your app plugin
@@ -109,6 +111,10 @@ class ProjectAppPluginPoint(PluginPoint):
     #: Display application for categories in addition to projects
     # TODO: Override this in your app plugin if needed
     category_enable = False
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
 
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
@@ -225,13 +231,24 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
+    def handle_project_update(self, project, old_data):
+        """
+        Perform actions to handle project update.
+        # NOTE: This is a WIP feature to be altered/expanded in a later release
+
+        :param project: Current project (Project)
+        :param old_data: Old project data prior to update (dict)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
 
 class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your backend plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Description string
     # TODO: Implement this in your backend plugin
@@ -244,6 +261,10 @@ class BackendPluginPoint(PluginPoint):
     #: URL of optional css file to be included
     # TODO: Implement this in your backend plugin if applicable
     css_url = None
+
+    #: Names of plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
 
     def get_api(self):
         """Return API entry point object."""
@@ -264,9 +285,9 @@ class BackendPluginPoint(PluginPoint):
 class SiteAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering site-wide apps"""
 
-    #: FontAwesome icon ID string
+    #: Iconify icon
     # TODO: Implement this in your site app plugin
-    icon = 'question-circle-o'
+    icon = 'mdi:help-rhombus-outline'
 
     #: Description string
     # TODO: Implement this in your site app plugin
@@ -291,13 +312,29 @@ class SiteAppPluginPoint(PluginPoint):
     #:             'default': 'example',
     #:             'placeholder': 'Enter example setting here',  # Optional
     #:             'description': 'Example user setting',  # Optional
-    #:             'options': ['example', 'example2'],  # Optional, only for settings of type STRING or INTEGER
+    #:             'options': ['example', 'example2'],  # Optional, only for
+    #:             settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
-    #:             'local': False,  # Optional, show/hide in forms on target site
+    #:             'local': False,  # Optional, show/hide in forms on target
+    #:             site
     #:         }
     #:     }
     # TODO: Define user specific settings in your app plugin, example above
     app_settings = {}
+
+    #: List of names for plugin specific Django settings to display in siteinfo
+    # TODO: Override this in your app plugin if needed
+    info_settings = []
+
+    def get_statistics(self):
+        """
+        Return app statistics as a dict. Should take the form of
+        {id: {label, value, url (optional), description (optional)}}.
+
+        :return: Dict
+        """
+        # TODO: Implement this in your app plugin
+        return {}
 
     def get_messages(self, user=None):
         """
@@ -394,18 +431,23 @@ def change_plugin_status(name, status, plugin_type='app'):
     plugin.save()
 
 
-def get_app_plugin(plugin_name):
+def get_app_plugin(plugin_name, plugin_type=None):
     """
     Return active app plugin.
 
     :param plugin_name: Plugin name (string)
-    :return: ProjectAppPlugin object or None if not found
+    :param plugin_type: Plugin type (string or None for all types)
+    :return: Plugin object or None if not found
     """
-    for k, v in PLUGIN_TYPES.items():
+    if plugin_type:
+        plugin_types = [PLUGIN_TYPES[plugin_type]]
+    else:
+        plugin_types = PLUGIN_TYPES.values()
+    for t in plugin_types:
         try:
-            return eval(v).get_plugin(plugin_name)
+            return eval(t).get_plugin(plugin_name)
         except Exception:
-            pass  # TODO refactor
+            pass
 
 
 def get_backend_api(plugin_name, force=False, **kwargs):
@@ -443,8 +485,8 @@ class RemoteSiteAppPlugin(SiteAppPluginPoint):
     #: App URLs (will be included in settings by djangoplugins)
     urls = []
 
-    #: FontAwesome icon ID string
-    icon = 'cloud'
+    #: Iconify icon
+    icon = 'mdi:cloud-sync'
 
     #: Description string
     description = 'Management of remote SODAR sites and remote project access'

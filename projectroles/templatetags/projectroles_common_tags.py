@@ -235,17 +235,16 @@ def get_backend_include(backend_name, include_type='js'):
 
 
 @register.simple_tag
-def get_history_dropdown(project, obj):
+def get_history_dropdown(obj, project=None):
     """Return link to object timeline events within project"""
     timeline = get_backend_api('timeline_backend')
-
     if not timeline:
         return ''
-
-    url = timeline.get_object_url(project.sodar_uuid, obj)
+    url = timeline.get_object_url(obj, project)
     return (
-        '<a class="dropdown-item" href="{}">\n<i class="fa fa-fw '
-        'fa-clock-o"></i> History</a>\n'.format(url)
+        '<a class="dropdown-item" href="{}">\n'
+        '<i class="iconify" data-icon="mdi:clock-time-eight-outline"></i> '
+        'History</a>\n'.format(url)
     )
 
 
@@ -287,10 +286,9 @@ def get_info_link(content, html=False):
     """Return info popover link icon"""
     return (
         '<a class="sodar-info-link" tabindex="0" data-toggle="popover" '
-        'data-trigger="focus" data-placement="top" data-content="{}" '
-        '{}><i class="fa fa-info-circle text-info"></i></a>'.format(
-            content, 'data-html="true"' if html else ''
-        )
+        'data-trigger="focus" data-placement="top" data-content="{}" {}>'
+        '<i class="iconify text-info" data-icon="mdi:information"></i>'
+        '</a>'.format(content, 'data-html="true"' if html else '')
     )
 
 
@@ -298,13 +296,14 @@ def get_info_link(content, html=False):
 def get_remote_icon(project, request):
     """Get remote project icon HTML"""
     if project.is_remote() and request.user.is_superuser:
-        try:
-            remote_project = RemoteProject.objects.get(
-                project=project, site__mode=SITE_MODE_SOURCE
-            )
+        remote_project = RemoteProject.objects.filter(
+            project=project, site__mode=SITE_MODE_SOURCE
+        ).first()
+        if remote_project:
             return (
-                '<i class="fa fa-globe {} mx-1 '
-                'sodar-pr-remote-project-icon" title="{} project from '
+                '<i class="iconify {} mx-1 '
+                'sodar-pr-remote-project-icon" data-icon="mdi:cloud" '
+                'title="{} project from '
                 '{}" data-toggle="tooltip" data-placement="top">'
                 '</i>'.format(
                     'text-danger' if project.is_revoked() else 'text-info',
@@ -312,16 +311,15 @@ def get_remote_icon(project, request):
                     remote_project.site.name,
                 )
             )
-
-        except RemoteProject.DoesNotExist:
-            pass
-
     return ''
 
 
 @register.simple_tag
 def get_visible_projects(projects, can_view_hidden_projects=False):
-    """Return all projects that are either visible by user display or by view hidden permission"""
+    """
+    Return all projects that are either visible by user display or by view
+    hidden permission.
+    """
     return [
         p for p in projects if p.site.user_display or can_view_hidden_projects
     ]

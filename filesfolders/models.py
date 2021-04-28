@@ -17,31 +17,31 @@ AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 # Local constants
 FILESFOLDERS_FLAGS = {
     'IMPORTANT': {
-        'icon': 'exclamation-circle',
+        'icon': 'mdi:information',
         'label': 'Important',
         'color': 'warning',
         'text_classes': 'font-weight-bold',
     },
     'FLAG': {
-        'icon': 'flag',
+        'icon': 'mdi:flag',
         'label': 'Flagged',
         'color': 'info',
         'text_classes': 'font-weight-bold',
     },
     'FLAG_HEART': {
-        'icon': 'heart',
+        'icon': 'mdi:heart',
         'label': 'Flagged (Heart)',
         'color': 'danger',
         'text_classes': 'font-weight-bold',
     },
     'REVOKED': {
-        'icon': 'undo',
+        'icon': 'mdi:undo',
         'label': 'Revoked',
         'color': 'secondary',
         'text_classes': 'text-strikethrough',
     },
     'SUPERSEDED': {
-        'icon': 'history',
+        'icon': 'mdi:history',
         'label': 'Superseded',
         'color': 'dark',
         'text_classes': 'text-muted',
@@ -88,6 +88,7 @@ class BaseFilesfoldersClass(models.Model):
         Project,
         related_name='%(app_label)s_%(class)s_objects',
         help_text='Project in which the object belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Folder under which object exists (null if root folder)
@@ -97,11 +98,14 @@ class BaseFilesfoldersClass(models.Model):
         null=True,
         blank=True,
         help_text='Folder under which object exists (null if root folder)',
+        on_delete=models.CASCADE,
     )
 
     #: User who owns the object
     owner = models.ForeignKey(
-        AUTH_USER_MODEL, help_text='User who owns the object'
+        AUTH_USER_MODEL,
+        help_text='User who owns the object',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of last modification

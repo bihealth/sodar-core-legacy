@@ -23,10 +23,10 @@
       <div class="btn-group ml-auto">
         <a role="button" class="btn btn-secondary"
            href="{{ request.session.real_referer }}">
-          <i class="fa fa-arrow-circle-left"></i> Cancel
+          <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Cancel
         </a>
         <button type="submit" class="btn btn-primary">
-          <i class="fa fa-exchange"></i> Transfer
+          <i class="iconify" data-icon="mdi:account-switch"></i> Transfer
         </button>
       </div>
     </div>
@@ -48,5 +48,5 @@
 {% block css %}
   {{ block.super }}
   <!-- Select2 theme -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet"/>
+  <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
 {% endblock css %}

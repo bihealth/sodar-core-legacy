@@ -1,5 +1,6 @@
-"""Tests for permissions in the filesfolders app"""
+"""Permission tests for the filesfolders app"""
 
+from django.test import override_settings
 from django.urls import reverse
 
 # Projectroles dependency
@@ -30,6 +31,39 @@ SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
 app_settings = AppSettingAPI()
 
 
+class TestListPermissions(TestProjectPermissionBase):
+    """Tests for the file list view"""
+
+    def test_list(self):
+        """Test file list"""
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+        ]
+        bad_users = [self.user_no_roles, self.anonymous]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
+        self.assert_response(url, self.anonymous, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_list_anon(self):
+        """Test file list with anonynomus access"""
+        url = reverse(
+            'filesfolders:list', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 200)
+
+
 class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
     """Tests for Folder views"""
 
@@ -56,9 +90,22 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
             self.delegate_as.user,
             self.contributor_as.user,
         ]
-        bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
+        bad_users = [self.guest_as.user, self.user_no_roles, self.anonymous]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_create_anon(self):
+        """Test folder creation with anonymous access"""
+        url = reverse(
+            'filesfolders:folder_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_folder_create_category(self):
         """Test folder creation under category"""
@@ -92,6 +139,19 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_update_anon(self):
+        """Test folder updating with anonymous access"""
+        url = reverse(
+            'filesfolders:folder_update',
+            kwargs={'item': self.folder.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_folder_delete(self):
         """Test folder deletion"""
@@ -108,6 +168,19 @@ class TestFolderPermissions(FolderMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_folder_delete_anon(self):
+        """Test folder deletion with anonymous access"""
+        url = reverse(
+            'filesfolders:folder_delete',
+            kwargs={'item': self.folder.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
 
 class TestFilePermissions(FileMixin, TestProjectPermissionBase):
@@ -150,6 +223,19 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_create_anon(self):
+        """Test file creation with anonymous access"""
+        url = reverse(
+            'filesfolders:file_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_file_create_category(self):
         """Test file creation under category"""
@@ -182,6 +268,18 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_update_anon(self):
+        """Test file updating with anonymous access"""
+        url = reverse(
+            'filesfolders:file_update', kwargs={'item': self.file.sodar_uuid}
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_file_delete(self):
         """Test file deletion"""
@@ -197,9 +295,21 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_delete_anon(self):
+        """Test file deletion with anonymous access"""
+        url = reverse(
+            'filesfolders:file_delete', kwargs={'item': self.file.sodar_uuid}
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_file_public_link(self):
-        """Test generation and viewing of a public URL to a file"""
+        """Test generation of a public URL to a file"""
         url = reverse(
             'filesfolders:file_public_link',
             kwargs={'file': self.file.sodar_uuid},
@@ -213,6 +323,19 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_file_public_link_anon(self):
+        """Test generation of a public URL to a file with anonymous access"""
+        url = reverse(
+            'filesfolders:file_public_link',
+            kwargs={'file': self.file.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_file_serve(self):
         """Test file serving for authenticated users"""
@@ -230,6 +353,10 @@ class TestFilePermissions(FileMixin, TestProjectPermissionBase):
         bad_users = [self.anonymous, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, self.user_no_roles, 200)
+        self.assert_response(url, self.anonymous, 302)
 
     def test_file_serve_public(self):
         """Test public file serving"""
@@ -307,6 +434,19 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         bad_users = [self.anonymous, self.guest_as.user, self.user_no_roles]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_create_anon(self):
+        """Test hyperlink creation with anonymous access"""
+        url = reverse(
+            'filesfolders:hyperlink_create',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_hyperlink_create_category(self):
         """Test hyperlink creation under category"""
@@ -340,6 +480,19 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_update_anon(self):
+        """Test hyperlink updating with anonymous access"""
+        url = reverse(
+            'filesfolders:hyperlink_update',
+            kwargs={'item': self.hyperlink.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
     def test_hyperlink_delete(self):
         """Test hyperlink deletion"""
@@ -356,6 +509,19 @@ class TestHyperLinkPermissions(HyperLinkMixin, TestProjectPermissionBase):
         ]
         self.assert_response(url, good_users, 200)
         self.assert_response(url, bad_users, 302)
+        # Test public project
+        self.project.set_public()
+        self.assert_response(url, bad_users, 302)
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_hyperlink_delete_anon(self):
+        """Test hyperlink deletion with anonymous access"""
+        url = reverse(
+            'filesfolders:hyperlink_delete',
+            kwargs={'item': self.hyperlink.sodar_uuid},
+        )
+        self.project.set_public()
+        self.assert_response(url, self.anonymous, 302)
 
 
 class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
@@ -403,6 +569,13 @@ class TestBatchPermissions(FolderMixin, TestProjectPermissionBase):
                 response = self.client.post(url, post_data)
                 self.assertEqual(response.status_code, 200)
 
+        for user in bad_users:
+            with self.login(user):
+                response = self.client.post(url, post_data)
+                self.assertEqual(response.status_code, 302)
+
+        # Test public project
+        self.project.set_public()
         for user in bad_users:
             with self.login(user):
                 response = self.client.post(url, post_data)

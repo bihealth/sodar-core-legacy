@@ -40,12 +40,12 @@
   ],
   "identifier": "https://doi.org/10.5281/zenodo.4269346",
   "codeRepository": "https://github.com/bihealth/sodar_core",
-  "datePublished": "2021-02-03",
-  "dateModified": "2021-02-03",
+  "datePublished": "2021-04-28",
+  "dateModified": "2021-04-28",
   "dateCreated": "2019-06-26",
   "description": "SODAR Core: A Django-based framework for scientific data management and analysis web apps",
   "keywords": "Python, Django, scientific data managmenent, software library",
   "license": "MIT",
   "title": "SODAR Core",
-  "version": "v0.9.1"
+  "version": "v0.10.0"
 }

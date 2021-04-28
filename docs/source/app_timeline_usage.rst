@@ -11,7 +11,9 @@ Timeline UI
 ===========
 
 You can browse events by navigating to a project or a category and selecting the
-"Timeline" app from the project sidebar.
+"Timeline" app from the project sidebar. Alternatively, a view for site-wide
+events (not linked to a project) can be found in the user menu on the top right
+corner of the site.
 
 By clicking on the time stamp for each event, you can see details of the event
 execution (in case of e.g. asynchronous events).
@@ -20,9 +22,10 @@ By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you
 to the relevant view for the object on your Django site.
 
-Certain events have a file icon in their description. If clicked,
-a popup showing a collection of extra data for the given event will appear.
-It will show the extra data of the event itself and of the different states the event went through, if there are any.
+Certain events have a file icon in their description. If clicked, a popup
+showing a collection of extra data for the given event will appear.
+The popup will display extra data of the event itself and of the different
+states the event went through, if there are any.
 
 Admin users are able to see certain *"classified"* level events hidden from
 normal users.
@@ -70,9 +73,9 @@ Once you can access the timeline backend, add the event with
 .. code-block:: python
 
     tl_event = timeline.add_event(
-        project=project,            # Project object
+        project=project,            # Project object (None for site-wide events)
         app_name=APP_NAME,          # Name of the current app
-        user=request.user,          # The user triggering the activity being saved
+        user=request.user,          # The user triggering the activity (can be None)
         event_name='some_event',    # You can define these yourself, not unique
         description='Description')  # Human readable description
 

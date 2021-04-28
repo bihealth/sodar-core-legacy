@@ -30,11 +30,11 @@
 {% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
 
 <div class="row sodar-subtitle-container">
-  <h2><i class="fa fa-cloud"></i> Remote SODAR Sites</h2>
+  <h2><i class="iconify" data-icon="mdi:cloud"></i> Remote SODAR Sites</h2>
   {% if site_mode == 'SOURCE' or not sites %}
     <a role="button" class="btn btn-primary ml-auto"
        href="{% url 'projectroles:remote_site_create' %}">
-      <i class="fa fa-plus"></i>
+      <i class="iconify" data-icon="mdi:plus-thick"></i>
       Add {% if site_mode == 'TARGET' %}Source{% else %}Target{% endif %} Site
     </a>
   {% endif %}
@@ -56,9 +56,9 @@
       <div class="card-header">
         <h4>
           {% if site_mode == 'SOURCE' %}
-            <i class="fa fa-cloud-upload"></i> Target Sites
+            <i class="iconify" data-icon="mdi:cloud-upload"></i> Target Sites
           {% else %}
-            <i class="fa fa-cloud-download"></i> Source Site
+            <i class="iconify" data-icon="mdi:cloud-download"></i> Source Site
           {% endif %}
         </h4>
       </div>

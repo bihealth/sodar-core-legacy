@@ -13,8 +13,8 @@ class BackendPlugin(BackendPluginPoint):
     #: Title (used in templates)
     title = 'Taskflow'
 
-    #: FontAwesome icon ID string
-    icon = 'database'
+    #: Iconify icon
+    icon = 'mdi:database'
 
     #: Description string
     description = 'SODAR Taskflow backend for data transactions'

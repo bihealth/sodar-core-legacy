@@ -1,7 +1,6 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 # Projectroles dependency
@@ -26,6 +25,7 @@ class BaseCacheItem(models.Model):
         help_text='Project in which the item belongs (optional)',
         null=True,
         blank=True,
+        on_delete=models.CASCADE,
     )
 
     #: App name
@@ -52,6 +52,7 @@ class BaseCacheItem(models.Model):
         null=True,
         blank=True,
         help_text='User who updated the item (optional)',
+        on_delete=models.CASCADE,
     )
 
     #: UUID for the item
@@ -64,7 +65,7 @@ class JSONCacheItem(BaseCacheItem):
     """Class representing a cached item in JSON format"""
 
     #: Cached data as JSON
-    data = JSONField(default=dict, help_text='Cached data as JSON')
+    data = models.JSONField(default=dict, help_text='Cached data as JSON')
 
     def __str__(self):
         return '{}: {}: {}'.format(

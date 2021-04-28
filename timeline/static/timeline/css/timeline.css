@@ -1,0 +1,62 @@
+/* Main table */
+table#sodar-tl-table tbody tr td:nth-child(1) {
+  white-space: nowrap;
+}
+
+table#sodar-tl-table tbody tr td:nth-child(5) {
+  width: 100%;
+}
+
+/* Detail table */
+table#sodar-tl-table-detail tbody tr td:nth-child(1) {
+  white-space: nowrap;
+}
+
+table#sodar-tl-table-detail tbody tr td:nth-child(2) {
+  max-width: 300px;
+  white-space: normal;
+}
+
+a.sodar-tl-link-detail:hover {
+  text-decoration: underline;
+}
+
+a.sodar-tl-link-extra {
+  cursor: pointer;
+}
+
+.popover {
+  font-size: 100%; /* Fix for Bootstrap 4.4 */
+}
+
+/* Responsive modifications */
+@media screen and (max-width: 1200px) {
+  .table#sodar-tl-table thead tr th:nth-child(2),
+  .table#sodar-tl-table tbody tr td:nth-child(2) {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  .table#sodar-tl-table thead tr th:nth-child(3),
+  .table#sodar-tl-table tbody tr td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 800px) {
+  .table#sodar-tl-table tbody tr td:nth-child(1) {
+    white-space: normal;
+  }
+  .table#sodar-tl-table thead tr th:nth-child(4),
+  .table#sodar-tl-table tbody tr td:nth-child(4) {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .table#sodar-tl-table thead tr th:nth-child(6),
+  .table#sodar-tl-table tbody tr td:nth-child(6) {
+      display: none;
+  }
+}

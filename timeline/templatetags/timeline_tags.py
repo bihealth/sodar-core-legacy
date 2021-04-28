@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.utils.timezone import localtime
 
 # Projectroles dependency
-from projectroles.plugins import ProjectAppPluginPoint
+from projectroles.plugins import get_app_plugin
 
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
@@ -67,21 +67,24 @@ def get_status_style(status):
 @register.simple_tag
 def get_app_url(event):
     """Return URL for event application"""
+    url_kwargs = {}
+    if event.project:
+        url_kwargs['project'] = event.project.sodar_uuid
+
     # Projectroles is a special case
-    if event.app == 'projectroles':
-        return reverse(
-            'projectroles:detail', kwargs={'project': event.project.sodar_uuid}
-        )
-
-    else:
-        app_plugin = ProjectAppPluginPoint.get_plugin(event.app)
-
+    if event.app == 'projectroles' and event.project:
+        return reverse('projectroles:detail', kwargs=url_kwargs)
+    elif event.app != 'projectroles':
+        app_plugin = get_app_plugin(event.app, plugin_type='project_app')
         if app_plugin:
             return reverse(
                 app_plugin.entry_point_url_id,
-                kwargs={'project': event.project.sodar_uuid},
+                kwargs=url_kwargs,
             )
-
+        # Try site apps
+        app_plugin = get_app_plugin(event.app, plugin_type='site_app')
+        if app_plugin:
+            return reverse(app_plugin.entry_point_url_id)
     return '#'
 
 

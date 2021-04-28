@@ -1,0 +1,74 @@
+{% extends 'projectroles/base.html' %}
+
+{% load static %}
+{% load projectroles_common_tags %}
+
+{% block title %}App Alerts{% endblock title %}
+
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    /* Responsive modifications */
+    @media screen and (max-width: 900px) {
+      .sodar-app-alert-date {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
+
+{% block projectroles %}
+
+<div class="row sodar-subtitle-container">
+  <h2><i class="iconify" data-icon="mdi:alert-octagram"></i> App Alerts</h2>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if object_list %}
+    {% for a in object_list %}
+      <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item"
+           data-alert-uuid="{{ a.sodar_uuid }}">
+        <span data-toggle="tooltip" data-placement="top"
+              title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
+          <i class="iconify"
+             data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
+        </span>
+          <span class="sodar-app-alert-date">{{ a.date_created | date:'Y-m-d H:i' }} |</span>
+        {{ a.message | safe }}
+        <span class="sodar-app-alert-buttons pull-right">
+          {% if a.url %}
+            <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
+               class="btn btn-{{ a.level | lower }}
+                      sodar-list-btn sodar-app-alert-btn-link"
+               role="button"
+               title="Follow link and dismiss"
+               data-toggle="tooltip" data-placement="top">
+              <i class="iconify" data-icon="mdi:arrow-right-bold"></i>
+            </a>
+          {% endif %}
+          <a href="#"
+             class="btn btn-{{ a.level | lower }}
+                    sodar-list-btn sodar-app-alert-btn-dismiss"
+             role="button"
+             title="Dismiss"
+             data-toggle="tooltip" data-placement="top"
+             data-uuid="{{ a.sodar_uuid }}"
+             data-dismiss-url="{% url 'appalerts:ajax_dismiss' appalert=a.sodar_uuid %}">
+            <i class="iconify" data-icon="mdi:close-thick"></i>
+          </a>
+        </span>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="alert alert-info">
+      There are currently no application alerts for you.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <script type="text/javascript" src="{% static 'appalerts/js/appalerts.js' %}"></script>
+{% endblock javascript %}

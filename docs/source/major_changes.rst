@@ -10,6 +10,236 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.0 (2021-04-28)
+********************
+
+Release Highlights
+==================
+
+- Project upgraded to Django v3.2
+- Minimum Python version requirement upgraded to 3.7
+- Site icons access via Iconify
+- Material Design Icons used as default icon set
+- Appalerts app for app-generated user alerts
+- Site-wide timeline events
+- Timeline events without user
+- Allow public guest access to projects for authenticated and anonymous users
+- Display Django settings in Site Info app
+- Make project available in PyPI
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+Python version requirements have been upgraded as follows:
+
+- The **minimum** Python version is 3.7
+- The **recommended** Python version is 3.8
+- CI tests are run on Python 3.7, 3.8 and 3.9
+- Support for Python 3.6 has been dropped.
+
+It is recommended to always use the most recent minor version of a Python
+release.
+
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
+
+**Ubuntu 20.04 Focal** is now the recommended OS version for development.
+
+Django v3.2 Upgrade
+-------------------
+
+This release updates SODAR Core from Django v1.11 to v3.2. This is a breaking
+change which causes many updates and also requires updating several
+dependencies.
+
+To upgrade, please update the Django requirement along with your site's other
+Python requirements to match ones in ``requirements/*.txt``. See
+`Django deprecation documentation <https://docs.djangoproject.com/en/dev/internals/deprecation/>`_
+for details about what has been deprecated in Django and which changes are
+mandatory.
+
+Common known issues:
+
+- Minimum version of PostgreSQL has been raised to v9.5.
+- ``ForeignKey`` fields in models must explicitly declare an ``on_delete``
+  argument.
+- ``is_authenticated()`` and ``is_anonymous()`` in the user model no longer
+  work: use ``is_authenticated`` and ``is_anonymous`` instead.
+- Replace imports from ``django.core.urlresolvers`` with ``django.urls``.
+- Replace ``django.contrib.postgres.fields.JSONField`` with
+  ``django.db.models.JSONField``.
+- Add ``DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'`` in
+  ``config/settings/base.py`` to get rid of database migration warnings.
+- Replace ``{% load staticfiles %}`` with ``{% load static %}``.
+
+In the future, the goal is to keep SODAR Core at the latest stable major version
+of Django, except for potential cases in which a critical third party package
+has not yet been updated to support a new release.
+
+New Context Processors Required
+-------------------------------
+
+The following new context processors are required if you intend to include any
+site apps to your projects, or make use of site-wide app alerts, respectively.
+To make use of these features, please add the following processors in
+``base.py`` under ``TEMPLATES``:
+
+.. code-block:: python
+
+    TEMPLATES = [
+        {
+            'OPTIONS': {
+                'context_processors': {
+                    # ...
+                    'projectroles.context_processors.site_app_processor',
+                    'projectroles.context_processors.app_alerts_processor',
+                }
+            }
+        }
+
+REST API Updates
+----------------
+
+The following changes have been made to REST API views:
+
+- ``public_guest_access`` parameter added to project API views.
+
+Site Icons Updated
+------------------
+
+Instead of directly including Font Awesome, site icons are now accessed as SVG
+using `Iconify <https://iconify.design/>`_. The default icon set has been
+changed from Font Awesome to `Material Design Icons <https://materialdesignicons.com>`_.
+It is however possible to use other icon sets supported by Iconify for your own
+SODAR Core apps.
+
+To make your icons work with SODAR Core v0.10+, you will need to take the
+following steps.
+
+First, make sure ``django-iconify`` is installed. Add
+``dj_iconify.apps.DjIconifyConfig`` to your Django site settings under
+``THIRD_PARTY_APPS`` and ``dj_iconify.urls`` to your site URLs in
+``config/urls.py``. See SODAR Core or SODAR Django Site settings for an example.
+
+You will also need to set ``ICONIFY_JSON_ROOT`` in the base Django settings.
+
+.. code-block:: django
+
+    ICONIFY_JSON_ROOT = os.path.join(STATIC_ROOT, 'iconify')
+
+If you are overriding the ``base_site.html`` template, add the following lines
+to your base template:
+
+.. code-block:: django
+
+    <script type="text/javascript" src="{% url 'config.js' %}"></script>
+    <script type="text/javascript" src="{% static 'projectroles/js/iconify.min.js' %}"></script>
+
+Next, you must download the `Iconify JSON collection files <https://github.com/iconify/collections-json/>`_
+required for hosting the icons on your Django server. It is recommended to use
+the ``geticons`` management command for this. By default, this downloads the
+required ``collections.json`` file along with the ``mdi.json`` file for the MDI
+icon collection.
+
+.. code-block:: console
+
+    $ ./manage.py geticons
+
+If you wish to also use other collections than MDI, add them as a list using
+the ``-c`` argument. The following example downloads the additional ``carbon``
+and ``clarity`` icon sets.
+
+.. code-block:: console
+
+    $ ./manage.py geticons -c carbon clarity
+
+Make sure you run ``collectstatic`` after retrieving the collections for
+development.
+
+Before committing your code, it is recommended to update your ``.gitignore``
+file with the following lines:
+
+.. code-block::
+
+    */static/iconify/*.json
+    */static/iconify/json/*.json
+
+To make the icons in your apps work with this change, you must change the icon
+syntax in your Django templates. Use ``iconify`` as the base class of the icon
+element. Enter the collection and icon name into the ``data-icon`` attribute.
+
+Example:
+
+.. code-block:: HTML
+
+    <i class="iconify" data-icon="mdi:home"></i>
+
+Also make sure to modify the ``icon`` attribute of your app plugins to include
+the full ``collection:name`` syntax for Iconify icons.
+
+You may have to specify icon sizing manually in certain elements. In that
+case, use the ``data-height`` and/or ``data-width`` attributes. For spinning
+icons, add the ``spin`` class provided in ``projectroles.css``.
+
+Once you have updated all your icons, you can remove the Font Awesome CSS
+include from your base template if you are not directly importing it from
+``base_site.html``.
+
+In certain client side Javascript implementations in which icons are loaded or
+replaced dynamically, you may have to refer to these URLs as a direct ``img``
+element:
+
+.. code-block:: HTML
+
+    <img src="/icons/mdi/home.svg" />
+
+For modifiers such as color and size when using ``img`` tags,
+`see here <https://docs.iconify.design/implementations/css.html>`_.
+
+Deprecated Features Removed
+---------------------------
+
+The following previously deprecated features have been removed in this release:
+
+- ``Project.get_full_title()`` has been removed. Use ``Project.full_title``
+  instead.
+- Old style search with a single ``search_term`` argument has been removed. Make
+  sure your search implementation expects and uses a ``search_terms`` list
+  instead.
+
+Timeline API Changes
+--------------------
+
+The signatures for ``get_object_url()`` and ``get_object_link()`` helpers have
+changed. They now expect the object itself as first argument, followed by an
+optional ``Project`` object. The same also applies for
+``get_history_dropdown()`` in projectroles common template tags.
+
+Public Guest Access Support
+---------------------------
+
+This version adds public guest access support for projects. By setting
+``PROJECTROLES_ALLOW_ANONYMOUS`` true, this can be extended to anonymous users.
+For your views to properly support anonymous access, please use the override of
+``LoginRequiredMixin`` provided in ``projectroles.views`` instead of the
+original mixin supplied in Django.
+
+GitHub Repository Updates
+-------------------------
+
+The GitHub repository for the project has been renamed from ``sodar_core`` to
+``sodar-core``. Otherwise the URL remains the same:
+`<https://github.com/bihealth/sodar-core/>`_
+
+GitHub should redirect from the old name indefinitely. However, just to be sure
+it is recommend to update your site's dependencies.
+
+Additionally, the former ``master`` branch has been renamed to ``main``.
+
+
 v0.9.1 (2021-03-05)
 *******************
 

@@ -8,6 +8,9 @@
 {# Local variables #}
 {% get_django_setting 'SITE_TITLE' as site_title %}
 {% get_django_setting 'SITE_SUBTITLE' as site_subtitle %}
+{% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+{% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
+{% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
 
 <div class="m-b-1 sodar-titlebar-container">
@@ -35,15 +38,30 @@
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
+        {# App alerts notification #}
+        {% if request.user.is_authenticated and app_alerts > 0 %}
+          <li class="nav-item" id="sodar-app-alert-nav">
+            <div id="sodar-app-alert-badge">
+              <a href="{% url 'appalerts:list' %}">
+                <div class="badge badge-pill bg-danger mr-4 mt-2">
+                  <i class="iconify" data-icon="mdi:alert-octagram"
+                     id="sodar-app-alert-icon"></i>
+                  <span id="sodar-app-alert-count">{{ app_alerts }}</span>
+                  <span id="sodar-app-alert-legend">alert{% if app_alerts != 1 %}s{% endif %}</span>
+                </div>
+              </a>
+            </div>
+          </li>
+        {% endif %}
+
         {# Search #}
-        {% if request.user.is_authenticated %}
-          {% get_django_setting 'PROJECTROLES_ENABLE_SEARCH' as enable_search %}
+        {% if request.user.is_authenticated or allow_anon %}
           {% if enable_search %}
             <li class="nav-item">
               <a class="btn btn-info mr-2" role="button"
                  href="{% url 'projectroles:search_advanced' %}"
                  title="Advanced search" data-toggle="tooltip" data-placement="left">
-                <i class="fa fa-search mt-1"></i>
+                  <i class="iconify mt-1" data-icon="mdi:layers-search" height="18"></i>
               </a>
             </li>
             <li class="nav-item">
@@ -76,12 +94,15 @@
         {# Help link #}
         <li class="nav-item">
           <a class="nav-link {% get_help_highlight request.user %}"
-             id="site-help-link"><i class="fa fa-fw fa-info-circle"></i> Help</a>
+             id="site-help-link">
+            <i class="iconify" data-icon="mdi:information"></i> Help
+          </a>
         </li>
 
         {# User dropdown menu #}
-        {% include 'projectroles/_site_titlebar_dropdown.html' %}
-
+        {% if not kiosk_mode %}
+          {% include 'projectroles/_site_titlebar_dropdown.html' %}
+        {% endif %}
       </ul>
     </div>
 

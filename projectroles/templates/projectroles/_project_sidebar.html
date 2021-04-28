@@ -24,9 +24,9 @@
        href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
        id="sodar-pr-link-project-detail">
       {% if project.type == PROJECT_TYPE_CATEGORY %}
-        <i class="fa fa-cubes"></i>
+        <i class="iconify" data-icon="mdi:rhombus-split" data-height="36"></i>
       {% else %}
-        <i class="fa fa-cube"></i>
+        <i class="iconify" data-icon="mdi:cube" data-height="36"></i>
       {% endif %}
       <br />{% get_display_name project.type title=True %}<br />Overview
     </a>
@@ -42,7 +42,7 @@
         <a class="nav-link"
            href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
            id="sodar-pr-link-app-plugin-{{ plugin.name }}">
-          <i class="fa fa-{{ plugin.icon }}"></i><br />{{ app_legend | safe }}
+          <i class="iconify" data-icon="{{ plugin.icon }}" data-height="36"></i><br />{{ app_legend | safe }}
         </a>
       </li>
     {% endif %}
@@ -55,7 +55,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-roles">
-        <i class="fa fa-users"></i><br />Members
+        <i class="iconify" data-icon="mdi:account-multiple" data-height="36"></i><br />Members
       </a>
     </li>
   {% endif %}
@@ -65,7 +65,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
-        <i class="fa fa-pencil"></i><br />Update<br />{% get_display_name project.type title=True %}
+        <i class="iconify" data-icon="mdi:lead-pencil" data-height="36"></i><br />Update<br />{% get_display_name project.type title=True %}
       </a>
     </li>
   {% endif %}
@@ -81,7 +81,7 @@
       <a class="nav-link"
          href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
-          <i class="fa fa-plus"></i><br />Create<br />{{ project_display }} or<br />{{ category_display }}
+        <i class="iconify" data-icon="mdi:plus-thick" data-height="36"></i><br />Create<br />{{ project_display }} or<br />{{ category_display }}
       </a>
     </li>
   {% endif %}
@@ -91,17 +91,18 @@
     <a class="nav-link"
        href="{% url 'projectroles:create' %}"
        id="sodar-pr-link-project-create">
-      <i class="fa fa-plus"></i><br />Create<br />{{ project_display }}
+      <i class="iconify" data-icon="mdi:plus-thick" data-height="36"></i><br />Create<br />{{ project_display }}
     </a>
   </li>
 {% elif request.resolver_match.url_name == 'home' or request.resolver_match.app_name == 'projectroles' and not project %}
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if allow_creation and can_create_project %}
-    <li id="sodar-pr-nav-project-create" class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
+    <li id="sodar-pr-nav-project-create"
+        class="nav-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-home-link-create">
-        <i class="fa fa-plus"></i><br />Create<br />{{ category_display }}
+        <i class="iconify" data-icon="mdi:plus-thick" data-height="36"></i><br />Create<br />{{ category_display }}
       </a>
     </li>
   {% endif %}

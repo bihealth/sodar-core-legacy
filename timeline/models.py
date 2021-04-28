@@ -1,7 +1,6 @@
 import uuid
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 
 # Projectroles dependency
@@ -33,7 +32,7 @@ class ProjectEventManager(models.Manager):
         """
         Return events which are linked to an object reference.
 
-        :param project: Project object
+        :param project: Project object or None
         :param object_model: Object model (string)
         :param object_uuid: sodar_uuid of the original object
         :param order_by: Ordering (default = pk descending)
@@ -47,13 +46,18 @@ class ProjectEventManager(models.Manager):
 
 
 class ProjectEvent(models.Model):
-    """Class representing a Project event"""
+    """
+    Class representing a Project event. Can also be a site-wide event not linked
+    to a specific project.
+    """
 
-    #: Project in which the event belongs
+    #: Project to which the event belongs
     project = models.ForeignKey(
         Project,
         related_name='events',
-        help_text='Project in which the event belongs',
+        help_text='Project to which the event belongs (null for no project)',
+        on_delete=models.CASCADE,
+        null=True,
     )
 
     #: App from which the event was triggered
@@ -61,11 +65,13 @@ class ProjectEvent(models.Model):
         max_length=255, help_text='App from which the event was triggered'
     )
 
-    #: User who initiated the event
+    #: User who initiated the event (optional)
     user = models.ForeignKey(
         AUTH_USER_MODEL,
+        null=True,
         # related_name='events',
-        help_text='User who initiated the event',
+        help_text='User who initiated the event (optional)',
+        on_delete=models.CASCADE,
     )
 
     #: Event ID string
@@ -78,7 +84,7 @@ class ProjectEvent(models.Model):
     )
 
     #: Additional event data as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional event data as JSON'
     )
 
@@ -98,14 +104,23 @@ class ProjectEvent(models.Model):
     objects = ProjectEventManager()
 
     def __str__(self):
-        return '{}: {}/{}'.format(
-            self.project.title, self.event_name, self.user.username
+        return '{}{}{}'.format(
+            (self.project.title + ': ') if self.project else '',
+            self.event_name,
+            ('/' + self.user.username) if self.user else '',
         )
 
     def __repr__(self):
-        values = (self.project.title, self.event_name, self.user.username)
+        return 'ProjectEvent({})'.format(
+            ', '.join(repr(v) for v in self.get_repr_values())
+        )
 
-        return 'ProjectEvent({})'.format(', '.join(repr(v) for v in values))
+    def get_repr_values(self):
+        return [
+            self.project.title if self.project else 'N/A',
+            self.event_name,
+            self.user.username if self.user else 'N/A',
+        ]
 
     def get_current_status(self):
         """Return the current event status"""
@@ -164,14 +179,11 @@ class ProjectEvent(models.Model):
         status = ProjectEventStatus()
         status.event = self
         status.status_type = status_type
-
         status.description = (
             status_desc if status_desc else DEFAULT_MESSAGES[status_type]
         )
-
         if extra_data:
             status.extra_data = extra_data
-
         status.save()
         return status
 
@@ -185,6 +197,7 @@ class ProjectEventObjectRef(models.Model):
         ProjectEvent,
         related_name='event_objects',
         help_text='Event to which the object belongs',
+        on_delete=models.CASCADE,
     )
 
     #: Label for the object related to the event
@@ -217,25 +230,18 @@ class ProjectEventObjectRef(models.Model):
     )
 
     #: Additional data related to the object as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional data related to the object as JSON'
     )
 
     def __str__(self):
-        return '{}: {}/{} ({})'.format(
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
+        return '{} ({})'.format(
+            self.event.__str__(),
             self.name,
         )
 
     def __repr__(self):
-        values = (
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
-            self.name,
-        )
+        values = self.event.get_repr_values() + [self.name]
         return 'ProjectEventObjectRef({})'.format(
             ', '.join(repr(v) for v in values)
         )
@@ -249,6 +255,7 @@ class ProjectEventStatus(models.Model):
         ProjectEvent,
         related_name='status_changes',
         help_text='Event to which the status change belongs',
+        on_delete=models.CASCADE,
     )
 
     #: DateTime of the status change
@@ -270,25 +277,18 @@ class ProjectEventStatus(models.Model):
     )
 
     #: Additional status data as JSON
-    extra_data = JSONField(
+    extra_data = models.JSONField(
         default=dict, help_text='Additional status data as JSON'
     )
 
     def __str__(self):
-        return '{}: {}/{} ({})'.format(
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
+        return '{} ({})'.format(
+            self.event.__str__(),
             self.status_type,
         )
 
     def __repr__(self):
-        values = (
-            self.event.project.title,
-            self.event.event_name,
-            self.event.user.username,
-            self.status_type,
-        )
+        values = self.event.get_repr_values() + [self.status_type]
         return 'ProjectEventStatus({})'.format(
             ', '.join(repr(v) for v in values)
         )

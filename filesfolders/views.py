@@ -3,7 +3,6 @@ from zipfile import ZipFile
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.core.files.base import ContentFile
 from django.db import transaction
@@ -31,6 +30,7 @@ from projectroles.plugins import get_backend_api
 from projectroles.app_settings import AppSettingAPI
 from projectroles.utils import build_secret, get_display_name
 from projectroles.views import (
+    LoginRequiredMixin,
     LoggedInPermissionMixin,
     ProjectContextMixin,
     HTTPRefererMixin,
@@ -63,17 +63,14 @@ class ObjectPermissionMixin(LoggedInPermissionMixin):
             obj = type(self.get_object()).objects.get(
                 sodar_uuid=self.kwargs['item']
             )
-
             if obj.owner == self.request.user:
                 return self.request.user.has_perm(
                     'filesfolders.update_data_own', self.get_permission_object()
                 )
-
             else:
                 return self.request.user.has_perm(
                     'filesfolders.update_data_all', self.get_permission_object()
                 )
-
         except type(self.get_object()).DoesNotExist:
             return False
 
@@ -81,7 +78,6 @@ class ObjectPermissionMixin(LoggedInPermissionMixin):
         """Override get_permission_object for checking Project permission"""
         if self.get_object():
             return self.get_object().project
-
         return None
 
 
@@ -98,7 +94,8 @@ class FilesfoldersTimelineMixin:
         old_data=None,
     ):
         """
-        Add filesfolders item create/update event to timeline
+        Add filesfolders item create/update event to timeline.
+
         :param obj: Filesfolders object being created or updated
         :param request: Request object
         :param view_action: "create" or "update" (string)
@@ -106,7 +103,6 @@ class FilesfoldersTimelineMixin:
         :param old_data: Data from existing object in case of update (dict)
         """
         timeline = get_backend_api('timeline_backend')
-
         if not timeline:
             return
 
@@ -122,7 +118,6 @@ class FilesfoldersTimelineMixin:
             for a in update_attrs:
                 if old_data[a] != getattr(obj, a):
                     extra_data[a] = str(getattr(obj, a))
-
             tl_desc += ' (' + ', '.join(a for a in extra_data) + ')'
 
         tl_event = timeline.add_event(
@@ -134,7 +129,6 @@ class FilesfoldersTimelineMixin:
             extra_data=extra_data,
             status_type='OK',
         )
-
         tl_event.add_object(
             obj=obj,
             label=obj_type,
@@ -159,18 +153,14 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
     def form_valid(self, form):
         view_action = self.get_view_action()
         old_data = {}
-
         update_attrs = ['name', 'folder', 'description', 'flag']
 
         if view_action == 'update':
             old_item = self.get_object()
-
             if old_item.__class__.__name__ == 'HyperLink':
                 update_attrs.append('url')
-
             elif old_item.__class__.__name__ == 'File':
                 update_attrs.append('public_url')
-
             # Get old fields
             for a in update_attrs:
                 old_data[a] = getattr(old_item, a)
@@ -196,7 +186,6 @@ class FormValidMixin(ModelFormMixin, FilesfoldersTimelineMixin):
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
-
         else:
             re_kwargs = {'project': self.object.project.sodar_uuid}
 
@@ -212,7 +201,6 @@ class DeleteSuccessMixin(DeletionMixin):
         # Add event in Timeline
         if timeline:
             obj_type = TL_OBJ_TYPES[self.object.__class__.__name__]
-
             # Add event in Timeline
             tl_event = timeline.add_event(
                 project=self.object.project,
@@ -222,7 +210,6 @@ class DeleteSuccessMixin(DeletionMixin):
                 description='delete {} {{{}}}'.format(obj_type, obj_type),
                 status_type='OK',
             )
-
             tl_event.add_object(
                 obj=self.object,
                 label=obj_type,
@@ -241,7 +228,6 @@ class DeleteSuccessMixin(DeletionMixin):
         # TODO: Repetition, put this in a mixin?
         if self.object.folder:
             re_kwargs = {'folder': self.object.folder.sodar_uuid}
-
         else:
             re_kwargs = {'project': self.object.project.sodar_uuid}
 
@@ -258,10 +244,8 @@ class FileServeMixin:
         # Get File object
         try:
             file = File.objects.get(sodar_uuid=kwargs['file'])
-
         except File.DoesNotExist:
             messages.error(self.request, 'File object not found!')
-
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -271,10 +255,8 @@ class FileServeMixin:
         # Get corresponding FileData object with file content
         try:
             file_data = FileData.objects.get(file_name=file.file.name)
-
         except FileData.DoesNotExist:
             messages.error(self.request, 'File data not found!')
-
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -285,11 +267,8 @@ class FileServeMixin:
         try:
             file_content = storage.open(file_data.file_name)
 
-        except Exception as ex:
-            print({}.format(ex))  # DEBUG
-
+        except Exception:
             messages.error(self.request, 'Error opening file!')
-
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -306,7 +285,7 @@ class FileServeMixin:
                 file.name
             )
 
-        if not self.request.user.is_anonymous:
+        if self.request.user.is_authenticated:
             # Add event in Timeline
             if timeline:
                 tl_event = timeline.add_event(
@@ -339,28 +318,19 @@ class BaseCreateView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         if 'folder' in self.kwargs:
-            try:
-                context['folder'] = Folder.objects.get(
-                    sodar_uuid=self.kwargs['folder']
-                )
-
-            except Folder.DoesNotExist:
-                pass
-
+            context['folder'] = Folder.objects.filter(
+                sodar_uuid=self.kwargs['folder']
+            ).first()
         return context
 
     def get_form_kwargs(self):
         """Pass current user and URL kwargs to form"""
         kwargs = super().get_form_kwargs()
-
         if 'folder' in self.kwargs:
             kwargs.update({'folder': self.kwargs['folder']})
-
         elif 'project' in self.kwargs:
             kwargs.update({'project': self.kwargs['project']})
-
         return kwargs
 
 
@@ -382,46 +352,34 @@ class ProjectFileView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         project = self.get_project(self.request, self.kwargs)
         context['project'] = project
-
         # Get folder and file data
         root_folder = None
 
         if 'folder' in self.kwargs:
-            try:
-                root_folder = Folder.objects.get(
-                    sodar_uuid=self.kwargs['folder']
-                )
-
+            root_folder = Folder.objects.filter(
+                sodar_uuid=self.kwargs['folder']
+            ).first()
+            if root_folder:
                 context['folder'] = root_folder
-
                 # Build breadcrumb
                 f = root_folder
                 breadcrumb = [f]
-
                 while f.folder:
                     breadcrumb.insert(0, f.folder)
                     f = f.folder
-
                 context['folder_breadcrumb'] = breadcrumb
-
-            except Folder.DoesNotExist:
-                pass
 
         context['folders'] = Folder.objects.filter(
             project=project, folder=root_folder
         )
-
         context['files'] = File.objects.filter(
             project=project, folder=root_folder
         )
-
         context['links'] = HyperLink.objects.filter(
             project=project, folder=root_folder
         )
-
         folder_pk = (
             Folder.objects.get(sodar_uuid=self.kwargs['folder']).pk
             if 'folder' in self.kwargs
@@ -432,24 +390,18 @@ class ProjectFileView(
         readme_md = File.objects.get_folder_readme(
             project_pk=project.pk, folder_pk=folder_pk, mimetype='text/markdown'
         )
-
         # If the markdown version is not found, try to get a plaintext version
         readme_txt = File.objects.get_folder_readme(
             project_pk=project.pk, folder_pk=folder_pk, mimetype='text/plain'
         )
-
         readme_file = readme_md if readme_md else readme_txt
-
         if readme_file:
             context['readme_name'] = readme_file.name
             context['readme_mime'] = readme_file.file.file.mimetype
-
             if context['readme_mime'] == 'text/markdown':
                 context['readme_data'] = readme_file.file.read().decode('utf-8')
-
                 if readme_txt:
                     context['readme_alt'] = readme_txt.name
-
             else:
                 context['readme_data'] = readme_file.file.read()
 
@@ -533,15 +485,12 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
         # TODO: Repetition, put this in a mixin?
         if folder:
             re_kwargs = {'folder': folder.sodar_uuid}
-
         else:
             re_kwargs = {'project': project.sodar_uuid}
-
         redirect_url = reverse('filesfolders:list', kwargs=re_kwargs)
 
         try:
             zip_file = ZipFile(file)
-
         except Exception as ex:
             messages.error(
                 self.request, 'Unable to extract zip file: {}'.format(ex)
@@ -555,7 +504,6 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
             for f in [f for f in zip_file.infolist() if not f.is_dir()]:
                 # Create subfolders if any
                 current_folder = folder
-
                 for zip_folder in f.filename.split('/')[:-1]:
                     try:
                         current_folder = Folder.objects.get(
@@ -563,7 +511,6 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
                             project=project,
                             folder=current_folder,
                         )
-
                     except Folder.DoesNotExist:
                         current_folder = Folder.objects.create(
                             name=zip_folder,
@@ -575,7 +522,6 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
                 # Save file
                 file_name_nopath = f.filename.split('/')[-1]
-
                 unpacked_file = File(
                     name=file_name_nopath,
                     project=project,
@@ -678,13 +624,11 @@ class FileServePublicView(FileServeMixin, View):
 
         try:
             file = File.objects.get(secret=kwargs['secret'])
-
             # Check if sharing public files is not allowed in project settings
             if not app_settings.get_app_setting(
                 APP_NAME, 'allow_public_links', file.project
             ):
                 return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
-
         except File.DoesNotExist:
             return HttpResponseBadRequest(LINK_BAD_REQUEST_MSG)
 
@@ -696,7 +640,6 @@ class FileServePublicView(FileServeMixin, View):
         kwargs.update(
             {'file': file.sodar_uuid, 'project': file.project.sodar_uuid}
         )
-
         # If successful, return get() from FileServeMixin
         return super().get(*args, **kwargs)
 
@@ -717,7 +660,6 @@ class FilePublicLinkView(
         """Override of GET for checking project settings"""
         try:
             file = File.objects.get(sodar_uuid=self.kwargs['file'])
-
         except File.DoesNotExist:
             messages.error(self.request, 'File not found!')
             return redirect(reverse('home'))
@@ -746,7 +688,6 @@ class FilePublicLinkView(
 
         try:
             file = File.objects.get(sodar_uuid=self.kwargs['file'])
-
         except File.DoesNotExist:
             messages.error(self.request, 'File not found!')
             return redirect(reverse('home'))
