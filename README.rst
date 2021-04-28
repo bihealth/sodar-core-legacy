@@ -104,12 +104,19 @@ Also included are resources and examples for developing SODAR compatible apps.
 Installation
 ============
 
-The ``django-sodar-core`` package can be installed from GitHub as follows. PyPI
-installation is forthcoming.
+The ``django-sodar-core`` package can be installed into your Django project
+from PyPI as follows.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar-core.git@v0.9.1#egg=django-sodar-core
+    pip install django-sodar-core==0.10.0
+
+For installing a development version you can point your dependency to a specific
+commit ID in GitHub. Note that these versions may not be stable.
+
+.. code-block:: console
+
+    pip install -e git+https://github.com/bihealth/sodar-core.git@xxxxxxxxxxxxx#egg=django-sodar-core
 
 Please note that This package installs a collection Django apps to
 be used in a Django web site project. See

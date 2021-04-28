@@ -11,14 +11,13 @@ detailed in this document.
 Installation
 ============
 
-The ``django-sodar-core`` package can be installed from GitHub using pip as
-follows. It is strongly recommended to specify a version tag, as the package is
-under active development and breaking changes can be expected. PyPI install is
-forthcoming.
+The ``django-sodar-core`` package can be installed into your Django project
+from PyPI as follows. It is strongly recommended to specify a version tag, as
+the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install -e git+https://github.com/bihealth/sodar-core.git@v0.9.1#egg=django-sodar-core
+    pip install django-sodar-core==0.10.0
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a

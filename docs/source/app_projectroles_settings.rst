@@ -12,7 +12,7 @@ These settings are usually found in ``config/settings/*.py``, with
 ``config/settings/base.py`` being the default configuration other files may
 override or extend.
 
-If your site is based on ``sodar_django_site``, mandatory settings are already
+If your site is based on ``sodar-django-site``, mandatory settings are already
 set to their default values. In that case, you only need to modify or customize
 them where applicable.
 

@@ -20,7 +20,7 @@ SODAR Django Site Template (Recommended)
 
 When setting up a new :term:`SODAR Core based site<SODAR Core Based Site>`, it
 is strongly recommended to use
-`sodar_django_site <https://github.com/bihealth/sodar_django_site>`_ as the
+`sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ as the
 template. The repository contains a minimal :term:`Django site<Django Site>`
 pre-configured with projectroles and other
 :term:`SODAR Core apps<SODAR Core App>`. The ``main`` branch of this project
@@ -81,12 +81,12 @@ chapter.
 
 First, add the ``django-plugins`` and ``django-sodar-core`` package requirements
 into your ``requirements/base.txt`` file. Make sure you are pointing to the
-desired release tag.
+desired release tag or commit ID.
 
 .. code-block:: console
 
-    -e git+https://github.com/mikkonie/django-plugins.git@1bc07181e6ab68b0f9ed3a00382eb1f6519e1009#egg=django-plugins
-    -e git+https://github.com/bihealth/sodar-core.git@v0.9.1#egg=django-sodar-core
+    -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
+    django-sodar-core==0.10.0
 
 Install the requirements for development:
 
@@ -99,7 +99,7 @@ you will have to resolve them before continuing.
 
 .. hint::
 
-    You can always refer to either the ``sodar_django_site`` repository or
+    You can always refer to either the ``sodar-django-site`` repository or
     ``example_site`` in the SODAR Core repository for a working example of a
     Cookiecutter-based Django site integrating SODAR Core. However, note that
     some aspects of the site configuration may vary depending on the

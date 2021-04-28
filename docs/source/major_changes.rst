@@ -10,22 +10,22 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.0 (WIP)
-*************
+v0.10.0 (2021-04-28)
+********************
 
 Release Highlights
 ==================
 
-- Release for major breaking platform-level updates
-- Minimum Python version requirement upgraded to 3.7
 - Project upgraded to Django v3.2
+- Minimum Python version requirement upgraded to 3.7
 - Site icons access via Iconify
 - Material Design Icons used as default icon set
 - Appalerts app for app-generated user alerts
 - Site-wide timeline events
-- Timeline evens without user
+- Timeline events without user
 - Allow public guest access to projects for authenticated and anonymous users
 - Display Django settings in Site Info app
+- Make project available in PyPI
 
 Breaking Changes
 ================
