@@ -20,6 +20,9 @@ venv/
 *.tmPreferences.cache
 *.stTheme.cache
 
+# Built distribution files
+dist/
+
 # workspace files are user-specific
 *.sublime-workspace
 

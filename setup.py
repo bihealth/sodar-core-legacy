@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=C0111,W6005,W6100
 """
-Package metadata for projectroles.
+Package metadata for django-sodar-core.
 """
 import os
 from setuptools import setup
@@ -35,7 +35,8 @@ def is_requirement(line):
     Return True if the requirement line is a package requirement.
 
     Returns:
-        bool: True if the line is not blank, a comment, a URL, or an included file
+        bool: True if the line is not blank, a comment, a URL, or an included
+              file
     """
     return not (
         line == ''
@@ -47,29 +48,29 @@ def is_requirement(line):
 
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
-CHANGELOG = open(
-    os.path.join(os.path.dirname(__file__), 'CHANGELOG.rst')
-).read()
 
 setup(
     name='django-sodar-core',
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     description="""SODAR Core framework and project management apps""",
-    long_description=README + '\n\n' + CHANGELOG,
+    long_description=README,
+    long_description_content_type='text/x-rst',
     author='Berlin Institute of Health, Core Unit Bioinformatics',
     author_email='cubi@bihealth.de',
-    url='',
+    url='https://github.com/bihealth/sodar-core',
     packages=[
         'projectroles',
-        'userprofile',
-        'timeline',
-        'filesfolders',
         'adminalerts',
-        'taskflowbackend',
+        'appalerts',
         'bgjobs',
-        'sodarcache',
+        'filesfolders',
         'siteinfo',
+        'sodarcache',
+        'taskflowbackend',
+        'timeline',
+        'tokens',
+        'userprofile',
     ],
     include_package_data=True,
     install_requires=load_requirements('requirements/base.txt'),
@@ -89,4 +90,5 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
+    python_requires='>=3.7',
 )

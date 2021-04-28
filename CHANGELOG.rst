@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Installation via PyPI (#293)
 - **Adminalerts**
     - ``get_statistics()`` implementation
 - **Appalerts**
