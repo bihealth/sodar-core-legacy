@@ -15,6 +15,8 @@ Changed
 
 - **General**
     - Upgrade django-debug-toolbar to v3.2.1 (#706)
+- **Projectroles**
+    - Enforce 3 character minimum limit for terms in multi-term search (#715)
 
 Fixed
 -----
@@ -25,6 +27,7 @@ Fixed
 - **Projectroles**
     - Exceptions from app plugin ``search()`` not properly caught (#713)
     - Broken project icon on search results page (#714)
+    - Empty search terms not sanitized (#715)
 
 
 v0.10.0 (2021-04-28)

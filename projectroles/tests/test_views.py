@@ -211,7 +211,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
     def test_render_search_type(self):
-        """Test to ensure the project search view renders correctly with a search type"""
+        """Test rendering with search type"""
         with self.login(self.user):
             response = self.client.get(
                 reverse('projectroles:search')
@@ -265,6 +265,52 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
         self.assertEqual(response.context['search_keywords'], {})
         self.assertEqual(response.context['search_type'], None)
+        self.assertEqual(len(response.context['project_results']), 2)
+
+    def test_render_advanced_short_input(self):
+        """Test input from advanced search with a short term (< 3 characters)"""
+        new_project = self._make_project(
+            'AnotherProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            description='xxx',
+        )
+        self.cat_owner_as = self._make_assignment(
+            new_project, self.user, self.role_owner
+        )
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'testproject\r\nxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['testproject'])
+        self.assertEqual(len(response.context['project_results']), 1)
+
+    def test_render_advanced_empty_input(self):
+        """Test input from advanced search with an empty term (should be ignored)"""
+        new_project = self._make_project(
+            'AnotherProject',
+            PROJECT_TYPE_PROJECT,
+            self.category,
+            description='xxx',
+        )
+        self.cat_owner_as = self._make_assignment(
+            new_project, self.user, self.role_owner
+        )
+
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'testproject\r\n\r\nxxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['search_terms'], ['testproject', 'xxx']
+        )
         self.assertEqual(len(response.context['project_results']), 2)
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)

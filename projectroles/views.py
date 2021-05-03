@@ -628,7 +628,9 @@ class ProjectSearchResultsView(
 
         if self.request.GET.get('m'):  # Multi search
             search_terms = [
-                t.strip() for t in self.request.GET['m'].strip().split('\r\n')
+                t.strip()
+                for t in self.request.GET['m'].strip().split('\r\n')
+                if len(t.strip()) >= 3
             ]
             if self.request.GET.get('k'):
                 keyword_input = self.request.GET['k'].strip().split(' ')
