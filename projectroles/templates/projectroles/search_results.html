@@ -126,11 +126,10 @@
 
   {% else %}
     {# Project Search #}
-
     {% if not search_type or search_type == 'project' %}
       {% if project_results|length > 0 %}
         {% get_display_name 'PROJECT' title=True plural=True as projects_title %}
-        {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='cube' %}
+        {% include 'projectroles/_search_header.html' with search_title=projects_title result_count=project_results|length icon='mdi:cube' %}
         <table class="table table-striped sodar-card-table sodar-search-table"
                id="sodar-pr-search-table">
           <thead>
@@ -151,8 +150,13 @@
 
     {# App Search #}
     {% for app in app_search_data %}
-      {% if app.plugin.search_template %}
+      {% if app.plugin.search_template and not app.error %}
         {% include app.plugin.search_template with plugin=app.plugin search_results=app.results %}
+      {% elif app.error %}
+        <div class="alert alert-error">
+          <strong>Error:</strong>
+          Exception raised by {{ app.plugin.name }}: "{{ app.error }}"
+        </div>
       {% endif %}
     {% endfor %}
 

@@ -696,12 +696,17 @@ class ProjectSearchResultsView(
                 'search_terms': search_terms,
                 'keywords': search_keywords,
             }
-            context['app_search_data'].append(
-                {
-                    'plugin': plugin,
-                    'results': plugin.search(**search_kwargs),
-                }
-            )
+            search_res = {'plugin': plugin, 'results': None, 'error': None}
+            try:
+                search_res['results'] = plugin.search(**search_kwargs)
+            except Exception as ex:
+                search_res['error'] = str(ex)
+                logger.error(
+                    'Exception raised by search() in {}: "{}"'.format(
+                        plugin.name, ex
+                    )
+                )
+            context['app_search_data'].append(search_res)
 
         return context
 

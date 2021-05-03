@@ -22,6 +22,9 @@ Fixed
 - **General**
     - Add ``build/`` to ``.gitignore`` (#707)
     - Invalid operating system qualifier in ``setup.py`` (#708)
+- **Projectroles**
+    - Exceptions from app plugin ``search()`` not properly caught (#713)
+    - Broken project icon on search results page (#714)
 
 
 v0.10.0 (2021-04-28)
