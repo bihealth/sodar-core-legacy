@@ -700,10 +700,19 @@ class ProjectSearchResultsView(
             try:
                 search_res['results'] = plugin.search(**search_kwargs)
             except Exception as ex:
+                if settings.DEBUG:
+                    raise ex
                 search_res['error'] = str(ex)
                 logger.error(
-                    'Exception raised by search() in {}: "{}"'.format(
-                        plugin.name, ex
+                    'Exception raised by search() in {}: "{}" ({})'.format(
+                        plugin.name,
+                        ex,
+                        '; '.join(
+                            [
+                                '{}={}'.format(k, v)
+                                for k, v in search_kwargs.items()
+                            ]
+                        ),
                     )
                 )
             context['app_search_data'].append(search_res)
