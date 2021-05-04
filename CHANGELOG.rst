@@ -14,6 +14,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade minimum Django version to v3.2.1 (#696)
     - Upgrade django-debug-toolbar to v3.2.1 (#706)
 - **Projectroles**
     - Enforce 3 character minimum limit for terms in multi-term search (#715)
