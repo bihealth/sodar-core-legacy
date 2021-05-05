@@ -36,6 +36,7 @@ Fixed
     - Exceptions from app plugin ``search()`` not properly caught (#713)
     - Broken project icon on search results page (#714)
     - Empty search terms not sanitized (#715)
+    - Hardcoded optional ``PROJECTROLES_DISABLE_CATEGORIES`` setting in forms (#719)
 
 
 v0.10.0 (2021-04-28)
