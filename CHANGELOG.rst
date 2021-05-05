@@ -10,6 +10,13 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Appalerts**
+    - Update alerts in JQuery without page reloading (#701)
+    - ``APPALERTS_STATUS_INTERVAL`` setting (#701)
+
 Changed
 -------
 

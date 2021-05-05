@@ -47,6 +47,9 @@ class BackendPlugin(BackendPluginPoint):
     #: Description string
     description = 'App Alerts backend for creating and accessing alerts'
 
+    #: URL of optional javascript file to be included
+    javascript_url = 'appalerts/js/appalerts.js'
+
     def get_api(self, **kwargs):
         """Return API entry point object."""
         return AppAlertAPI()

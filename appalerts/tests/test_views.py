@@ -108,6 +108,24 @@ class TestAppAlertRedirectView(TestViewsBase):
         self.assertEqual(self.alert.active, True)
 
 
+class TestAppAlertStatusAjaxView(TestViewsBase):
+    """Tests for the alert status ajax view"""
+
+    def test_get_user_with_alerts(self):
+        """Test GET as user with alert assigned"""
+        with self.login(self.regular_user):
+            response = self.client.get(reverse('appalerts:ajax_status'))
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['alerts'], 1)
+
+    def test_get_user_no_alerts(self):
+        """Test GET as user without alert assigned"""
+        with self.login(self.no_alert_user):
+            response = self.client.get(reverse('appalerts:ajax_status'))
+            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['alerts'], 0)
+
+
 class TestAppAlertDismissAjaxView(TestViewsBase):
     """Tests for the alert dismissal ajax view"""
 

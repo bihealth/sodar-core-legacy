@@ -16,13 +16,35 @@ v0.10.1 (WIP)
 Release Highlights
 ==================
 
+- Add JQuery status updating for app alerts
 - Make project available in PyPI
-- Fix minor issues detected in v0.10.0
+- Bug fixes and minor updates
 
 Breaking Changes
 ================
 
-N/A
+System Prerequisites
+--------------------
+
+The minimum versions of dependencies have been bumped as follows:
+
+- Django: v3.2.1
+- Django-debug-toolbar: v3.2.1
+
+Base Template Updated
+---------------------
+
+If you are overriding the ``base_site.html`` with your own template and intend
+to use the ``appalerts`` app, please add the following snippet into the
+``javascript`` block in ``{SITE}/templates/base.html``:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {# ... #}
+      <!-- App alerts Javascript -->
+      {% include 'projectroles/_appalerts_include.html' %}
+    {% endblock javascript %}
 
 
 v0.10.0 (2021-04-28)

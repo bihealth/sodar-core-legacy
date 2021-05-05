@@ -80,3 +80,103 @@ class TestListView(TestAlertUIBase):
             'alert',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 1)
+
+
+class TestTitlebarBadge(TestAlertUIBase):
+    """Tests for the site titlebar badge"""
+
+    def test_render(self):
+        """Test existence of alert badge for user with alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.regular_user, url)
+        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        self.assertIsNotNone(alert_badge)
+        self.assertTrue(alert_badge.is_displayed())
+        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
+        alert_legend = self.selenium.find_element_by_id(
+            'sodar-app-alert-legend'
+        )
+        self.assertEqual(alert_count.text, '2')
+        self.assertEqual(alert_legend.text, 'alerts')
+
+    def test_render_no_alerts(self):
+        """Test existence of alert badge for user without alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.no_alert_user, url)
+        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        self.assertIsNotNone(alert_badge)
+        self.assertFalse(alert_badge.is_displayed())
+
+    def test_render_add(self):
+        """Test adding an alert for user with alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.regular_user, url)
+        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
+        alert_legend = self.selenium.find_element_by_id(
+            'sodar-app-alert-legend'
+        )
+        self.assertEqual(alert_count.text, '2')
+        self.assertEqual(alert_legend.text, 'alerts')
+
+        self._make_app_alert(user=self.regular_user, url=reverse('home'))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.text_to_be_present_in_element(
+                (By.ID, 'sodar-app-alert-count'), '3'
+            )
+        )
+        self.assertEqual(alert_count.text, '3')
+        self.assertEqual(alert_legend.text, 'alerts')
+
+    def test_render_delete(self):
+        """Test deleting an alert from user with alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.regular_user, url)
+        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
+        alert_legend = self.selenium.find_element_by_id(
+            'sodar-app-alert-legend'
+        )
+        self.assertEqual(alert_count.text, '2')
+        self.assertEqual(alert_legend.text, 'alerts')
+
+        self.alert2.delete()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.text_to_be_present_in_element(
+                (By.ID, 'sodar-app-alert-count'), '1'
+            )
+        )
+        self.assertEqual(alert_count.text, '1')
+        self.assertEqual(alert_legend.text, 'alert')
+
+    def test_render_delete_all(self):
+        """Test deleting all alerts from user with alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.regular_user, url)
+        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        self.assertTrue(alert_badge.is_displayed())
+
+        self.alert.delete()
+        self.alert2.delete()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.invisibility_of_element_located((By.ID, 'sodar-app-alert-badge'))
+        )
+        self.assertFalse(alert_badge.is_displayed())
+
+    def test_render_add_no_alerts(self):
+        """Test adding an alert for user without prior alerts"""
+        url = reverse('home')
+        self.login_and_redirect(self.no_alert_user, url)
+        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        self.assertFalse(alert_badge.is_displayed())
+
+        self._make_app_alert(user=self.no_alert_user, url=reverse('home'))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.visibility_of_element_located((By.ID, 'sodar-app-alert-badge'))
+        )
+        self.assertTrue(alert_badge.is_displayed())
+
+        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
+        alert_legend = self.selenium.find_element_by_id(
+            'sodar-app-alert-legend'
+        )
+        self.assertEqual(alert_count.text, '1')
+        self.assertEqual(alert_legend.text, 'alert')

@@ -634,6 +634,10 @@ FILESFOLDERS_SHOW_LIST_COLUMNS = env.bool(
 ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 
 
+# Appalerts app settings
+APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
+
+
 # Taskflow backend settings
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
 TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default

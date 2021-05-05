@@ -1,0 +1,8 @@
+{% load static %}
+{% load projectroles_common_tags %}
+
+{% check_backend 'appalerts_backend' as appalerts_active %}
+  {% if appalerts_active and request.user.is_authenticated %}
+  {# TODO: Use get_backend_include() instead (see #717) #}
+  <script type="text/javascript" src="{% static 'appalerts/js/appalerts.js' %}"></script>
+{% endif %}
