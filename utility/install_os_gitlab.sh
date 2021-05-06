@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install OS dependencies for Docker image python:3.6 used in Gitlab CI
+# Install OS dependencies for Docker image python:3.8 used in Gitlab CI
 
 echo "***********************************************"
 echo "Apt-get update"

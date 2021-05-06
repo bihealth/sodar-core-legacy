@@ -45,28 +45,27 @@ class TestAppAlertPermissions(AppAlertMixin, TestPermissionBase):
             'appalerts:redirect', kwargs={'appalert': self.alert.sodar_uuid}
         )
         bad_url = reverse('appalerts:list')
-        good_users = [
-            self.regular_user,
-        ]
+        good_users = [self.regular_user]
         bad_users = [self.superuser, self.no_alert_user, self.anonymous]
         self.assert_response(
             url, good_users, 302, redirect_user=reverse('home')
         )
         self.assert_response(url, bad_users, 302, redirect_user=bad_url)
 
+    def test_ajax_status(self):
+        """Test permissions for the alert status ajax view"""
+        url = reverse('appalerts:ajax_status')
+        good_users = [self.superuser, self.regular_user, self.no_alert_user]
+        bad_users = [self.anonymous]
+        self.assert_response(url, good_users, 200)
+        self.assert_response(url, bad_users, 403)
+
     def test_ajax_dismiss(self):
         """Test permissions for the alert dismiss ajax view"""
         url = reverse(
             'appalerts:ajax_dismiss', kwargs={'appalert': self.alert.sodar_uuid}
         )
-        good_users = [
-            self.regular_user,
-        ]
+        good_users = [self.regular_user]
         bad_users = [self.superuser, self.no_alert_user, self.anonymous]
-        self.assert_response(
-            url,
-            good_users,
-            200,
-            method='POST',
-        )
+        self.assert_response(url, good_users, 200, method='POST')
         self.assert_response(url, bad_users, 403, method='POST')

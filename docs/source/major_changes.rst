@@ -10,6 +10,56 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.1 (2021-05-06)
+********************
+
+Release Highlights
+==================
+
+- Add JQuery status updating for app alerts
+- Make project available in PyPI
+- Critical bug fixes for remote sync
+- Bug fixes and minor updates
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum versions of dependencies have been bumped as follows:
+
+- Django: v3.2.1
+- Django-debug-toolbar: v3.2.1
+
+Base Template Updated
+---------------------
+
+If you are overriding the ``base_site.html`` with your own template and intend
+to use the ``appalerts`` app, please add the following snippet into the
+``javascript`` block in ``{SITE}/templates/base.html``:
+
+.. code-block:: django
+
+    {% block javascript %}
+      {# ... #}
+      <!-- App alerts Javascript -->
+      {% include 'projectroles/_appalerts_include.html' %}
+    {% endblock javascript %}
+
+Remote Sync Bug in v0.9
+-----------------------
+
+A bug in remote project sync was recently discovered in SODAR Core v0.9.x and
+v0.10.0. The bug has been fixed in this release, but the complete fix requires
+for both the ``SOURCE`` and ``TARGET`` sites to be upgraded to v0.10. If you
+need to use a site based on SODAR Core v0.9 as a remote sync target, please
+upgrade your site to
+`this hotfix branch <https://github.com/bihealth/sodar-core/tree/0.9.1/fix-settings-sync>`_.
+Note that it is recommended to upgrade all your sites to v0.10 as soon as
+possible.
+
+
 v0.10.0 (2021-04-28)
 ********************
 
@@ -25,7 +75,6 @@ Release Highlights
 - Timeline events without user
 - Allow public guest access to projects for authenticated and anonymous users
 - Display Django settings in Site Info app
-- Make project available in PyPI
 
 Breaking Changes
 ================

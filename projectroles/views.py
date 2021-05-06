@@ -628,7 +628,9 @@ class ProjectSearchResultsView(
 
         if self.request.GET.get('m'):  # Multi search
             search_terms = [
-                t.strip() for t in self.request.GET['m'].strip().split('\r\n')
+                t.strip()
+                for t in self.request.GET['m'].strip().split('\r\n')
+                if len(t.strip()) >= 3
             ]
             if self.request.GET.get('k'):
                 keyword_input = self.request.GET['k'].strip().split(' ')
@@ -696,12 +698,26 @@ class ProjectSearchResultsView(
                 'search_terms': search_terms,
                 'keywords': search_keywords,
             }
-            context['app_search_data'].append(
-                {
-                    'plugin': plugin,
-                    'results': plugin.search(**search_kwargs),
-                }
-            )
+            search_res = {'plugin': plugin, 'results': None, 'error': None}
+            try:
+                search_res['results'] = plugin.search(**search_kwargs)
+            except Exception as ex:
+                if settings.DEBUG:
+                    raise ex
+                search_res['error'] = str(ex)
+                logger.error(
+                    'Exception raised by search() in {}: "{}" ({})'.format(
+                        plugin.name,
+                        ex,
+                        '; '.join(
+                            [
+                                '{}={}'.format(k, v)
+                                for k, v in search_kwargs.items()
+                            ]
+                        ),
+                    )
+                )
+            context['app_search_data'].append(search_res)
 
         return context
 

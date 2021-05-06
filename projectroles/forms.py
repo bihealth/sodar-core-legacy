@@ -255,7 +255,7 @@ class ProjectForm(SODARModelForm):
             or not instance.parent
             or (
                 instance.type == PROJECT_TYPE_PROJECT
-                and settings.PROJECTROLES_DISABLE_CATEGORIES
+                and getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
             )
         ):
             ret.append((None, '--------'))
@@ -443,6 +443,9 @@ class ProjectForm(SODARModelForm):
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
         super().__init__(*args, **kwargs)
+        disable_categories = getattr(
+            settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
+        )
 
         # Get current user for checking permissions for form items
         if current_user:
@@ -494,7 +497,7 @@ class ProjectForm(SODARModelForm):
             self.fields['owner'].widget = forms.HiddenInput()
 
             # Set valid choices for parent
-            if not settings.PROJECTROLES_DISABLE_CATEGORIES:
+            if not disable_categories:
                 self.fields['parent'].choices = self._get_parent_choices(
                     self.instance, self.current_user
                 )
@@ -535,7 +538,7 @@ class ProjectForm(SODARModelForm):
             # Creating a top level project
             else:
                 # Force project type
-                if settings.PROJECTROLES_DISABLE_CATEGORIES:
+                if disable_categories:
                     self.initial['type'] = PROJECT_TYPE_PROJECT
                 else:
                     self.initial['type'] = PROJECT_TYPE_CATEGORY
@@ -556,7 +559,9 @@ class ProjectForm(SODARModelForm):
     def clean(self):
         """Function for custom form validation and cleanup"""
         instance_owner_as = self.instance.get_owner() if self.instance else None
-
+        disable_categories = getattr(
+            settings, 'PROJECTROLES_DISABLE_CATEGORIES', False
+        )
         parent = self.cleaned_data.get('parent')
 
         # Check for category/project being placed in root
@@ -571,7 +576,7 @@ class ProjectForm(SODARModelForm):
                 )
             elif (
                 self.cleaned_data.get('type') == PROJECT_TYPE_PROJECT
-                and not settings.PROJECTROLES_DISABLE_CATEGORIES
+                and not disable_categories
             ):
                 self.add_error(
                     'parent', 'Projects can not be placed under root'

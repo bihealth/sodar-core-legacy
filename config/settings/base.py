@@ -529,7 +529,12 @@ SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 ENABLED_BACKEND_PLUGINS = env.list(
     'ENABLED_BACKEND_PLUGINS',
     None,
-    ['appalerts_backend', 'timeline_backend', 'example_backend_app'],
+    [
+        'appalerts_backend',
+        'sodar_cache',
+        'timeline_backend',
+        'example_backend_app',
+    ],
 )
 
 # SODAR API settings
@@ -632,6 +637,10 @@ FILESFOLDERS_SHOW_LIST_COLUMNS = env.bool(
 
 # Adminalerts app settings
 ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
+
+
+# Appalerts app settings
+APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
 
 
 # Taskflow backend settings

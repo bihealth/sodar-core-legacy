@@ -2,6 +2,10 @@
 src/
 *.egg-info/
 
+# Built distribution files
+build/
+dist/
+
 ### Documentation ###
 /docs*/build/
 
@@ -14,14 +18,18 @@ venv/
 .AppleDouble
 .LSOverride
 
+# Pycharm
+.idea/*
+docs/pycharm/*
+
+# Vscode
+.vscode/*
+
 ### SublimeText ###
 # cache files for sublime text
 *.tmlanguage.cache
 *.tmPreferences.cache
 *.stTheme.cache
-
-# Built distribution files
-dist/
 
 # workspace files are user-specific
 *.sublime-workspace
@@ -54,10 +62,6 @@ coverage.xml
 # Translations
 *.mo
 *.pot
-
-# Pycharm
-.idea/*
-docs/pycharm/*
 
 # Vim
 
@@ -96,6 +100,3 @@ flamegraph.pl
 
 # Celery
 celerybeat-schedule
-
-# Vscode
-.vscode/*

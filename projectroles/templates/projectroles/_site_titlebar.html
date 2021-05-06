@@ -12,6 +12,7 @@
 {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
 {% get_django_setting 'PROJECTROLES_ALLOW_ANONYMOUS' as allow_anon %}
 {% static_file_exists 'images/logo_navbar.png' as logo_exists %}
+{% check_backend 'appalerts_backend' as appalerts_active %}
 
 <div class="m-b-1 sodar-titlebar-container">
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark sodar-base-navbar"
@@ -39,9 +40,14 @@
       <ul class="navbar-nav ml-auto" id="sodar-base-navbar-nav">
 
         {# App alerts notification #}
-        {% if request.user.is_authenticated and app_alerts > 0 %}
-          <li class="nav-item" id="sodar-app-alert-nav">
-            <div id="sodar-app-alert-badge">
+        {% if request.user.is_authenticated and appalerts_active %}
+          {% get_django_setting 'APPALERTS_STATUS_INTERVAL' 5 as alert_interval %}
+          <li class="nav-item"
+              id="sodar-app-alert-nav"
+              data-status-url="{% url 'appalerts:ajax_status' %}"
+              data-interval="{{ alert_interval }}">
+            <div id="sodar-app-alert-badge"
+                 style="{% if app_alerts == 0 %}display: none{% endif %}">
               <a href="{% url 'appalerts:list' %}">
                 <div class="badge badge-pill bg-danger mr-4 mt-2">
                   <i class="iconify" data-icon="mdi:alert-octagram"

@@ -7,7 +7,7 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-v0.10.0 (2021-04-28)
+v0.10.1 (2021-05-06)
 ====================
 
 Added
@@ -15,6 +15,44 @@ Added
 
 - **General**
     - Installation via PyPI (#293)
+- **Appalerts**
+    - Update alerts in JQuery without page reloading (#701, #723)
+    - ``APPALERTS_STATUS_INTERVAL`` setting (#701)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.1 (#696)
+    - Upgrade django-debug-toolbar to v3.2.1 (#706)
+- **Appalerts**
+    - Tweak alert layout (#716)
+- **Projectroles**
+    - Enforce 3 character minimum limit for terms in multi-term search (#715)
+    - Improve remote sync stability
+
+Fixed
+-----
+
+- **General**
+    - Add ``build/`` to ``.gitignore`` (#707)
+    - Invalid operating system qualifier in ``setup.py`` (#708)
+- **Projectroles**
+    - Uncaught exceptions in app plugin ``search()`` (#713)
+    - Broken project icon on search results page (#714)
+    - Empty search terms not sanitized (#715)
+    - Hardcoded optional ``PROJECTROLES_DISABLE_CATEGORIES`` setting in forms (#719)
+    - Remote sync objects referred by database ID instead of ``sodar_uuid`` (#720)
+    - Uncaught exceptions in app settings remote sync (#720)
+    - Assumed ``sodar_uuid`` match for target app settings in remote sync (#722)
+
+
+v0.10.0 (2021-04-28)
+====================
+
+Added
+-----
+
 - **Adminalerts**
     - ``get_statistics()`` implementation
 - **Appalerts**

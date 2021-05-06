@@ -16,7 +16,12 @@ urlpatterns = [
         name='redirect',
     ),
     url(
-        regex=r'^dismiss/(?P<appalert>[0-9a-f-]+)$',
+        regex=r'^ajax/status$',
+        view=views_ajax.AppAlertStatusAjaxView.as_view(),
+        name='ajax_status',
+    ),
+    url(
+        regex=r'^ajax/dismiss/(?P<appalert>[0-9a-f-]+)$',
         view=views_ajax.AppAlertDismissAjaxView.as_view(),
         name='ajax_dismiss',
     ),
