@@ -16,7 +16,7 @@ Added
 - **General**
     - Installation via PyPI (#293)
 - **Appalerts**
-    - Update alerts in JQuery without page reloading (#701)
+    - Update alerts in JQuery without page reloading (#701, #723)
     - ``APPALERTS_STATUS_INTERVAL`` setting (#701)
 
 Changed
