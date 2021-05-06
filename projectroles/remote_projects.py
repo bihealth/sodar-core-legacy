@@ -935,12 +935,15 @@ class RemoteProjectAPI:
         # App Settings
         ###############
 
+        logger.info('Skipping app settings sync (temporary hotfix)')
+        '''
         logger.info('Synchronizing app settings..')
 
         for sodar_uuid, app_setting in self.remote_data['app_settings'].items():
             self._sync_app_settings(sodar_uuid, app_setting)
 
         logger.info('Synchronization OK')
+        '''
         return self.remote_data
 
     def _sync_app_settings(self, sodar_uuid, app_setting):
