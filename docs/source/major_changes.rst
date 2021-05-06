@@ -10,14 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.1 (WIP)
-*************
+v0.10.1 (2021-05-06)
+********************
 
 Release Highlights
 ==================
 
 - Add JQuery status updating for app alerts
 - Make project available in PyPI
+- Critical bug fixes for remote sync
 - Bug fixes and minor updates
 
 Breaking Changes
@@ -49,11 +50,12 @@ to use the ``appalerts`` app, please add the following snippet into the
 Remote Sync Bug in v0.9
 -----------------------
 
-A bug in remote project sync was recently discovered in SODAR Core v0.9. The bug
-has been fixed in this release, but the complete fix requires for both the
-``SOURCE`` and ``TARGET`` sites to be upgraded to v0.10. If you need to use a
-site based on SODAR Core v0.9 as a remote sync target, please upgrade your site
-to `this hotfix branch <https://github.com/bihealth/sodar-core/tree/0.9.1/fix-settings-sync>`_.
+A bug in remote project sync was recently discovered in SODAR Core v0.9.x and
+v0.10.0. The bug has been fixed in this release, but the complete fix requires
+for both the ``SOURCE`` and ``TARGET`` sites to be upgraded to v0.10. If you
+need to use a site based on SODAR Core v0.9 as a remote sync target, please
+upgrade your site to
+`this hotfix branch <https://github.com/bihealth/sodar-core/tree/0.9.1/fix-settings-sync>`_.
 Note that it is recommended to upgrade all your sites to v0.10 as soon as
 possible.
 

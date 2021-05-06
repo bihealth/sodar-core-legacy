@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.10.1 (2021-05-06)
+====================
 
 Added
 -----
@@ -38,7 +38,7 @@ Fixed
     - Add ``build/`` to ``.gitignore`` (#707)
     - Invalid operating system qualifier in ``setup.py`` (#708)
 - **Projectroles**
-    - Exceptions from app plugin ``search()`` not properly caught (#713)
+    - Uncaught exceptions in app plugin ``search()`` (#713)
     - Broken project icon on search results page (#714)
     - Empty search terms not sanitized (#715)
     - Hardcoded optional ``PROJECTROLES_DISABLE_CATEGORIES`` setting in forms (#719)
