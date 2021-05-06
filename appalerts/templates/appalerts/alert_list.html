@@ -33,7 +33,10 @@
           <i class="iconify"
              data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
         </span>
-          <span class="sodar-app-alert-date">{{ a.date_created | date:'Y-m-d H:i' }} |</span>
+        <span data-toggle="tooltip" data-placement="top"
+              title="{{ a.date_created | date:'Y-m-d H:i' }}">
+          <i class="iconify" data-icon="mdi:clock"></i>
+        </span>
         {{ a.message | safe }}
         <span class="sodar-app-alert-buttons pull-right">
           {% if a.url %}
