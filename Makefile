@@ -6,11 +6,10 @@ define USAGE=
 @echo -e "\tmake black [arg=--<arg>]                 -- black formatting"
 @echo -e "\tmake serve                               -- start source server"
 @echo -e "\tmake serve_target                        -- start target server"
-@echo -e "\tmake serve_taskflow [arg=sync]           -- start taskflow server"
+@echo -e "\tmake serve_taskflow [arg=sync]           -- start server with SODAR Taskflow"
 @echo -e "\tmake collectstatic                       -- run collectstatic"
 @echo -e "\tmake test [arg=<test_object>]            -- run all tests or specify module/class/function"
 @echo -e "\tmake test_taskflow [arg=<test_object>]   -- run all tests and taskflow tests or specify module/class/function"
-@echo -e "\tmake sync_taskflow                       -- sync taskflow"
 @echo -e "\tmake manage_target arg=<target_command>  -- run management command on target site, arg is mandatory"
 @echo -e
 endef

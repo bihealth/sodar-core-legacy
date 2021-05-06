@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **General**
+    - Installation via PyPI (#293)
 - **Appalerts**
     - Update alerts in JQuery without page reloading (#701)
     - ``APPALERTS_STATUS_INTERVAL`` setting (#701)
@@ -51,8 +53,6 @@ v0.10.0 (2021-04-28)
 Added
 -----
 
-- **General**
-    - Installation via PyPI (#293)
 - **Adminalerts**
     - ``get_statistics()`` implementation
 - **Appalerts**

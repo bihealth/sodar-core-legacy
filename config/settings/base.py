@@ -529,7 +529,12 @@ SITE_INSTANCE_TITLE = env.str('SITE_INSTANCE_TITLE', 'SODAR Core Example')
 ENABLED_BACKEND_PLUGINS = env.list(
     'ENABLED_BACKEND_PLUGINS',
     None,
-    ['appalerts_backend', 'timeline_backend', 'example_backend_app'],
+    [
+        'appalerts_backend',
+        'sodar_cache',
+        'timeline_backend',
+        'example_backend_app',
+    ],
 )
 
 # SODAR API settings

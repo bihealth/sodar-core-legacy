@@ -86,9 +86,9 @@ To provide a unique identifier for objects in the SODAR context, add a
 
 .. note::
 
-    Projectroles links to objects in URLs, links and forms using UUIDs instead
+    SODAR Core links to objects in URLs, links and forms using UUIDs instead
     of database private keys. This is strongly recommended for all Django models
-    in apps using the projectroles framework.
+    in apps using the SODAR Core framework.
 
 .. note::
 
@@ -115,7 +115,7 @@ Below is an example of a projectroles-compatible Django model:
         project = models.ForeignKey(
             Project,
             related_name='some_objects',
-            help_text='Project in which this object belongs',
+            help_text='Project to which this object belongs',
         )
         sodar_uuid = models.UUIDField(
             default=uuid.uuid4,
@@ -175,8 +175,8 @@ member variables and functions as instructed in comments and docstrings.
 
     class ProjectAppPlugin(ProjectAppPluginPoint):
         """Plugin for registering app with Projectroles"""
-        name = 'example_project_app'
-        title = 'Example Project App'
+        name = 'yourprojectapp'
+        title = 'Your Project App'
         urls = urlpatterns
         # ...
 
@@ -343,6 +343,17 @@ class:
 
 - ``sodar-subtitle-container``: Container for the page title
 - ``sodar-content-container``: Container for the actual content of your app
+
+If you do not want to include the project title header to your project
+templates, you can replace the ``projectroles_extend`` block with a
+``projectroles`` block.
+
+.. warning::
+
+    When customizing your templates, make sure you are not accidentally nesting
+    built-in blocks within eachother by e.g. placing the ``css`` block *inside*
+    the ``projectroles`` or ``projectroles_extend`` block. Doing so may cause
+    the page to render incorrectly or includes to fail.
 
 Rules
 -----
