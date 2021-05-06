@@ -125,8 +125,8 @@ NEW_PEER_NAME = PEER_SITE_NAME + ' new'
 NEW_PEER_DESC = PEER_SITE_DESC + ' new'
 NEW_PEER_USER_DISPLAY = not PEER_SITE_USER_DISPLAY
 
-PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID = str(uuid.uuid4())
-PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID = str(uuid.uuid4())
+PR_IP_RESTRICT_UUID = str(uuid.uuid4())
+PR_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 
 
 class TestGetTargetData(
@@ -567,24 +567,24 @@ class TestSyncSourceData(
                 }
             },
             'app_settings': {
-                PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID: {
+                PR_IP_RESTRICT_UUID: {
                     'name': 'ip_restrict',
                     'type': 'BOOLEAN',
                     'value': False,
                     'value_json': {},
-                    'app_plugin_id': None,  # None is for 'projectroles' app
+                    'app_plugin': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
-                    'user_id': None,
+                    'user_uuid': None,
                     'local': False,
                 },
-                PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID: {
+                PR_IP_ALLOWLIST_UUID: {
                     'name': 'ip_allowlist',
                     'type': 'JSON',
                     'value': '',
                     'value_json': [],
-                    'app_plugin_id': None,  # None is for 'projectroles' app
+                    'app_plugin': None,  # None is for 'projectroles' app
                     'project_uuid': SOURCE_PROJECT_UUID,
-                    'user_id': None,
+                    'user_uuid': None,
                     'local': False,
                 },
             },
@@ -866,10 +866,10 @@ class TestSyncSourceData(
         self.assertEqual(peer_project_dict, expected)
 
         app_setting_ip_restrict_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
         app_setting_ip_allowlist_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         expected_ip_restrict = {
@@ -877,7 +877,7 @@ class TestSyncSourceData(
             'type': 'BOOLEAN',
             'value': '0',
             'value_json': {},
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_RESTRICT_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -888,7 +888,7 @@ class TestSyncSourceData(
             'type': 'JSON',
             'value': '',
             'value_json': [],
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -938,24 +938,16 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE4_UUID
         ]['status'] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'status'
-        ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'status'
-        ] = 'created'
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
 
         self.assertEqual(self.default_data, expected)
 
     def test_create_app_setting_local(self):
         remote_data = self.default_data
 
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'local'
-        ] = True
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'local'
-        ] = True
+        remote_data['app_settings'][PR_IP_RESTRICT_UUID]['local'] = True
+        remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
 
         original_data = deepcopy(remote_data)
 
@@ -972,12 +964,8 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][
             SOURCE_PROJECT_ROLE_UUID
         ]['status'] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'status'
-        ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'status'
-        ] = 'created'
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1068,12 +1056,8 @@ class TestSyncSourceData(
         expected['projects'][new_project_uuid]['roles'][new_role_uuid][
             'status'
         ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'status'
-        ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'status'
-        ] = 'created'
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1220,7 +1204,7 @@ class TestSyncSourceData(
             setting_type='BOOLEAN',
             value=False,
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
 
         # Init IP allowlist setting
@@ -1231,7 +1215,7 @@ class TestSyncSourceData(
             value=None,
             value_json=[],
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         # Assert preconditions
@@ -1274,12 +1258,10 @@ class TestSyncSourceData(
 
         # Change projectroles app settings
 
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'value'
-        ] = True
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value_json'
-        ] = ['192.168.1.1']
+        remote_data['app_settings'][PR_IP_RESTRICT_UUID]['value'] = True
+        remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
+            '192.168.1.1'
+        ]
 
         # Do sync
         self.remote_api.sync_source_data(self.source_site, remote_data)
@@ -1420,10 +1402,10 @@ class TestSyncSourceData(
         self.assertEqual(peer_project_dict, expected)
 
         app_setting_ip_restrict_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
         app_setting_ip_allowlist_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         expected_ip_restrict = {
@@ -1431,7 +1413,7 @@ class TestSyncSourceData(
             'type': 'BOOLEAN',
             'value': '1',
             'value_json': {},
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_RESTRICT_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -1442,7 +1424,7 @@ class TestSyncSourceData(
             'type': 'JSON',
             'value': '',
             'value_json': ['192.168.1.1'],
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -1469,18 +1451,12 @@ class TestSyncSourceData(
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid][
             'status'
         ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'value'
-        ] = True
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value_json'
-        ] = ['192.168.1.1']
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'status'
-        ] = 'updated'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'status'
-        ] = 'updated'
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['value'] = True
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
+            '192.168.1.1'
+        ]
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'updated'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'updated'
 
         self.assertEqual(remote_data, expected)
 
@@ -1555,7 +1531,7 @@ class TestSyncSourceData(
             setting_type='BOOLEAN',
             value=False,
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
 
         # Init IP allowlist setting
@@ -1566,7 +1542,7 @@ class TestSyncSourceData(
             value=None,
             value_json=[],
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         # Assert preconditions
@@ -1581,18 +1557,12 @@ class TestSyncSourceData(
 
         # Change projectroles app settings
 
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'local'
-        ] = True
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'local'
-        ] = True
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'value'
-        ] = True
-        remote_data['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'value_json'
-        ] = ['192.168.1.1']
+        remote_data['app_settings'][PR_IP_RESTRICT_UUID]['local'] = True
+        remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
+        remote_data['app_settings'][PR_IP_RESTRICT_UUID]['value'] = True
+        remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
+            '192.168.1.1'
+        ]
 
         original_data = deepcopy(remote_data)
 
@@ -1600,10 +1570,10 @@ class TestSyncSourceData(
         self.remote_api.sync_source_data(self.source_site, remote_data)
 
         app_setting_ip_restrict_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
         app_setting_ip_allowlist_obj = AppSetting.objects.get(
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         expected_ip_restrict = {
@@ -1611,7 +1581,7 @@ class TestSyncSourceData(
             'type': 'BOOLEAN',
             'value': '0',
             'value_json': {},
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_RESTRICT_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -1622,7 +1592,7 @@ class TestSyncSourceData(
             'type': 'JSON',
             'value': None,
             'value_json': [],
-            'sodar_uuid': uuid.UUID(PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID),
+            'sodar_uuid': uuid.UUID(PR_IP_ALLOWLIST_UUID),
             'project': project_obj.id,
             'app_plugin': None,
             'user': None,
@@ -1870,12 +1840,8 @@ class TestSyncSourceData(
             'role': PROJECT_ROLE_CONTRIBUTOR,
             'status': 'deleted',
         }
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID][
-            'status'
-        ] = 'created'
-        expected['app_settings'][PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID][
-            'status'
-        ] = 'created'
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
 
         self.assertEqual(remote_data, expected)
 
@@ -1936,7 +1902,7 @@ class TestSyncSourceData(
             setting_type='BOOLEAN',
             value=False,
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID,
+            sodar_uuid=PR_IP_RESTRICT_UUID,
         )
 
         # Init IP allowlist setting
@@ -1947,7 +1913,7 @@ class TestSyncSourceData(
             value=None,
             value_json=[],
             project=project_obj,
-            sodar_uuid=PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID,
+            sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
         # Set up Peer Objects
@@ -2104,12 +2070,10 @@ class TestSyncSourceData(
 
         # Assert no changes between update_data and remote_data
         # Except global app settings, they are always updated.
-        original_data['app_settings'][
-            PROJECTROLES_APP_SETTING_IP_RESTRICT_UUID
-        ]['status'] = 'updated'
-        original_data['app_settings'][
-            PROJECTROLES_APP_SETTING_IP_ALLOWLIST_UUID
-        ]['status'] = 'updated'
+        original_data['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'updated'
+        original_data['app_settings'][PR_IP_ALLOWLIST_UUID][
+            'status'
+        ] = 'updated'
         self.assertEqual(original_data, remote_data)
 
     def test_create_no_access(self):
