@@ -43,7 +43,7 @@ urlpatterns = [
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
     # Admin Alerts URLs
-    url(r'^alerts/admin/', include('adminalerts.urls')),
+    url(r'^alerts/adm/', include('adminalerts.urls')),
     # App Alerts URLs
     url(r'^alerts/app/', include('appalerts.urls')),
     # Site Info URLs

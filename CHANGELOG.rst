@@ -15,6 +15,7 @@ Changed
 
 - **General**
     - Upgrade to Chromedriver v90 (#731)
+    - Example site adminalerts URL include (#730)
 
 
 v0.10.1 (2021-05-06)
