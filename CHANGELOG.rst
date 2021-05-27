@@ -19,6 +19,12 @@ Changed
 - **Projectroles**
     - Display anonymous icon in titlebar dropdown if not logged in (#726)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Unhandled exceptions and missing data in project list extra columns (#733)
+
 
 v0.10.1 (2021-05-06)
 ====================
