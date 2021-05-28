@@ -18,6 +18,7 @@ Changed
     - Example site adminalerts URL include (#730)
     - Update documentation screenshots (#734)
     - Reorganize static files in documentation (#734)
+    - Rename example ``django-db-file-storage`` URL pattern (#732)
 - **Projectroles**
     - Display anonymous icon in titlebar dropdown if not logged in (#726)
 

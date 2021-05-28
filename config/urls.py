@@ -39,7 +39,7 @@ urlpatterns = [
     # Filesfolders URLs
     url(r'^files/', include('filesfolders.urls')),
     # django-db-file-storage URLs (obfuscated for users)
-    url(r'^naFieng1Lai8heg2/', include('db_file_storage.urls')),
+    url(r'^DJANGO-DB-FILE-STORAGE-CHANGE-ME/', include('db_file_storage.urls')),
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
     # Admin Alerts URLs
