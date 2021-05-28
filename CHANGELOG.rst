@@ -29,6 +29,7 @@ Fixed
 - **Projectroles**
     - Unhandled exceptions and missing data in project list extra columns (#733)
     - Project star icon alignment (#736)
+    - Project list layout broken by ``FILESFOLDERS_SHOW_LIST_COLUMNS`` setting (#737)
 
 
 v0.10.1 (2021-05-06)

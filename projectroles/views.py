@@ -492,6 +492,11 @@ class ProjectListContextMixin:
             for ap in get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
         ]:
+            # HACK for filesfolders columns (see issues #737 and #738)
+            if app_plugin.name == 'filesfolders' and not getattr(
+                settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False
+            ):
+                continue
             for k, v in app_plugin.project_list_columns.items():
                 v['app_plugin'] = app_plugin
                 v['key'] = k
