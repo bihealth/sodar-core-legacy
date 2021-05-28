@@ -16,14 +16,19 @@ Changed
 - **General**
     - Upgrade to Chromedriver v90 (#731)
     - Example site adminalerts URL include (#730)
+    - Update documentation screenshots (#734)
+    - Reorganize static files in documentation (#734)
 - **Projectroles**
     - Display anonymous icon in titlebar dropdown if not logged in (#726)
 
 Fixed
 -----
 
+- **General**
+    - Figure aspect ratios in documentation (#735)
 - **Projectroles**
     - Unhandled exceptions and missing data in project list extra columns (#733)
+    - Project star icon alignment (#736)
 
 
 v0.10.1 (2021-05-06)

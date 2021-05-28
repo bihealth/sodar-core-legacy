@@ -38,7 +38,7 @@ dynamically include app and project content in Django views. In addition to
 developing new Django apps, existing apps can be easily modified to gain access
 to SODAR Core features.
 
-.. figure:: _static/figures/sodar_core_site.png
+.. figure:: _static/overview/sodar_core_site.png
     :align: center
     :scale: 50%
 
