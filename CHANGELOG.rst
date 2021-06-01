@@ -31,6 +31,7 @@ Fixed
     - Unhandled exceptions and missing data in project list extra columns (#733)
     - Project star icon alignment (#736)
     - Project list layout broken by ``FILESFOLDERS_SHOW_LIST_COLUMNS`` setting (#737)
+    - Public guest access role not displayed in project list (#739)
 - **Timeline**
     - Crash in ``add_event()`` if called with ``AnonymousUser`` (#740)
 

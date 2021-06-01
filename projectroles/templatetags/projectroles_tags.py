@@ -185,9 +185,10 @@ def get_project_column_value(col, project):
 @register.simple_tag
 def get_user_role_html(project, user):
     """Return user role HTML"""
+    role_as = None
     if user.is_superuser:
         return '<span class="text-danger">Superuser</span>'
-    elif user.is_authenticated:
+    if user.is_authenticated:
         role_as = RoleAssignment.objects.filter(
             project=project, user=user
         ).first()
@@ -199,7 +200,7 @@ def get_user_role_html(project, user):
             )
         if role_as:
             return role_as.role.name.split(' ')[1].capitalize()
-    elif user.is_anonymous and project.public_guest_access:
+    if project.public_guest_access and not role_as:
         return 'Guest'
     return '<span class="text-muted">N/A</span>'
 

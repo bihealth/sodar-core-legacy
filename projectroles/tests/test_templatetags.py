@@ -5,6 +5,7 @@ import mistune
 import uuid
 
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings, RequestFactory
 from django.urls import reverse
 
@@ -543,9 +544,12 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             '<span class="text-muted">N/A</span>',
         )
         self.project.set_public()
-
-        # TODO: Test for authenticated user in a public guest access project
-        # TODO: Test for anonymous user
+        self.assertEqual(
+            tags.get_user_role_html(self.project, user_no_roles), 'Guest'
+        )
+        self.assertEqual(
+            tags.get_user_role_html(self.project, AnonymousUser()), 'Guest'
+        )
 
     def test_is_inherited_owner(self):
         """Test is_inherited_owner()"""
