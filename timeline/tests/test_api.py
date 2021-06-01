@@ -1,5 +1,6 @@
 """API tests for the timeline app"""
 
+from django.contrib.auth.models import AnonymousUser
 from django.forms.models import model_to_dict
 from django.urls import reverse
 
@@ -195,6 +196,27 @@ class TestTimelineAPI(
             'sodar_uuid': event.sodar_uuid,
         }
         self.assertEqual(model_to_dict(event), expected)
+
+    def test_add_event_anon_user(self):
+        """Test adding an event with AnonymousUser"""
+
+        # Assert precondition
+        self.assertEqual(ProjectEvent.objects.all().count(), 0)
+        self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
+
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=AnonymousUser(),
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+        )
+
+        # Assert object status after insert
+        self.assertEqual(ProjectEvent.objects.all().count(), 1)
+        self.assertEqual(ProjectEventStatus.objects.all().count(), 1)
+        self.assertIsNone(event.user)
 
     def test_add_event_invalid_app(self):
         """Test adding an event with an invalid app name (should fail)"""

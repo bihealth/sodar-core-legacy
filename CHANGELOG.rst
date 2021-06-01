@@ -31,6 +31,8 @@ Fixed
     - Unhandled exceptions and missing data in project list extra columns (#733)
     - Project star icon alignment (#736)
     - Project list layout broken by ``FILESFOLDERS_SHOW_LIST_COLUMNS`` setting (#737)
+- **Timeline**
+    - Crash in ``add_event()`` if called with ``AnonymousUser`` (#740)
 
 
 v0.10.1 (2021-05-06)
