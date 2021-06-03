@@ -242,7 +242,7 @@ category first (collections of projects). Use the "create category" button on
 the left to create a "example category" first, then create an "example project"
 within. The project details view should look as follows.
 
-.. figure:: _static/for_the_impatient/project_home.png
+.. figure:: _static/for_the_impatient/project_details.png
 
 Note that the site search already works, so typing "example" into the text field
 on the top and clicking "search" will return your example project. The project
