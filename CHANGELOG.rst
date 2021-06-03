@@ -15,10 +15,13 @@ Changed
 
 - **General**
     - Upgrade to Chromedriver v90 (#731)
-    - Example site adminalerts URL include (#730)
+    - Rename example site adminalerts URL include (#730)
     - Update documentation screenshots (#734)
     - Reorganize static files in documentation (#734)
     - Rename example ``django-db-file-storage`` URL pattern (#732)
+    - Upgrade minimum Django version to v3.2.4 (#727)
+    - Upgrade Python dependencies (#727)
+    - Reformat with Black v21.5b2
 - **Projectroles**
     - Display anonymous icon in titlebar dropdown if not logged in (#726)
 

@@ -2,13 +2,13 @@
 wheel==0.36.2
 
 # Django
-django>=3.2.1, <3.3
+django>=3.2.4, <3.3
 
 # Configuration
 django-environ>=0.4.5, <0.5
 
 # Forms
-django-crispy-forms>=1.11.1, <1.12
+django-crispy-forms>=1.11.2, <1.12
 
 # Models
 django-model-utils>=4.1.1, <4.2
@@ -29,7 +29,7 @@ pytz>=2021.1
 django-iconify==0.1.0.post1
 
 # Online documentation via django-docs.
-Sphinx>=3.5.1, <3.6
+Sphinx>=4.0.2, <4.1
 django-docs>=0.3.1, <0.4
 sphinx-rtd-theme>=0.5.1, <0.6
 
@@ -44,10 +44,10 @@ versioneer>=0.19
 -e git+https://github.com/mikkonie/django-plugins.git@42e86e7904e5c09f1da32173862b26843eda5dd8#egg=django-plugins
 
 # Rules for permissions
-rules>=2.2, <2.3
+rules>=3.0, <3.1
 
 # REST framework
-djangorestframework>=3.12.2, <3.13
+djangorestframework>=3.12.4, <3.13
 
 # Keyed list addon for DRF
 -e git+https://github.com/mikkonie/drf-keyed-list.git@b03607b866c5706b0e1ea46a7eeaab6527030734#egg=drf-keyed-list
@@ -65,7 +65,7 @@ mistune>=0.8.4, <0.9
 django-db-file-storage==0.5.5
 
 # Backround Jobs requirements
-celery>=5.0.5, <5.1
+celery>=5.1.0, <5.2
 
 # Django autocomplete light (DAL)
 django-autocomplete-light>=3.8.2, <3.9

@@ -937,7 +937,7 @@ class TestRoleAssignmentOwnerTransferView(TestTaskflowBase):
 
 @skipIf(not TASKFLOW_ENABLED, TASKFLOW_SKIP_MSG)
 class TestRoleAssignmentDeleteView(TestTaskflowBase):
-    """Tests for RoleAssignment delete view """
+    """Tests for RoleAssignment delete view"""
 
     def setUp(self):
         super().setUp()

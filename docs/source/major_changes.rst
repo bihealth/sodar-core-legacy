@@ -13,7 +13,22 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.10.2 (WIP)
 *************
 
-TODO
+Release Highlights
+==================
+
+This is a maintenance and bug fix release. For details see the
+:ref:`full changelog<changelog>`.
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.4.
+
+Third party Python package requirements have been upgraded. See the
+``requirements`` directory for up-to-date package versions.
 
 
 v0.10.1 (2021-05-06)

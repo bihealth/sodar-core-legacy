@@ -197,61 +197,61 @@ class BaseTestCase(StatusCodeAssertionMixin):
         self.assertEqual(response.status_code, status_code, msg)
 
     def response_200(self, response=None, msg=None):
-        """ Given response has status_code 200 """
+        """Given response has status_code 200"""
         self._assert_response_code(200, response, msg)
 
     def response_201(self, response=None, msg=None):
-        """ Given response has status_code 201 """
+        """Given response has status_code 201"""
         self._assert_response_code(201, response, msg)
 
     def response_204(self, response=None, msg=None):
-        """ Given response has status_code 204 """
+        """Given response has status_code 204"""
         self._assert_response_code(204, response, msg)
 
     def response_301(self, response=None, msg=None):
-        """ Given response has status_code 301 """
+        """Given response has status_code 301"""
         self._assert_response_code(301, response, msg)
 
     def response_302(self, response=None, msg=None):
-        """ Given response has status_code 302 """
+        """Given response has status_code 302"""
         self._assert_response_code(302, response, msg)
 
     def response_400(self, response=None, msg=None):
-        """ Given response has status_code 400 """
+        """Given response has status_code 400"""
         self._assert_response_code(400, response, msg)
 
     def response_401(self, response=None, msg=None):
-        """ Given response has status_code 401 """
+        """Given response has status_code 401"""
         self._assert_response_code(401, response, msg)
 
     def response_403(self, response=None, msg=None):
-        """ Given response has status_code 403 """
+        """Given response has status_code 403"""
         self._assert_response_code(403, response, msg)
 
     def response_404(self, response=None, msg=None):
-        """ Given response has status_code 404 """
+        """Given response has status_code 404"""
         self._assert_response_code(404, response, msg)
 
     def response_405(self, response=None, msg=None):
-        """ Given response has status_code 405 """
+        """Given response has status_code 405"""
         self._assert_response_code(405, response, msg)
 
     def response_409(self, response=None, msg=None):
-        """ Given response has status_code 409 """
+        """Given response has status_code 409"""
         self._assert_response_code(409, response, msg)
 
     def response_410(self, response=None, msg=None):
-        """ Given response has status_code 410 """
+        """Given response has status_code 410"""
         self._assert_response_code(410, response, msg)
 
     def get_check_200(self, url, *args, **kwargs):
-        """ Test that we can GET a page and it returns a 200 """
+        """Test that we can GET a page and it returns a 200"""
         response = self.get(url, *args, **kwargs)
         self.response_200(response)
         return response
 
     def assertLoginRequired(self, url, *args, **kwargs):
-        """ Ensure login is required to GET this URL """
+        """Ensure login is required to GET this URL"""
         response = self.get(url, *args, **kwargs)
         reversed_url = reverse(url, args=args, kwargs=kwargs)
         login_url = str(resolve_url(settings.LOGIN_URL))
@@ -259,11 +259,11 @@ class BaseTestCase(StatusCodeAssertionMixin):
         self.assertRedirects(response, expected_url)
 
     def login(self, *args, **credentials):
-        """ Login a user """
+        """Login a user"""
         return login(self, *args, **credentials)
 
     def reverse(self, name, *args, **kwargs):
-        """ Reverse a url, convenience to avoid having to import reverse in tests """
+        """Reverse a url, convenience to avoid having to import reverse in tests"""
         return reverse(name, args=args, kwargs=kwargs)
 
     @classmethod
@@ -351,14 +351,14 @@ class BaseTestCase(StatusCodeAssertionMixin):
             raise NoPreviousResponse("There isn't a previous response to query")
 
     def assertResponseContains(self, text, response=None, html=True, **kwargs):
-        """ Convenience wrapper for assertContains """
+        """Convenience wrapper for assertContains"""
         response = self._which_response(response)
         self.assertContains(response, text, html=html, **kwargs)
 
     def assertResponseNotContains(
         self, text, response=None, html=True, **kwargs
     ):
-        """ Convenience wrapper for assertNotContains """
+        """Convenience wrapper for assertNotContains"""
         response = self._which_response(response)
         self.assertNotContains(response, text, html=html, **kwargs)
 
@@ -523,13 +523,13 @@ class CBVTestCase(TestCase):
             signals.template_rendered.disconnect(dispatch_uid=signal_uid)
 
     def get_check_200(self, url, *args, **kwargs):
-        """ Test that we can GET a page and it returns a 200 """
+        """Test that we can GET a page and it returns a 200"""
         response = super(CBVTestCase, self).get(url, *args, **kwargs)
         self.response_200(response)
         return response
 
     def assertLoginRequired(self, url, *args, **kwargs):
-        """ Ensure login is required to GET this URL """
+        """Ensure login is required to GET this URL"""
         response = super(CBVTestCase, self).get(url, *args, **kwargs)
         reversed_url = reverse(url, args=args, kwargs=kwargs)
         login_url = str(resolve_url(settings.LOGIN_URL))
