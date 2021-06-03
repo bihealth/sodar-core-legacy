@@ -26,7 +26,7 @@ app. Note that overwriting of files is not currently allowed.
 
 .. figure:: _static/app_filesfolders/sodar_filesfolders.png
     :align: center
-    :scale: 50%
+    :figwidth: 100%
 
     Filesfolders main view
 

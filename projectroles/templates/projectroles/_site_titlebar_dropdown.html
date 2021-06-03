@@ -54,7 +54,11 @@
   <a class="nav-link sodar-nav-link-last dropdown-toggle"
      id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
-    <i class="iconify" data-icon="mdi:user"></i>
+    {% if request.user.is_authenticated %}
+      <i class="iconify" data-icon="mdi:user"></i>
+    {% else %}
+      <i class="iconify" data-icon="mdi:incognito"></i>
+    {% endif %}
   </a>
   <div class="dropdown-menu dropdown-menu-right sodar-navbar-user-dropdown">
     <div class="dropdown-header" id="sodar-navbar-user-legend">

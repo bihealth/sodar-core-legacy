@@ -89,13 +89,13 @@ URLs to more.
     $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     $ bash Miniconda3-latest-Linux-x86_64.sh -b -p ~/miniconda3
     $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.7
+    $ conda install -y python=3.8
 
     # Mac
     $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
     $ bash Miniconda3-latest-MacOSX-x86_64.sh -b -p ~/miniconda3
     $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.7
+    $ conda install -y python=3.8
 
 For activating the conda installation, use ``source ~/miniconda3/bin/activate``.
 
@@ -109,7 +109,7 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install django-sodar-core==0.10.1
+    $ pip install django-sodar-core==0.10.2
 
 
 Download Example Site
@@ -216,11 +216,11 @@ Now, start the server, and you can then visit http://127.0.0.1:8000/login/?next=
 
 You should see the following:
 
-.. figure:: _static/figures/impatient_login_screen.png
+.. figure:: _static/for_the_impatient/login_screen.png
 
 Now, login with your superuser and you should see the following:
 
-.. figure:: _static/figures/impatient_project_list.png
+.. figure:: _static/for_the_impatient/project_list.png
 
 Click the little user icon on the top right to access the django admin (here is
 where you can create more users, for example) but also the preconfigured
@@ -242,7 +242,7 @@ category first (collections of projects). Use the "create category" button on
 the left to create a "example category" first, then create an "example project"
 within. The project details view should look as follows.
 
-.. figure:: _static/figures/impatient_project_home.png
+.. figure:: _static/for_the_impatient/project_details.png
 
 Note that the site search already works, so typing "example" into the text field
 on the top and clicking "search" will return your example project. The project
@@ -266,7 +266,7 @@ Go ahead and try out the filesfolders app by clicking the "small files" icon on
 the left. After creating folders and uploading a few files, you will see a trace
 of actions in the timeline app:
 
-.. figure:: _static/figures/impatient_timeline.png
+.. figure:: _static/for_the_impatient/timeline.png
 
 .. note::
 

@@ -487,34 +487,35 @@ class ProjectListContextMixin:
         """
         i = 0
         cols = []
-
         for app_plugin in [
             ap
             for ap in get_active_plugins(plugin_type='project_app')
             if ap.project_list_columns
         ]:
+            # HACK for filesfolders columns (see issues #737 and #738)
+            if app_plugin.name == 'filesfolders' and not getattr(
+                settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False
+            ):
+                continue
             for k, v in app_plugin.project_list_columns.items():
                 v['app_plugin'] = app_plugin
                 v['key'] = k
                 v['ordering'] = v.get('ordering') or i
                 v['data'] = {}
-
                 for p in [
                     p for p in project_list if p.type == PROJECT_TYPE_PROJECT
                 ]:
                     try:
-                        v['data'][
-                            str(p.sodar_uuid)
-                        ] = app_plugin.get_project_list_value(
+                        val = app_plugin.get_project_list_value(
                             k, p, self.request.user
                         )
-
+                        v['data'][str(p.sodar_uuid)] = (
+                            val if val is not None else ''
+                        )
                     except Exception:
-                        pass  # TODO: Logging
-
+                        v['data'][str(p.sodar_uuid)] = ''
                 cols.append(v)
                 i += 1
-
         return sorted(cols, key=lambda x: x['ordering'])
 
     def get_context_data(self, *args, **kwargs):

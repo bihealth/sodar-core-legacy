@@ -7,6 +7,38 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.2 (2021-06-03)
+====================
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Chromedriver v90 (#731)
+    - Rename example site adminalerts URL include (#730)
+    - Update documentation screenshots (#734)
+    - Reorganize static files in documentation (#734)
+    - Rename example ``django-db-file-storage`` URL pattern (#732)
+    - Upgrade minimum Django version to v3.2.4 (#727)
+    - Upgrade Python dependencies (#727)
+    - Reformat with Black v21.5b2
+- **Projectroles**
+    - Display anonymous icon in titlebar dropdown if not logged in (#726)
+
+Fixed
+-----
+
+- **General**
+    - Figure aspect ratios in documentation (#735)
+- **Projectroles**
+    - Unhandled exceptions and missing data in project list extra columns (#733)
+    - Project star icon alignment (#736)
+    - Project list layout broken by ``FILESFOLDERS_SHOW_LIST_COLUMNS`` setting (#737)
+    - Public guest access role not displayed in project list (#739)
+- **Timeline**
+    - Crash in ``add_event()`` if called with ``AnonymousUser`` (#740)
+
+
 v0.10.1 (2021-05-06)
 ====================
 

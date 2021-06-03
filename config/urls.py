@@ -39,11 +39,11 @@ urlpatterns = [
     # Filesfolders URLs
     url(r'^files/', include('filesfolders.urls')),
     # django-db-file-storage URLs (obfuscated for users)
-    url(r'^naFieng1Lai8heg2/', include('db_file_storage.urls')),
+    url(r'^DJANGO-DB-FILE-STORAGE-CHANGE-ME/', include('db_file_storage.urls')),
     # User Profile URLs
     url(r'^user/', include('userprofile.urls')),
     # Admin Alerts URLs
-    url(r'^alerts/admin/', include('adminalerts.urls')),
+    url(r'^alerts/adm/', include('adminalerts.urls')),
     # App Alerts URLs
     url(r'^alerts/app/', include('appalerts.urls')),
     # Site Info URLs

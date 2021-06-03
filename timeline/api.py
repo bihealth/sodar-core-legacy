@@ -130,6 +130,10 @@ class TimelineAPI:
                 )
             )
 
+        # Handle user in case called with AnonymousUser object
+        if user and user.is_anonymous:
+            user = None
+
         event = ProjectEvent()
         event.project = project
         event.app = app_name

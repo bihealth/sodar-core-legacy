@@ -109,7 +109,7 @@ from PyPI as follows.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.1
+    pip install django-sodar-core==0.10.2
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.
@@ -118,8 +118,8 @@ commit ID in GitHub. Note that these versions may not be stable.
 
     pip install -e git+https://github.com/bihealth/sodar-core.git@xxxxxxxxxxxxx#egg=django-sodar-core
 
-Please note that This package installs a collection Django apps to
-be used in a Django web site project. See
+Please note that This package installs a collection of Django apps to be used in
+a Django web site project. See
 `SODAR Core documentation <https://sodar-core.readthedocs.io/en/latest/?badge=latest>`_
 for detailed documentation on use, integration and development.
 
