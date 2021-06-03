@@ -64,7 +64,7 @@ app_settings = AppSettingAPI()
 class TestTemplateTagsBase(
     ProjectMixin, RoleAssignmentMixin, ProjectInviteMixin, TestCase
 ):
-    """Base class for testing project permissions"""
+    """Base class for testing template tags"""
 
     def setUp(self):
         # Init roles

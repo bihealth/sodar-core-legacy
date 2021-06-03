@@ -89,13 +89,13 @@ URLs to more.
     $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
     $ bash Miniconda3-latest-Linux-x86_64.sh -b -p ~/miniconda3
     $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.7
+    $ conda install -y python=3.8
 
     # Mac
     $ wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
     $ bash Miniconda3-latest-MacOSX-x86_64.sh -b -p ~/miniconda3
     $ source ~/miniconda3/bin/activate
-    $ conda install -y python=3.7
+    $ conda install -y python=3.8
 
 For activating the conda installation, use ``source ~/miniconda3/bin/activate``.
 
@@ -109,7 +109,7 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install django-sodar-core==0.10.1
+    $ pip install django-sodar-core==0.10.2
 
 
 Download Example Site

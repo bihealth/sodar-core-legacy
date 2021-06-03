@@ -17,7 +17,7 @@ the package is under active development and breaking changes are expected.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.1
+    pip install django-sodar-core==0.10.2
 
 Please note that the django-sodar-core package only installs
 :term:`Django apps<Django App>`, which you need to include in a
