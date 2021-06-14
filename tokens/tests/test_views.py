@@ -1,10 +1,11 @@
 """View tests for the tokens app"""
 
+
+from django.urls import reverse
+
 from knox.models import AuthToken
 
 from test_plus.test import TestCase
-
-from django.urls import reverse
 
 
 class TestUserTokenListView(TestCase):
@@ -13,7 +14,7 @@ class TestUserTokenListView(TestCase):
     def setUp(self):
         self.user = self.make_user()
 
-    def make_token(self):
+    def _make_token(self):
         self.tokens = [AuthToken.objects.create(self.user, None)]
 
     def test_list_empty(self):
@@ -21,15 +22,15 @@ class TestUserTokenListView(TestCase):
         with self.login(self.user):
             response = self.get('tokens:list')
         self.response_200(response)
-        self.assertEqual(len(response.context["object_list"]), 0)
+        self.assertEqual(len(response.context['object_list']), 0)
 
     def test_list_one(self):
         """Test that rendering the list view with one token works"""
-        self.make_token()
+        self._make_token()
         with self.login(self.user):
             response = self.get('tokens:list')
         self.response_200(response)
-        self.assertEqual(len(response.context["object_list"]), 1)
+        self.assertEqual(len(response.context['object_list']), 1)
 
 
 class TestUserTokenCreateView(TestCase):

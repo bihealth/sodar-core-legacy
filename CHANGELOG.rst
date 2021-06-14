@@ -7,6 +7,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Tokens**
+    - Expiry date incorrectly displayed in token list (#747)
+
+Removed
+-------
+
+- **Tokens**
+    - Unused ``admin`` and ``models`` modules
+
+
 v0.10.2 (2021-06-03)
 ====================
 

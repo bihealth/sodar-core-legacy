@@ -1,9 +1,9 @@
 """Permission tests for the tokens app"""
 
-from knox.models import AuthToken
-
 from django.test import override_settings
 from django.urls import reverse
+
+from knox.models import AuthToken
 
 # Projectroles dependency
 from projectroles.tests.test_permissions import TestPermissionBase
