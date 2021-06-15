@@ -19,6 +19,8 @@ Changed
 Fixed
 -----
 
+- **Timeline**
+    - Uncaught exceptions in ``get_event_description()`` (#749)
 - **Tokens**
     - Expiry date incorrectly displayed in token list (#747)
 

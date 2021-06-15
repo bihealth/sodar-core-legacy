@@ -180,8 +180,7 @@ class TimelineAPI:
         desc = event.description
         unknown_label = '(unknown)'
         refs = {}
-        ref_ids = re.findall("{'?(.*?)'?}", desc)
-
+        ref_ids = re.findall('{\'?(.*?)\'?}', desc)
         if len(ref_ids) == 0:
             return event.description
 
@@ -191,7 +190,6 @@ class TimelineAPI:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
                 refs[r] = app_plugin.get_extra_data_link(event.extra_data, r)
                 continue
-
             try:
                 ref_obj = ProjectEventObjectRef.objects.get(
                     event=event, label=r
@@ -245,14 +243,12 @@ class TimelineAPI:
             # Apps with plugins
             else:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
-
                 try:
                     link_data = app_plugin.get_object_link(
                         ref_obj.object_model, ref_obj.object_uuid
                     )
                 except Exception:
                     link_data = None
-
                 if link_data:
                     refs[r] = '<a href="{}" {}>{}</a> {}'.format(
                         link_data['url'],
@@ -270,7 +266,10 @@ class TimelineAPI:
                         ref_obj, history_link
                     )
 
-        return event.description.format(**refs)
+        try:
+            return event.description.format(**refs)
+        except Exception as ex:  # Dispaly exception instead of crashing
+            return '{}: {}'.format(ex.__class__.__name__, ex)
 
     @staticmethod
     def get_object_url(obj, project=None):
