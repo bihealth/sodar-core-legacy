@@ -1,4 +1,5 @@
 """Tests for views in the userprofile Django app"""
+
 from django.contrib import auth
 from django.test import RequestFactory
 from django.urls import reverse

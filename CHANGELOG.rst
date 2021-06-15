@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **Userprofile**
+    - Hide user update button for non-local users (#748)
+
 Fixed
 -----
 
