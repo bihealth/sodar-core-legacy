@@ -23,6 +23,7 @@ Fixed
     - Uncaught exceptions in ``get_event_description()`` (#749)
 - **Tokens**
     - Expiry date incorrectly displayed in token list (#747)
+    - Missing query set ordering in token list (#754)
 
 Removed
 -------

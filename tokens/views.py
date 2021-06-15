@@ -20,7 +20,7 @@ class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
 
     def get_queryset(self):
         """Only allow access to this user's query set."""
-        return AuthToken.objects.filter(user=self.request.user)
+        return AuthToken.objects.filter(user=self.request.user).order_by('-pk')
 
 
 class UserTokenCreateView(
