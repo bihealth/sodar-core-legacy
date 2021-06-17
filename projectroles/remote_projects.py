@@ -972,22 +972,25 @@ class RemoteProjectAPI:
     def _sync_app_setting(cls, a_uuid, a_data):
         """
         Create or update an AppSetting on a target site.
-        May rise exceptions which have to be caught.
+
+        :param a_uuid: App setting UUID
+        :param a_data: App setting data
         """
         ad = deepcopy(a_data)
         app_plugin = None
         project = None
         user = None
 
-        # Get related objects (will raise exceptions on failure)
+        # Get app plugin (skip the rest if not found on target server)
         if ad['app_plugin']:
             app_plugin = get_app_plugin(ad['app_plugin'])
             if not app_plugin:
-                raise ObjectDoesNotExist(
-                    'App plugin not found with name "{}"'.format(
-                        ad['app_plugin']
-                    )
+                logger.debug(
+                    'Skipping setting "{}": App plugin not found with name '
+                    '"{}"'.format(ad['name'], ad['app_plugin'])
                 )
+                return
+
         if ad['project_uuid']:
             project = Project.objects.get(sodar_uuid=ad['project_uuid'])
         if ad['user_uuid']:

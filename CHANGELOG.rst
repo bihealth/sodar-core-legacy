@@ -19,6 +19,8 @@ Changed
 Fixed
 -----
 
+- **Projectroles**
+    - Remote sync crash on target site if app not present (#757)
 - **Timeline**
     - Uncaught exceptions in ``get_event_description()`` (#749)
 - **Tokens**
