@@ -112,7 +112,7 @@ from PyPI as follows.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.2
+    pip install django-sodar-core==0.10.3
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.
