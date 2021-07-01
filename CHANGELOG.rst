@@ -13,6 +13,9 @@ Unreleased
 Changed
 -------
 
+- **General**
+    - Upgrade minimum Django version to v3.2.5 (#744)
+    - Upgrade Python dependencies (#744)
 - **Userprofile**
     - Hide user update button for non-local users (#748)
 
