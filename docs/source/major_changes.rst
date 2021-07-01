@@ -10,6 +10,29 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.3 (2021-07-01)
+********************
+
+Release Highlights
+==================
+
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.5.
+
+The following third party Python package requirements have been upgraded:
+
+- ``sphinx-rtd-theme>=0.5.2, <0.6`` (base)
+- ``black==21.6b0`` (test)
+
+
 v0.10.2 (2021-06-03)
 ********************
 

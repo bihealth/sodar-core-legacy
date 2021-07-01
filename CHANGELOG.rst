@@ -7,6 +7,36 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.3 (2021-07-01)
+====================
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.5 (#744)
+    - Upgrade Python dependencies (#744)
+- **Userprofile**
+    - Hide user update button for non-local users (#748)
+
+Fixed
+-----
+
+- **Projectroles**
+    - False errors from app settings sync if app not installed on target site (#757)
+- **Timeline**
+    - Uncaught exceptions in ``get_event_description()`` (#749)
+- **Tokens**
+    - Expiry date incorrectly displayed in token list (#747)
+    - Missing query set ordering in token list (#754)
+
+Removed
+-------
+
+- **Tokens**
+    - Unused ``admin`` and ``models`` modules
+
+
 v0.10.2 (2021-06-03)
 ====================
 

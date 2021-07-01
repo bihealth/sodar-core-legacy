@@ -18,13 +18,16 @@
     <div class="card-header">
       <h4>
         <i class="iconify" data-icon="mdi:account-details"></i> Details
-        <span class="sodar-header-input-group pull-right">
-        <a role="button"
-           class="btn btn-primary {% if not local_user %}disabled{% endif %}"
-           href="{% url 'projectroles:user_update' %}">
-          <i class="iconify" data-icon="mdi:lead-pencil"></i> Update User
-        </a>
-        </span>
+        {% if local_user %}
+          <span class="sodar-header-input-group pull-right">
+            <a role="button"
+               class="btn btn-primary"
+               id="sodar-user-update-btn"
+               href="{% url 'projectroles:user_update' %}">
+              <i class="iconify" data-icon="mdi:lead-pencil"></i> Update User
+            </a>
+          </span>
+        {% endif %}
       </h4>
     </div>
     <div class="card-body">

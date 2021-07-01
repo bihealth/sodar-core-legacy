@@ -408,7 +408,10 @@ Minimal example for a project app template:
 
       {# Page subtitle #}
       <div class="container-fluid sodar-subtitle-container">
-        <h3><i class="fa fa-rocket"></i> App and/or Page Title/h3>
+        <h3>
+          <i class="iconify" data-icon="mdi:rocket-launch"></i>
+          App and/or Page Title
+        </h3>
       </div>
 
       {# App content #}

@@ -2,7 +2,7 @@
 wheel==0.36.2
 
 # Django
-django>=3.2.4, <3.3
+django>=3.2.5, <3.3
 
 # Configuration
 django-environ>=0.4.5, <0.5
@@ -31,7 +31,7 @@ django-iconify==0.1.0.post1
 # Online documentation via django-docs.
 Sphinx>=4.0.2, <4.1
 django-docs>=0.3.1, <0.4
-sphinx-rtd-theme>=0.5.1, <0.6
+sphinx-rtd-theme>=0.5.2, <0.6
 
 # Versioning
 versioneer>=0.19

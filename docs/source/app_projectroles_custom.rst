@@ -87,7 +87,7 @@ documentation links or linking to external sites. Example:
     {# Example extra link #}
     <li class="nav-item">
       <a href="#" class="nav-link" id="site-extra-link-x" target="_blank">
-        <i class="fa fa-fw fa-question-circle"></i> Extra Link
+        <i class="iconify" data-icon="mdi:help-circle"></i> Extra Link
       </a>
     </li>
 

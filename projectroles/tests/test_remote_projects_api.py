@@ -1,4 +1,5 @@
-"""Test for the remote projects API in the projectroles app"""
+"""Tests for the remote projects API in the projectroles app"""
+
 from copy import deepcopy
 import uuid
 
@@ -29,6 +30,7 @@ from projectroles.tests.test_models import (
     SodarUserMixin,
     AppSettingMixin,
 )
+
 
 User = auth.get_user_model()
 
@@ -202,7 +204,6 @@ class TestGetTargetData(
             site=self.target_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
         )
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
@@ -225,7 +226,6 @@ class TestGetTargetData(
             'peer_sites': {},
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
     def test_read_info(self):
@@ -235,7 +235,6 @@ class TestGetTargetData(
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.peer_site,
@@ -275,7 +274,6 @@ class TestGetTargetData(
             },
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
     def test_read_info_nested(self):
@@ -286,7 +284,6 @@ class TestGetTargetData(
         self._make_assignment(sub_category, self.user_source, self.role_owner)
         self.project.parent = sub_category
         self.project.save()
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=self.target_site,
@@ -294,7 +291,6 @@ class TestGetTargetData(
         )
 
         sync_data = self.remote_api.get_target_data(self.target_site)
-        self.maxDiff = None  # DEBUG
 
         expected = {
             'users': {},
@@ -328,7 +324,6 @@ class TestGetTargetData(
             'peer_sites': {},
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
     def test_read_roles(self):
@@ -398,7 +393,6 @@ class TestGetTargetData(
             },
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
     def test_revoked(self):
@@ -457,25 +451,22 @@ class TestGetTargetData(
             'peer_sites': {},
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
     def test_no_access(self):
         """Test get data with no project access set in the source site"""
         sync_data = self.remote_api.get_target_data(self.target_site)
-
         expected = {
             'users': {},
             'projects': {},
             'peer_sites': {},
             'app_settings': {},
         }
-
         self.assertEqual(sync_data, expected)
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-class TestSyncSourceData(
+class TestSyncSourceDataBase(
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
@@ -484,7 +475,7 @@ class TestSyncSourceData(
     AppSettingMixin,
     TestCase,
 ):
-    """Tests for the sync_source_data() API function"""
+    """Base class for tests for the sync_source_data() API function"""
 
     def setUp(self):
         # Init users
@@ -590,9 +581,13 @@ class TestSyncSourceData(
             },
         }
 
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+class TestSyncSourceDataCreate(TestSyncSourceDataBase):
+    """Creation tests for the sync_source_data() API function"""
+
     def test_create(self):
         """Test sync with non-existing project data and READ_ROLE access"""
-
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
@@ -836,7 +831,6 @@ class TestSyncSourceData(
         peer_site_obj = RemoteSite.objects.get(
             sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
         )
-
         expected = {
             'name': PEER_SITE_NAME,
             'url': PEER_SITE_URL,
@@ -851,13 +845,11 @@ class TestSyncSourceData(
         self.assertEqual(peer_site_dict, expected)
 
         peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
-
         expected = {
             'site': peer_site_obj.pk,
             'project_uuid': project_obj.sodar_uuid,
             'project': project_obj.pk,
         }
-
         peer_project_dict = model_to_dict(peer_project_obj)
         peer_project_dict.pop('id')
         peer_project_dict.pop('sodar_uuid')
@@ -940,15 +932,13 @@ class TestSyncSourceData(
         ]['status'] = 'created'
         expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
         expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
-
         self.assertEqual(self.default_data, expected)
 
     def test_create_app_setting_local(self):
+        """Test creating a local app setting"""
         remote_data = self.default_data
-
         remote_data['app_settings'][PR_IP_RESTRICT_UUID]['local'] = True
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
-
         original_data = deepcopy(remote_data)
 
         self.remote_api.sync_source_data(self.source_site, remote_data)
@@ -966,12 +956,10 @@ class TestSyncSourceData(
         ]['status'] = 'created'
         expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
         expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
-
         self.assertEqual(remote_data, expected)
 
     def test_create_multiple(self):
         """Test sync with non-existing project data and multiple projects"""
-
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
@@ -980,11 +968,9 @@ class TestSyncSourceData(
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         remote_data = self.default_data
-
         new_project_uuid = str(uuid.uuid4())
         new_project_title = 'New Project Title'
         new_role_uuid = str(uuid.uuid4())
-
         remote_data['projects'][new_project_uuid] = {
             'title': new_project_title,
             'type': PROJECT_TYPE_PROJECT,
@@ -999,7 +985,6 @@ class TestSyncSourceData(
                 }
             },
         }
-
         original_data = deepcopy(remote_data)
 
         # Do sync
@@ -1013,7 +998,6 @@ class TestSyncSourceData(
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         new_user = User.objects.get(username=SOURCE_USER_USERNAME)
-
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         new_project_obj = Project.objects.get(sodar_uuid=new_project_uuid)
         expected = {
@@ -1058,12 +1042,10 @@ class TestSyncSourceData(
         ] = 'created'
         expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
         expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
-
         self.assertEqual(remote_data, expected)
 
     def test_create_local_owner(self):
         """Test sync with non-existing project data and a local owner"""
-
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
@@ -1072,7 +1054,6 @@ class TestSyncSourceData(
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
         remote_data = self.default_data
-
         remote_data['users'][SOURCE_USER_UUID]['username'] = 'source_admin'
         remote_data['projects'][SOURCE_CATEGORY_UUID]['roles'][
             SOURCE_CATEGORY_ROLE_UUID
@@ -1090,16 +1071,13 @@ class TestSyncSourceData(
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
-
         category_obj = Project.objects.get(sodar_uuid=SOURCE_CATEGORY_UUID)
         self.assertEqual(category_obj.get_owner().user, self.admin_user)
-
         project_obj = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
         self.assertEqual(project_obj.get_owner().user, self.admin_user)
 
     def test_create_category_conflict(self):
         """Test sync with conflict in local categories (should fail)"""
-
         # Set up local category
         self._make_project(
             title=SOURCE_CATEGORY_TITLE,
@@ -1127,11 +1105,210 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
 
-    def test_update(self):
-        """Test sync with existing project data and READ_ROLE access"""
+    def test_create_no_access(self):
+        """Test sync with no READ_ROLE access set"""
+        remote_data = self.default_data
+        remote_data['projects'][SOURCE_CATEGORY_UUID][
+            'level'
+        ] = REMOTE_LEVEL_READ_INFO
+        remote_data['projects'][SOURCE_PROJECT_UUID][
+            'level'
+        ] = REMOTE_LEVEL_READ_INFO
+        original_data = deepcopy(remote_data)
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status
+        self.assertEqual(Project.objects.all().count(), 0)
+        self.assertEqual(RoleAssignment.objects.all().count(), 0)
+        self.assertEqual(User.objects.all().count(), 1)
+        self.assertEqual(RemoteProject.objects.all().count(), 0)
+        self.assertEqual(RemoteSite.objects.all().count(), 1)
+        # Assert no changes between update_data and remote_data
+        self.assertEqual(original_data, remote_data)
+
+    def test_create_local_user(self):
+        """Test sync with a local non-owner user"""
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
+            'user': local_user_username,
+            'role': self.role_contributor.name,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should not be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_user_allow(self):
+        """Test sync with a local user with local users allowed"""
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        # Create the user on the target site
+        self.make_user(local_user_username)
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
+            'user': local_user_username,
+            'role': self.role_contributor.name,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 3)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_user_allow_unavailable(self):
+        """Test sync with a non-existent local user with local users allowed"""
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
+            'user': local_user_username,
+            'role': self.role_contributor.name,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should not be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_owner_allow(self):
+        """Test sync with a local owner with local users allowed"""
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        # Create the user on the target site
+        new_user = self.make_user(local_user_username)
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
+            role_uuid: {
+                'user': local_user_username,
+                'role': self.role_owner.name,
+            }
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 3)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+        # Assert owner role
+        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(new_project.get_owner().user, new_user)
+
+    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
+    def test_create_local_owner_allow_unavailable(self):
+        """Test sync with an unavailable local owner"""
+        local_user_username = 'localusername'
+        local_user_uuid = str(uuid.uuid4())
+        role_uuid = str(uuid.uuid4())
+        remote_data = self.default_data
+        # Create the user on the target site
+        remote_data['users'][local_user_uuid] = {
+            'sodar_uuid': local_user_uuid,
+            'username': local_user_username,
+            'name': SOURCE_USER_NAME,
+            'first_name': SOURCE_USER_FIRST_NAME,
+            'last_name': SOURCE_USER_LAST_NAME,
+            'email': SOURCE_USER_EMAIL,
+            'groups': ['system'],
+        }
+
+        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
+            role_uuid: {
+                'user': local_user_username,
+                'role': self.role_owner.name,
+            }
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Assert database status (the new user and role should be created)
+        self.assertEqual(Project.objects.all().count(), 2)
+        self.assertEqual(RoleAssignment.objects.all().count(), 2)
+        self.assertEqual(User.objects.all().count(), 2)
+        self.assertEqual(RemoteProject.objects.all().count(), 3)
+        self.assertEqual(RemoteSite.objects.all().count(), 2)
+        # Assert owner role
+        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
+        self.assertEqual(new_project.get_owner().user, self.admin_user)
+
+
+@override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
+    """Updating tests for the sync_source_data() API function"""
+
+    def setUp(self):
+        super().setUp()
 
         # Set up target category and project
-        category_obj = self._make_project(
+        self.category_obj = self._make_project(
             title='NewCategoryTitle',
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
@@ -1139,46 +1316,46 @@ class TestSyncSourceData(
             readme='New readme',
             sodar_uuid=SOURCE_CATEGORY_UUID,
         )
-        project_obj = self._make_project(
+        self.project_obj = self._make_project(
             title='NewProjectTitle',
             type=PROJECT_TYPE_PROJECT,
-            parent=category_obj,
+            parent=self.category_obj,
             description='New description',
             readme='New readme',
             sodar_uuid=SOURCE_PROJECT_UUID,
         )
 
         # Set up user and roles
-        target_user = self._make_sodar_user(
+        self.target_user = self._make_sodar_user(
             username=SOURCE_USER_USERNAME,
             name='NewFirstName NewLastName',
             first_name='NewFirstName',
             last_name='NewLastName',
             email='newemail@example.com',
         )
-        c_owner_obj = self._make_assignment(
-            category_obj, target_user, self.role_owner
+        self.c_owner_obj = self._make_assignment(
+            self.category_obj, self.target_user, self.role_owner
         )
-        p_owner_obj = self._make_assignment(
-            project_obj, target_user, self.role_owner
+        self.p_owner_obj = self._make_assignment(
+            self.project_obj, self.target_user, self.role_owner
         )
 
         # Set up RemoteProject objects
         self._make_remote_project(
-            project_uuid=category_obj.sodar_uuid,
-            project=category_obj,
+            project_uuid=self.category_obj.sodar_uuid,
+            project=self.category_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
         self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
+            project_uuid=self.project_obj.sodar_uuid,
+            project=self.project_obj,
             site=self.source_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
 
         # Set up Peer Objects
-        peer_site = RemoteSite.objects.create(
+        self.peer_site = RemoteSite.objects.create(
             **{
                 'name': PEER_SITE_NAME,
                 'url': PEER_SITE_URL,
@@ -1191,9 +1368,9 @@ class TestSyncSourceData(
         )
 
         self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=peer_site,
+            project_uuid=self.project_obj.sodar_uuid,
+            project=self.project_obj,
+            site=self.peer_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
         )
 
@@ -1203,10 +1380,9 @@ class TestSyncSourceData(
             name='ip_restrict',
             setting_type='BOOLEAN',
             value=False,
-            project=project_obj,
+            project=self.project_obj,
             sodar_uuid=PR_IP_RESTRICT_UUID,
         )
-
         # Init IP allowlist setting
         self._make_setting(
             app_name='projectroles',
@@ -1214,10 +1390,19 @@ class TestSyncSourceData(
             setting_type='JSON',
             value=None,
             value_json=[],
-            project=project_obj,
+            project=self.project_obj,
             sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
 
+        # Update default data
+        self.default_data['projects'][SOURCE_CATEGORY_UUID][
+            'status'
+        ] = 'updated'
+        self.default_data['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
+        self.default_data['users'][SOURCE_USER_UUID]['status'] = 'updated'
+
+    def test_update(self):
+        """Test sync with existing project data and READ_ROLE access"""
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1227,12 +1412,10 @@ class TestSyncSourceData(
         self.assertEqual(AppSetting.objects.count(), 2)
 
         remote_data = self.default_data
-
         # Add new user and contributor role to source project
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
         new_user_uuid = str(uuid.uuid4())
         new_role_uuid = str(uuid.uuid4())
-
         remote_data['users'][str(new_user_uuid)] = {
             'sodar_uuid': new_user_uuid,
             'username': new_user_username,
@@ -1247,17 +1430,13 @@ class TestSyncSourceData(
         }
 
         # Change Peer Site data
-
         remote_data['peer_sites'][PEER_SITE_UUID]['name'] = NEW_PEER_NAME
         remote_data['peer_sites'][PEER_SITE_UUID]['description'] = NEW_PEER_DESC
         remote_data['peer_sites'][PEER_SITE_UUID][
             'user_display'
         ] = NEW_PEER_USER_DISPLAY
-
         original_data = deepcopy(remote_data)
-
         # Change projectroles app settings
-
         remote_data['app_settings'][PR_IP_RESTRICT_UUID]['value'] = True
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
             '192.168.1.1'
@@ -1276,9 +1455,9 @@ class TestSyncSourceData(
 
         new_user = User.objects.get(username=new_user_username)
 
-        category_obj.refresh_from_db()
+        self.category_obj.refresh_from_db()
         expected = {
-            'id': category_obj.pk,
+            'id': self.category_obj.pk,
             'title': SOURCE_CATEGORY_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
             'description': SOURCE_PROJECT_DESCRIPTION,
@@ -1288,45 +1467,45 @@ class TestSyncSourceData(
             'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
-        model_dict = model_to_dict(category_obj)
+        model_dict = model_to_dict(self.category_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        c_owner_obj.refresh_from_db()
+        self.c_owner_obj.refresh_from_db()
         expected = {
-            'id': c_owner_obj.pk,
-            'project': category_obj.pk,
-            'user': target_user.pk,
+            'id': self.c_owner_obj.pk,
+            'project': self.category_obj.pk,
+            'user': self.target_user.pk,
             'role': self.role_owner.pk,
-            'sodar_uuid': c_owner_obj.sodar_uuid,
+            'sodar_uuid': self.c_owner_obj.sodar_uuid,
         }
-        self.assertEqual(model_to_dict(c_owner_obj), expected)
+        self.assertEqual(model_to_dict(self.c_owner_obj), expected)
 
-        project_obj.refresh_from_db()
+        self.project_obj.refresh_from_db()
         expected = {
-            'id': project_obj.pk,
+            'id': self.project_obj.pk,
             'title': SOURCE_PROJECT_TITLE,
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
-            'parent': category_obj.pk,
+            'parent': self.category_obj.pk,
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
-        model_dict = model_to_dict(project_obj)
+        model_dict = model_to_dict(self.project_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        p_owner_obj.refresh_from_db()
+        self.p_owner_obj.refresh_from_db()
         expected = {
-            'id': p_owner_obj.pk,
-            'project': project_obj.pk,
-            'user': target_user.pk,
+            'id': self.p_owner_obj.pk,
+            'project': self.project_obj.pk,
+            'user': self.target_user.pk,
             'role': self.role_owner.pk,
-            'sodar_uuid': p_owner_obj.sodar_uuid,
+            'sodar_uuid': self.p_owner_obj.sodar_uuid,
         }
-        self.assertEqual(model_to_dict(p_owner_obj), expected)
+        self.assertEqual(model_to_dict(self.p_owner_obj), expected)
 
         p_contrib_obj = RoleAssignment.objects.get(
             project__sodar_uuid=SOURCE_PROJECT_UUID,
@@ -1334,7 +1513,7 @@ class TestSyncSourceData(
         )
         expected = {
             'id': p_contrib_obj.pk,
-            'project': project_obj.pk,
+            'project': self.project_obj.pk,
             'user': new_user.pk,
             'role': self.role_contributor.pk,
             'sodar_uuid': p_contrib_obj.sodar_uuid,
@@ -1342,13 +1521,13 @@ class TestSyncSourceData(
         self.assertEqual(model_to_dict(p_contrib_obj), expected)
 
         remote_cat_obj = RemoteProject.objects.get(
-            site=self.source_site, project_uuid=category_obj.sodar_uuid
+            site=self.source_site, project_uuid=self.category_obj.sodar_uuid
         )
         expected = {
             'id': remote_cat_obj.pk,
             'site': self.source_site.pk,
-            'project_uuid': category_obj.sodar_uuid,
-            'project': category_obj.pk,
+            'project_uuid': self.category_obj.sodar_uuid,
+            'project': self.category_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_cat_obj.date_access,
             'sodar_uuid': remote_cat_obj.sodar_uuid,
@@ -1356,13 +1535,13 @@ class TestSyncSourceData(
         self.assertEqual(model_to_dict(remote_cat_obj), expected)
 
         remote_project_obj = RemoteProject.objects.get(
-            site=self.source_site, project_uuid=project_obj.sodar_uuid
+            site=self.source_site, project_uuid=self.project_obj.sodar_uuid
         )
         expected = {
             'id': remote_project_obj.pk,
             'site': self.source_site.pk,
-            'project_uuid': project_obj.sodar_uuid,
-            'project': project_obj.pk,
+            'project_uuid': self.project_obj.sodar_uuid,
+            'project': self.project_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_project_obj.date_access,
             'sodar_uuid': remote_project_obj.sodar_uuid,
@@ -1372,7 +1551,6 @@ class TestSyncSourceData(
         peer_site_obj = RemoteSite.objects.get(
             sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
         )
-
         expected = {
             'name': NEW_PEER_NAME,
             'url': PEER_SITE_URL,
@@ -1387,13 +1565,11 @@ class TestSyncSourceData(
         self.assertEqual(peer_site_dict, expected)
 
         peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
-
         expected = {
             'site': peer_site_obj.pk,
-            'project_uuid': project_obj.sodar_uuid,
-            'project': project_obj.pk,
+            'project_uuid': self.project_obj.sodar_uuid,
+            'project': self.project_obj.pk,
         }
-
         peer_project_dict = model_to_dict(peer_project_obj)
         peer_project_dict.pop('id')
         peer_project_dict.pop('sodar_uuid')
@@ -1407,14 +1583,13 @@ class TestSyncSourceData(
         app_setting_ip_allowlist_obj = AppSetting.objects.get(
             sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
-
         expected_ip_restrict = {
             'name': 'ip_restrict',
             'type': 'BOOLEAN',
             'value': '1',
             'value_json': {},
             'sodar_uuid': uuid.UUID(PR_IP_RESTRICT_UUID),
-            'project': project_obj.id,
+            'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
@@ -1425,7 +1600,7 @@ class TestSyncSourceData(
             'value': '',
             'value_json': ['192.168.1.1'],
             'sodar_uuid': uuid.UUID(PR_IP_ALLOWLIST_UUID),
-            'project': project_obj.id,
+            'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
@@ -1457,113 +1632,18 @@ class TestSyncSourceData(
         ]
         expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'updated'
         expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'updated'
-
         self.assertEqual(remote_data, expected)
 
     def test_update_app_setting_local(self):
-        # Set up target category and project
-        category_obj = self._make_project(
-            title='NewCategoryTitle',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None,
-            description='New description',
-            readme='New readme',
-            sodar_uuid=SOURCE_CATEGORY_UUID,
-        )
-        project_obj = self._make_project(
-            title='NewProjectTitle',
-            type=PROJECT_TYPE_PROJECT,
-            parent=category_obj,
-            description='New description',
-            readme='New readme',
-            sodar_uuid=SOURCE_PROJECT_UUID,
-        )
-
-        # Set up user and roles
-        target_user = self._make_sodar_user(
-            username=SOURCE_USER_USERNAME,
-            name='NewFirstName NewLastName',
-            first_name='NewFirstName',
-            last_name='NewLastName',
-            email='newemail@example.com',
-        )
-        self._make_assignment(category_obj, target_user, self.role_owner)
-        self._make_assignment(project_obj, target_user, self.role_owner)
-
-        # Set up RemoteProject objects
-        self._make_remote_project(
-            project_uuid=category_obj.sodar_uuid,
-            project=category_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-
-        # Set up Peer Objects
-        peer_site = RemoteSite.objects.create(
-            **{
-                'name': PEER_SITE_NAME,
-                'url': PEER_SITE_URL,
-                'mode': SITE_MODE_PEER,
-                'description': PEER_SITE_DESC,
-                'secret': None,
-                'sodar_uuid': PEER_SITE_UUID,
-                'user_display': PEER_SITE_USER_DISPLAY,
-            }
-        )
-
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=peer_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
-        )
-
-        # Init IP restrict setting
-        self._make_setting(
-            app_name='projectroles',
-            name='ip_restrict',
-            setting_type='BOOLEAN',
-            value=False,
-            project=project_obj,
-            sodar_uuid=PR_IP_RESTRICT_UUID,
-        )
-
-        # Init IP allowlist setting
-        self._make_setting(
-            app_name='projectroles',
-            name='ip_allowlist',
-            setting_type='JSON',
-            value=None,
-            value_json=[],
-            project=project_obj,
-            sodar_uuid=PR_IP_ALLOWLIST_UUID,
-        )
-
-        # Assert preconditions
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-        self.assertEqual(AppSetting.objects.count(), 2)
-
+        """Test update with a local app setting"""
         remote_data = self.default_data
-
         # Change projectroles app settings
-
         remote_data['app_settings'][PR_IP_RESTRICT_UUID]['local'] = True
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
         remote_data['app_settings'][PR_IP_RESTRICT_UUID]['value'] = True
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['value_json'] = [
             '192.168.1.1'
         ]
-
         original_data = deepcopy(remote_data)
 
         # Do sync
@@ -1575,14 +1655,13 @@ class TestSyncSourceData(
         app_setting_ip_allowlist_obj = AppSetting.objects.get(
             sodar_uuid=PR_IP_ALLOWLIST_UUID,
         )
-
         expected_ip_restrict = {
             'name': 'ip_restrict',
             'type': 'BOOLEAN',
             'value': '0',
             'value_json': {},
             'sodar_uuid': uuid.UUID(PR_IP_RESTRICT_UUID),
-            'project': project_obj.id,
+            'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
@@ -1593,7 +1672,7 @@ class TestSyncSourceData(
             'value': None,
             'value_json': [],
             'sodar_uuid': uuid.UUID(PR_IP_ALLOWLIST_UUID),
-            'project': project_obj.id,
+            'project': self.project_obj.id,
             'app_plugin': None,
             'user': None,
             'user_modifiable': True,
@@ -1615,38 +1694,36 @@ class TestSyncSourceData(
         expected['users'][SOURCE_USER_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'updated'
         expected['projects'][SOURCE_PROJECT_UUID]['status'] = 'updated'
-
         self.assertEqual(remote_data, expected)
+
+    def test_update_app_setting_no_app(self):
+        """Test update with app setting for app not present on target site"""
+        # Assert preconditions
+        self.assertEqual(AppSetting.objects.count(), 2)
+
+        remote_data = self.default_data
+        setting_uuid = str(uuid.uuid4())
+        setting_name = 'NOT_A_VALID_SETTING'
+        # Change projectroles app settings
+        remote_data['app_settings'][setting_uuid] = {
+            'name': setting_name,
+            'type': 'BOOLEAN',
+            'value': False,
+            'value_json': {},
+            'app_plugin': 'NOT_A_VALID_APP',
+            'project_uuid': SOURCE_PROJECT_UUID,
+            'user_uuid': None,
+            'local': False,
+        }
+
+        # Do sync
+        self.remote_api.sync_source_data(self.source_site, remote_data)
+
+        # Make sure setting was not set
+        self.assertIsNone(AppSetting.objects.filter(name=setting_name).first())
 
     def test_update_revoke(self):
         """Test sync with existing project data and REVOKED access"""
-
-        # Set up target category and project
-        category_obj = self._make_project(
-            title='NewCategoryTitle',
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None,
-            description='New description',
-            readme='New readme',
-            sodar_uuid=SOURCE_CATEGORY_UUID,
-        )
-        project_obj = self._make_project(
-            title='NewProjectTitle',
-            type=PROJECT_TYPE_PROJECT,
-            parent=category_obj,
-            description='New description',
-            readme='New readme',
-            sodar_uuid=SOURCE_PROJECT_UUID,
-        )
-
-        # Set up users and roles
-        target_user = self._make_sodar_user(
-            username=SOURCE_USER_USERNAME,
-            name='NewFirstName NewLastName',
-            first_name='NewFirstName',
-            last_name='NewLastName',
-            email='newemail@example.com',
-        )
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
         target_user2 = self._make_sodar_user(
             username=new_user_username,
@@ -1655,42 +1732,8 @@ class TestSyncSourceData(
             last_name='OtherName',
             email='othername@example.com',
         )
-        self._make_assignment(category_obj, target_user, self.role_owner)
-        self._make_assignment(project_obj, target_user, self.role_owner)
-        self._make_assignment(project_obj, target_user2, self.role_contributor)
-
-        # Set up RemoteProject objects
-        self._make_remote_project(
-            project_uuid=category_obj.sodar_uuid,
-            project=category_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-
-        # Set up Peer Objects
-        peer_site = RemoteSite.objects.create(
-            **{
-                'name': PEER_SITE_NAME,
-                'url': PEER_SITE_URL,
-                'mode': SITE_MODE_PEER,
-                'description': PEER_SITE_DESC,
-                'secret': None,
-                'sodar_uuid': PEER_SITE_UUID,
-                'user_display': PEER_SITE_USER_DISPLAY,
-            }
-        )
-
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=peer_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
+        self._make_assignment(
+            self.project_obj, target_user2, self.role_contributor
         )
 
         # Assert preconditions
@@ -1701,7 +1744,6 @@ class TestSyncSourceData(
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
         remote_data = self.default_data
-
         # Revoke access to project
         remote_data['projects'][SOURCE_PROJECT_UUID][
             'level'
@@ -1737,73 +1779,11 @@ class TestSyncSourceData(
 
     def test_delete_role(self):
         """Test sync with existing project data and a removed role"""
-
-        # Set up target category and project
-        category_obj = self._make_project(
-            title=SOURCE_CATEGORY_TITLE,
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None,
-            description=SOURCE_PROJECT_DESCRIPTION,
-            readme=SOURCE_PROJECT_README,
-            sodar_uuid=SOURCE_CATEGORY_UUID,
-        )
-        project_obj = self._make_project(
-            title=SOURCE_PROJECT_TITLE,
-            type=PROJECT_TYPE_PROJECT,
-            parent=category_obj,
-            description=SOURCE_PROJECT_DESCRIPTION,
-            readme=SOURCE_PROJECT_README,
-            sodar_uuid=SOURCE_PROJECT_UUID,
-        )
-
-        # Set up user and roles
-        target_user = self._make_sodar_user(
-            username=SOURCE_USER_USERNAME,
-            name=SOURCE_USER_NAME,
-            first_name=SOURCE_USER_FIRST_NAME,
-            last_name=SOURCE_USER_LAST_NAME,
-            email=SOURCE_USER_EMAIL,
-        )
-        self._make_assignment(category_obj, target_user, self.role_owner)
-        self._make_assignment(project_obj, target_user, self.role_owner)
-
-        # Set up RemoteProject objects
-        self._make_remote_project(
-            project_uuid=category_obj.sodar_uuid,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-
-        # Set up Peer Objects
-        peer_site = RemoteSite.objects.create(
-            **{
-                'name': PEER_SITE_NAME,
-                'url': PEER_SITE_URL,
-                'mode': SITE_MODE_PEER,
-                'description': PEER_SITE_DESC,
-                'secret': None,
-                'sodar_uuid': PEER_SITE_UUID,
-                'user_display': PEER_SITE_USER_DISPLAY,
-            }
-        )
-
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=peer_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
-        )
-
         # Add new user and contributor role in target site
         new_user_username = 'newuser@' + SOURCE_USER_DOMAIN
         new_user = self.make_user(new_user_username)
         new_role_obj = self._make_assignment(
-            project_obj, new_user, self.role_contributor
+            self.project_obj, new_user, self.role_contributor
         )
         new_role_uuid = str(new_role_obj.sodar_uuid)
 
@@ -1840,102 +1820,12 @@ class TestSyncSourceData(
             'role': PROJECT_ROLE_CONTRIBUTOR,
             'status': 'deleted',
         }
-        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'created'
-        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'created'
-
+        expected['app_settings'][PR_IP_RESTRICT_UUID]['status'] = 'updated'
+        expected['app_settings'][PR_IP_ALLOWLIST_UUID]['status'] = 'updated'
         self.assertEqual(remote_data, expected)
 
     def test_update_no_changes(self):
         """Test sync with existing project data and no changes"""
-
-        # Set up target category and project
-        category_obj = self._make_project(
-            title=SOURCE_CATEGORY_TITLE,
-            type=PROJECT_TYPE_CATEGORY,
-            parent=None,
-            description=SOURCE_PROJECT_DESCRIPTION,
-            readme=SOURCE_PROJECT_README,
-            sodar_uuid=SOURCE_CATEGORY_UUID,
-        )
-        project_obj = self._make_project(
-            title=SOURCE_PROJECT_TITLE,
-            type=PROJECT_TYPE_PROJECT,
-            parent=category_obj,
-            description=SOURCE_PROJECT_DESCRIPTION,
-            readme=SOURCE_PROJECT_README,
-            sodar_uuid=SOURCE_PROJECT_UUID,
-        )
-
-        # Set up user and roles
-        target_user = self._make_sodar_user(
-            username=SOURCE_USER_USERNAME,
-            name=SOURCE_USER_NAME,
-            first_name=SOURCE_USER_FIRST_NAME,
-            last_name=SOURCE_USER_LAST_NAME,
-            email=SOURCE_USER_EMAIL,
-        )
-        c_owner_obj = self._make_assignment(
-            category_obj, target_user, self.role_owner
-        )
-        p_owner_obj = self._make_assignment(
-            project_obj, target_user, self.role_owner
-        )
-
-        # Set up RemoteProject objects
-        self._make_remote_project(
-            project_uuid=category_obj.sodar_uuid,
-            project=category_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=self.source_site,
-            level=REMOTE_LEVEL_READ_ROLES,
-        )
-
-        # Init IP restrict setting
-        self._make_setting(
-            app_name='projectroles',
-            name='ip_restrict',
-            setting_type='BOOLEAN',
-            value=False,
-            project=project_obj,
-            sodar_uuid=PR_IP_RESTRICT_UUID,
-        )
-
-        # Init IP allowlist setting
-        self._make_setting(
-            app_name='projectroles',
-            name='ip_allowlist',
-            setting_type='JSON',
-            value=None,
-            value_json=[],
-            project=project_obj,
-            sodar_uuid=PR_IP_ALLOWLIST_UUID,
-        )
-
-        # Set up Peer Objects
-        peer_site = RemoteSite.objects.create(
-            **{
-                'name': PEER_SITE_NAME,
-                'url': PEER_SITE_URL,
-                'mode': SITE_MODE_PEER,
-                'description': PEER_SITE_DESC,
-                'secret': None,
-                'sodar_uuid': PEER_SITE_UUID,
-                'user_display': PEER_SITE_USER_DISPLAY,
-            }
-        )
-
-        self._make_remote_project(
-            project_uuid=project_obj.sodar_uuid,
-            project=project_obj,
-            site=peer_site,
-            level=SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
-        )
-
         # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
@@ -1956,9 +1846,9 @@ class TestSyncSourceData(
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
 
-        category_obj.refresh_from_db()
+        self.category_obj.refresh_from_db()
         expected = {
-            'id': category_obj.pk,
+            'id': self.category_obj.pk,
             'title': SOURCE_CATEGORY_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
             'description': SOURCE_PROJECT_DESCRIPTION,
@@ -1968,54 +1858,54 @@ class TestSyncSourceData(
             'full_title': SOURCE_CATEGORY_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
-        model_dict = model_to_dict(category_obj)
+        model_dict = model_to_dict(self.category_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        c_owner_obj.refresh_from_db()
+        self.c_owner_obj.refresh_from_db()
         expected = {
-            'id': c_owner_obj.pk,
-            'project': category_obj.pk,
-            'user': target_user.pk,
+            'id': self.c_owner_obj.pk,
+            'project': self.category_obj.pk,
+            'user': self.target_user.pk,
             'role': self.role_owner.pk,
-            'sodar_uuid': c_owner_obj.sodar_uuid,
+            'sodar_uuid': self.c_owner_obj.sodar_uuid,
         }
-        self.assertEqual(model_to_dict(c_owner_obj), expected)
+        self.assertEqual(model_to_dict(self.c_owner_obj), expected)
 
-        project_obj.refresh_from_db()
+        self.project_obj.refresh_from_db()
         expected = {
-            'id': project_obj.pk,
+            'id': self.project_obj.pk,
             'title': SOURCE_PROJECT_TITLE,
             'type': PROJECT_TYPE_PROJECT,
             'description': SOURCE_PROJECT_DESCRIPTION,
-            'parent': category_obj.pk,
+            'parent': self.category_obj.pk,
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
-        model_dict = model_to_dict(project_obj)
+        model_dict = model_to_dict(self.project_obj)
         model_dict.pop('readme', None)
         self.assertEqual(model_dict, expected)
 
-        p_owner_obj.refresh_from_db()
+        self.p_owner_obj.refresh_from_db()
         expected = {
-            'id': p_owner_obj.pk,
-            'project': project_obj.pk,
-            'user': target_user.pk,
+            'id': self.p_owner_obj.pk,
+            'project': self.project_obj.pk,
+            'user': self.target_user.pk,
             'role': self.role_owner.pk,
-            'sodar_uuid': p_owner_obj.sodar_uuid,
+            'sodar_uuid': self.p_owner_obj.sodar_uuid,
         }
-        self.assertEqual(model_to_dict(p_owner_obj), expected)
+        self.assertEqual(model_to_dict(self.p_owner_obj), expected)
 
         remote_cat_obj = RemoteProject.objects.get(
-            site=self.source_site, project_uuid=category_obj.sodar_uuid
+            site=self.source_site, project_uuid=self.category_obj.sodar_uuid
         )
         expected = {
             'id': remote_cat_obj.pk,
             'site': self.source_site.pk,
-            'project_uuid': category_obj.sodar_uuid,
-            'project': category_obj.pk,
+            'project_uuid': self.category_obj.sodar_uuid,
+            'project': self.category_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_cat_obj.date_access,
             'sodar_uuid': remote_cat_obj.sodar_uuid,
@@ -2023,13 +1913,13 @@ class TestSyncSourceData(
         self.assertEqual(model_to_dict(remote_cat_obj), expected)
 
         remote_project_obj = RemoteProject.objects.get(
-            site=self.source_site, project_uuid=project_obj.sodar_uuid
+            site=self.source_site, project_uuid=self.project_obj.sodar_uuid
         )
         expected = {
             'id': remote_project_obj.pk,
             'site': self.source_site.pk,
-            'project_uuid': project_obj.sodar_uuid,
-            'project': project_obj.pk,
+            'project_uuid': self.project_obj.sodar_uuid,
+            'project': self.project_obj.pk,
             'level': REMOTE_LEVEL_READ_ROLES,
             'date_access': remote_project_obj.date_access,
             'sodar_uuid': remote_project_obj.sodar_uuid,
@@ -2039,7 +1929,6 @@ class TestSyncSourceData(
         peer_site_obj = RemoteSite.objects.get(
             sodar_uuid=PEER_SITE_UUID, mode=SITE_MODE_PEER
         )
-
         expected = {
             'name': PEER_SITE_NAME,
             'url': PEER_SITE_URL,
@@ -2054,13 +1943,11 @@ class TestSyncSourceData(
         self.assertEqual(peer_site_dict, expected)
 
         peer_project_obj = RemoteProject.objects.get(site=peer_site_obj)
-
         expected = {
             'site': peer_site_obj.pk,
-            'project_uuid': project_obj.sodar_uuid,
-            'project': project_obj.pk,
+            'project_uuid': self.project_obj.sodar_uuid,
+            'project': self.project_obj.pk,
         }
-
         peer_project_dict = model_to_dict(peer_project_obj)
         peer_project_dict.pop('id')
         peer_project_dict.pop('sodar_uuid')
@@ -2075,221 +1962,3 @@ class TestSyncSourceData(
             'status'
         ] = 'updated'
         self.assertEqual(original_data, remote_data)
-
-    def test_create_no_access(self):
-        """Test sync with no READ_ROLE access set"""
-
-        remote_data = self.default_data
-
-        remote_data['projects'][SOURCE_CATEGORY_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
-        remote_data['projects'][SOURCE_PROJECT_UUID][
-            'level'
-        ] = REMOTE_LEVEL_READ_INFO
-
-        original_data = deepcopy(remote_data)
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status
-        self.assertEqual(Project.objects.all().count(), 0)
-        self.assertEqual(RoleAssignment.objects.all().count(), 0)
-        self.assertEqual(User.objects.all().count(), 1)
-        self.assertEqual(RemoteProject.objects.all().count(), 0)
-        self.assertEqual(RemoteSite.objects.all().count(), 1)
-
-        # Assert no changes between update_data and remote_data
-        self.assertEqual(original_data, remote_data)
-
-    def test_create_local_user(self):
-        """Test sync with a local non-owner user"""
-
-        local_user_username = 'localusername'
-        local_user_uuid = str(uuid.uuid4())
-        role_uuid = str(uuid.uuid4())
-        remote_data = self.default_data
-
-        remote_data['users'][local_user_uuid] = {
-            'sodar_uuid': local_user_uuid,
-            'username': local_user_username,
-            'name': SOURCE_USER_NAME,
-            'first_name': SOURCE_USER_FIRST_NAME,
-            'last_name': SOURCE_USER_LAST_NAME,
-            'email': SOURCE_USER_EMAIL,
-            'groups': ['system'],
-        }
-
-        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
-            'user': local_user_username,
-            'role': self.role_contributor.name,
-        }
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status (the new user and role should not be created)
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_create_local_user_allow(self):
-        """Test sync with a local user with local users allowed"""
-
-        local_user_username = 'localusername'
-        local_user_uuid = str(uuid.uuid4())
-        role_uuid = str(uuid.uuid4())
-        remote_data = self.default_data
-
-        # Create the user on the target site
-        self.make_user(local_user_username)
-
-        remote_data['users'][local_user_uuid] = {
-            'sodar_uuid': local_user_uuid,
-            'username': local_user_username,
-            'name': SOURCE_USER_NAME,
-            'first_name': SOURCE_USER_FIRST_NAME,
-            'last_name': SOURCE_USER_LAST_NAME,
-            'email': SOURCE_USER_EMAIL,
-            'groups': ['system'],
-        }
-
-        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
-            'user': local_user_username,
-            'role': self.role_contributor.name,
-        }
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status (the new user and role should be created)
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 3)
-        self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_create_local_user_allow_unavailable(self):
-        """Test sync with a non-existent local user with local users allowed"""
-
-        local_user_username = 'localusername'
-        local_user_uuid = str(uuid.uuid4())
-        role_uuid = str(uuid.uuid4())
-        remote_data = self.default_data
-
-        remote_data['users'][local_user_uuid] = {
-            'sodar_uuid': local_user_uuid,
-            'username': local_user_username,
-            'name': SOURCE_USER_NAME,
-            'first_name': SOURCE_USER_FIRST_NAME,
-            'last_name': SOURCE_USER_LAST_NAME,
-            'email': SOURCE_USER_EMAIL,
-            'groups': ['system'],
-        }
-
-        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'][role_uuid] = {
-            'user': local_user_username,
-            'role': self.role_contributor.name,
-        }
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status (the new user and role should not be created)
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_create_local_owner_allow(self):
-        """Test sync with a local owner with local users allowed"""
-
-        local_user_username = 'localusername'
-        local_user_uuid = str(uuid.uuid4())
-        role_uuid = str(uuid.uuid4())
-        remote_data = self.default_data
-
-        # Create the user on the target site
-        new_user = self.make_user(local_user_username)
-
-        remote_data['users'][local_user_uuid] = {
-            'sodar_uuid': local_user_uuid,
-            'username': local_user_username,
-            'name': SOURCE_USER_NAME,
-            'first_name': SOURCE_USER_FIRST_NAME,
-            'last_name': SOURCE_USER_LAST_NAME,
-            'email': SOURCE_USER_EMAIL,
-            'groups': ['system'],
-        }
-
-        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
-            role_uuid: {
-                'user': local_user_username,
-                'role': self.role_owner.name,
-            }
-        }
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status (the new user and role should be created)
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 3)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-        # Assert owner role
-        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
-        self.assertEqual(new_project.get_owner().user, new_user)
-
-    @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_create_local_owner_allow_unavailable(self):
-        """Test sync with an unavailable local owner"""
-
-        local_user_username = 'localusername'
-        local_user_uuid = str(uuid.uuid4())
-        role_uuid = str(uuid.uuid4())
-        remote_data = self.default_data
-
-        # Create the user on the target site
-        # new_user = self.make_user(local_user_username)
-
-        remote_data['users'][local_user_uuid] = {
-            'sodar_uuid': local_user_uuid,
-            'username': local_user_username,
-            'name': SOURCE_USER_NAME,
-            'first_name': SOURCE_USER_FIRST_NAME,
-            'last_name': SOURCE_USER_LAST_NAME,
-            'email': SOURCE_USER_EMAIL,
-            'groups': ['system'],
-        }
-
-        remote_data['projects'][SOURCE_PROJECT_UUID]['roles'] = {
-            role_uuid: {
-                'user': local_user_username,
-                'role': self.role_owner.name,
-            }
-        }
-
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
-
-        # Assert database status (the new user and role should be created)
-        self.assertEqual(Project.objects.all().count(), 2)
-        self.assertEqual(RoleAssignment.objects.all().count(), 2)
-        self.assertEqual(User.objects.all().count(), 2)
-        self.assertEqual(RemoteProject.objects.all().count(), 3)
-        self.assertEqual(RemoteSite.objects.all().count(), 2)
-
-        # Assert owner role
-        new_project = Project.objects.get(sodar_uuid=SOURCE_PROJECT_UUID)
-        self.assertEqual(new_project.get_owner().user, self.admin_user)

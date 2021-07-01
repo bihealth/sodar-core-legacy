@@ -7,18 +7,14 @@
 {% block projectroles %}
 
 <div class="container-fluid sodar-subtitle-container">
-  <h2>
-    Confirm Deletion of API Token &quot;{{ object.token_key }}&quot;
-  </h2>
+  <h2>Confirm Deletion of API Token &quot;{{ object.token_key }}&quot;</h2>
 </div>
 
 <div class="container-fluid sodar-page-container">
-
   <div class="alert alert-danger">
     Are sure you want to delete the token "{{ object.token_key }}"?
     This will remove access to all clients using this API token!
   </div>
-
   <form method="post">
     {% csrf_token %}
     <div class="btn-group pull-right">

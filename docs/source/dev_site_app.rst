@@ -147,7 +147,10 @@ actual app content within the ``projectroles`` block. Example:
     {% block projectroles %}
 
       <div class="container sodar-subtitle-container">
-        <h2><i class="fa fa-umbrella"></i> Example Site App</h2>
+        <h2>
+          <i class="iconify" data-icon="mdi:rocket-launch-outline"></i>
+          Example Site App
+        </h2>
       </div>
 
       <div class="container-fluid sodar-page-container">

@@ -10,6 +10,7 @@ from projectroles.plugins import get_app_plugin
 from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 
+timeline = TimelineAPI()
 register = template.Library()
 
 STATUS_STYLES = {
@@ -34,7 +35,6 @@ def get_timestamp(event):
 @register.simple_tag
 def get_event_description(event, request=None):
     """Return printable version of event description"""
-    timeline = TimelineAPI()
     return timeline.get_event_description(event, request)
 
 
