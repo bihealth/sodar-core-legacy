@@ -1,6 +1,9 @@
 SODAR Core
 ^^^^^^^^^^
 
+.. image:: https://badge.fury.io/py/django-sodar-core.svg
+    :target: https://badge.fury.io/py/django-sodar-core
+
 .. image:: https://github.com/bihealth/sodar-core/workflows/build/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 

@@ -205,12 +205,14 @@ Now, start the server, and you can then visit http://127.0.0.1:8000/login/?next=
 
 .. code-block:: bash
 
-    $ python manage.py runserver
+    $ make serve
+    python manage.py runserver --settings=config.settings.local
+    Watching for file changes with StatReloader
     Performing system checks...
 
     System check identified no issues (0 silenced).
-    February 03, 2020 - 10:00:53
-    Django version 1.11.25, using settings 'config.settings.local'
+    July 01, 2021 - 13:06:06
+    Django version 3.2.5, using settings 'config.settings.local'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 

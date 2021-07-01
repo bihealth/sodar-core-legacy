@@ -23,7 +23,7 @@ Fixed
 -----
 
 - **Projectroles**
-    - Remote sync crash on target site if app not present (#757)
+    - False errors from app settings sync if app not installed on target site (#757)
 - **Timeline**
     - Uncaught exceptions in ``get_event_description()`` (#749)
 - **Tokens**

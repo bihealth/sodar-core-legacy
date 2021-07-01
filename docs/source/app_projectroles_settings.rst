@@ -419,7 +419,7 @@ This part of the setup is **optional**.
             )
 
 
-SAML SSO Configuration (optional)
+SAML SSO Configuration (Optional)
 =================================
 
 Optional Single Sign-On (SSO) authorization via SAML is also available. To
@@ -437,20 +437,22 @@ in the client.
 .. figure:: _static/saml/keycloak_client_config.png
 
 To generate the ``metadata.xml`` file required for the client, go to the
-**Realm Settings** page and in the **General** tab, click ``SAML 2.0 Identity Provider Metadata``
-to download the xml data. Save it somewhere on the client, the preferred name is ``metadata.xml``.
+**Realm Settings** page and in the **General** tab, click
+``SAML 2.0 Identity Provider Metadata`` to download the xml data. Save it
+somewhere on the client, the preferred name is ``metadata.xml``.
 
 .. figure:: _static/saml/keycloak_metadata_download.png
 
-For the signing of the request send to the Keycloak server you will require a certificate and
-key provided by the Keycloak server and incorporated into the configuration of the client.
-Switch to the ``SAML Keys``. Make sure to select ``PKCS12`` as **Archive Format**.
+For the signing of the request send to the Keycloak server you will require a
+certificate and key provided by the Keycloak server and incorporated into the
+configuration of the client. Switch to the ``SAML Keys``. Make sure to select
+``PKCS12`` as **Archive Format**.
 
 .. figure:: _static/saml/keycloak_saml_key_download1.png
 .. figure:: _static/saml/keycloak_saml_key_download2.png
 
-Convert the archive on the commandline with the follow command and store them in some place
-on your client.
+Convert the archive on the commandline with the follow command and store them in
+some place on your client.
 
 .. code::
 
@@ -468,21 +470,22 @@ configuration:
     ENABLE_SAML = env.bool('ENABLE_SAML', False)
     SAML2_AUTH = {
         # Required setting
-        'SAML_CLIENT_SETTINGS': {  # Pysaml2 Saml client settings (https://pysaml2.readthedocs.io/en/latest/howto/config.html)
-            'entityid': env.str(
-                'SAML_CLIENT_ENTITY_ID', 'SODARcore'
-            ),  # The optional entity ID string to be passed in the 'Issuer' element of authn request, if required by the IDP.
+        # Pysaml2 Saml client settings
+        # See: https://pysaml2.readthedocs.io/en/latest/howto/config.html
+        'SAML_CLIENT_SETTINGS': {
+            # Optional entity ID string to be passed in the 'Issuer' element of
+            # authn request, if required by the IDP.
+            'entityid': env.str('SAML_CLIENT_ENTITY_ID', 'SODARcore'),
             'entitybaseurl': env.str(
                 'SAML_CLIENT_ENTITY_URL', 'https://localhost:8000'
             ),
+            # The auto(dynamic) metadata configuration URL of SAML2
             'metadata': {
                 'local': [
-                    env.str(
-                        'SAML_CLIENT_METADATA_FILE', 'metadata.xml'
-                    ),  # The auto(dynamic) metadata configuration URL of SAML2
+                    env.str('SAML_CLIENT_METADATA_FILE', 'metadata.xml'),
                 ],
             },
-            "service": {
+            'service': {
                 'sp': {
                     'idp': env.str(
                         'SAML_CLIENT_IPD',
@@ -504,7 +507,10 @@ configuration:
                 }
             ],
         },
-        'DEFAULT_NEXT_URL': '/',  # Custom target redirect URL after the user get logged in. Default to /admin if not set. This setting will be overwritten if you have parameter ?next= specificed in the login URL.
+        # Custom target redirect URL after the user get logged in.
+        # Defaults to /admin if not set. This setting will be overwritten if you
+        # have parameter ?next= specificed in the login URL.
+        'DEFAULT_NEXT_URL': '/',
         # # Optional settings below
         # 'NEW_USER_PROFILE': {
         #     'USER_GROUPS': [],  # The default group name when a new user logs in
@@ -512,19 +518,24 @@ configuration:
         #     'STAFF_STATUS': True,  # The staff status for new users
         #     'SUPERUSER_STATUS': False,  # The superuser status for new users
         # },
-        # 'ATTRIBUTES_MAP': {  # Change Email/UserName/FirstName/LastName to corresponding SAML2 userprofile attributes.
-        #     'email': 'Email',
-        #     'username': 'UserName',
-        #     'first_name': 'FirstName',
-        #     'last_name': 'LastName',
-        # },
+        # 'ATTRIBUTES_MAP': env.dict(
+        #     'SAML_ATTRIBUTES_MAP',
+        #     {
+        #         Change values to corresponding SAML2 userprofile attributes.
+        #         'email': 'Email',
+        #         'username': 'UserName',
+        #         'first_name': 'FirstName',
+        #         'last_name': 'LastName',
+        #     }
+        # ),
         # 'TRIGGER': {
         #     'FIND_USER': 'path.to.your.find.user.hook.method',
         #     'NEW_USER': 'path.to.your.new.user.hook.method',
         #     'CREATE_USER': 'path.to.your.create.user.hook.method',
         #     'BEFORE_LOGIN': 'path.to.your.login.hook.method',
         # },
-        # 'ASSERTION_URL': 'https://cubi5.bihealth.org:8000',  # Custom URL to validate incoming SAML requests against
+        # Custom URL to validate incoming SAML requests against
+        # 'ASSERTION_URL': 'https://your.url.here',
     }
 
 Add the following settings to your environment variables:
