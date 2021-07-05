@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **General**
+    - SAML attribute map example in config (#760)
+
+
 v0.10.3 (2021-07-01)
 ====================
 

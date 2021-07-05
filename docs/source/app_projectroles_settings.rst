@@ -520,7 +520,7 @@ configuration:
         # },
         # 'ATTRIBUTES_MAP': env.dict(
         #     'SAML_ATTRIBUTES_MAP',
-        #     {
+        #     default={
         #         Change values to corresponding SAML2 userprofile attributes.
         #         'email': 'Email',
         #         'username': 'UserName',
