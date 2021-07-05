@@ -15,6 +15,7 @@ Fixed
 
 - **General**
     - SAML attribute map example in config (#760)
+    - Docs layout broken by ``docutils>=0.17`` (#763)
 
 
 v0.10.3 (2021-07-01)
