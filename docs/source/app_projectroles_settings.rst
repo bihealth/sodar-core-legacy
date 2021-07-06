@@ -636,4 +636,8 @@ Logging (Optional)
 ==================
 
 It is recommended to add "projectroles" under ``LOGGING['loggers']``. For
-production, ``INFO`` debug level is recommended.
+production, ``ERROR`` debug level is recommended.
+
+The example site and SODAR Django Site template provide the ``LOGGING_APPS`` and
+``LOGGING_FILE_PATH`` helpers for easily adding SODAR Core apps to logging and
+providing a system path for optional log file writing.

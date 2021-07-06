@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - ``LOGGING_APPS`` and ``LOGGING_FILE_PATH`` settings in example site (#762)
+
 Fixed
 -----
 

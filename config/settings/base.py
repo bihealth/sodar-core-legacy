@@ -482,8 +482,40 @@ SAML2_AUTH = {
 # Logging
 # ------------------------------------------------------------------------------
 
+# List of apps to include in logging
+LOGGING_APPS = env.list(
+    'LOGGING_APPS',
+    default=[
+        'projectroles',
+        'sodarcache',
+        'taskflowbackend',
+    ],
+)
+
+# Path for file logging. If not set, will log only to console.
+LOGGING_FILE_PATH = env.str('LOGGING_FILE_PATH', None)
+
 
 def set_logging(debug):
+    app_logger_config = {
+        'level': 'DEBUG' if debug else 'ERROR',
+        'handlers': ['console', 'file'] if LOGGING_FILE_PATH else ['console'],
+        'propagate': True,
+    }
+    log_handlers = {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        }
+    }
+    if LOGGING_FILE_PATH:
+        log_handlers['file'] = {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': LOGGING_FILE_PATH,
+            'formatter': 'simple',
+        }
     return {
         'version': 1,
         'disable_existing_loggers': False,
@@ -492,30 +524,8 @@ def set_logging(debug):
                 'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
             }
         },
-        'handlers': {
-            'console': {
-                'level': 'DEBUG',
-                'class': 'logging.StreamHandler',
-                'formatter': 'simple',
-            }
-        },
-        'loggers': {
-            'projectroles': {
-                'level': 'DEBUG' if debug else 'INFO',
-                'handlers': ['console'],
-                'propagate': False,
-            },
-            'taskflowbackend': {
-                'level': 'DEBUG' if debug else 'INFO',
-                'handlers': ['console'],
-                'propagate': False,
-            },
-            'sodarcache': {
-                'level': 'DEBUG' if debug else 'INFO',
-                'handlers': ['console'],
-                'propagate': False,
-            },
-        },
+        'handlers': log_handlers,
+        'loggers': {a: app_logger_config for a in LOGGING_APPS},
     }
 
 
