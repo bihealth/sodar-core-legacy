@@ -16,6 +16,8 @@ Added
 - **General**
     - ``LOGGING_APPS`` and ``LOGGING_FILE_PATH`` settings in example site (#762)
     - Siteinfo app to logged apps in base config (#767)
+- **Siteinfo**
+    - ``ENABLED_BACKEND_PLUGINS`` in ``CORE_SETTINGS`` (#766)
 
 Fixed
 -----
