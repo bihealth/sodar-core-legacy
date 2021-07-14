@@ -15,6 +15,7 @@ Added
 
 - **General**
     - ``LOGGING_APPS`` and ``LOGGING_FILE_PATH`` settings in example site (#762)
+    - Siteinfo app to logged apps in base config (#767)
 
 Fixed
 -----
@@ -22,6 +23,8 @@ Fixed
 - **General**
     - SAML attribute map example in config (#760)
     - Docs layout broken by ``docutils>=0.17`` (#763)
+- **Siteinfo**
+    - Plugin settings not read if ``get_statistics()`` raises exception (#767)
 
 
 v0.10.3 (2021-07-01)

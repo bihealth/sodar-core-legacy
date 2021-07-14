@@ -487,6 +487,7 @@ LOGGING_APPS = env.list(
     'LOGGING_APPS',
     default=[
         'projectroles',
+        'siteinfo',
         'sodarcache',
         'taskflowbackend',
     ],
