@@ -19,6 +19,12 @@ Added
 - **Siteinfo**
     - ``ENABLED_BACKEND_PLUGINS`` in ``CORE_SETTINGS`` (#766)
 
+Changed
+-------
+
+- **General**
+    - Upgrade to Chromedriver v92 (#772)
+
 Fixed
 -----
 
