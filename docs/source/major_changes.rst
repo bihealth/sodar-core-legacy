@@ -13,7 +13,20 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.10.4 (WIP)
 *************
 
-TODO
+Release Highlights
+==================
+
+- Fix API views to return 404 status code if object is not found
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.6.
 
 
 v0.10.3 (2021-07-01)

@@ -32,6 +32,8 @@ Fixed
 - **General**
     - SAML attribute map example in config (#760)
     - Docs layout broken by ``docutils>=0.17`` (#763)
+- **Projectroles**
+    - HTTP 403 raised instead of 404 in API views if object not found (#774)
 - **Siteinfo**
     - Plugin settings not read if ``get_statistics()`` raises exception (#767)
 
