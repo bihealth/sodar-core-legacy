@@ -16,6 +16,7 @@ from django.contrib import auth
 from django.contrib import messages
 from django.contrib.auth.mixins import AccessMixin
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
 from django.utils import timezone
@@ -235,6 +236,9 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
     def has_permission(self):
         """Overrides for project permission access"""
         project = self.get_project()
+        if not project:
+            raise Http404
+
         # Override permissions for superuser, owner or delegate
         perm_override = (
             self.request.user.is_superuser
@@ -268,7 +272,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 return False
 
         # Disable project app access for categories unless specifically enabled
-        if project and project.type == PROJECT_TYPE_CATEGORY:
+        if project.type == PROJECT_TYPE_CATEGORY:
             request_url = resolve(self.request.get_full_path())
             if request_url.app_name != APP_NAME:
                 app_plugin = get_app_plugin(request_url.app_name)
@@ -277,7 +281,7 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
                 return False
 
         # Disable access for non-owner/delegate if remote project is revoked
-        if project and project.is_revoked() and not perm_override:
+        if project.is_revoked() and not perm_override:
             return False
 
         return super().has_permission()
@@ -1292,9 +1296,15 @@ class ProjectCreateView(
     form_class = ProjectForm
 
     def has_permission(self):
-        """Override has_permission() to ensure even superuser can't create
-        project under a remote category as target"""
-        if (
+        """
+        Override has_permission() to ensure even superuser can't create
+        project under a remote category as target
+        """
+        if not self.kwargs.get('project'):
+            if self.request.user.is_superuser:
+                return True  # Allow top level project creation for superuser
+            return False  # Disallow for other users
+        elif (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
             and self.kwargs.get('project')
         ):
@@ -1307,12 +1317,10 @@ class ProjectCreateView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         if 'project' in self.kwargs:
             context['parent'] = Project.objects.get(
                 sodar_uuid=self.kwargs['project']
             )
-
         return context
 
     def get_form_kwargs(self):

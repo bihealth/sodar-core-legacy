@@ -16,7 +16,8 @@ v0.10.4 (WIP)
 Release Highlights
 ==================
 
-- Fix API views to return 404 status code if object is not found
+- Fix API and UI views to return 404 status code if object is not found
+- Siteinfo app improvements
 - General bug fixes and minor updates
 - Upgraded dependencies
 
