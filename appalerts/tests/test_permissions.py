@@ -66,6 +66,7 @@ class TestAppAlertPermissions(AppAlertMixin, TestPermissionBase):
             'appalerts:ajax_dismiss', kwargs={'appalert': self.alert.sodar_uuid}
         )
         good_users = [self.regular_user]
-        bad_users = [self.superuser, self.no_alert_user, self.anonymous]
+        bad_users = [self.superuser, self.no_alert_user]
         self.assert_response(url, good_users, 200, method='POST')
-        self.assert_response(url, bad_users, 403, method='POST')
+        self.assert_response(url, bad_users, 404, method='POST')
+        self.assert_response(url, self.anonymous, 403, method='POST')

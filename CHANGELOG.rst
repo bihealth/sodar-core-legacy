@@ -16,6 +16,9 @@ Added
 - **General**
     - ``LOGGING_APPS`` and ``LOGGING_FILE_PATH`` settings in example site (#762)
     - Siteinfo app to logged apps in base config (#767)
+- **Appalerts**
+    - "Dismiss All" button in alert list (#770)
+    - Update list view with reload link on added alerts (#780)
 - **Siteinfo**
     - ``ENABLED_BACKEND_PLUGINS`` in ``CORE_SETTINGS`` (#766)
 
@@ -25,6 +28,8 @@ Changed
 - **General**
     - Upgrade to Chromedriver v92 (#772)
     - Upgrade minimum Django version to v3.2.6 (#773)
+- **Appalerts**
+    - Display no alerts element after clearing list (#779)
 
 Fixed
 -----
@@ -34,6 +39,7 @@ Fixed
     - Docs layout broken by ``docutils>=0.17`` (#763)
 - **Projectroles**
     - HTTP 403 raised instead of 404 in API and UI views if object not found (#774)
+    - Incorrect message on ownership transfer email notifications (#778)
 - **Siteinfo**
     - Plugin settings not read if ``get_statistics()`` raises exception (#767)
 

@@ -1969,7 +1969,7 @@ class RoleAssignmentOwnerTransferView(
         )
 
         if SEND_EMAIL:
-            success_msg += ' A notification email has been sent to both users.'
+            success_msg += ' notification(s) have been sent by email.'
 
         messages.success(self.request, success_msg)
         return redirect(redirect_url)

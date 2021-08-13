@@ -62,7 +62,6 @@ class TestAppAlertRedirectView(TestViewsBase):
     def test_redirect_superuser(self):
         """Test redirecting as superuser"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.superuser):
             response = self.client.get(
                 reverse(
@@ -71,14 +70,12 @@ class TestAppAlertRedirectView(TestViewsBase):
                 )
             )
             self.assertRedirects(response, self.list_url)
-
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
 
     def test_redirect_regular_user(self):
         """Test redirecting as user with assigned alert"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.regular_user):
             response = self.client.get(
                 reverse(
@@ -87,14 +84,12 @@ class TestAppAlertRedirectView(TestViewsBase):
                 )
             )
             self.assertRedirects(response, self.alert.url)
-
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, False)
 
     def test_redirect_no_alert_user(self):
         """Test redirecting as user without alerts"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.no_alert_user):
             response = self.client.get(
                 reverse(
@@ -103,7 +98,6 @@ class TestAppAlertRedirectView(TestViewsBase):
                 )
             )
             self.assertRedirects(response, self.list_url)
-
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
 
@@ -132,7 +126,6 @@ class TestAppAlertDismissAjaxView(TestViewsBase):
     def test_post_superuser(self):
         """Test post as superuser"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.superuser):
             response = self.client.post(
                 reverse(
@@ -140,15 +133,13 @@ class TestAppAlertDismissAjaxView(TestViewsBase):
                     kwargs={'appalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 403)
-
+            self.assertEqual(response.status_code, 404)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
 
     def test_post_regular_user(self):
         """Test post as user with assigned alert"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.regular_user):
             response = self.client.post(
                 reverse(
@@ -157,14 +148,12 @@ class TestAppAlertDismissAjaxView(TestViewsBase):
                 )
             )
             self.assertEqual(response.status_code, 200)
-
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, False)
 
     def test_post_no_alert_user(self):
         """Test post as user without alerts"""
         self.assertEqual(self.alert.active, True)
-
         with self.login(self.no_alert_user):
             response = self.client.post(
                 reverse(
@@ -172,7 +161,24 @@ class TestAppAlertDismissAjaxView(TestViewsBase):
                     kwargs={'appalert': self.alert.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.status_code, 404)
+        self.alert.refresh_from_db()
+        self.assertEqual(self.alert.active, True)
 
+    def test_post_regular_user_all(self):
+        """Test post as user dismissing all alerts"""
+        self.assertEqual(self.alert.active, True)
+        with self.login(self.regular_user):
+            response = self.client.post(reverse('appalerts:ajax_dismiss_all'))
+            self.assertEqual(response.status_code, 200)
+        self.alert.refresh_from_db()
+        self.assertEqual(self.alert.active, False)
+
+    def test_post_no_alert_user_all(self):
+        """Test post as user without alerts trying to dismiss all"""
+        self.assertEqual(self.alert.active, True)
+        with self.login(self.no_alert_user):
+            response = self.client.post(reverse('appalerts:ajax_dismiss_all'))
+            self.assertEqual(response.status_code, 404)
         self.alert.refresh_from_db()
         self.assertEqual(self.alert.active, True)
