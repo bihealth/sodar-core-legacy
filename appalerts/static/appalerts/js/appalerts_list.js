@@ -4,7 +4,7 @@ function updateEmptyAlertsElement () {
 
     if (emptyElem && emptyElem.is(':visible') && alertBadge.is(':visible')) {
         emptyElem.html(
-            '<a href="#" id="sodar-app-alert-reload"' +
+            '<a href="#" id="sodar-app-alert-reload" ' +
             'onclick="window.location.reload()">' +
             'Please reload this page to view new alerts.</a>');
     }
@@ -37,6 +37,7 @@ $(document).ready(function () {
           if (alertCountInt <= 0) {
               $(document).find('#sodar-app-alert-badge').fadeOut(250);
               $(document).find('#sodar-app-alert-empty').delay(300).fadeIn(250);
+              $(document).find('#sodar-app-alert-btn-dismiss-all').addClass('disabled');
           } else {
               alertCount.html(alertCountInt.toString());
               if (alertCountInt === 1) {
