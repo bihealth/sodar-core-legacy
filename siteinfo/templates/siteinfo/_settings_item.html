@@ -1,6 +1,8 @@
 <dt class="col-md-5 text-nowrap">{{ k }}</dt>
-{% if v.set %}
+{% if v.set and v.value != '' %}
   <dd class="col-md-7">{{ v.value }}</dd>
+{% elif v.set and v.value == '' %}
+  <dd class="col-md-7 text-muted">&lt;Empty value&gt;</dd>
 {% else %}
   <dd class="col-md-7 text-muted">N/A</dd>
 {% endif %}
