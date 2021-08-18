@@ -497,22 +497,24 @@ LOGGING_APPS = env.list(
 LOGGING_FILE_PATH = env.str('LOGGING_FILE_PATH', None)
 
 
-def set_logging(debug):
+def set_logging(debug, level=None):
+    if not level:
+        level = 'DEBUG' if debug else 'ERROR'
     app_logger_config = {
-        'level': 'DEBUG' if debug else 'ERROR',
+        'level': level,
         'handlers': ['console', 'file'] if LOGGING_FILE_PATH else ['console'],
         'propagate': True,
     }
     log_handlers = {
         'console': {
-            'level': 'DEBUG',
+            'level': level,
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
         }
     }
     if LOGGING_FILE_PATH:
         log_handlers['file'] = {
-            'level': 'DEBUG',
+            'level': level,
             'class': 'logging.FileHandler',
             'filename': LOGGING_FILE_PATH,
             'formatter': 'simple',

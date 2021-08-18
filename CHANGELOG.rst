@@ -37,6 +37,7 @@ Fixed
 - **General**
     - SAML attribute map example in config (#760)
     - Docs layout broken by ``docutils>=0.17`` (#763)
+    - Logging level not correctly set for all loggers (#771)
 - **Projectroles**
     - HTTP 403 raised instead of 404 in API and UI views if object not found (#774)
     - Incorrect message on ownership transfer email notifications (#778)
