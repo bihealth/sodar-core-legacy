@@ -291,7 +291,10 @@ class ProjectForm(SODARModelForm):
             categories = [
                 c
                 for c in categories
-                if c not in instance.get_children(flat=True)
+                if (
+                    c.parent != instance
+                    and c not in instance.get_children(flat=True)
+                )
             ]
 
         # FIX for #558: Ensure current parent is in choices
