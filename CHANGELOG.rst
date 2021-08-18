@@ -30,6 +30,8 @@ Changed
     - Upgrade minimum Django version to v3.2.6 (#773)
 - **Appalerts**
     - Display no alerts element after clearing list (#779)
+- **Siteinfo**
+    - UI improvements for empty and unset values
 
 Fixed
 -----
@@ -43,7 +45,7 @@ Fixed
     - Incorrect message on ownership transfer email notifications (#778)
 - **Siteinfo**
     - Plugin settings not read if ``get_statistics()`` raises exception (#767)
-    - App settings list layout broken by empty string values (#768)
+    - List layout broken by empty string values (#768)
 
 
 v0.10.3 (2021-07-01)

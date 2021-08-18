@@ -1,6 +1,7 @@
 {% extends 'projectroles/base.html' %}
 
 {% load projectroles_common_tags %}
+{% load siteinfo_tags %}
 
 {% block title %}Site Info{% endblock title %}
 
@@ -106,11 +107,11 @@
         <div class="card-body">
           <dl class="row">
             <dt class="col-md-3">Site Title</dt>
-            <dd class="col-md-9">{{ site_title }}</dd>
+            <dd class="{% get_info_cls site_title 'col-md-9' %}">{% get_info_val site_title %}</dd>
             <dt class="col-md-3">Site Subtitle</dt>
-            <dd class="col-md-9">{{ site_subtitle }}</dd>
+            <dd class="{% get_info_cls site_subtitle 'col-md-9' %}">{% get_info_val site_subtitle %}</dd>
             <dt class="col-md-3">Site Instance</dt>
-            <dd class="col-md-9">{{ site_instance_title }}</dd>
+            <dd class="{% get_info_cls site_instance_title 'col-md-9' %}">{% get_info_val site_instance_title %}</dd>
             <dt class="col-md-3">Site Version</dt>
             <dd class="col-md-9">{% site_version %}</dd>
             <dt class="col-md-3">SODAR Core Version</dt>
@@ -208,7 +209,12 @@
         <div class="card-body">
           <dl class="row">
             {% for k, v in settings_core.items %}
-              {% include 'siteinfo/_settings_item.html' %}
+              <dt class="col-md-5 text-nowrap">{{ k }}</dt>
+              {% if v.set %}
+                <dd class="{% get_info_cls v.value %}">{% get_info_val v.value %}</dd>
+              {% else %}
+                <dd class="col-md-7 text-muted">(Unset)</dd>
+              {% endif %}
             {% endfor %}
           </dl>
         </div>
