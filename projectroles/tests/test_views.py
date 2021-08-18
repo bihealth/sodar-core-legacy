@@ -6,7 +6,7 @@ from urllib.parse import urlencode
 from django.core import mail
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
-from django.test import RequestFactory, override_settings
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib import auth
@@ -25,7 +25,6 @@ from projectroles.models import (
     SODAR_CONSTANTS,
 )
 from projectroles.plugins import (
-    change_plugin_status,
     get_backend_api,
     get_active_plugins,
 )
@@ -84,14 +83,6 @@ class TestViewsBase(TestCase):
     """Base class for view testing"""
 
     def setUp(self):
-        self.req_factory = RequestFactory()
-
-        # Force disabling of taskflow plugin if it's available
-        if get_backend_api('taskflow'):
-            change_plugin_status(
-                name='taskflow', status=1, plugin_type='backend'  # 0 = Disabled
-            )
-
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]
         self.role_delegate = Role.objects.get_or_create(

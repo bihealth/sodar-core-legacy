@@ -30,6 +30,8 @@ Changed
     - Upgrade minimum Django version to v3.2.6 (#773)
 - **Appalerts**
     - Display no alerts element after clearing list (#779)
+- **Projectroles**
+    - Refactor view test setup (#769)
 - **Siteinfo**
     - UI improvements for empty and unset values
 

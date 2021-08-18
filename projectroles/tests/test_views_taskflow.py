@@ -8,7 +8,12 @@ from django.conf import settings
 from django.contrib import auth
 from django.core.exceptions import ImproperlyConfigured
 from django.forms.models import model_to_dict
-from django.test import LiveServerTestCase, tag, override_settings
+from django.test import (
+    LiveServerTestCase,
+    RequestFactory,
+    tag,
+    override_settings,
+)
 
 # HACK to get around https://stackoverflow.com/a/25081791
 from django.urls import reverse
@@ -189,13 +194,22 @@ class TestTaskflowBase(
 # Local Tests ------------------------------------------------------------------
 
 
+class TestTaskflowLocalAPIBase(
+    ProjectMixin, RoleAssignmentMixin, TestViewsBase
+):
+    """Base class for testing the local taskflow API views"""
+
+    def setUp(self):
+        super().setUp()
+        self.req_factory = RequestFactory()
+
+
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
+class TestProjectGetAPIView(TestTaskflowLocalAPIBase):
     """Tests for the project retrieve API view"""
 
     def setUp(self):
         super().setUp()
-
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -214,13 +228,11 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
         response = views_taskflow.TaskflowProjectGetAPIView.as_view()(request)
         self.assertEqual(response.status_code, 200)
-
         expected = {
             'project_uuid': str(self.project.sodar_uuid),
             'title': self.project.title,
             'description': self.project.description,
         }
-
         self.assertEqual(response.data, expected)
 
     @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
@@ -232,7 +244,6 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             parent=None,
             submit_status=SUBMIT_STATUS_PENDING_TASKFLOW,
         )
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_get'),
             data={
@@ -245,14 +256,11 @@ class TestProjectGetAPIView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestProjectUpdateAPIView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestProjectUpdateAPIView(TestTaskflowLocalAPIBase):
     """Tests for the project updating API view"""
 
     def setUp(self):
         super().setUp()
-
         self.category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -268,12 +276,10 @@ class TestProjectUpdateAPIView(
 
     def test_post(self):
         """Test POST request for updating a project"""
-
         # NOTE: Duplicate titles not checked here, not allowed in the form
         title = 'New title'
         desc = 'New desc'
         readme = 'New readme'
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_update'),
             data={
@@ -289,7 +295,6 @@ class TestProjectUpdateAPIView(
             request
         )
         self.assertEqual(response.status_code, 200)
-
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, title)
         self.assertEqual(self.project.description, desc)
@@ -297,11 +302,9 @@ class TestProjectUpdateAPIView(
 
     def test_post_no_description(self):
         """Test POST request without a description field"""
-
         # NOTE: Duplicate titles not checked here, not allowed in the form
         title = 'New title'
         readme = 'New readme'
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_update'),
             data={
@@ -316,7 +319,6 @@ class TestProjectUpdateAPIView(
             request
         )
         self.assertEqual(response.status_code, 200)
-
         self.project.refresh_from_db()
         self.assertEqual(self.project.title, title)
         self.assertEqual(self.project.description, '')
@@ -324,9 +326,7 @@ class TestProjectUpdateAPIView(
 
     def test_post_move(self):
         """Test POST request for moving a project"""
-
         new_category = self._make_project('NewCat', PROJECT_TYPE_CATEGORY, None)
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_project_update'),
             data={
@@ -347,14 +347,11 @@ class TestProjectUpdateAPIView(
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestRoleAssignmentGetAPIView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestRoleAssignmentGetAPIView(TestTaskflowLocalAPIBase):
     """Tests for the role assignment getting API view"""
 
     def setUp(self):
         super().setUp()
-
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -376,7 +373,6 @@ class TestRoleAssignmentGetAPIView(
             request
         )
         self.assertEqual(response.status_code, 200)
-
         expected = {
             'assignment_uuid': str(self.owner_as.sodar_uuid),
             'project_uuid': str(self.project.sodar_uuid),
@@ -388,14 +384,11 @@ class TestRoleAssignmentGetAPIView(
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestRoleAssignmentSetAPIView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestRoleAssignmentSetAPIView(TestTaskflowLocalAPIBase):
     """Tests for the role assignment setting API view"""
 
     def setUp(self):
         super().setUp()
-
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -406,10 +399,7 @@ class TestRoleAssignmentSetAPIView(
     def test_post_new(self):
         """Test POST request for assigning a new role"""
         new_user = self.make_user('new_user')
-
-        # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_set'),
             data={
@@ -419,13 +409,11 @@ class TestRoleAssignmentSetAPIView(
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
             },
         )
-
         response = views_taskflow.TaskflowRoleAssignmentSetAPIView.as_view()(
             request
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         new_as = RoleAssignment.objects.get(project=self.project, user=new_user)
         self.assertEqual(new_as.role.pk, self.role_contributor.pk)
 
@@ -433,10 +421,7 @@ class TestRoleAssignmentSetAPIView(
         """Test POST request for updating an existing role"""
         new_user = self.make_user('new_user')
         self._make_assignment(self.project, new_user, self.role_guest)
-
-        # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_set'),
             data={
@@ -446,7 +431,6 @@ class TestRoleAssignmentSetAPIView(
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
             },
         )
-
         response = views_taskflow.TaskflowRoleAssignmentSetAPIView.as_view()(
             request
         )
@@ -458,14 +442,11 @@ class TestRoleAssignmentSetAPIView(
 
 
 @override_settings(ENABLED_BACKEND_PLUGINS=['taskflow'])
-class TestRoleAssignmentDeleteAPIView(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestRoleAssignmentDeleteAPIView(TestTaskflowLocalAPIBase):
     """Tests for the role assignment deletion API view"""
 
     def setUp(self):
         super().setUp()
-
         self.project = self._make_project(
             'TestProject', PROJECT_TYPE_PROJECT, None
         )
@@ -477,10 +458,7 @@ class TestRoleAssignmentDeleteAPIView(
         """Test POST request for removing a role assignment"""
         new_user = self.make_user('new_user')
         self._make_assignment(self.project, new_user, self.role_guest)
-
-        # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_delete'),
             data={
@@ -489,7 +467,6 @@ class TestRoleAssignmentDeleteAPIView(
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
             },
         )
-
         response = views_taskflow.TaskflowRoleAssignmentDeleteAPIView.as_view()(
             request
         )
@@ -499,10 +476,7 @@ class TestRoleAssignmentDeleteAPIView(
     def test_post_not_found(self):
         """Test POST request for removing a non-existing role assignment"""
         new_user = self.make_user('new_user')
-
-        # Assert precondition
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
-
         request = self.req_factory.post(
             reverse('projectroles:taskflow_role_delete'),
             data={
@@ -511,7 +485,6 @@ class TestRoleAssignmentDeleteAPIView(
                 'sodar_secret': settings.TASKFLOW_SODAR_SECRET,
             },
         )
-
         response = views_taskflow.TaskflowRoleAssignmentDeleteAPIView.as_view()(
             request
         )
@@ -519,9 +492,7 @@ class TestRoleAssignmentDeleteAPIView(
         self.assertEqual(RoleAssignment.objects.all().count(), 1)
 
 
-class TestTaskflowAPIViewAccess(
-    ProjectMixin, RoleAssignmentMixin, TestViewsBase
-):
+class TestTaskflowAPIViewAccess(TestTaskflowLocalAPIBase):
     """Tests for taskflow API view access"""
 
     def setUp(self):
@@ -548,7 +519,6 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_settings_get'),
             reverse('projectroles:taskflow_settings_set'),
         ]
-
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': TASKFLOW_SECRET_INVALID}
@@ -570,7 +540,6 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_settings_get'),
             reverse('projectroles:taskflow_settings_set'),
         ]
-
         for url in urls:
             request = self.req_factory.post(url)
             response = views_taskflow.TaskflowProjectGetAPIView.as_view()(
@@ -590,7 +559,6 @@ class TestTaskflowAPIViewAccess(
             reverse('projectroles:taskflow_settings_get'),
             reverse('projectroles:taskflow_settings_set'),
         ]
-
         for url in urls:
             request = self.req_factory.post(
                 url, data={'sodar_secret': settings.TASKFLOW_SODAR_SECRET}
