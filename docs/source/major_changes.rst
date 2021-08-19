@@ -10,15 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.4 (WIP)
-*************
+v0.10.4 (2021-08-19)
+********************
 
 Release Highlights
 ==================
 
 - Appalerts list view UI improvements
+- Siteinfo app and UI improvements
 - Fix API and UI views to return 404 status code if object is not found
-- Siteinfo app improvements
 - General bug fixes and minor updates
 - Upgraded dependencies
 
@@ -29,6 +29,13 @@ System Prerequisites
 --------------------
 
 The minimum Django version has been bumped to v3.2.6.
+
+Base UI and API View 404 Responses
+----------------------------------
+
+Base UI and API views have been fixed to correctly return HTTP 404 to authorized
+users for resources that are not found. This may affect some test cases which
+still operate under the assumption of the views returning 403 instead.
 
 
 v0.10.3 (2021-07-01)

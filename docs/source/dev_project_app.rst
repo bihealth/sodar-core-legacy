@@ -799,6 +799,10 @@ An example "hello world" REST API view for SODAR apps is available in
     from views to be implemented on your site. This is to prevent version number
     clashes and not require changes from your API when SODAR Core is updated.
 
+    For implementing your own API views, make sure to use the ``SODARAPI*``
+    base classes, **not** the ``CoreAPI`` classes. Similarly, in testing make
+    sure to use the base class helpers of the site API instead of the core API.
+
 Ajax API Views
 --------------
 
