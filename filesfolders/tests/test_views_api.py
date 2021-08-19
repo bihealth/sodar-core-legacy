@@ -12,6 +12,9 @@ from filesfolders.tests.test_views import ZIP_PATH_NO_FILES, TestViewsBaseMixin
 from filesfolders.models import Folder, File, HyperLink
 
 
+INVALID_UUID = '11111111-1111-1111-1111-111111111111'
+
+
 class TestFilesfoldersAPIViewsBase(
     TestViewsBaseMixin, SODARAPIViewTestMixin, APITestCase
 ):
@@ -147,6 +150,16 @@ class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(self.folder.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_retrieve_not_found(self):
+        """Test retrieval of Folder with invalid UUID"""
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_folder_retrieve_update_destroy',
+                kwargs={'folder': INVALID_UUID},
+            )
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_update(self):
         """Test update of Folder model through API"""
@@ -351,6 +364,16 @@ class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
         }
         self.assertEqual(json.loads(response.content), expected)
 
+    def test_retrieve_not_found(self):
+        """Test retrieval of File with invalid UUID"""
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_file_retrieve_update_destroy',
+                kwargs={'file': INVALID_UUID},
+            )
+        )
+        self.assertEqual(response.status_code, 404)
+
     def test_update(self):
         """Test update of File model through API"""
         response = self.request_knox(
@@ -418,10 +441,19 @@ class TestFileServeAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'file': self.file.sodar_uuid},
             )
         )
-
         expected = b'content'
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(response.content, expected)
+
+    def test_get_not_found(self):
+        """Test download with invalid UUID"""
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_file_serve',
+                kwargs={'file': INVALID_UUID},
+            )
+        )
+        self.assertEqual(response.status_code, 404)
 
 
 class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
@@ -552,6 +584,16 @@ class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(self.hyperlink.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_retrieve_not_found(self):
+        """Test retrieval of HyperLink with invalid UUID"""
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_hyperlink_retrieve_update_destroy',
+                kwargs={'hyperlink': INVALID_UUID},
+            )
+        )
+        self.assertEqual(response.status_code, 404)
 
     def test_update(self):
         """Test update of HyperLink model through API"""

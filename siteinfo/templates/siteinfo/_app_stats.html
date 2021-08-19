@@ -1,4 +1,5 @@
 {% load projectroles_common_tags %}
+{% load siteinfo_tags %}
 
 {% if pl_data.stats or pl_data.error %}
   <div class="card" id="sodar-si-{{ plugin.name }}-app-stats-card">
@@ -21,7 +22,7 @@
             {% if stat.url %}
               <dd class="col-md-9"><a href="{{ stat.url }}">{{ stat.value }}</a></dd>
             {% else %}
-              <dd class="col-md-9">{{ stat.value }}</dd>
+              <dd class="{% get_info_cls stat.value %}">{% get_info_val stat.value %}</dd>
             {% endif %}
            {% endfor %}
          {% elif pl_data.error %}

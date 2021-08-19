@@ -325,10 +325,16 @@ class TestFolderAPIPermissions(FolderMixin, TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_folder_destroy_anon(self):
         """Test permissions for folder destroying with anonymous access"""
-        obj_uuid = uuid.uuid4()
+        folder = self._make_folder(
+            name='folder',
+            project=self.project,
+            folder=None,
+            owner=self.owner_as.user,
+            description='',
+        )
         url = reverse(
             'filesfolders:api_folder_retrieve_update_destroy',
-            kwargs={'folder': obj_uuid},
+            kwargs={'folder': folder.sodar_uuid},
         )
         self.project.set_public()
         self.assert_response_api(url, self.anonymous, 401, method='DELETE')
@@ -764,10 +770,20 @@ class TestFileAPIPermissions(FileMixin, TestCoreProjectAPIPermissionBase):
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_file_destroy_anon(self):
         """Test permissions for file destroying with anonymous access"""
-        obj_uuid = uuid.uuid4()
+        file = self._make_file(
+            name='file2.txt',
+            file_name='file2.txt',
+            file_content=self.file_content,
+            project=self.project,
+            folder=None,
+            owner=self.owner_as.user,
+            description='',
+            public_url=True,
+            secret=build_secret(),
+        )
         url = reverse(
             'filesfolders:api_file_retrieve_update_destroy',
-            kwargs={'file': obj_uuid},
+            kwargs={'file': file.sodar_uuid},
         )
         self.project.set_public()
         self.assert_response_api(
@@ -1124,10 +1140,17 @@ class TestHyperLinkAPIPermissions(
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
     def test_hyperlink_destroy_anon(self):
         """Test permissions for hyperlink destroying with anonymous access"""
-        obj_uuid = uuid.uuid4()
+        link = self._make_hyperlink(
+            name='New Link',
+            url='http://www.duckduckgo.com/',
+            project=self.project,
+            folder=None,
+            owner=self.owner_as.user,
+            description='',
+        )
         url = reverse(
             'filesfolders:api_hyperlink_retrieve_update_destroy',
-            kwargs={'hyperlink': obj_uuid},
+            kwargs={'hyperlink': link.sodar_uuid},
         )
         self.project.set_public()
         self.assert_response_api(

@@ -36,18 +36,12 @@ class AppAlertDismissAjaxView(SODARBaseAjaxView):
         # HACK: Manually refuse access to anonymous as this view is an exception
         if not request.user or request.user.is_anonymous:
             return Response({'detail': 'Anonymous access denied'}, status=401)
-
-        alert = AppAlert.objects.filter(
-            sodar_uuid=kwargs.get('appalert')
-        ).first()
-
-        if not alert:
-            return Response({'detail': 'Alert not found'}, status=404)
-        if request.user != alert.user:
-            return Response(
-                {'detail': 'User lacks permissions to update alert'}, status=403
-            )
-
-        alert.active = False
-        alert.save()
+        alerts = AppAlert.objects.filter(user=request.user, active=True)
+        if kwargs.get('appalert'):
+            alerts = alerts.filter(sodar_uuid=kwargs['appalert'])
+        if not alerts:
+            return Response({'detail': 'Not found'}, status=404)
+        for alert in alerts:
+            alert.active = False
+            alert.save()
         return Response({'detail': 'OK'}, status=200)

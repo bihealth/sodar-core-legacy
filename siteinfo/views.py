@@ -20,6 +20,7 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 CORE_SETTINGS = [
+    'ENABLED_BACKEND_PLUGINS',
     'PROJECTROLES_ALLOW_ANONYMOUS',
     'PROJECTROLES_ALLOW_LOCAL_USERS',
     'PROJECTROLES_CUSTOM_JS_INCLUDES',
@@ -81,13 +82,20 @@ class SiteInfoView(LoggedInPermissionMixin, TemplateView):
         for p in p_list:
             try:
                 ret[p] = {'stats': p.get_statistics(), 'settings': {}}
-                if p.info_settings:
-                    ret[p]['settings'] = cls._get_settings(p.info_settings)
             except Exception as ex:
                 ret[p] = {'error': str(ex)}
                 logger.error(
                     'Exception in {}.get_statistics(): {}'.format(p.name, ex)
                 )
+            if p.info_settings:
+                try:
+                    ret[p]['settings'] = cls._get_settings(p.info_settings)
+                except Exception as ex:
+                    logger.error(
+                        'Exception in _get_settings() for {}: {}'.format(
+                            p.name, ex
+                        )
+                    )
         return ret
 
     def get_context_data(self, *args, **kwargs):

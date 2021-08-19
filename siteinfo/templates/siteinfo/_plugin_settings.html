@@ -1,3 +1,5 @@
+{% load siteinfo_tags %}
+
 {% if pl_data.settings %}
   <div class="card" id="sodar-si-core-settings-card-app-{{ plugin.name }}">
     <div class="card-header">
@@ -9,7 +11,12 @@
     <div class="card-body">
       <dl class="row">
         {% for k, v in pl_data.settings.items %}
-          {% include 'siteinfo/_settings_item.html' %}
+          <dt class="col-md-5 text-nowrap">{{ k }}</dt>
+          {% if v.set %}
+            <dd class="{% get_info_cls v.value %}">{% get_info_val v.value %}</dd>
+          {% else %}
+            <dd class="col-md-7 text-muted">(Unset)</dd>
+          {% endif %}
         {% endfor %}
       </dl>
     </div>

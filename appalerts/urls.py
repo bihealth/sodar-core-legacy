@@ -25,4 +25,9 @@ urlpatterns = [
         view=views_ajax.AppAlertDismissAjaxView.as_view(),
         name='ajax_dismiss',
     ),
+    url(
+        regex=r'^ajax/dismiss/all$',
+        view=views_ajax.AppAlertDismissAjaxView.as_view(),
+        name='ajax_dismiss_all',
+    ),
 ]

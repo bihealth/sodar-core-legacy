@@ -1,4 +1,5 @@
 """Tests for views in the filesfolders app"""
+
 import os
 
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -12,9 +13,13 @@ from projectroles.models import Role, SODAR_CONSTANTS
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from projectroles.app_settings import AppSettingAPI
 
-from ..models import File, Folder, HyperLink
-from .test_models import FolderMixin, FileMixin, HyperLinkMixin
-from ..utils import build_public_url
+from filesfolders.models import File, Folder, HyperLink
+from filesfolders.tests.test_models import (
+    FolderMixin,
+    FileMixin,
+    HyperLinkMixin,
+)
+from filesfolders.utils import build_public_url
 
 
 # SODAR constants
@@ -28,10 +33,10 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 # Local constants
 APP_NAME = 'filesfolders'
 SECRET = '7dqq83clo2iyhg29hifbor56og6911r5'
-
 TEST_DATA_PATH = os.path.dirname(__file__) + '/data/'
 ZIP_PATH = TEST_DATA_PATH + 'unpack_test.zip'
 ZIP_PATH_NO_FILES = TEST_DATA_PATH + 'no_files.zip'
+INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
 # App settings API
@@ -115,14 +120,14 @@ class TestViewsBase(TestViewsBaseMixin, TestCase):
     """Base class for view testing"""
 
 
-# List View --------------------------------------------------------------
+# List View --------------------------------------------------------------------
 
 
 class TestListView(TestViewsBase):
     """Tests for the file list view"""
 
     def test_render(self):
-        """Test rendering of the project root view"""
+        """Test rendering project root view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -130,14 +135,25 @@ class TestListView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
-            self.assertIsNotNone(response.context['folders'])
-            self.assertIsNotNone(response.context['files'])
-            self.assertIsNotNone(response.context['links'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertIsNotNone(response.context['folders'])
+        self.assertIsNotNone(response.context['files'])
+        self.assertIsNotNone(response.context['links'])
+
+    def test_render_not_found(self):
+        """Test rendering with invalid project UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:list',
+                    kwargs={'project': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_render_in_folder(self):
-        """Test rendering of a folder view within the project"""
+        """Test rendering folder view within the project"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -145,16 +161,14 @@ class TestListView(TestViewsBase):
                     kwargs={'folder': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
-            self.assertIsNotNone(response.context['folder_breadcrumb'])
-            self.assertIsNotNone(response.context['files'])
-            self.assertIsNotNone(response.context['links'])
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertIsNotNone(response.context['folder_breadcrumb'])
+        self.assertIsNotNone(response.context['files'])
+        self.assertIsNotNone(response.context['links'])
 
     def test_render_with_readme_txt(self):
-        """Test rendering of the project list with a plaintext readme file"""
-
-        # Init readme file
+        """Test rendering with a plaintext readme file"""
         self.readme_file = self._make_file(
             name='readme.txt',
             file_name='readme.txt',
@@ -166,7 +180,6 @@ class TestListView(TestViewsBase):
             public_url=False,
             secret='xxxxxxxxx',
         )
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -174,20 +187,20 @@ class TestListView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['readme_name'], 'readme.txt')
-            self.assertEqual(response.context['readme_data'], self.file_content)
-            self.assertEqual(response.context['readme_mime'], 'text/plain')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['readme_name'], 'readme.txt')
+        self.assertEqual(response.context['readme_data'], self.file_content)
+        self.assertEqual(response.context['readme_mime'], 'text/plain')
 
 
-# File Views -------------------------------------------------------------
+# File Views -------------------------------------------------------------------
 
 
 class TestFileCreateView(TestViewsBase):
     """Tests for the File create view"""
 
     def test_render(self):
-        """Test rendering of the File create view"""
+        """Test rendering File create view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -195,11 +208,11 @@ class TestFileCreateView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
 
     def test_render_in_folder(self):
-        """Test rendering of the File create view under a folder"""
+        """Test rendering under a folder"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -211,9 +224,19 @@ class TestFileCreateView(TestViewsBase):
             self.assertEqual(response.context['project'].pk, self.project.pk)
             self.assertEqual(response.context['folder'].pk, self.folder.pk)
 
+    def test_render_not_found(self):
+        """Test rendering with invalid project UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:file_create',
+                    kwargs={'project': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
+
     def test_create(self):
         """Test file creation"""
-
         self.assertEqual(File.objects.all().count(), 1)
 
         post_data = {
@@ -224,7 +247,6 @@ class TestFileCreateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -234,20 +256,18 @@ class TestFileCreateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(File.objects.all().count(), 2)
 
     def test_create_empty(self):
         """Test empty file creation (should fail)"""
-
         self.assertEqual(File.objects.all().count(), 1)
 
         post_data = {
@@ -260,7 +280,6 @@ class TestFileCreateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -270,16 +289,14 @@ class TestFileCreateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(
-                bytes(
-                    '<p id="error_1_id_file" class="invalid-feedback"><strong>The submitted file is empty.</strong></p>'.encode(
-                        'utf-8'
-                    )
-                )
-                in response.content
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            bytes(
+                '<p id="error_1_id_file" class="invalid-feedback"><strong>'
+                'The submitted file is empty.</strong></p>'.encode('utf-8')
             )
-
+            in response.content
+        )
         self.assertEqual(File.objects.all().count(), 1)
 
     def test_create_in_folder(self):
@@ -294,7 +311,6 @@ class TestFileCreateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -304,15 +320,14 @@ class TestFileCreateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'folder': self.folder.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'folder': self.folder.sodar_uuid},
+            ),
+        )
         self.assertEqual(File.objects.all().count(), 2)
 
     def test_create_existing(self):
@@ -327,7 +342,6 @@ class TestFileCreateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -336,15 +350,11 @@ class TestFileCreateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 200)
-
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(File.objects.all().count(), 1)
 
     def test_unpack_archive(self):
         """Test uploading a zip file to be unpacked"""
-
-        # Assert preconditions
         self.assertEqual(File.objects.all().count(), 1)
         self.assertEqual(Folder.objects.all().count(), 1)
 
@@ -358,7 +368,6 @@ class TestFileCreateView(TestViewsBase):
                 'public_url': False,
                 'unpack_archive': True,
             }
-
             with self.login(self.user):
                 response = self.client.post(
                     reverse(
@@ -368,16 +377,14 @@ class TestFileCreateView(TestViewsBase):
                     post_data,
                 )
 
-                self.assertEqual(response.status_code, 302)
-                self.assertEqual(
-                    response.url,
-                    reverse(
-                        'filesfolders:list',
-                        kwargs={'project': self.project.sodar_uuid},
-                    ),
-                )
-
-        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(File.objects.all().count(), 3)
         self.assertEqual(Folder.objects.all().count(), 3)
 
@@ -385,14 +392,12 @@ class TestFileCreateView(TestViewsBase):
         new_file2 = File.objects.get(name='zip_test2.txt')
         new_folder1 = Folder.objects.get(name='dir1')
         new_folder2 = Folder.objects.get(name='dir2')
-
         self.assertEqual(new_file1.folder, new_folder1)
         self.assertEqual(new_file2.folder, new_folder2)
         self.assertEqual(new_folder2.folder, new_folder1)
 
     def test_unpack_archive_overwrite(self):
         """Test unpacking a zip file with existing file (should fail)"""
-
         ow_folder = self._make_folder(
             name='dir1',
             project=self.project,
@@ -400,7 +405,6 @@ class TestFileCreateView(TestViewsBase):
             owner=self.user,
             description='',
         )
-
         self._make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
@@ -412,8 +416,6 @@ class TestFileCreateView(TestViewsBase):
             public_url=False,
             secret='xxxxxxxxx',
         )
-
-        # Assert preconditions
         self.assertEqual(File.objects.all().count(), 2)
         self.assertEqual(Folder.objects.all().count(), 2)
 
@@ -427,7 +429,6 @@ class TestFileCreateView(TestViewsBase):
                 'public_url': False,
                 'unpack_archive': True,
             }
-
             with self.login(self.user):
                 response = self.client.post(
                     reverse(
@@ -437,15 +438,12 @@ class TestFileCreateView(TestViewsBase):
                     post_data,
                 )
 
-                self.assertEqual(response.status_code, 200)
-
-        # Assert postconditions
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(File.objects.all().count(), 2)
         self.assertEqual(Folder.objects.all().count(), 2)
 
     def test_unpack_archive_empty(self):
         """Test unpacking a zip file with an empty archive (should fail)"""
-
         with open(ZIP_PATH_NO_FILES, 'rb') as zip_file:
             post_data = {
                 'name': 'no_files.zip',
@@ -456,7 +454,6 @@ class TestFileCreateView(TestViewsBase):
                 'public_url': False,
                 'unpack_archive': True,
             }
-
             with self.login(self.user):
                 response = self.client.post(
                     reverse(
@@ -465,12 +462,10 @@ class TestFileCreateView(TestViewsBase):
                     ),
                     post_data,
                 )
-
-                self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_upload_archive_existing(self):
         """Test uploading a zip file with existing file (no unpack)"""
-
         ow_folder = self._make_folder(
             name='dir1',
             project=self.project,
@@ -478,7 +473,6 @@ class TestFileCreateView(TestViewsBase):
             owner=self.user,
             description='',
         )
-
         self._make_file(
             name='zip_test1.txt',
             file_name='zip_test1.txt',
@@ -490,8 +484,6 @@ class TestFileCreateView(TestViewsBase):
             public_url=False,
             secret='xxxxxxxxx',
         )
-
-        # Assert preconditions
         self.assertEqual(File.objects.all().count(), 2)
         self.assertEqual(Folder.objects.all().count(), 2)
 
@@ -505,7 +497,6 @@ class TestFileCreateView(TestViewsBase):
                 'public_url': False,
                 'unpack_archive': False,
             }
-
             with self.login(self.user):
                 response = self.client.post(
                     reverse(
@@ -515,9 +506,7 @@ class TestFileCreateView(TestViewsBase):
                     post_data,
                 )
 
-                self.assertEqual(response.status_code, 302)
-
-        # Assert postconditions
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(File.objects.all().count(), 3)
         self.assertEqual(Folder.objects.all().count(), 2)
 
@@ -534,8 +523,19 @@ class TestFileUpdateView(TestViewsBase):
                     kwargs={'item': self.file.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.file.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.file.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid file UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:file_update',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_update(self):
         """Test file update with different content"""
@@ -550,7 +550,6 @@ class TestFileUpdateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -560,15 +559,14 @@ class TestFileUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(File.objects.all().count(), 1)
         self.file.refresh_from_db()
         self.assertEqual(self.file.file.read(), self.file_content_alt)
@@ -586,7 +584,6 @@ class TestFileUpdateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -596,23 +593,20 @@ class TestFileUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-            self.assertTrue(
-                bytes(
-                    '<p id="error_1_id_file" class="invalid-feedback"><strong>The submitted file is empty.</strong></p>'.encode(
-                        'utf-8'
-                    )
-                )
-                in response.content
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            bytes(
+                '<p id="error_1_id_file" class="invalid-feedback"><strong>'
+                'The submitted file is empty.</strong></p>'.encode('utf-8')
             )
-
+            in response.content
+        )
         self.assertEqual(File.objects.all().count(), 1)
         self.file.refresh_from_db()
         self.assertEqual(self.file.file.read(), self.file_content)
 
     def test_update_existing(self):
-        """Test file update with a file name that already exists (should fail)"""
-
+        """Test file update with file name that already exists (should fail)"""
         self._make_file(
             name='file2.txt',
             file_name='file2.txt',
@@ -624,7 +618,6 @@ class TestFileUpdateView(TestViewsBase):
             public_url=True,
             secret='abc123',
         )
-
         self.assertEqual(File.objects.all().count(), 2)
 
         post_data = {
@@ -635,7 +628,6 @@ class TestFileUpdateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -645,8 +637,7 @@ class TestFileUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(File.objects.all().count(), 2)
         self.file.refresh_from_db()
         self.assertEqual(self.file.file.read(), self.file_content)
@@ -660,7 +651,6 @@ class TestFileUpdateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -670,21 +660,19 @@ class TestFileUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'folder': self.folder.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'folder': self.folder.sodar_uuid},
+            ),
+        )
         self.file.refresh_from_db()
         self.assertEqual(self.file.folder, self.folder)
 
     def test_update_folder_existing(self):
         """Test overwriting file in a different folder (should fail)"""
-
         # Create file with same name in the target folder
         self._make_file(
             name='file.txt',
@@ -705,7 +693,6 @@ class TestFileUpdateView(TestViewsBase):
             'flag': '',
             'public_url': False,
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -715,8 +702,7 @@ class TestFileUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(File.objects.all().count(), 2)
         self.file.refresh_from_db()
         self.assertEqual(self.file.folder, None)
@@ -734,13 +720,23 @@ class TestFileDeleteView(TestViewsBase):
                     kwargs={'item': self.file.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.file.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.file.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid file UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:file_delete',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_post(self):
         """Test deleting a File"""
         self.assertEqual(File.objects.all().count(), 1)
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -748,15 +744,14 @@ class TestFileDeleteView(TestViewsBase):
                     kwargs={'item': self.file.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(File.objects.all().count(), 0)
 
 
@@ -775,7 +770,21 @@ class TestFileServeView(TestViewsBase):
                     },
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
+
+    def test_render_not_found(self):
+        """Test rendering of the File serving view"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:file_serve',
+                    kwargs={
+                        'file': INVALID_UUID,
+                        'file_name': self.file.name,
+                    },
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
 
 class TestFileServePublicView(TestViewsBase):
@@ -790,15 +799,13 @@ class TestFileServePublicView(TestViewsBase):
                     kwargs={'secret': SECRET, 'file_name': self.file.name},
                 )
             )
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_bad_request_setting(self):
-        """Test bad request response from the public serving view if public
-        linking is disabled via settings"""
+        """Test bad request response if public linking is disabled"""
         app_settings.set_app_setting(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -806,14 +813,12 @@ class TestFileServePublicView(TestViewsBase):
                     kwargs={'secret': SECRET, 'file_name': self.file.name},
                 )
             )
-            self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     def test_bad_request_file_flag(self):
-        """Test bad request response from the public serving view if the file
-        can not be served publicly"""
+        """Test bad request response if file can not be served publicly"""
         self.file.public_url = False
         self.file.save()
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -821,15 +826,12 @@ class TestFileServePublicView(TestViewsBase):
                     kwargs={'secret': SECRET, 'file_name': self.file.name},
                 )
             )
-            self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
     def test_bad_request_no_file(self):
-        """Test bad request response from the public serving view if the file
-        has been deleted"""
-
+        """Test bad request response if file has been deleted"""
         file_name = self.file.name
         self.file.delete()
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -837,14 +839,14 @@ class TestFileServePublicView(TestViewsBase):
                     kwargs={'secret': SECRET, 'file_name': file_name},
                 )
             )
-            self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
 
 class TestFilePublicLinkView(TestViewsBase):
     """Tests for the File public link view"""
 
     def test_render(self):
-        """Test rendering of the File public link view"""
+        """Test rendering File public link view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -852,25 +854,34 @@ class TestFilePublicLinkView(TestViewsBase):
                     kwargs={'file': self.file.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(
-                response.context['public_url'],
-                build_public_url(
-                    self.file,
-                    self.req_factory.get(
-                        'file_public_link',
-                        kwargs={'file': self.file.sodar_uuid},
-                    ),
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context['public_url'],
+            build_public_url(
+                self.file,
+                self.req_factory.get(
+                    'file_public_link',
+                    kwargs={'file': self.file.sodar_uuid},
                 ),
+            ),
+        )
+
+    def test_render_not_found(self):
+        """Test rendering with invalid file UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:file_public_link',
+                    kwargs={'file': INVALID_UUID},
+                )
             )
+        self.assertEqual(response.status_code, 404)
 
     def test_redirect_setting(self):
-        """Test redirecting from the public link view if public linking is
-        disabled via settings"""
+        """Test redirecting if public linking is disabled via settings"""
         app_settings.set_app_setting(
             APP_NAME, 'allow_public_links', False, project=self.project
         )
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -878,31 +889,29 @@ class TestFilePublicLinkView(TestViewsBase):
                     kwargs={'file': self.file.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 302)
 
-    def test_redirect_no_file(self):
-        """Test redirecting from the public link view if the file has been
-        deleted"""
+    def test_render_no_file(self):
+        """Test rendering if the file has been deleted"""
         file_uuid = self.file.sodar_uuid
         self.file.delete()
-
         with self.login(self.user):
             response = self.client.get(
                 reverse(
                     'filesfolders:file_public_link', kwargs={'file': file_uuid}
                 )
             )
-            self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 404)
 
 
-# Folder Views -----------------------------------------------------------
+# Folder Views -----------------------------------------------------------------
 
 
 class TestFolderCreateView(TestViewsBase):
     """Tests for the File create view"""
 
     def test_render(self):
-        """Test rendering of the Folder create view"""
+        """Test rendering Folder create view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -910,11 +919,22 @@ class TestFolderCreateView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid project UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:folder_create',
+                    kwargs={'project': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_render_in_folder(self):
-        """Test rendering of the Folder create view under a folder"""
+        """Test rendering Folder create view under a folder"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -922,9 +942,9 @@ class TestFolderCreateView(TestViewsBase):
                     kwargs={'folder': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
-            self.assertEqual(response.context['folder'].pk, self.folder.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertEqual(response.context['folder'].pk, self.folder.pk)
 
     def test_create(self):
         """Test folder creation"""
@@ -936,7 +956,6 @@ class TestFolderCreateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -946,15 +965,14 @@ class TestFolderCreateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(Folder.objects.all().count(), 2)
 
     def test_create_in_folder(self):
@@ -967,7 +985,6 @@ class TestFolderCreateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -977,28 +994,25 @@ class TestFolderCreateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'folder': self.folder.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'folder': self.folder.sodar_uuid},
+            ),
+        )
         self.assertEqual(Folder.objects.all().count(), 2)
 
     def test_create_existing(self):
         """Test folder creation with existing folder (should fail)"""
         self.assertEqual(Folder.objects.all().count(), 1)
-
         post_data = {
             'name': 'folder',
             'folder': '',
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1007,16 +1021,15 @@ class TestFolderCreateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(Folder.objects.all().count(), 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Folder.objects.all().count(), 1)
 
 
 class TestFolderUpdateView(TestViewsBase):
     """Tests for the Folder update view"""
 
     def test_render(self):
-        """Test rendering of the Folder update view"""
+        """Test rendering Folder update view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1024,8 +1037,19 @@ class TestFolderUpdateView(TestViewsBase):
                     kwargs={'item': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.folder.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.folder.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid folder UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:folder_update',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_update(self):
         """Test folder update"""
@@ -1037,7 +1061,6 @@ class TestFolderUpdateView(TestViewsBase):
             'description': 'updated description',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1047,23 +1070,21 @@ class TestFolderUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(Folder.objects.all().count(), 1)
         self.folder.refresh_from_db()
         self.assertEqual(self.folder.name, 'renamed_folder')
         self.assertEqual(self.folder.description, 'updated description')
 
     def test_update_existing(self):
-        """Test folder update with a name that already exists (should fail)"""
-
+        """Test folder update with name that already exists (should fail)"""
         self._make_folder(
             name='folder2',
             project=self.project,
@@ -1071,7 +1092,6 @@ class TestFolderUpdateView(TestViewsBase):
             owner=self.user,
             description='',
         )
-
         self.assertEqual(Folder.objects.all().count(), 2)
 
         post_data = {
@@ -1080,7 +1100,6 @@ class TestFolderUpdateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1090,8 +1109,7 @@ class TestFolderUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(Folder.objects.all().count(), 2)
         self.folder.refresh_from_db()
         self.assertEqual(self.folder.name, 'folder')
@@ -1101,7 +1119,7 @@ class TestFolderDeleteView(TestViewsBase):
     """Tests for the File delete view"""
 
     def test_render(self):
-        """Test rendering of the Folder delete view"""
+        """Test rendering Folder delete view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1109,13 +1127,23 @@ class TestFolderDeleteView(TestViewsBase):
                     kwargs={'item': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.folder.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.folder.pk)
+
+    def test_render_not_found(self):
+        """Test rendering Folder delete view"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:folder_delete',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_post(self):
         """Test deleting a Folder"""
         self.assertEqual(Folder.objects.all().count(), 1)
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1123,26 +1151,25 @@ class TestFolderDeleteView(TestViewsBase):
                     kwargs={'item': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(Folder.objects.all().count(), 0)
 
 
-# HyperLink Views --------------------------------------------------------
+# HyperLink Views --------------------------------------------------------------
 
 
 class TestHyperLinkCreateView(TestViewsBase):
     """Tests for the HyperLink create view"""
 
     def test_render(self):
-        """Test rendering of the HyperLink create view"""
+        """Test rendering HyperLink create view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1150,11 +1177,22 @@ class TestHyperLinkCreateView(TestViewsBase):
                     kwargs={'project': self.project.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid project UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:hyperlink_create',
+                    kwargs={'project': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_render_in_folder(self):
-        """Test rendering of the HyperLink create view under a folder"""
+        """Test rendering under a folder"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1162,14 +1200,13 @@ class TestHyperLinkCreateView(TestViewsBase):
                     kwargs={'folder': self.folder.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['project'].pk, self.project.pk)
-            self.assertEqual(response.context['folder'].pk, self.folder.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['project'].pk, self.project.pk)
+        self.assertEqual(response.context['folder'].pk, self.folder.pk)
 
     def test_create(self):
         """Test hyperlink creation"""
         self.assertEqual(HyperLink.objects.all().count(), 1)
-
         post_data = {
             'name': 'new link',
             'url': 'http://link.com',
@@ -1177,7 +1214,6 @@ class TestHyperLinkCreateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1186,22 +1222,19 @@ class TestHyperLinkCreateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(HyperLink.objects.all().count(), 2)
 
     def test_create_in_folder(self):
         """Test folder creation within a folder"""
         self.assertEqual(HyperLink.objects.all().count(), 1)
-
         post_data = {
             'name': 'new link',
             'url': 'http://link.com',
@@ -1209,7 +1242,6 @@ class TestHyperLinkCreateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1218,22 +1250,19 @@ class TestHyperLinkCreateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'folder': self.folder.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'folder': self.folder.sodar_uuid},
+            ),
+        )
         self.assertEqual(HyperLink.objects.all().count(), 2)
 
     def test_create_existing(self):
         """Test hyperlink creation with an existing file (should fail)"""
         self.assertEqual(HyperLink.objects.all().count(), 1)
-
         post_data = {
             'name': 'Link',
             'url': 'http://google.com',
@@ -1241,7 +1270,6 @@ class TestHyperLinkCreateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1250,16 +1278,15 @@ class TestHyperLinkCreateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(HyperLink.objects.all().count(), 1)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(HyperLink.objects.all().count(), 1)
 
 
 class TestHyperLinkUpdateView(TestViewsBase):
     """Tests for the HyperLink update view"""
 
     def test_render(self):
-        """Test rendering of the HyperLink update view"""
+        """Test rendering HyperLink update view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1267,13 +1294,23 @@ class TestHyperLinkUpdateView(TestViewsBase):
                     kwargs={'item': self.hyperlink.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.hyperlink.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.hyperlink.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:hyperlink_update',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_update(self):
         """Test hyperlink update"""
         self.assertEqual(HyperLink.objects.all().count(), 1)
-
         post_data = {
             'name': 'Renamed Link',
             'url': 'http://updated.com',
@@ -1281,7 +1318,6 @@ class TestHyperLinkUpdateView(TestViewsBase):
             'description': 'updated description',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1290,16 +1326,14 @@ class TestHyperLinkUpdateView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(HyperLink.objects.all().count(), 1)
         self.hyperlink.refresh_from_db()
         self.assertEqual(self.hyperlink.name, 'Renamed Link')
@@ -1308,7 +1342,6 @@ class TestHyperLinkUpdateView(TestViewsBase):
 
     def test_update_existing(self):
         """Test hyperlink update with a name that already exists (should fail)"""
-
         self._make_hyperlink(
             name='Link2',
             url='http://url2.com',
@@ -1317,7 +1350,6 @@ class TestHyperLinkUpdateView(TestViewsBase):
             owner=self.user,
             description='',
         )
-
         self.assertEqual(HyperLink.objects.all().count(), 2)
 
         post_data = {
@@ -1327,7 +1359,6 @@ class TestHyperLinkUpdateView(TestViewsBase):
             'description': '',
             'flag': '',
         }
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1337,8 +1368,7 @@ class TestHyperLinkUpdateView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 200)
-
+        self.assertEqual(response.status_code, 200)
         self.assertEqual(HyperLink.objects.all().count(), 2)
         self.hyperlink.refresh_from_db()
         self.assertEqual(self.hyperlink.name, 'Link')
@@ -1348,7 +1378,7 @@ class TestHyperLinkDeleteView(TestViewsBase):
     """Tests for the HyperLink delete view"""
 
     def test_render(self):
-        """Test rendering of the File delete view"""
+        """Test rendering File delete view"""
         with self.login(self.user):
             response = self.client.get(
                 reverse(
@@ -1356,13 +1386,23 @@ class TestHyperLinkDeleteView(TestViewsBase):
                     kwargs={'item': self.hyperlink.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.context['object'].pk, self.hyperlink.pk)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'].pk, self.hyperlink.pk)
+
+    def test_render_not_found(self):
+        """Test rendering with invalid UUID"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse(
+                    'filesfolders:hyperlink_delete',
+                    kwargs={'item': INVALID_UUID},
+                )
+            )
+        self.assertEqual(response.status_code, 404)
 
     def test_post(self):
         """Test deleting a HyperLink"""
         self.assertEqual(HyperLink.objects.all().count(), 1)
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1370,19 +1410,18 @@ class TestHyperLinkDeleteView(TestViewsBase):
                     kwargs={'item': self.hyperlink.sodar_uuid},
                 )
             )
-            self.assertEqual(response.status_code, 302)
-            self.assertEqual(
-                response.url,
-                reverse(
-                    'filesfolders:list',
-                    kwargs={'project': self.project.sodar_uuid},
-                ),
-            )
-
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response.url,
+            reverse(
+                'filesfolders:list',
+                kwargs={'project': self.project.sodar_uuid},
+            ),
+        )
         self.assertEqual(HyperLink.objects.all().count(), 0)
 
 
-# Batch Editing View --------------------------------------------------------
+# Batch Editing View -----------------------------------------------------------
 
 
 class TestBatchEditView(TestViewsBase):
@@ -1391,13 +1430,11 @@ class TestBatchEditView(TestViewsBase):
     def test_render_delete(self):
         """Test rendering of the batch editing view when deleting"""
         post_data = {'batch-action': 'delete', 'user-confirmed': '0'}
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
         post_data[
             'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
         ] = 1
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1406,18 +1443,15 @@ class TestBatchEditView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_render_move(self):
         """Test rendering of the batch editing view when moving"""
         post_data = {'batch-action': 'move', 'user-confirmed': '0'}
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data[
             'batch_item_HyperLink_{}'.format(self.hyperlink.sodar_uuid)
         ] = 1
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -1426,19 +1460,15 @@ class TestBatchEditView(TestViewsBase):
                 ),
                 post_data,
             )
-
-            self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 200)
 
     def test_deletion(self):
         """Test batch object deletion"""
-
-        # Assert preconditions
         self.assertEqual(File.objects.all().count(), 1)
         self.assertEqual(Folder.objects.all().count(), 1)
         self.assertEqual(HyperLink.objects.all().count(), 1)
 
         post_data = {'batch-action': 'delete', 'user-confirmed': '1'}
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
         post_data[
@@ -1454,22 +1484,16 @@ class TestBatchEditView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-
-            # Assert postconditions
-            self.assertEqual(File.objects.all().count(), 0)
-            self.assertEqual(Folder.objects.all().count(), 0)
-            self.assertEqual(HyperLink.objects.all().count(), 0)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(File.objects.all().count(), 0)
+        self.assertEqual(Folder.objects.all().count(), 0)
+        self.assertEqual(HyperLink.objects.all().count(), 0)
 
     def test_deletion_non_empty_folder(self):
-        """Test batch object deletion with a non-empty folder (should not be
-        deleted)"""
-
-        # Create new folder & file under folder
+        """Test batch object deletion with a non-empty folder (should not be deleted)"""
         new_folder = self._make_folder(
             'new_folder', self.project, None, self.user, ''
         )
-
         self._make_file(
             name='new_file.txt',
             file_name='new_file.txt',
@@ -1481,13 +1505,10 @@ class TestBatchEditView(TestViewsBase):
             public_url=True,
             secret='7dqq83clo2iyhg29hifbor56og6911r6',
         )
-
-        # Assert preconditions
         self.assertEqual(File.objects.all().count(), 2)
         self.assertEqual(Folder.objects.all().count(), 2)
 
         post_data = {'batch-action': 'delete', 'user-confirmed': '1'}
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(new_folder.sodar_uuid)] = 1
@@ -1501,25 +1522,21 @@ class TestBatchEditView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-
-            # Assert postconditions
-            # The new folder and file should be left
-            self.assertEqual(File.objects.all().count(), 1)
-            self.assertEqual(Folder.objects.all().count(), 1)
+        self.assertEqual(response.status_code, 302)
+        # The new folder and file should be left
+        self.assertEqual(File.objects.all().count(), 1)
+        self.assertEqual(Folder.objects.all().count(), 1)
 
     def test_moving(self):
         """Test batch object moving"""
         target_folder = self._make_folder(
             'target_folder', self.project, None, self.user, ''
         )
-
         post_data = {
             'batch-action': 'move',
             'user-confirmed': '1',
             'target-folder': target_folder.sodar_uuid,
         }
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
         post_data[
@@ -1535,30 +1552,24 @@ class TestBatchEditView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-
-            # Assert postconditions
-            self.assertEqual(
-                File.objects.get(pk=self.file.pk).folder.pk, target_folder.pk
-            )
-            self.assertEqual(
-                Folder.objects.get(pk=self.folder.pk).folder.pk,
-                target_folder.pk,
-            )
-            self.assertEqual(
-                HyperLink.objects.get(pk=self.hyperlink.pk).folder.pk,
-                target_folder.pk,
-            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            File.objects.get(pk=self.file.pk).folder.pk, target_folder.pk
+        )
+        self.assertEqual(
+            Folder.objects.get(pk=self.folder.pk).folder.pk,
+            target_folder.pk,
+        )
+        self.assertEqual(
+            HyperLink.objects.get(pk=self.hyperlink.pk).folder.pk,
+            target_folder.pk,
+        )
 
     def test_moving_name_exists(self):
-        """Test batch object moving with similarly name object in target
-        (should not be moved)"""
-
-        # Create new folder & file
+        """Test batch object moving with name existing in target (should not be moved)"""
         target_folder = self._make_folder(
             'target_folder', self.project, None, self.user, ''
         )
-
         self._make_file(
             name='file.txt',  # Same name as self.file
             file_name='file.txt',
@@ -1576,7 +1587,6 @@ class TestBatchEditView(TestViewsBase):
             'user-confirmed': '1',
             'target-folder': target_folder.sodar_uuid,
         }
-
         post_data['batch_item_File_{}'.format(self.file.sodar_uuid)] = 1
         post_data['batch_item_Folder_{}'.format(self.folder.sodar_uuid)] = 1
         post_data[
@@ -1592,17 +1602,15 @@ class TestBatchEditView(TestViewsBase):
                 post_data,
             )
 
-            self.assertEqual(response.status_code, 302)
-
-            # Assert postconditions
-            self.assertEqual(
-                File.objects.get(pk=self.file.pk).folder, None
-            )  # Not moved
-            self.assertEqual(
-                Folder.objects.get(pk=self.folder.pk).folder.pk,
-                target_folder.pk,
-            )
-            self.assertEqual(
-                HyperLink.objects.get(pk=self.hyperlink.pk).folder.pk,
-                target_folder.pk,
-            )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            File.objects.get(pk=self.file.pk).folder, None
+        )  # Not moved
+        self.assertEqual(
+            Folder.objects.get(pk=self.folder.pk).folder.pk,
+            target_folder.pk,
+        )
+        self.assertEqual(
+            HyperLink.objects.get(pk=self.hyperlink.pk).folder.pk,
+            target_folder.pk,
+        )

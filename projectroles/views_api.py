@@ -90,6 +90,7 @@ CORE_API_ALLOWED_VERSIONS = [
     '0.10.1',
     '0.10.2',
     '0.10.3',
+    '0.10.4',
 ]
 
 
@@ -120,17 +121,14 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         """
         Override has_permission() for checking auth and project permission
         """
-        project = self.get_project(request=request, kwargs=view.kwargs)
-
-        if (
-            not project
-            or not request.user
-            or (
-                request.user.is_anonymous
-                and not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
-            )
+        if (not request.user or request.user.is_anonymous) and not getattr(
+            settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
         ):
             return False
+
+        project = self.get_project(request=request, kwargs=view.kwargs)
+        if not project:
+            raise NotFound()
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
 
