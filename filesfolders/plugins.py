@@ -38,7 +38,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'BOOLEAN',
             'default': False,
-            'label': 'Allow Public Links',
+            'label': 'Allow public links',
             'description': 'Allow generation of public links for small files',
             'user_modifiable': True,
         }
