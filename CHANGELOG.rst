@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Improve login button locating in ``login_and_redirect_with_ui()`` (#796)
+
+
 v0.10.4 (2021-08-19)
 ====================
 

@@ -298,9 +298,7 @@ class TestUIBase(
         field_user.send_keys(user.username)
         field_pass = self.selenium.find_element_by_id('sodar-login-password')
         field_pass.send_keys('password')
-        self.selenium.find_element_by_xpath(
-            '//button[contains(., "Login")]'
-        ).click()
+        self.selenium.find_element_by_id('sodar-login-submit').click()
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
