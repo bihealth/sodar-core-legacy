@@ -18,6 +18,13 @@ Changed
 - **Projectroles**
     - Improve login button locating in ``login_and_redirect_with_ui()`` (#796)
 
+Fixed
+-----
+
+- **Appalerts**
+    - Redundant HTML anchor in Dismiss All button (#788)
+
+
 
 v0.10.4 (2021-08-19)
 ====================
