@@ -25,6 +25,7 @@ Changed
 
 - **General**
     - Unify app settings label notation (#793)
+    - Upgrade minimum Django version to v3.2.7 (#800)
 - **Appalerts**
     - Improve alert list layout (#790)
 - **Projectroles**

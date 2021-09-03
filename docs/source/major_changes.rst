@@ -19,11 +19,15 @@ Release Highlights
 - Display project badge in app alerts
 - Custom email header and footer
 - General bug fixes and minor updates
+- Upgraded dependencies
 
 Breaking Changes
 ================
 
-N/A
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.7.
 
 
 v0.10.4 (2021-08-19)
