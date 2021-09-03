@@ -17,6 +17,8 @@ Added
     - Display project badge in alert (#790)
 - **Projectroles**
     - ``exact`` kwarg for ``assert_element_count()`` in UI tests (#798)
+    - Custom email header and footer (#789)
+    - ``PROJECTROLES_EMAIL_HEADER`` and ``PROJECTROLES_EMAIL_FOOTER`` settings (#789)
 
 Changed
 -------

@@ -13,7 +13,17 @@ releases, see the :ref:`full changelog<changelog>`.
 v0.10.5 (WIP)
 *************
 
-TBD
+Release Highlights
+==================
+
+- Display project badge in app alerts
+- Custom email header and footer
+- General bug fixes and minor updates
+
+Breaking Changes
+================
+
+N/A
 
 
 v0.10.4 (2021-08-19)

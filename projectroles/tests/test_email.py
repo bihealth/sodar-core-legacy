@@ -1,6 +1,7 @@
 """Tests for email sending in the projectroles Django app"""
 
 from django.core import mail
+from django.test import override_settings
 from django.urls import reverse
 
 from test_plus.test import TestCase, RequestFactory
@@ -27,6 +28,8 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 SUBJECT_BODY = 'Test subject'
 MESSAGE_BODY = 'Test message'
 INVALID_EMAIL = 'ahch0La8lo0eeT8u'
+CUSTOM_HEADER = 'Custom header'
+CUSTOM_FOOTER = 'Custom footer'
 
 
 class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
@@ -181,3 +184,35 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertEqual(email_sent, 2)
             self.assertEqual(len(mail.outbox), 2)
+
+    @override_settings(PROJECTROLES_EMAIL_HEADER=CUSTOM_HEADER)
+    def test_custom_header(self):
+        """Test send_generic_mail() with custom header"""
+        with self.login(self.user_owner):
+            request = self.factory.get(reverse('home'))
+            request.user = self.user_owner
+            send_generic_mail(
+                subject_body=SUBJECT_BODY,
+                message_body=MESSAGE_BODY,
+                recipient_list=[self.user_owner.email],
+                request=request,
+                reply_to=[self.user_owner.email],
+            )
+            self.assertIn(CUSTOM_HEADER, mail.outbox[0].body)
+            self.assertNotIn(CUSTOM_FOOTER, mail.outbox[0].body)
+
+    @override_settings(PROJECTROLES_EMAIL_FOOTER=CUSTOM_FOOTER)
+    def test_custom_footer(self):
+        """Test send_generic_mail() with custom footer"""
+        with self.login(self.user_owner):
+            request = self.factory.get(reverse('home'))
+            request.user = self.user_owner
+            send_generic_mail(
+                subject_body=SUBJECT_BODY,
+                message_body=MESSAGE_BODY,
+                recipient_list=[self.user_owner.email],
+                request=request,
+                reply_to=[self.user_owner.email],
+            )
+            self.assertNotIn(CUSTOM_HEADER, mail.outbox[0].body)
+            self.assertIn(CUSTOM_FOOTER, mail.outbox[0].body)

@@ -220,13 +220,24 @@ def get_invite_message(message=None):
     return ''
 
 
-def get_email_footer():
+def get_email_header(header):
     """
-    Return the invite content footer.
+    Return the email header.
 
     :return: string
     """
-    return MESSAGE_FOOTER.format(
+    return getattr(settings, 'PROJECTROLES_EMAIL_HEADER') or header
+
+
+def get_email_footer():
+    """
+    Return the email footer.
+
+    :return: string
+    """
+    return getattr(
+        settings, 'PROJECTROLES_EMAIL_FOOTER'
+    ) or MESSAGE_FOOTER.format(
         site_title=SITE_TITLE,
         admin_name=ADMIN_RECIPIENT[0],
         admin_email=ADMIN_RECIPIENT[1],
@@ -285,7 +296,9 @@ def get_role_change_body(
     :param project_url: URL for the project
     :return: String
     """
-    body = MESSAGE_HEADER.format(recipient=user_name, site_title=SITE_TITLE)
+    body = get_email_header(
+        MESSAGE_HEADER.format(recipient=user_name, site_title=SITE_TITLE)
+    )
 
     if change_type == 'create':
         body += MESSAGE_ROLE_CREATE.format(
@@ -432,8 +445,10 @@ def send_accept_note(invite, request, user):
             project=invite.project.title,
         )
     )
-    message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+    message = get_email_header(
+        MESSAGE_HEADER.format(
+            recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+        )
     )
     message += MESSAGE_ACCEPT_BODY.format(
         role=invite.role.name,
@@ -467,8 +482,10 @@ def send_expiry_note(invite, request, user_name):
             user_name=user_name, project=invite.project.title
         )
     )
-    message = MESSAGE_HEADER.format(
-        recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+    message = get_email_header(
+        MESSAGE_HEADER.format(
+            recipient=invite.issuer.get_full_name(), site_title=SITE_TITLE
+        )
     )
     message += MESSAGE_EXPIRY_BODY.format(
         role=invite.role.name,
@@ -506,8 +523,10 @@ def send_project_create_mail(project, request):
         project=project.title,
         user_name=request.user.get_full_name(),
     )
-    message = MESSAGE_HEADER.format(
-        recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
+    message = get_email_header(
+        MESSAGE_HEADER.format(
+            recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
+        )
     )
     message += MESSAGE_PROJECT_CREATE_BODY.format(
         user_name=request.user.get_full_name(),
@@ -553,8 +572,10 @@ def send_project_move_mail(project, request):
         project=project.title,
         user_name=request.user.get_full_name(),
     )
-    message = MESSAGE_HEADER.format(
-        recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
+    message = get_email_header(
+        MESSAGE_HEADER.format(
+            recipient=parent_owner.user.get_full_name(), site_title=SITE_TITLE
+        )
     )
     message += MESSAGE_PROJECT_MOVE_BODY.format(
         user_name=request.user.get_full_name(),
@@ -605,8 +626,8 @@ def send_generic_mail(
             recp_name = 'recipient'
             recp_email = recipient
 
-        message = MESSAGE_HEADER.format(
-            recipient=recp_name, site_title=SITE_TITLE
+        message = get_email_header(
+            MESSAGE_HEADER.format(recipient=recp_name, site_title=SITE_TITLE)
         )
         message += message_body
         if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:

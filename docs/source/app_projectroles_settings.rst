@@ -225,6 +225,8 @@ Optional Projectroles Settings
 
 The following projectroles settings are **optional**:
 
+* ``PROJECTROLES_EMAIL_HEADER``: Custom email header (string)
+* ``PROJECTROLES_EMAIL_FOOTER``: Custom email footer (string)
 * ``PROJECTROLES_SECRET_LENGTH``: Character length of secret token used in
   projectroles (int)
 * ``PROJECTROLES_SEARCH_PAGINATION``: Amount of search results per each app to
@@ -260,6 +262,8 @@ Example:
 
     # Projectroles app settings
     # ...
+    PROJECTROLES_EMAIL_HEADER = 'This email has been sent by X from Y'
+    PROJECTROLES_EMAIL_FOOTER = 'For assistance contact admin@example.com'
     PROJECTROLES_SECRET_LENGTH = 32
     PROJECTROLES_SEARCH_PAGINATION = 5
     PROJECTROLES_HELP_HIGHLIGHT_DAYS = 7
