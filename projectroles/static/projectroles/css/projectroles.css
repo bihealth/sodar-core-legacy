@@ -294,7 +294,6 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 3px;
-  border: 1px solid transparent; /* HACK for expanding table cell */
   margin-bottom: -5px;  /* HACK for expanding table cell */
 }
 
@@ -302,8 +301,7 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   z-index: 1100;
   width: auto;
   background-color: #ffffe0;
-  border: 1px solid #dfdfdf;
-  box-shadow: 0 3px 3px -3px #909090;
+  box-shadow: 0 0 0 1px #dfdfdf inset, 0 3px 3px -3px #909090;
 }
 
 

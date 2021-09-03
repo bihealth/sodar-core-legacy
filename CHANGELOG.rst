@@ -38,6 +38,7 @@ Fixed
     - Redundant HTML anchor in Dismiss All button (#788)
 - **Projectroles**
     - Sidebar notch position (#787)
+    - ``sodar-overflow-container`` misalignment (#791)
 
 
 v0.10.4 (2021-08-19)
