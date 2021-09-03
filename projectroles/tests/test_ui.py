@@ -353,6 +353,7 @@ class TestUIBase(
         search_string,
         attribute='id',
         path='//',
+        exact=False,
         wait_elem=None,
         wait_loc=DEFAULT_WAIT_LOC,
     ):
@@ -364,35 +365,33 @@ class TestUIBase(
         :param url: URL to test (string)
         :param search_string: ID substring of element (string)
         :param attribute: Attribute to search for (string, default=id)
+        :param path: Path for searching (string, default="//")
+        :param exact: Exact match if True (boolean, default=False)
         :param wait_elem: Wait for existence of an element (string, optional)
         :param wait_loc: Locator of optional wait element (string, corresponds
                          to selenium "By" class members)
         """
         for e in expected:
             expected_user = e[0]  # Just to clarify code
-            expected_count = e[1]
-
             self.login_and_redirect(expected_user, url, wait_elem, wait_loc)
+
+            xpath = '{}*[@{}="{}"]' if exact else '{}*[contains(@{}, "{}")]'
+            expected_count = e[1]
 
             if expected_count > 0:
                 self.assertEqual(
                     len(
                         self.selenium.find_elements_by_xpath(
-                            '{}*[contains(@{}, "{}")]'.format(
-                                path, attribute, search_string
-                            )
+                            xpath.format(path, attribute, search_string)
                         )
                     ),
                     expected_count,
                     'expected_user={}'.format(expected_user),
                 )
-
             else:
                 with self.assertRaises(NoSuchElementException):
                     self.selenium.find_element_by_xpath(
-                        '{}*[contains(@{}, "{}")]'.format(
-                            path, attribute, search_string
-                        )
+                        xpath.format(path, attribute, search_string)
                     )
 
     def assert_element_set(

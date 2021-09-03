@@ -15,6 +15,8 @@ Added
 
 - **Appalerts**
     - Display project badge in alert (#790)
+- **Projectroles**
+    - ``exact`` kwarg for ``assert_element_count()`` in UI tests (#798)
 
 Changed
 -------

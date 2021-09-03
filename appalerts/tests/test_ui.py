@@ -47,7 +47,11 @@ class TestListView(TestAlertUIBase):
         ]
         url = reverse('appalerts:list')
         self.assert_element_count(
-            expected, url, 'sodar-app-alert-item', 'class'
+            expected,
+            url,
+            'alert alert-info sodar-app-alert-item',
+            'class',
+            exact=True,
         )
 
     def test_alert_dismiss(self):
