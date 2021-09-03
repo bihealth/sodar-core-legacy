@@ -100,9 +100,8 @@ KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
-ALERT_MSG_ROLE_CHANGE = (
-    'Membership granted in project "{project}" with the ' 'role of "{role}".'
-)
+ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
+ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
 
 
 # Access Django user model
@@ -1035,9 +1034,9 @@ class ProjectModifyMixin:
             if app_alerts:
                 app_alerts.add_alert(
                     app_name=APP_NAME,
-                    alert_name='role_update',
+                    alert_name='role_create',
                     user=owner,
-                    message=ALERT_MSG_ROLE_CHANGE.format(
+                    message=ALERT_MSG_ROLE_CREATE.format(
                         project=project.title, role=owner_as.role.name
                     ),
                     url=reverse(
@@ -1509,14 +1508,17 @@ class RoleAssignmentModifyMixin:
 
         if request.user != user:
             if app_alerts:
-                alert_msg = ALERT_MSG_ROLE_CHANGE.format(
-                    project=project.title, role=role.name
-                )
+                if action == 'create':
+                    alert_msg = ALERT_MSG_ROLE_CREATE
+                else:  # Update
+                    alert_msg = ALERT_MSG_ROLE_UPDATE
                 app_alerts.add_alert(
                     app_name=APP_NAME,
                     alert_name='role_' + action,
                     user=user,
-                    message=alert_msg,
+                    message=alert_msg.format(
+                        project=project.title, role=role.name
+                    ),
                     url=reverse(
                         'projectroles:detail',
                         kwargs={'project': project.sodar_uuid},
@@ -1657,8 +1659,9 @@ class RoleAssignmentDeleteMixin:
                 app_name=APP_NAME,
                 alert_name='role_delete',
                 user=user,
-                message='Your membership in project "{}" has been '
-                'removed.'.format(project.title),
+                message='Your membership in this {} has been removed.'.format(
+                    get_display_name(project.type)
+                ),
                 project=project,
             )
         if SEND_EMAIL:
@@ -1874,7 +1877,7 @@ class RoleAssignmentOwnerTransferMixin:
                     app_name=APP_NAME,
                     alert_name='role_update',
                     user=old_owner,
-                    message=ALERT_MSG_ROLE_CHANGE.format(
+                    message=ALERT_MSG_ROLE_UPDATE.format(
                         project=project.title, role=old_owner_role.name
                     ),
                     url=reverse(
@@ -1894,7 +1897,7 @@ class RoleAssignmentOwnerTransferMixin:
                     app_name=APP_NAME,
                     alert_name='role_update',
                     user=new_owner,
-                    message=ALERT_MSG_ROLE_CHANGE.format(
+                    message=ALERT_MSG_ROLE_UPDATE.format(
                         project=project.title, role=owner_role.name
                     ),
                     url=reverse(

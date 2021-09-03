@@ -5,6 +5,23 @@
 
 {% block title %}App Alerts{% endblock title %}
 
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    .sodar-app-alert-project-badge {
+        vertical-align: top;
+        margin-top: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 300px;
+    }
+
+    .sodar-app-alert-row div:nth-child(1) {
+        max-width: 40px;
+    }
+  </style>
+{% endblock css %}
+
 {% block projectroles %}
 
 <div class="row sodar-subtitle-container">
@@ -23,38 +40,55 @@
   {% for a in object_list %}
     <div class="alert alert-{{ a.level | lower }} sodar-app-alert-item"
          data-alert-uuid="{{ a.sodar_uuid }}">
-      <span data-toggle="tooltip" data-placement="top"
-            title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
-        <i class="iconify"
-           data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
-      </span>
-      <span data-toggle="tooltip" data-placement="top"
-            title="{{ a.date_created | date:'Y-m-d H:i' }}">
-        <i class="iconify" data-icon="mdi:clock"></i>
-      </span>
-      {{ a.message | safe }}
-      <span class="sodar-app-alert-buttons pull-right">
-        {% if a.url %}
-          <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
-             class="btn btn-{{ a.level | lower }}
-                    sodar-list-btn sodar-app-alert-btn-link"
-             role="button"
-             title="Follow link and dismiss"
-             data-toggle="tooltip" data-placement="top">
-            <i class="iconify" data-icon="mdi:arrow-right-bold"></i>
-          </a>
-        {% endif %}
-        <a href="#"
-           class="btn btn-{{ a.level | lower }}
-                  sodar-list-btn sodar-app-alert-btn-dismiss sodar-app-alert-btn-dismiss-single"
-           role="button"
-           title="Dismiss"
-           data-toggle="tooltip" data-placement="top"
-           data-uuid="{{ a.sodar_uuid }}"
-           data-dismiss-url="{% url 'appalerts:ajax_dismiss' appalert=a.sodar_uuid %}">
-          <i class="iconify" data-icon="mdi:close-thick"></i>
-        </a>
-      </span>
+      <div class="row sodar-app-alert-row">
+        <div class="col col-sm-1 px-0">
+          <span data-toggle="tooltip" data-placement="top"
+                title="{% if a.app_plugin %}{{ a.app_plugin.title }}{% else %}Projectroles{% endif %}">
+            <i class="iconify"
+               data-icon="{% if a.app_plugin %}{{ a.app_plugin.get_plugin.icon }}{% else %}mdi:cube{% endif %}"></i>
+          </span>
+          <span data-toggle="tooltip" data-placement="top"
+                title="{{ a.date_created | date:'Y-m-d H:i' }}">
+            <i class="iconify" data-icon="mdi:clock"></i>
+          </span>
+        </div>
+        <div class="col pl-0">
+          {% if a.project %}
+            <span class="badge badge-{{ a.level | lower }} sodar-app-alert-project-badge"
+                  title="{% get_display_name a.project.type title=True %}: {{ a.project.title }}"
+                  data-toggle="tooltip" data-placement="top">
+              <i class="iconify"
+                 data-icon="{% if a.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
+              </i>
+              {{ a.project.title }}
+            </span>
+          {% endif %}
+          {{ a.message | safe }}
+        </div>
+        <div>
+          <span class="sodar-app-alert-buttons pull-right">
+            {% if a.url %}
+              <a href="{% url 'appalerts:redirect' appalert=a.sodar_uuid %}"
+                 class="btn btn-{{ a.level | lower }}
+                        sodar-list-btn sodar-app-alert-btn-link"
+                 role="button"
+                 title="Follow link and dismiss"
+                 data-toggle="tooltip" data-placement="top">
+                <i class="iconify" data-icon="mdi:arrow-right-top-bold"></i>
+              </a>
+            {% endif %}
+            <a class="btn btn-{{ a.level | lower }}
+                      sodar-list-btn sodar-app-alert-btn-dismiss sodar-app-alert-btn-dismiss-single"
+               role="button"
+               title="Dismiss"
+               data-toggle="tooltip" data-placement="top"
+               data-uuid="{{ a.sodar_uuid }}"
+               data-dismiss-url="{% url 'appalerts:ajax_dismiss' appalert=a.sodar_uuid %}">
+              <i class="iconify" data-icon="mdi:close-thick"></i>
+            </a>
+          </span>
+        </div>
+      </div>
     </div>
   {% endfor %}
 
