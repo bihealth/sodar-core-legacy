@@ -33,6 +33,8 @@ Fixed
 
 - **Appalerts**
     - Redundant HTML anchor in Dismiss All button (#788)
+- **Projectroles**
+    - Sidebar notch position (#787)
 
 
 v0.10.4 (2021-08-19)
