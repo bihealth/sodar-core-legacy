@@ -226,7 +226,7 @@ def get_email_header(header):
 
     :return: string
     """
-    return getattr(settings, 'PROJECTROLES_EMAIL_HEADER') or header
+    return getattr(settings, 'PROJECTROLES_EMAIL_HEADER', None) or header
 
 
 def get_email_footer():
@@ -236,7 +236,7 @@ def get_email_footer():
     :return: string
     """
     return getattr(
-        settings, 'PROJECTROLES_EMAIL_FOOTER'
+        settings, 'PROJECTROLES_EMAIL_FOOTER', None
     ) or MESSAGE_FOOTER.format(
         site_title=SITE_TITLE,
         admin_name=ADMIN_RECIPIENT[0],
