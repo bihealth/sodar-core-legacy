@@ -31,4 +31,28 @@ $(document).ready(function () {
             updateAlertStatus();
         }, alertInterval * 1000);
     }
+
+    // Handle alert dismissal
+    $('#sodar-app-alert-badge-btn-dismiss').click(function () {
+        console.log('Clicked!')
+        $.post({
+            url: $(this).attr('data-dismiss-url'),
+            method: 'POST',
+            dataType: 'json'
+        }).done(function () {
+          // If we are on the alert list, update it accordingly
+          var alerts = $(document).find('.sodar-app-alert-item');
+          if (alerts.length > 0) {
+              alerts.each(function () {
+                  $(this).fadeOut(250);
+              });
+              $(document).find('#sodar-app-alert-empty').delay(300).fadeIn(250);
+              $(document).find('#sodar-app-alert-btn-dismiss-all').addClass('disabled');
+          }
+          // Fade the badge itself
+          $(document).find('#sodar-app-alert-badge').fadeOut(250);
+        }).fail(function (err) {
+            console.error('Unable to dismiss alerts: ' + err);
+        });
+    });
 });
