@@ -14,7 +14,7 @@ Added
 -----
 
 - **Appalerts**
-    - Display project badge in alert (#790)
+    - Display project badge in alert (#790, #801)
 - **Projectroles**
     - ``exact`` kwarg for ``assert_element_count()`` in UI tests (#798)
     - Custom email header and footer (#789)

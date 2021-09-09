@@ -16,6 +16,10 @@
         max-width: 300px;
     }
 
+    .sodar-app-alert-project-badge a {
+        color: inherit;
+    }
+
     .sodar-app-alert-row div:nth-child(1) {
         max-width: 40px;
     }
@@ -54,13 +58,15 @@
         </div>
         <div class="col pl-0">
           {% if a.project %}
-            <span class="badge badge-{{ a.level | lower }} sodar-app-alert-project-badge"
+            <span class="badge badge-{{ a.level | lower }} sodar-app-alert-project-badge mr-1"
                   title="{% get_display_name a.project.type title=True %}: {{ a.project.title }}"
                   data-toggle="tooltip" data-placement="top">
               <i class="iconify"
                  data-icon="{% if a.project.type == 'PROJECT' %}mdi:cube{% else %}mdi:rhombus-split{% endif %}">
               </i>
-              {{ a.project.title }}
+              <a href="{% url 'projectroles:detail' project=a.project.sodar_uuid %}">
+                {{ a.project.title }}
+              </a>
             </span>
           {% endif %}
           {{ a.message | safe }}
