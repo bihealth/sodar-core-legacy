@@ -2876,7 +2876,7 @@ class RemoteSiteDeleteView(
 class RemoteProjectListView(
     LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
 ):
-    """Main view for displaying a remote site's project list"""
+    """View for displaying the project lsit for remote site sync"""
 
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remote_projects.html'
@@ -2890,7 +2890,6 @@ class RemoteProjectListView(
         # Projects in SOURCE mode: all local projects of type PROJECT
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             projects = Project.objects.filter(type=PROJECT_TYPE_PROJECT)
-
         # Projects in TARGET mode: retrieve from source
         else:  # SITE_MODE_TARGET
             remote_uuids = [p.project_uuid for p in site.projects.all()]
@@ -2904,36 +2903,31 @@ class RemoteProjectListView(
         return context
 
 
-class RemoteProjectsBatchUpdateView(
+class RemoteProjectBatchUpdateView(
     LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
 ):
-    """Manually created form view for updating project access in batch for a
-    remote target site"""
+    """
+    Manually created form view for updating project access in batch for a
+    remote target site.
+    """
 
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remoteproject_update.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         # Current site
-        try:
-            context['site'] = RemoteSite.objects.get(
-                sodar_uuid=kwargs['remotesite']
-            )
-
-        except RemoteSite.DoesNotExist:
-            pass
-
+        context['site'] = RemoteSite.objects.filter(
+            sodar_uuid=kwargs['remotesite']
+        ).first()
         return context
 
     def post(self, request, *args, **kwargs):
+        timeline = get_backend_api('timeline_backend')
+        post_data = request.POST
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
-        post_data = request.POST
         confirmed = True if 'update-confirmed' in post_data else False
-        timeline = get_backend_api('timeline_backend')
-
         redirect_url = reverse(
             'projectroles:remote_projects',
             kwargs={'remotesite': site.sodar_uuid},
@@ -2962,17 +2956,10 @@ class RemoteProjectsBatchUpdateView(
             modifying_access = []
 
             for k, v in access_fields.items():
-                remote_obj = None
                 project_uuid = k.split('_')[2]
-
-                try:
-                    remote_obj = RemoteProject.objects.get(
-                        site=site, project_uuid=project_uuid
-                    )
-
-                except RemoteProject.DoesNotExist:
-                    pass
-
+                remote_obj = RemoteProject.objects.filter(
+                    site=site, project_uuid=project_uuid
+                ).first()
                 if (not remote_obj and v != REMOTE_LEVEL_NONE) or (
                     remote_obj and remote_obj.level != v
                 ):
@@ -2998,7 +2985,6 @@ class RemoteProjectsBatchUpdateView(
                 return redirect(redirect_url)
 
             context['modifying_access'] = modifying_access
-
             return super().render_to_response(context)
 
         ############
@@ -3008,14 +2994,12 @@ class RemoteProjectsBatchUpdateView(
         for k, v in access_fields.items():
             project_uuid = k.split('_')[2]
             project = Project.objects.filter(sodar_uuid=project_uuid).first()
-
             # Update or create a RemoteProject object
             try:
                 rp = RemoteProject.objects.get(
                     site=site, project_uuid=project_uuid
                 )
                 rp.level = v
-
             except RemoteProject.DoesNotExist:
                 rp = RemoteProject(
                     site=site,
@@ -3023,7 +3007,6 @@ class RemoteProjectsBatchUpdateView(
                     project=project,
                     level=v,
                 )
-
             rp.save()
 
             if timeline and project:
@@ -3031,7 +3014,6 @@ class RemoteProjectsBatchUpdateView(
                     'site',
                     SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][v].lower(),
                 )
-
                 tl_event = timeline.add_event(
                     project=project,
                     app_name=APP_NAME,
@@ -3041,7 +3023,6 @@ class RemoteProjectsBatchUpdateView(
                     classified=True,
                     status_type='OK',
                 )
-
                 tl_event.add_object(site, 'site', site.name)
 
         # All OK
@@ -3058,47 +3039,39 @@ class RemoteProjectsBatchUpdateView(
         return redirect(redirect_url)
 
 
-class RemoteProjectsSyncView(
+class RemoteProjectSyncView(
     LoginRequiredMixin, LoggedInPermissionMixin, TemplateView
 ):
-    """Synchronize remote projects from a source site"""
+    """Target site view for synchronizing remote projects from a source site"""
 
     permission_required = 'projectroles.update_remote'
     template_name = 'projectroles/remoteproject_sync.html'
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         # Current site
-        try:
-            context['site'] = RemoteSite.objects.get(
-                sodar_uuid=kwargs['remotesite']
-            )
-
-        except RemoteSite.DoesNotExist:
-            pass
-
+        context['site'] = RemoteSite.objects.filter(
+            sodar_uuid=kwargs['remotesite']
+        ).first()
         return context
 
     def get(self, request, *args, **kwargs):
         """Override get() for a confirmation view"""
-        from projectroles.views_api import (
-            CORE_API_MEDIA_TYPE,
-            CORE_API_DEFAULT_VERSION,
-        )
-
-        remote_api = RemoteProjectAPI()
         redirect_url = reverse('projectroles:remote_sites')
-
         if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE:
             messages.error(
                 request, 'Site in SOURCE mode, remote sync not allowed'
             )
             return redirect(redirect_url)
 
+        from projectroles.views_api import (
+            CORE_API_MEDIA_TYPE,
+            CORE_API_DEFAULT_VERSION,
+        )
+
+        remote_api = RemoteProjectAPI()
         context = self.get_context_data(*args, **kwargs)
         site = context['site']
-
         api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
@@ -3116,17 +3089,14 @@ class RemoteProjectsSyncView(
 
         except Exception as ex:
             ex_str = str(ex)
-
             if (
                 isinstance(ex, urllib.error.URLError)
                 and isinstance(ex.reason, ssl.SSLError)
                 and ex.reason.reason == 'WRONG_VERSION_NUMBER'
             ):
                 ex_str = 'Most likely server cannot handle HTTPS requests.'
-
             if len(ex_str) >= 255:
                 ex_str = ex_str[:255]
-
             messages.error(
                 request,
                 'Unable to synchronize {}: {}'.format(
@@ -3140,7 +3110,6 @@ class RemoteProjectsSyncView(
             update_data = remote_api.sync_source_data(
                 site, remote_data, request
             )
-
         except Exception as ex:
             messages.error(
                 request, 'Remote sync cancelled with exception: {}'.format(ex)
@@ -3157,7 +3126,11 @@ class RemoteProjectsSyncView(
             [v for v in update_data['projects'].values() if 'status' in v]
         )
         app_settings_count = len(
-            [v for v in update_data['app_settings'].values() if 'status' in v]
+            [
+                v
+                for v in update_data['app_settings'].values()
+                if 'status' in v and v['status'] != 'skipped'
+            ]
         )
         role_count = 0
 

@@ -846,7 +846,6 @@ class RemoteProjectAPI:
             self.default_owner = User.objects.get(
                 username=settings.PROJECTROLES_DEFAULT_ADMIN
             )
-
         except User.DoesNotExist:
             error_msg = (
                 'Local user "{}" defined in PROJECTROLES_DEFAULT_ADMIN '
@@ -900,15 +899,11 @@ class RemoteProjectAPI:
                 remote_site = RemoteSite.objects.filter(
                     sodar_uuid=remote_site_uuid
                 ).first()
-
                 if remote_site:
                     self._update_peer_site(remote_site_uuid, site_data)
-
                 else:
                     self._create_peer_site(remote_site_uuid, site_data)
-
             logger.info('Peer Site Sync OK')
-
         else:
             logger.info('No new Peer Sites to sync')
 
@@ -1007,11 +1002,16 @@ class RemoteProjectAPI:
             if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
                 logger.info('Keeping local setting {}'.format(str(obj)))
                 return
+            # Skip if value is identical
+            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
+                logger.info('Skipping setting {}'.format(str(obj)))
+                a_data['status'] = 'skipped'
+                return
             # If setting is global, update existing value by recreating object
-            action_str = 'Updating'
+            action_str = 'updating'
             obj.delete()
         except ObjectDoesNotExist:
-            action_str = 'Creating'
+            action_str = 'creating'
 
         # Remove keys that are not available in the model
         ad.pop('local', None)
@@ -1026,9 +1026,9 @@ class RemoteProjectAPI:
 
         # Create new app setting
         obj = AppSetting(**ad)
-        logger.info('{} setting {}'.format(action_str, str(obj)))
+        logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
         obj.save()
-        a_data['status'] = action_str.lower().replace('ing', 'ed')
+        a_data['status'] = action_str.replace('ing', 'ed')
 
 
 def _add_user(sync_data, user):
@@ -1072,14 +1072,12 @@ def _add_parent_categories(sync_data, category, project_level):
         if project_level == REMOTE_LEVEL_READ_ROLES:
             cat_data['roles'] = {}
             cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-
             for role_as in category.roles.all():
                 cat_data['roles'][str(role_as.sodar_uuid)] = {
                     'user': role_as.user.username,
                     'role': role_as.role.name,
                 }
                 sync_data = _add_user(sync_data, role_as.user)
-
         else:
             cat_data['level'] = REMOTE_LEVEL_READ_INFO
 
@@ -1106,7 +1104,7 @@ def _add_app_setting(sync_data, app_setting):
             'type': app_setting.type,
             'value': app_setting.value,
             'value_json': app_setting.value_json,
-            'app_plugin': app_setting.app_plugin.name  # 'app_plugin_id': app_setting.app_plugin.id
+            'app_plugin': app_setting.app_plugin.name
             if app_setting.app_plugin
             else None,
             'project_uuid': app_setting.project.sodar_uuid
@@ -1114,7 +1112,7 @@ def _add_app_setting(sync_data, app_setting):
             else None,
             'user_uuid': app_setting.user.sodar_uuid
             if app_setting.user
-            else None,  # 'user_id': app_setting.user.id if app_setting.user else None,
+            else None,
             'local': AppSettingAPI._get_projectroles_settings()
             .get(app_setting.name, {})
             .get('local', APP_SETTING_LOCAL_DEFAULT),

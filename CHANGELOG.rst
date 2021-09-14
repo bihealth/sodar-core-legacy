@@ -31,6 +31,9 @@ Changed
     - Improve alert list layout (#790)
 - **Projectroles**
     - Improve login button locating in ``login_and_redirect_with_ui()`` (#796)
+    - Hide skipped app settings from target remote sync view (#785)
+    - Improve app settings layout in target remote sync view (#804)
+    - Minor refactoring for remote sync views
 
 Fixed
 -----
@@ -40,6 +43,7 @@ Fixed
 - **Projectroles**
     - Sidebar notch position (#787)
     - ``sodar-overflow-container`` misalignment (#791)
+    - App settings recreated if value is identical (#785)
 
 
 v0.10.4 (2021-08-19)
