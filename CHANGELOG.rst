@@ -34,6 +34,7 @@ Changed
     - Hide skipped app settings from target remote sync view (#785)
     - Improve app settings layout in target remote sync view (#804)
     - Minor refactoring for remote sync views
+    - Refactor ``_get_projectroles_settings()`` into ``get_projectroles_defs()`` (#803)
 
 Fixed
 -----

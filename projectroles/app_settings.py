@@ -180,31 +180,6 @@ class AppSettingAPI:
             raise ValueError('Value is not valid JSON: {}'.format(value))
 
     @classmethod
-    def _get_projectroles_settings(cls):
-        """
-        Return projectroles settings. If it exists, get value from
-        settings.PROJECTROLES_APP_SETTINGS_TEST for testing modifications.
-
-        :return: Dict
-        """
-        try:
-            app_settings = (
-                settings.PROJECTROLES_APP_SETTINGS_TEST
-                or PROJECTROLES_APP_SETTINGS
-            )
-        except AttributeError:
-            app_settings = PROJECTROLES_APP_SETTINGS
-
-        for k, v in app_settings.items():
-            if 'local' not in v:
-                raise ValueError(
-                    '"local" attribute is missing in projectroles app '
-                    'setting "{}"'.format(k)
-                )
-
-        return app_settings
-
-    @classmethod
     def _compare_value(cls, setting_obj, input_value):
         """
         Compare input value to value in an AppSetting object
@@ -233,7 +208,7 @@ class AppSettingAPI:
         :raise: KeyError if nothing is found with setting_name
         """
         if app_name == 'projectroles':
-            app_settings = cls._get_projectroles_settings()
+            app_settings = cls.get_projectroles_defs()
         else:
             app_plugin = get_app_plugin(app_name)
             if not app_plugin:
@@ -433,7 +408,7 @@ class AppSettingAPI:
 
         except AppSetting.DoesNotExist:
             if app_name == 'projectroles':
-                app_settings = cls._get_projectroles_settings()
+                app_settings = cls.get_projectroles_defs()
                 app_plugin_model = None
             else:
                 app_plugin = get_app_plugin(app_name)
@@ -579,7 +554,7 @@ class AppSettingAPI:
         if not plugin and not app_name:
             raise ValueError('Plugin and app name both unset')
         if app_name == 'projectroles':
-            app_settings = cls._get_projectroles_settings()
+            app_settings = cls.get_projectroles_defs()
         else:
             if not plugin:
                 plugin = get_app_plugin(app_name)
@@ -624,7 +599,7 @@ class AppSettingAPI:
         if not plugin and not app_name:
             raise ValueError('Plugin and app name both unset')
         if app_name == 'projectroles':
-            app_settings = cls._get_projectroles_settings()
+            app_settings = cls.get_projectroles_defs()
         else:
             if not plugin:
                 plugin = get_app_plugin(app_name)
@@ -656,3 +631,26 @@ class AppSettingAPI:
             cls._check_type(v['type'])
             cls._check_type_options(v['type'], v.get('options'))
         return setting_defs
+
+    @classmethod
+    def get_projectroles_defs(cls):
+        """
+        Return projectroles settings definitions. If it exists, get value from
+        settings.PROJECTROLES_APP_SETTINGS_TEST for testing modifications.
+
+        :return: Dict
+        """
+        try:
+            app_settings = (
+                settings.PROJECTROLES_APP_SETTINGS_TEST
+                or PROJECTROLES_APP_SETTINGS
+            )
+        except AttributeError:
+            app_settings = PROJECTROLES_APP_SETTINGS
+        for k, v in app_settings.items():
+            if 'local' not in v:
+                raise ValueError(
+                    'Attribute "local" is missing in projectroles app '
+                    'setting definition "{}"'.format(k)
+                )
+        return app_settings

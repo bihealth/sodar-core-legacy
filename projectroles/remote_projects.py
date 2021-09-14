@@ -26,11 +26,9 @@ from projectroles.models import (
 from projectroles.plugins import get_app_plugin, get_backend_api
 
 
-# App settings API
-app_settings_api = AppSettingAPI()
-
-User = auth.get_user_model()
+app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+User = auth.get_user_model()
 
 APP_NAME = 'projectroles'
 
@@ -1098,7 +1096,7 @@ def _add_peer_site(sync_data, site):
 
 
 def _add_app_setting(sync_data, app_setting):
-    if not sync_data['app_settings'].get(str(app_setting.sodar_uuid)):
+    if sync_data['app_settings'].get(str(app_setting.sodar_uuid)):
         sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
             'name': app_setting.name,
             'type': app_setting.type,
@@ -1113,7 +1111,7 @@ def _add_app_setting(sync_data, app_setting):
             'user_uuid': app_setting.user.sodar_uuid
             if app_setting.user
             else None,
-            'local': AppSettingAPI._get_projectroles_settings()
+            'local': app_settings.get_projectroles_defs()
             .get(app_setting.name, {})
             .get('local', APP_SETTING_LOCAL_DEFAULT),
         }
