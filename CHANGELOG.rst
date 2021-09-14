@@ -44,6 +44,7 @@ Fixed
     - Sidebar notch position (#787)
     - ``sodar-overflow-container`` misalignment (#791)
     - App settings recreated if value is identical (#785)
+    - Line separators in ``remoteproject_sync.html`` (#805)
 
 
 v0.10.4 (2021-08-19)
