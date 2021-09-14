@@ -260,7 +260,9 @@
                       {% endif %}
                     </td>
                     <td>{{ a.name }}</td>
-                    <td>{% get_plugin_name_by_id a.plugin_id %}</td>
+                    <td>
+                      {% if a.app_plugin %}{{ a.app_plugin }}{% else %}projectroles{% endif %}
+                    </td>
                     <td>
                       {% if a.type == 'JSON' %}
                         {{ a.value_json }}

@@ -654,3 +654,21 @@ class AppSettingAPI:
                     'setting definition "{}"'.format(k)
                 )
         return app_settings
+
+    @classmethod
+    def get_all_defs(cls):
+        """
+        Return app setting definitions for projectroles and all active app
+        plugins in a dictionary with the app name as key.
+
+        :return: Dict
+        """
+        ret = {'projectroles': cls.get_projectroles_defs()}
+        plugins = (
+            []
+            + get_active_plugins('project_app')
+            + get_active_plugins('site_app')
+        )
+        for p in plugins:
+            ret[p.name] = p.app_settings
+        return ret

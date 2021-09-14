@@ -10,6 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
 
+from djangoplugins.models import Plugin
+
 from projectroles.app_settings import (
     AppSettingAPI,
     APP_SETTING_LOCAL_DEFAULT,
@@ -23,7 +25,7 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     AppSetting,
 )
-from projectroles.plugins import get_app_plugin, get_backend_api
+from projectroles.plugins import get_backend_api
 
 
 app_settings = AppSettingAPI()
@@ -723,6 +725,43 @@ class RemoteProjectAPI:
                 )
             )
 
+    @classmethod
+    def _add_app_setting(cls, sync_data, app_setting, all_defs):
+        """
+        Add app setting to sync data.
+
+        :param sync_data: Sync data to be updated (dict)
+        :param app_setting: AppSetting object
+        :param all_defs: All settings defs
+        :return: Updated sync_data dict
+        """
+        if app_setting.app_plugin:
+            plugin_name = app_setting.app_plugin.name
+        else:
+            plugin_name = 'projectroles'
+        local = (
+            all_defs.get(plugin_name, {})
+            .get(app_setting.name, {})
+            .get('local', APP_SETTING_LOCAL_DEFAULT)
+        )
+        sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
+            'name': app_setting.name,
+            'type': app_setting.type,
+            'value': app_setting.value,
+            'value_json': app_setting.value_json,
+            'app_plugin': app_setting.app_plugin.name
+            if app_setting.app_plugin
+            else None,
+            'project_uuid': app_setting.project.sodar_uuid
+            if app_setting.project
+            else None,
+            'user_uuid': app_setting.user.sodar_uuid
+            if app_setting.user
+            else None,
+            'local': local,
+        }
+        return sync_data
+
     # API functions ------------------------------------------------------------
 
     def get_target_data(self, target_site):
@@ -738,6 +777,7 @@ class RemoteProjectAPI:
             'peer_sites': {},
             'app_settings': {},
         }
+        all_defs = app_settings.get_all_defs()
 
         for rp in target_site.projects.all():
             project = rp.get_project()
@@ -757,7 +797,7 @@ class RemoteProjectAPI:
             # Get and add app settings for project
             for a in AppSetting.objects.filter(project=project):
                 try:
-                    sync_data = _add_app_setting(sync_data, a)
+                    sync_data = self._add_app_setting(sync_data, a, all_defs)
                 except Exception as ex:
                     logger.error(
                         'Failed to sync app setting "{}.settings.{}" '
@@ -822,6 +862,75 @@ class RemoteProjectAPI:
             sync_data['projects'][str(rp.project_uuid)] = project_data
 
         return sync_data
+
+    @classmethod
+    def _sync_app_setting(cls, a_uuid, a_data):
+        """
+        Create or update an AppSetting on a target site.
+
+        :param a_uuid: App setting UUID
+        :param a_data: App setting data
+        """
+        ad = deepcopy(a_data)
+        app_plugin = None
+        project = None
+        user = None
+
+        # Get app plugin (skip the rest if not found on target server)
+        if ad['app_plugin']:
+            app_plugin = Plugin.objects.filter(name=ad['app_plugin']).first()
+            if not app_plugin:
+                logger.debug(
+                    'Skipping setting "{}": App plugin not found with name '
+                    '"{}"'.format(ad['name'], ad['app_plugin'])
+                )
+                return
+
+        if ad['project_uuid']:
+            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
+        if ad['user_uuid']:
+            user = User.objects.get(sodar_uuid=ad['user_uuid'])
+
+        try:
+            obj = AppSetting.objects.get(
+                app_plugin=app_plugin,
+                name=ad['name'],
+                project=project,
+                user=user,
+            )
+            # Skip if value is identical
+            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
+                logger.info(
+                    'Skipping setting {}: value unchanged'.format(str(obj))
+                )
+                a_data['status'] = 'skipped'
+                return
+            # Keep local app setting if available
+            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
+                logger.info('Keeping local setting {}'.format(ad['name']))
+                return
+            # If setting is global, update existing value by recreating object
+            action_str = 'updating'
+            obj.delete()
+        except ObjectDoesNotExist:
+            action_str = 'creating'
+
+        # Remove keys that are not available in the model
+        ad.pop('local', None)
+        ad.pop('project_uuid', None)
+        ad.pop('user_uuid', None)
+        # Add keys required for the model
+        ad['project'] = project
+        ad['user'] = user
+        ad['sodar_uuid'] = a_uuid
+        if app_plugin:
+            ad['app_plugin'] = app_plugin
+
+        # Create new app setting
+        obj = AppSetting(**ad)
+        logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
+        obj.save()
+        a_data['status'] = action_str.replace('ing', 'ed')
 
     @transaction.atomic
     def sync_source_data(self, site, remote_data, request=None):
@@ -957,76 +1066,11 @@ class RemoteProjectAPI:
                         ex,
                     )
                 )
+                if settings.DEBUG:
+                    raise ex
 
         logger.info('Synchronization OK')
         return self.remote_data
-
-    @classmethod
-    def _sync_app_setting(cls, a_uuid, a_data):
-        """
-        Create or update an AppSetting on a target site.
-
-        :param a_uuid: App setting UUID
-        :param a_data: App setting data
-        """
-        ad = deepcopy(a_data)
-        app_plugin = None
-        project = None
-        user = None
-
-        # Get app plugin (skip the rest if not found on target server)
-        if ad['app_plugin']:
-            app_plugin = get_app_plugin(ad['app_plugin'])
-            if not app_plugin:
-                logger.debug(
-                    'Skipping setting "{}": App plugin not found with name '
-                    '"{}"'.format(ad['name'], ad['app_plugin'])
-                )
-                return
-
-        if ad['project_uuid']:
-            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
-        if ad['user_uuid']:
-            user = User.objects.get(sodar_uuid=ad['user_uuid'])
-
-        try:
-            obj = AppSetting.objects.get(
-                app_plugin=app_plugin,
-                name=ad['name'],
-                project=project,
-                user=user,
-            )
-            # Keep local app setting if available
-            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
-                logger.info('Keeping local setting {}'.format(str(obj)))
-                return
-            # Skip if value is identical
-            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
-                logger.info('Skipping setting {}'.format(str(obj)))
-                a_data['status'] = 'skipped'
-                return
-            # If setting is global, update existing value by recreating object
-            action_str = 'updating'
-            obj.delete()
-        except ObjectDoesNotExist:
-            action_str = 'creating'
-
-        # Remove keys that are not available in the model
-        ad.pop('local', None)
-        ad.pop('project_uuid', None)
-        ad.pop('user_uuid', None)
-        # Add keys required for the model
-        ad['project'] = project
-        ad['user'] = user
-        ad['sodar_uuid'] = a_uuid
-        if app_plugin:
-            ad['app_plugin'] = app_plugin.get_model()
-
-        # Create new app setting
-        obj = AppSetting(**ad)
-        logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
-        obj.save()
-        a_data['status'] = action_str.replace('ing', 'ed')
 
 
 def _add_user(sync_data, user):
@@ -1091,28 +1135,5 @@ def _add_peer_site(sync_data, site):
             'url': site.url,
             'description': site.description,
             'user_display': site.user_display,
-        }
-    return sync_data
-
-
-def _add_app_setting(sync_data, app_setting):
-    if sync_data['app_settings'].get(str(app_setting.sodar_uuid)):
-        sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
-            'name': app_setting.name,
-            'type': app_setting.type,
-            'value': app_setting.value,
-            'value_json': app_setting.value_json,
-            'app_plugin': app_setting.app_plugin.name
-            if app_setting.app_plugin
-            else None,
-            'project_uuid': app_setting.project.sodar_uuid
-            if app_setting.project
-            else None,
-            'user_uuid': app_setting.user.sodar_uuid
-            if app_setting.user
-            else None,
-            'local': app_settings.get_projectroles_defs()
-            .get(app_setting.name, {})
-            .get('local', APP_SETTING_LOCAL_DEFAULT),
         }
     return sync_data

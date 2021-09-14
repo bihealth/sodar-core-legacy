@@ -139,19 +139,6 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
         )
         self.assertEqual(c_tags.get_user_by_username('NON_EXISTING_USER'), None)
 
-    def test_get_plugin_name_by_id(self):
-        """Test get_plugin_name_by_id()"""
-        self.assertEqual(
-            c_tags.get_plugin_name_by_id(
-                self.setting_filesfolders.app_plugin_id
-            ),
-            'filesfolders',
-        )
-
-    def test_get_plugin_name_by_id_no_id(self):
-        """Test get_plugin_name_by_id()"""
-        self.assertEqual(c_tags.get_plugin_name_by_id(None), 'projectroles')
-
     def test_get_django_setting(self):
         """Test get_django_setting()"""
         ret = c_tags.get_django_setting('PROJECTROLES_BROWSER_WARNING')

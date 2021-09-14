@@ -591,6 +591,15 @@ class TestAppSettingAPI(
                 'description': 'Example boolean project setting',
                 'user_modifiable': True,
             },
+            'project_global_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                'type': 'BOOLEAN',
+                'label': 'Global boolean setting',
+                'default': False,
+                'description': 'Example global boolean project setting',
+                'user_modifiable': True,
+                'local': False,
+            },
             'project_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'JSON',
@@ -738,13 +747,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 8)
+        self.assertEqual(len(defs), 9)
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 6)
+        self.assertEqual(len(defs), 7)
 
     def test_get_setting_defs_invalid_scope(self):
         """Test get_setting_defs() with an invalid scope"""

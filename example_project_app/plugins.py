@@ -71,6 +71,15 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
             'description': 'Example boolean project setting',
             'user_modifiable': True,
         },
+        'project_global_setting': {
+            'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+            'type': 'BOOLEAN',
+            'label': 'Global boolean setting',
+            'default': False,
+            'description': 'Example global boolean project setting',
+            'user_modifiable': True,
+            'local': False,
+        },
         'project_json_setting': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'JSON',
