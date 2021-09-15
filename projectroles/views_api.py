@@ -839,7 +839,7 @@ class RemoteProjectGetAPIView(CoreAPIBaseMixin, APIView):
         except RemoteSite.DoesNotExist:
             return Response('Remote site not found, unauthorized', status=401)
 
-        sync_data = remote_api.get_target_data(target_site)
+        sync_data = remote_api.get_source_data(target_site)
 
         # Update access date for target site remote projects
         target_site.projects.all().update(date_access=timezone.now())

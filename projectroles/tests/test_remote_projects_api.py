@@ -131,7 +131,7 @@ PR_IP_RESTRICT_UUID = str(uuid.uuid4())
 PR_IP_ALLOWLIST_UUID = str(uuid.uuid4())
 
 
-class TestGetTargetData(
+class TestGetSourceData(
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
@@ -139,7 +139,7 @@ class TestGetTargetData(
     SodarUserMixin,
     TestCase,
 ):
-    """Tests for the get_target_data() API function"""
+    """Tests for the get_source_data() API function"""
 
     def setUp(self):
         # Init roles
@@ -209,9 +209,7 @@ class TestGetTargetData(
             site=self.peer_site,
             level=REMOTE_LEVEL_VIEW_AVAIL,
         )
-
-        sync_data = self.remote_api.get_target_data(self.target_site)
-
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {},
             'projects': {
@@ -240,9 +238,7 @@ class TestGetTargetData(
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-
-        sync_data = self.remote_api.get_target_data(self.target_site)
-
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {},
             'projects': {
@@ -277,7 +273,7 @@ class TestGetTargetData(
         self.assertEqual(sync_data, expected)
 
     def test_read_info_nested(self):
-        """Test get data with project level of READ_INFO with nested categories"""
+        """Test get data with READ_INFO and nested categories"""
         sub_category = self._make_project(
             'SubCategory', PROJECT_TYPE_CATEGORY, parent=self.category
         )
@@ -289,9 +285,7 @@ class TestGetTargetData(
             site=self.target_site,
             level=REMOTE_LEVEL_READ_INFO,
         )
-
-        sync_data = self.remote_api.get_target_data(self.target_site)
-
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {},
             'projects': {
@@ -338,9 +332,7 @@ class TestGetTargetData(
             site=self.peer_site,
             level=REMOTE_LEVEL_READ_ROLES,
         )
-
-        sync_data = self.remote_api.get_target_data(self.target_site)
-
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {
                 str(self.user_source.sodar_uuid): {
@@ -409,9 +401,7 @@ class TestGetTargetData(
             site=self.peer_site,
             level=REMOTE_LEVEL_REVOKED,
         )
-
-        sync_data = self.remote_api.get_target_data(self.target_site)
-
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {
                 str(self.user_source.sodar_uuid): {
@@ -455,7 +445,7 @@ class TestGetTargetData(
 
     def test_no_access(self):
         """Test get data with no project access set in the source site"""
-        sync_data = self.remote_api.get_target_data(self.target_site)
+        sync_data = self.remote_api.get_source_data(self.target_site)
         expected = {
             'users': {},
             'projects': {},
@@ -466,7 +456,7 @@ class TestGetTargetData(
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-class TestSyncSourceDataBase(
+class TestSyncRemoteDataBase(
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
@@ -475,7 +465,7 @@ class TestSyncSourceDataBase(
     AppSettingMixin,
     TestCase,
 ):
-    """Base class for tests for the sync_source_data() API function"""
+    """Base class for tests for the sync_remote_data() API function"""
 
     def setUp(self):
         # Init users
@@ -583,12 +573,11 @@ class TestSyncSourceDataBase(
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-class TestSyncSourceDataCreate(TestSyncSourceDataBase):
-    """Creation tests for the sync_source_data() API function"""
+class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
+    """Creation tests for the sync_remote_data() API function"""
 
     def test_create(self):
         """Test sync with non-existing project data and READ_ROLE access"""
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
@@ -661,7 +650,7 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
         original_data = deepcopy(self.default_data)
 
         # Do sync
-        self.remote_api.sync_source_data(self.source_site, self.default_data)
+        self.remote_api.sync_remote_data(self.source_site, self.default_data)
 
         # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
@@ -941,9 +930,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
         remote_data['app_settings'][PR_IP_ALLOWLIST_UUID]['local'] = True
         original_data = deepcopy(remote_data)
 
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert remote_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
@@ -960,7 +948,6 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
 
     def test_create_multiple(self):
         """Test sync with non-existing project data and multiple projects"""
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
@@ -987,10 +974,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
         }
         original_data = deepcopy(remote_data)
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 3)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 2)
@@ -1025,7 +1010,6 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
         }
         self.assertEqual(model_to_dict(p_new_owner_obj), expected)
 
-        # Assert remote_data changes
         expected = original_data
         expected['users'][SOURCE_USER_UUID]['status'] = 'created'
         expected['projects'][SOURCE_CATEGORY_UUID]['status'] = 'created'
@@ -1046,7 +1030,6 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
 
     def test_create_local_owner(self):
         """Test sync with non-existing project data and a local owner"""
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
@@ -1062,10 +1045,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             SOURCE_PROJECT_ROLE_UUID
         ]['user'] = 'source_admin'
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 1)
@@ -1078,27 +1059,22 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
 
     def test_create_category_conflict(self):
         """Test sync with conflict in local categories (should fail)"""
-        # Set up local category
         self._make_project(
             title=SOURCE_CATEGORY_TITLE,
             type=PROJECT_TYPE_CATEGORY,
             parent=None,
         )
-
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 1)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
         self.assertEqual(RemoteProject.objects.all().count(), 0)
         self.assertEqual(RemoteSite.objects.all().count(), 1)
-
         remote_data = self.default_data
 
         # Do sync, assert an exception is raised
         with self.assertRaises(ValueError):
-            self.remote_api.sync_source_data(self.source_site, remote_data)
+            self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 1)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
@@ -1116,10 +1092,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
         ] = REMOTE_LEVEL_READ_INFO
         original_data = deepcopy(remote_data)
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 0)
         self.assertEqual(RoleAssignment.objects.all().count(), 0)
         self.assertEqual(User.objects.all().count(), 1)
@@ -1148,8 +1122,7 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             'role': self.role_contributor.name,
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         # Assert database status (the new user and role should not be created)
         self.assertEqual(Project.objects.all().count(), 2)
@@ -1182,10 +1155,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             'role': self.role_contributor.name,
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status (the new user and role should be created)
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1213,10 +1184,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             'role': self.role_contributor.name,
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status (the new user and role should not be created)
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
@@ -1248,10 +1217,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             }
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status (the new user and role should be created)
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1286,10 +1253,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
             }
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status (the new user and role should be created)
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
@@ -1301,8 +1266,8 @@ class TestSyncSourceDataCreate(TestSyncSourceDataBase):
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
-    """Updating tests for the sync_source_data() API function"""
+class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
+    """Updating tests for the sync_remote_data() API function"""
 
     def setUp(self):
         super().setUp()
@@ -1403,7 +1368,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
 
     def test_update(self):
         """Test sync with existing project data and READ_ROLE access"""
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
@@ -1442,10 +1406,8 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
             '192.168.1.1'
         ]
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1646,8 +1608,7 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         ]
         original_data = deepcopy(remote_data)
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         app_setting_ip_restrict_obj = AppSetting.objects.get(
             sodar_uuid=PR_IP_RESTRICT_UUID,
@@ -1698,7 +1659,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
 
     def test_update_app_setting_no_app(self):
         """Test update with app setting for app not present on target site"""
-        # Assert preconditions
         self.assertEqual(AppSetting.objects.count(), 2)
 
         remote_data = self.default_data
@@ -1716,8 +1676,7 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
             'local': False,
         }
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
         # Make sure setting was not set
         self.assertIsNone(AppSetting.objects.filter(name=setting_name).first())
@@ -1735,8 +1694,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         self._make_assignment(
             self.project_obj, target_user2, self.role_contributor
         )
-
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1750,10 +1707,8 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         ] = REMOTE_LEVEL_REVOKED
         remote_data['projects'][SOURCE_PROJECT_UUID]['remote_sites'] = []
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1769,7 +1724,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
                 user=new_user,
                 role__name=PROJECT_ROLE_CONTRIBUTOR,
             )
-
         # Assert update_data changes
         self.assertEqual(
             remote_data['projects'][SOURCE_PROJECT_UUID]['level'],
@@ -1787,7 +1741,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         )
         new_role_uuid = str(new_role_obj.sodar_uuid)
 
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 3)
         self.assertEqual(User.objects.all().count(), 3)
@@ -1797,23 +1750,19 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 3)
         self.assertEqual(RemoteProject.objects.all().count(), 3)
         self.assertEqual(RemoteSite.objects.all().count(), 2)
-
         with self.assertRaises(RoleAssignment.DoesNotExist):
             RoleAssignment.objects.get(
                 project__sodar_uuid=SOURCE_PROJECT_UUID,
                 role__name=PROJECT_ROLE_CONTRIBUTOR,
             )
 
-        # Assert remote_data changes
         expected = original_data
         expected['projects'][SOURCE_PROJECT_UUID]['roles'][new_role_uuid] = {
             'user': new_user_username,
@@ -1826,7 +1775,6 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
 
     def test_update_no_changes(self):
         """Test sync with existing project data and no changes"""
-        # Assert preconditions
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)
@@ -1836,10 +1784,8 @@ class TestSyncSourceDataUpdate(TestSyncSourceDataBase):
         remote_data = self.default_data
         original_data = deepcopy(remote_data)
 
-        # Do sync
-        self.remote_api.sync_source_data(self.source_site, remote_data)
+        self.remote_api.sync_remote_data(self.source_site, remote_data)
 
-        # Assert database status
         self.assertEqual(Project.objects.all().count(), 2)
         self.assertEqual(RoleAssignment.objects.all().count(), 2)
         self.assertEqual(User.objects.all().count(), 2)

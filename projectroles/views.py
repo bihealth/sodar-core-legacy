@@ -3107,7 +3107,7 @@ class RemoteProjectSyncView(
 
         # Sync data
         try:
-            update_data = remote_api.sync_source_data(
+            update_data = remote_api.sync_remote_data(
                 site, remote_data, request
             )
         except Exception as ex:
