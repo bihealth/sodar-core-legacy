@@ -49,6 +49,7 @@ Fixed
     - Line separators in ``remoteproject_sync.html`` (#805)
     - App settings remote sync only supporting projectroles (#806, #809)
     - Plugin name incorrectly displayed in target remote sync view (#810)
+    - Active link check for projectroles URLs ignoring app name (#814)
 
 Removed
 -------

@@ -24,7 +24,7 @@
     {% if project %}
 
       {# Overview #}
-      <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'detail' %}"
+      <a class="dropdown-item {% get_pr_link_state projectroles_urls request 'detail' %}"
           href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
           title="Overview"
           id="sodar-pr-alt-link-overview">
@@ -51,7 +51,7 @@
 
       {# Role and project editing #}
       {% if can_view_roles %}
-        <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name role_urls %}"
+        <a class="dropdown-item {% get_pr_link_state projectroles_urls request role_urls %}"
            href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
            title="Members"
            id="sodar-pr-alt-link-project-roles">
@@ -59,7 +59,7 @@
         </a>
       {% endif %}
       {% if can_update_project %}
-        <a class="dropdown-item {% get_pr_link_state projectroles_urls request.resolver_match.url_name 'update' %}"
+        <a class="dropdown-item {% get_pr_link_state projectroles_urls request 'update' %}"
            href="{% url 'projectroles:update' project=project.sodar_uuid %}"
            title="Update {% get_display_name 'PROJECT' title=True %}"
            id="sodar-pr-alt-link-project-update">
