@@ -130,12 +130,12 @@ urls_ui = [
     ),
     url(
         regex=r'^remote/site/access/(?P<remotesite>[0-9a-f-]+)$',
-        view=views.RemoteProjectsBatchUpdateView.as_view(),
+        view=views.RemoteProjectBatchUpdateView.as_view(),
         name='remote_projects_update',
     ),
     url(
         regex=r'^remote/site/sync/(?P<remotesite>[0-9a-f-]+)$',
-        view=views.RemoteProjectsSyncView.as_view(),
+        view=views.RemoteProjectSyncView.as_view(),
         name='remote_projects_sync',
     ),
 ]

@@ -3018,7 +3018,7 @@ class TestRemoteProjectGetAPIView(
 
         self.assertEqual(response.status_code, 200)
 
-        expected = self.remote_api.get_target_data(self.target_site)
+        expected = self.remote_api.get_source_data(self.target_site)
         response_dict = json.loads(response.content.decode('utf-8'))
 
         self.assertEqual(response_dict, expected)

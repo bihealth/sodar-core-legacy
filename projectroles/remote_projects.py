@@ -10,6 +10,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.utils import timezone
 
+from djangoplugins.models import Plugin
+
 from projectroles.app_settings import (
     AppSettingAPI,
     APP_SETTING_LOCAL_DEFAULT,
@@ -23,16 +25,12 @@ from projectroles.models import (
     SODAR_CONSTANTS,
     AppSetting,
 )
-from projectroles.plugins import get_app_plugin, get_backend_api
+from projectroles.plugins import get_backend_api
 
 
-# App settings API
-app_settings_api = AppSettingAPI()
-
-User = auth.get_user_model()
+app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
-
-APP_NAME = 'projectroles'
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -54,6 +52,9 @@ REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
+
+# Local constants
+APP_NAME = 'projectroles'
 
 
 class RemoteProjectAPI:
@@ -78,33 +79,265 @@ class RemoteProjectAPI:
         #: Updated parent projects in current sync operation
         self.updated_parents = []
 
-    # Internal functions -------------------------------------------------------
+    # Internal Source Site Functions -------------------------------------------
+
+    @classmethod
+    def _add_parent_categories(cls, sync_data, category, project_level):
+        """
+        Add parent categories of a category to source site sync data.
+
+        :param sync_data: Sync data to be updated (dict)
+        :param category: Project object for category
+        :param project_level: Access level for project (string)
+        :return: Updated sync_data (dict)
+        """
+        if category.parent:
+            sync_data = cls._add_parent_categories(
+                sync_data, category.parent, project_level
+            )
+
+        # Add if not added yet OR if a READ_ROLES project is encountered
+        if (
+            str(category.sodar_uuid) not in sync_data['projects'].keys()
+            or sync_data['projects'][str(category.sodar_uuid)]['level']
+            != REMOTE_LEVEL_READ_ROLES
+            and sync_data[project_level] == REMOTE_LEVEL_READ_ROLES
+        ):
+            cat_data = {
+                'title': category.title,
+                'type': PROJECT_TYPE_CATEGORY,
+                'parent_uuid': str(category.parent.sodar_uuid)
+                if category.parent
+                else None,
+                'description': category.description,
+                'readme': category.readme.raw,
+            }
+
+            if project_level == REMOTE_LEVEL_READ_ROLES:
+                cat_data['roles'] = {}
+                cat_data['level'] = REMOTE_LEVEL_READ_ROLES
+                for role_as in category.roles.all():
+                    cat_data['roles'][str(role_as.sodar_uuid)] = {
+                        'user': role_as.user.username,
+                        'role': role_as.role.name,
+                    }
+                    sync_data = cls._add_user(sync_data, role_as.user)
+            else:
+                cat_data['level'] = REMOTE_LEVEL_READ_INFO
+
+            sync_data['projects'][str(category.sodar_uuid)] = cat_data
+
+        return sync_data
+
+    @classmethod
+    def _add_peer_site(cls, sync_data, site):
+        """
+        Add peer site to source site sync data.
+
+        :param sync_data: Sync data to be updated (dict)
+        :param site: RemoteSite object for peer site
+        :return: Updated sync_data (dict)
+        """
+        # Do not add sites twice
+        if not sync_data['peer_sites'].get(str(site.sodar_uuid), None):
+            sync_data['peer_sites'][str(site.sodar_uuid)] = {
+                'name': site.name,
+                'url': site.url,
+                'description': site.description,
+                'user_display': site.user_display,
+            }
+        return sync_data
+
+    @classmethod
+    def _add_user(cls, sync_data, user):
+        """
+        Add user to source site sync data.
+
+        :param sync_data: Sync data to be updated (dict)
+        :param user: SODARUser object
+        :return: Updated sync_data (dict)
+        """
+        if user.username not in [
+            u['username'] for u in sync_data['users'].values()
+        ]:
+            sync_data['users'][str(user.sodar_uuid)] = {
+                'username': user.username,
+                'name': user.name,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email,
+                'groups': [g.name for g in user.groups.all()],
+            }
+        return sync_data
+
+    @classmethod
+    def _add_app_setting(cls, sync_data, app_setting, all_defs):
+        """
+        Add app setting to sync data on source site.
+
+        :param sync_data: Sync data to be updated (dict)
+        :param app_setting: AppSetting object
+        :param all_defs: All settings defs
+        :return: Updated sync_data (dict)
+        """
+        if app_setting.app_plugin:
+            plugin_name = app_setting.app_plugin.name
+        else:
+            plugin_name = 'projectroles'
+        local = (
+            all_defs.get(plugin_name, {})
+            .get(app_setting.name, {})
+            .get('local', APP_SETTING_LOCAL_DEFAULT)
+        )
+        sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
+            'name': app_setting.name,
+            'type': app_setting.type,
+            'value': app_setting.value,
+            'value_json': app_setting.value_json,
+            'app_plugin': app_setting.app_plugin.name
+            if app_setting.app_plugin
+            else None,
+            'project_uuid': app_setting.project.sodar_uuid
+            if app_setting.project
+            else None,
+            'user_uuid': app_setting.user.sodar_uuid
+            if app_setting.user
+            else None,
+            'local': local,
+        }
+        return sync_data
+
+    # Source Site API functions ------------------------------------------------
+
+    def get_source_data(self, target_site):
+        """
+        Get user and project data on a source site to be synchronized into a
+        target site.
+
+        :param target_site: RemoteSite object for target site
+        :return: Dict
+        """
+        sync_data = {
+            'users': {},
+            'projects': {},
+            'peer_sites': {},
+            'app_settings': {},
+        }
+        all_defs = app_settings.get_all_defs()
+
+        for rp in target_site.projects.all():
+            project = rp.get_project()
+            # All RemoteSites which also host this project with a sufficient
+            # access level
+            remote_sites = [
+                relation.site
+                for relation in RemoteProject.objects.filter(
+                    project_uuid=project.sodar_uuid
+                )
+                if relation.level
+                in [REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]
+                and relation.site != target_site  # Dont add current target site
+            ]
+
+            # Get and add app settings for project
+            for a in AppSetting.objects.filter(project=project):
+                try:
+                    sync_data = self._add_app_setting(sync_data, a, all_defs)
+                except Exception as ex:
+                    logger.error(
+                        'Failed to sync app setting "{}.settings.{}" '
+                        '(UUID={}): {} '.format(
+                            a.app_plugin.name
+                            if a.app_plugin
+                            else 'projectroles',
+                            a.name,
+                            a.sodar_uuid,
+                            ex,
+                        )
+                    )
+
+            # RemoteSite data to create objects on target site
+            for site in remote_sites:
+                sync_data = self._add_peer_site(sync_data, site)
+
+            project_data = {
+                'level': rp.level,
+                'title': project.title,
+                'type': PROJECT_TYPE_PROJECT,
+                'remote_sites': [str(site.sodar_uuid) for site in remote_sites],
+            }
+
+            # View available projects
+            if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
+                project_data['available'] = True if project else False
+
+            # Add info
+            elif project and rp.level in [
+                REMOTE_LEVEL_READ_INFO,
+                REMOTE_LEVEL_READ_ROLES,
+                REMOTE_LEVEL_REVOKED,
+            ]:
+                project_data['description'] = project.description
+                project_data['readme'] = project.readme.raw
+                # Add categories
+                if project.parent:
+                    sync_data = self._add_parent_categories(
+                        sync_data, project.parent, rp.level
+                    )
+                    project_data['parent_uuid'] = str(project.parent.sodar_uuid)
+
+            # If level is READ_ROLES or REVOKED, add roles
+            if rp.level in [REMOTE_LEVEL_READ_ROLES, REMOTE_LEVEL_REVOKED]:
+                project_data['roles'] = {}
+                for role_as in project.roles.all():
+                    # If REVOKED, only sync owner and delegate
+                    if (
+                        rp.level == REMOTE_LEVEL_READ_ROLES
+                        or role_as.role.name
+                        in ['project owner', 'project delegate']
+                    ):
+                        project_data['roles'][str(role_as.sodar_uuid)] = {
+                            'user': role_as.user.username,
+                            'role': role_as.role.name,
+                        }
+                        sync_data = self._add_user(sync_data, role_as.user)
+
+            sync_data['projects'][str(rp.project_uuid)] = project_data
+
+        return sync_data
+
+    # Internal Target Site Functions -------------------------------------------
 
     @staticmethod
-    def _update_obj(obj, data, fields):
-        """Update object"""
-        for f in [f for f in fields if hasattr(obj, f)]:
-            setattr(obj, f, data[f])
+    def _update_obj(obj, obj_data, fields):
+        """
+        Update object for target site sync.
 
+        :param obj: Django database object
+        :param obj_data: Object sync data (dict)
+        :param fields: Fields to be updated (list)
+        :return: Updated object
+        """
+        for f in [f for f in fields if hasattr(obj, f)]:
+            setattr(obj, f, obj_data[f])
         obj.save()
         return obj
 
-    def _check_local_conflicts(self, c_uuid):
+    def _check_local_categories(self, uuid):
         """
         Check for local category name conflicts on a target site.
 
-        :param c_uuid: Category UUID (string)
+        :param uuid: Category UUID (string)
         :return: True if conflict was found (bool)
         """
-        c_data = self.remote_data['projects'][c_uuid]
+        c_data = self.remote_data['projects'][uuid]
         local_cat = (
             Project.objects.filter(
                 type=PROJECT_TYPE_CATEGORY, title=c_data['title']
             )
-            .exclude(sodar_uuid=c_uuid)
+            .exclude(sodar_uuid=uuid)
             .first()
         )
-
         if local_cat and not local_cat.parent and not c_data['parent_uuid']:
             return True
         elif (
@@ -113,18 +346,21 @@ class RemoteProjectAPI:
             and local_cat.parent.title
             == self.remote_data['projects'][c_data['parent_uuid']]['title']
         ):
-            return self._check_local_conflicts(c_data['parent_uuid'])
-
+            return self._check_local_categories(c_data['parent_uuid'])
         return False
 
-    def _sync_user(self, uuid, u_data):
-        """Synchronize LDAP user based on source site data"""
+    def _sync_user(self, uuid, user_data):
+        """
+        Synchronize LDAP user on target site.
+
+        :param uuid: User UUID (string)
+        :param user_data: User sync data (dict)
+        """
         # Update existing user
         try:
-            user = User.objects.get(username=u_data['username'])
+            user = User.objects.get(username=user_data['username'])
             updated_fields = []
-
-            for k, v in u_data.items():
+            for k, v in user_data.items():
                 if (
                     k not in ['groups', 'sodar_uuid']
                     and hasattr(user, k)
@@ -133,31 +369,28 @@ class RemoteProjectAPI:
                     updated_fields.append(k)
 
             if updated_fields:
-                user = self._update_obj(user, u_data, updated_fields)
-                u_data['status'] = 'updated'
-
+                user = self._update_obj(user, user_data, updated_fields)
+                user_data['status'] = 'updated'
                 logger.info(
                     'Updated user: {} ({}): {}'.format(
-                        u_data['username'], uuid, ', '.join(updated_fields)
+                        user_data['username'], uuid, ', '.join(updated_fields)
                     )
                 )
 
             # Check and update groups
             if sorted([g.name for g in user.groups.all()]) != sorted(
-                u_data['groups']
+                user_data['groups']
             ):
                 for g in user.groups.all():
-                    if g.name not in u_data['groups']:
+                    if g.name not in user_data['groups']:
                         g.user_set.remove(user)
                         logger.debug(
                             'Removed user {} ({}) from group "{}"'.format(
                                 user.username, user.sodar_uuid, g.name
                             )
                         )
-
                 existing_groups = [g.name for g in user.groups.all()]
-
-                for g in u_data['groups']:
+                for g in user_data['groups']:
                     if g not in existing_groups:
                         group, created = Group.objects.get_or_create(name=g)
                         group.user_set.add(user)
@@ -169,12 +402,14 @@ class RemoteProjectAPI:
 
         # Create new user
         except User.DoesNotExist:
-            create_values = {k: v for k, v in u_data.items() if k != 'groups'}
+            create_values = {
+                k: v for k, v in user_data.items() if k != 'groups'
+            }
             user = User.objects.create(**create_values)
-            u_data['status'] = 'created'
+            user_data['status'] = 'created'
             logger.info('Created user: {}'.format(user.username))
 
-            for g in u_data['groups']:
+            for g in user_data['groups']:
                 group, created = Group.objects.get_or_create(name=g)
                 group.user_set.add(user)
                 logger.debug(
@@ -184,6 +419,13 @@ class RemoteProjectAPI:
                 )
 
     def _handle_user_error(self, error_msg, project, role_uuid):
+        """
+        Handle user sync error on target site.
+
+        :param error_msg: Error message (string)
+        :param project: Project object
+        :param role_uuid: UUID of RoleAssignment object (string)
+        """
         logger.error(error_msg)
         self.remote_data['projects'][str(project.sodar_uuid)]['roles'][
             role_uuid
@@ -192,13 +434,19 @@ class RemoteProjectAPI:
             role_uuid
         ]['status_msg'] = error_msg
 
-    def _handle_project_error(self, error_msg, uuid, p, action):
-        """Add and log project error in remote sync"""
+    def _handle_project_error(self, error_msg, uuid, project_data, action):
+        """
+        Handle project error on target site.
+
+        :param error_msg: Error message (string)
+        :param uuid: Project UUID (string)
+        :param project_data: Project sync data (string)
+        """
         logger.error(
             '{} {} "{}" ({}): {}'.format(
                 action.capitalize(),
-                p['type'].lower(),
-                p['title'],
+                project_data['type'].lower(),
+                project_data['title'],
                 uuid,
                 error_msg,
             )
@@ -206,12 +454,18 @@ class RemoteProjectAPI:
         self.remote_data['projects'][uuid]['status'] = 'error'
         self.remote_data['projects'][uuid]['status_msg'] = error_msg
 
-    def _update_project(self, project, p_data, parent):
-        """Update an existing project during sync"""
+    def _update_project(self, project, project_data, parent):
+        """
+        Update an existing project on target site.
+
+        :param project: Project object
+        :param project_data: Project sync data (string)
+        :param parent: Project object for parent category
+        """
         updated_fields = []
         uuid = str(project.sodar_uuid)
 
-        for k, v in p_data.items():
+        for k, v in project_data.items():
             if (
                 k not in ['parent', 'sodar_uuid', 'roles', 'readme']
                 and hasattr(project, k)
@@ -220,18 +474,16 @@ class RemoteProjectAPI:
                 updated_fields.append(k)
 
         # README is a special case
-        if project.readme.raw != p_data['readme']:
+        if project.readme.raw != project_data['readme']:
             updated_fields.append('readme')
 
         if updated_fields or project.parent != parent:
-            project = self._update_obj(project, p_data, updated_fields)
-
+            project = self._update_obj(project, project_data, updated_fields)
             # Manually update parent
             if parent != project.parent:
                 project.parent = parent
                 project.save()
                 updated_fields.append('parent')
-
             self.remote_data['projects'][uuid]['status'] = 'updated'
 
             if self.tl_user:  # Timeline
@@ -254,42 +506,44 @@ class RemoteProjectAPI:
 
             logger.info(
                 'Updated {}: {}'.format(
-                    p_data['type'].lower(), ', '.join(sorted(updated_fields))
+                    project_data['type'].lower(),
+                    ', '.join(sorted(updated_fields)),
                 )
             )
 
         else:
             logger.debug('Nothing to update in project details')
 
-    def _create_project(self, uuid, p_data, parent):
-        """Create a new project from source site data"""
+    def _create_project(self, uuid, project_data, parent):
+        """
+        Create a new project on target site.
 
+        :param uuid: Project UUID (string)
+        :param project_data: Project sync data (string)
+        :param parent: Project object for parent category
+        """
         # Check existing title under the same parent
-        try:
-            old_project = Project.objects.get(
-                parent=parent, title=p_data['title']
-            )
-
-            # Handle error
+        old_project = Project.objects.filter(
+            parent=parent, title=project_data['title']
+        ).first()
+        if old_project:
             error_msg = (
                 '{} with the title "{}" exists under the same '
                 'parent, unable to create'.format(
                     old_project.type.capitalize(), old_project.title
                 )
             )
-            self._handle_project_error(error_msg, uuid, p_data, 'create')
+            self._handle_project_error(error_msg, uuid, project_data, 'create')
             return
 
-        except Project.DoesNotExist:
-            pass
-
         create_fields = ['title', 'description', 'readme']
-        create_values = {k: v for k, v in p_data.items() if k in create_fields}
-        create_values['type'] = p_data['type']
+        create_values = {
+            k: v for k, v in project_data.items() if k in create_fields
+        }
+        create_values['type'] = project_data['type']
         create_values['parent'] = parent
         create_values['sodar_uuid'] = uuid
         project = Project.objects.create(**create_values)
-
         self.remote_data['projects'][uuid]['status'] = 'created'
 
         if self.tl_user:  # Timeline
@@ -304,10 +558,15 @@ class RemoteProjectAPI:
             # TODO: Add extra_data
             tl_event.add_object(self.source_site, 'site', self.source_site.name)
 
-        logger.info('Created {}'.format(p_data['type'].lower()))
+        logger.info('Created {}'.format(project_data['type'].lower()))
 
     def _create_peer_site(self, uuid, site_data):
-        """Create PEER-mode remote site"""
+        """
+        Create remote peer site on target site.
+
+        :param uuid: Remote site UUID (string)
+        :param site_data: Site sync data (dict)
+        """
         create_fields = ['name', 'url', 'description', 'user_display']
         create_values = {
             k: v for k, v in site_data.items() if k in create_fields
@@ -319,15 +578,17 @@ class RemoteProjectAPI:
         logger.info('Created Peer Site {}'.format(create_values['name']))
 
     def _update_peer_site(self, uuid, site_data):
-        """Update PEER-mode remote site"""
+        """
+        Update remote peer site on target site.
+
+        :param uuid: Remote site UUID (string)
+        :param site_data: Site sync data (dict)
+        """
         site = RemoteSite.objects.filter(sodar_uuid=uuid).first()
-
         updated_fields = []
-
         for k, v in site_data.items():
             if hasattr(site, k) and str(getattr(site, k)) != str(v):
                 updated_fields.append(k)
-
         if updated_fields:
             site = self._update_obj(site, site_data, updated_fields)
             logger.info(
@@ -335,21 +596,26 @@ class RemoteProjectAPI:
                     str(site.name), ', '.join(sorted(updated_fields))
                 )
             )
-
         else:
             logger.debug('Nothing to update for peer site "{}"'.format(uuid))
 
-    def _update_roles(self, project, p_data):
-        """Create or update project roles"""
+    def _update_roles(self, project, project_data):
+        """
+        Create or update project roles on target site.
+
+        :param project: Project object
+        :param project_data: Project sync data (string)
+        """
         # TODO: Refactor this
         uuid = str(project.sodar_uuid)
         allow_local = getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False)
 
-        for r_uuid, r in {k: v for k, v in p_data['roles'].items()}.items():
+        for r_uuid, r in {
+            k: v for k, v in project_data['roles'].items()
+        }.items():
             # Ensure the Role exists
             try:
                 role = Role.objects.get(name=r['role'])
-
             except Role.DoesNotExist:
                 error_msg = 'Role object "{}" not found (assignment {})'.format(
                     r['role'], r_uuid
@@ -395,7 +661,6 @@ class RemoteProjectAPI:
                 and '@' not in r['user']
             ):
                 role_user = self.default_owner
-
                 # Notify of assigning role to default owner
                 status_msg = (
                     'Non-LDAP/AD user "{}" set as owner, assigning role '
@@ -410,7 +675,6 @@ class RemoteProjectAPI:
                     'status_msg'
                 ] = status_msg
                 logger.info(status_msg)
-
             else:
                 role_user = User.objects.get(username=r['user'])
 
@@ -422,7 +686,6 @@ class RemoteProjectAPI:
             # Delete existing owner role
             if r['role'] == PROJECT_ROLE_OWNER:
                 old_owner_as = project.get_owner()
-
                 if old_owner_as and old_owner_as.user != role_user:
                     old_owner_as.delete()
                     logger.debug(
@@ -471,7 +734,6 @@ class RemoteProjectAPI:
                     'user': role_user,
                 }
                 RoleAssignment.objects.create(**role_values)
-
                 self.remote_data['projects'][str(project.sodar_uuid)]['roles'][
                     r_uuid
                 ]['status'] = 'created'
@@ -500,12 +762,16 @@ class RemoteProjectAPI:
                     )
                 )
 
-    def _remove_deleted_roles(self, project, p_data):
-        """Remove roles for project deleted in source site"""
+    def _remove_deleted_roles(self, project, project_data):
+        """
+        Remove deleted project roles from target site.
+
+        :param project: Project object
+        :param project_data: Project sync data (string)
+        """
         timeline = get_backend_api('timeline_backend')
         uuid = str(project.sodar_uuid)
-        current_users = [v['user'] for k, v in p_data['roles'].items()]
-
+        current_users = [v['user'] for k, v in project_data['roles'].items()]
         deleted_roles = (
             RoleAssignment.objects.filter(project=project)
             .exclude(role__name=PROJECT_ROLE_OWNER)
@@ -521,13 +787,11 @@ class RemoteProjectAPI:
                 del_role = del_as.role
                 del_uuid = str(del_as.sodar_uuid)
                 del_as.delete()
-
                 self.remote_data['projects'][uuid]['roles'][del_uuid] = {
                     'user': del_user.username,
                     'role': del_role.name,
                     'status': 'deleted',
                 }
-
                 if self.tl_user:  # Timeline
                     tl_desc = (
                         'remove role "{}" from {{{}}} by site '
@@ -554,50 +818,57 @@ class RemoteProjectAPI:
                 )
             )
 
-    def _sync_project(self, uuid, p_data):
-        """Synchronize a project from source site. Create/update project, its
-        parents and user roles"""
+    def _sync_project(self, uuid, project_data):
+        """
+        Synchronize a single project on target site. Create/update project, its
+        parents and user roles.
+
+        :param uuid: Project UUID (string)
+        :param project_data: Project sync data (string)
+        """
         # Add/update parents if not yet handled
         if (
-            p_data['parent_uuid']
-            and p_data['parent_uuid'] not in self.updated_parents
+            project_data['parent_uuid']
+            and project_data['parent_uuid'] not in self.updated_parents
         ):
-            c_data = self.remote_data['projects'][p_data['parent_uuid']]
-            self._sync_project(p_data['parent_uuid'], c_data)
-            self.updated_parents.append(p_data['parent_uuid'])
+            c_data = self.remote_data['projects'][project_data['parent_uuid']]
+            self._sync_project(project_data['parent_uuid'], c_data)
+            self.updated_parents.append(project_data['parent_uuid'])
 
         project = Project.objects.filter(
-            type=p_data['type'], sodar_uuid=uuid
+            type=project_data['type'], sodar_uuid=uuid
         ).first()
         parent = None
         action = 'create' if not project else 'update'
-
         logger.info(
             'Processing {} "{}" ({})..'.format(
-                p_data['type'].lower(), p_data['title'], uuid
+                project_data['type'].lower(), project_data['title'], uuid
             )
         )
 
         # Get parent and ensure it exists
-        if p_data['parent_uuid']:
+        if project_data['parent_uuid']:
             try:
-                parent = Project.objects.get(sodar_uuid=p_data['parent_uuid'])
-
+                parent = Project.objects.get(
+                    sodar_uuid=project_data['parent_uuid']
+                )
             except Project.DoesNotExist:
                 # Handle error
-                error_msg = 'Parent {} not found'.format(p_data['parent_uuid'])
-                self._handle_project_error(error_msg, uuid, p_data, action)
+                error_msg = 'Parent {} not found'.format(
+                    project_data['parent_uuid']
+                )
+                self._handle_project_error(
+                    error_msg, uuid, project_data, action
+                )
                 return
 
-        # Update project
+        # Update/create project
         if project:
-            self._update_project(project, p_data, parent)
-
-        # Create new project
+            self._update_project(project, project_data, parent)
         else:
-            self._create_project(uuid, p_data, parent)
+            self._create_project(uuid, project_data, parent)
             project = Project.objects.filter(
-                type=p_data['type'], sodar_uuid=uuid
+                type=project_data['type'], sodar_uuid=uuid
             ).first()
 
         # Create/update a RemoteProject object
@@ -605,18 +876,17 @@ class RemoteProjectAPI:
             remote_project = RemoteProject.objects.get(
                 site=self.source_site, project=project
             )
-            remote_project.level = p_data['level']
+            remote_project.level = project_data['level']
             remote_project.project = project
             remote_project.date_access = timezone.now()
             remote_project.save()
             remote_action = 'updated'
-
         except RemoteProject.DoesNotExist:
             remote_project = RemoteProject.objects.create(
                 site=self.source_site,
                 project_uuid=project.sodar_uuid,
                 project=project,
-                level=p_data['level'],
+                level=project_data['level'],
                 date_access=timezone.now(),
             )
             remote_action = 'created'
@@ -628,7 +898,7 @@ class RemoteProjectAPI:
         )
 
         # Skip the rest if not updating roles
-        if 'level' in p_data and p_data['level'] not in [
+        if 'level' in project_data and project_data['level'] not in [
             REMOTE_LEVEL_READ_ROLES,
             REMOTE_LEVEL_REVOKED,
         ]:
@@ -636,16 +906,16 @@ class RemoteProjectAPI:
 
         # Create/update roles
         # NOTE: Only update AD/LDAP user roles and local owner roles
-        if p_data['level'] == REMOTE_LEVEL_READ_ROLES:
-            self._update_roles(project, p_data)
-
+        if project_data['level'] == REMOTE_LEVEL_READ_ROLES:
+            self._update_roles(project, project_data)
         # Remove deleted user roles (also for REVOKED projects)
-        self._remove_deleted_roles(project, p_data)
+        self._remove_deleted_roles(project, project_data)
 
     def _sync_peer_projects(self, uuid, p_data):
-        """Create RemoteProject objects to represent local project on different
-        peer sites"""
-
+        """
+        Create RemoteProject objects on target site to represent local project
+        on different peer sites.
+        """
         if p_data.get('remote_sites', None):
             for remote_site_uuid in p_data['remote_sites']:
                 remote_site = RemoteSite.objects.filter(
@@ -664,7 +934,6 @@ class RemoteProjectAPI:
                         timezone.now()
                     )  # This might not be needed for Peer Projects
                     remote_action = 'updated'
-
                 except RemoteProject.DoesNotExist:
                     remote_project = RemoteProject.objects.create(
                         site=remote_site,
@@ -682,7 +951,6 @@ class RemoteProjectAPI:
                     ', '.join(p_data['remote_sites']),
                 )
             )
-
         else:
             logger.debug(
                 '{} is not a peer project (no remote site field)'.format(
@@ -690,20 +958,24 @@ class RemoteProjectAPI:
                 )
             )
 
-    def _remove_revoked_peers(self, uuid, p_data):
-        """Remove RemoteProject objects for revoked peer projects"""
+    @classmethod
+    def _remove_revoked_peers(cls, uuid, project_data):
+        """
+        Remove RemoteProject objects for revoked peer projects from target site.
+
+        :param uuid: Project UUID (string)
+        :param project_data: Project sync data (string)
+        """
         removed_sites = []
 
-        if p_data.get('remote_sites', None):
+        if project_data.get('remote_sites', None):
             local_peers = RemoteProject.objects.filter(
                 project_uuid=uuid, site__mode=SITE_MODE_PEER
             )
-
             if not local_peers:
                 return
-
             for rp in local_peers:
-                if str(rp.site.sodar_uuid) not in p_data['remote_sites']:
+                if str(rp.site.sodar_uuid) not in project_data['remote_sites']:
                     removed_sites.append(rp.site.name)
                     rp.delete()
 
@@ -725,114 +997,86 @@ class RemoteProjectAPI:
                 )
             )
 
-    # API functions ------------------------------------------------------------
-
-    def get_target_data(self, target_site):
+    @classmethod
+    def _sync_app_setting(cls, uuid, set_data):
         """
-        Get user and project data to be synchronized into a target site.
+        Create or update an AppSetting on a target site.
 
-        :param target_site: RemoteSite object for the target site
-        :return: Dict
+        :param uuid: App setting UUID (string)
+        :param set_data: App setting data (dict)
         """
-        sync_data = {
-            'users': {},
-            'projects': {},
-            'peer_sites': {},
-            'app_settings': {},
-        }
+        ad = deepcopy(set_data)
+        app_plugin = None
+        project = None
+        user = None
 
-        for rp in target_site.projects.all():
-            project = rp.get_project()
-
-            # All RemoteSites which also host this project with a sufficient
-            # access level
-            remote_sites = [
-                relation.site
-                for relation in RemoteProject.objects.filter(
-                    project_uuid=project.sodar_uuid
+        # Get app plugin (skip the rest if not found on target server)
+        if ad['app_plugin']:
+            app_plugin = Plugin.objects.filter(name=ad['app_plugin']).first()
+            if not app_plugin:
+                logger.debug(
+                    'Skipping setting "{}": App plugin not found with name '
+                    '"{}"'.format(ad['name'], ad['app_plugin'])
                 )
-                if relation.level
-                in [REMOTE_LEVEL_READ_INFO, REMOTE_LEVEL_READ_ROLES]
-                and relation.site != target_site  # Dont add current target site
-            ]
+                return
 
-            # Get and add app settings for project
-            for a in AppSetting.objects.filter(project=project):
-                try:
-                    sync_data = _add_app_setting(sync_data, a)
-                except Exception as ex:
-                    logger.error(
-                        'Failed to sync app setting "{}.settings.{}" '
-                        '(UUID={}): {} '.format(
-                            a.app_plugin.name
-                            if a.app_plugin
-                            else 'projectroles',
-                            a.name,
-                            a.sodar_uuid,
-                            ex,
-                        )
-                    )
+        if ad['project_uuid']:
+            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
+        if ad['user_uuid']:
+            user = User.objects.get(sodar_uuid=ad['user_uuid'])
 
-            # RemoteSite data to create objects on target site
-            for site in remote_sites:
-                sync_data = _add_peer_site(sync_data, site)
+        try:
+            obj = AppSetting.objects.get(
+                app_plugin=app_plugin,
+                name=ad['name'],
+                project=project,
+                user=user,
+            )
+            # Skip if value is identical
+            if obj.value == ad['value'] and obj.value_json == ad['value_json']:
+                logger.info(
+                    'Skipping setting {}: value unchanged'.format(str(obj))
+                )
+                set_data['status'] = 'skipped'
+                return
+            # Keep local app setting if available
+            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
+                logger.info('Keeping local setting {}'.format(ad['name']))
+                return
+            # If setting is global, update existing value by recreating object
+            action_str = 'updating'
+            obj.delete()
+        except ObjectDoesNotExist:
+            action_str = 'creating'
 
-            project_data = {
-                'level': rp.level,
-                'title': project.title,
-                'type': PROJECT_TYPE_PROJECT,
-                'remote_sites': [str(site.sodar_uuid) for site in remote_sites],
-            }
+        # Remove keys that are not available in the model
+        ad.pop('local', None)
+        ad.pop('project_uuid', None)
+        ad.pop('user_uuid', None)
+        # Add keys required for the model
+        ad['project'] = project
+        ad['user'] = user
+        ad['sodar_uuid'] = uuid
+        if app_plugin:
+            ad['app_plugin'] = app_plugin
 
-            # View available projects
-            if rp.level == REMOTE_LEVEL_VIEW_AVAIL:
-                project_data['available'] = True if project else False
+        # Create new app setting
+        obj = AppSetting(**ad)
+        logger.info('{} setting {}'.format(action_str.capitalize(), str(obj)))
+        obj.save()
+        set_data['status'] = action_str.replace('ing', 'ed')
 
-            # Add info
-            elif project and rp.level in [
-                REMOTE_LEVEL_READ_INFO,
-                REMOTE_LEVEL_READ_ROLES,
-                REMOTE_LEVEL_REVOKED,
-            ]:
-                project_data['description'] = project.description
-                project_data['readme'] = project.readme.raw
-
-                # Add categories
-                if project.parent:
-                    sync_data = _add_parent_categories(
-                        sync_data, project.parent, rp.level
-                    )
-                    project_data['parent_uuid'] = str(project.parent.sodar_uuid)
-
-            # If level is READ_ROLES or REVOKED, add roles
-            if rp.level in [REMOTE_LEVEL_READ_ROLES, REMOTE_LEVEL_REVOKED]:
-                project_data['roles'] = {}
-
-                for role_as in project.roles.all():
-                    # If REVOKED, only sync owner and delegate
-                    if (
-                        rp.level == REMOTE_LEVEL_READ_ROLES
-                        or role_as.role.name
-                        in ['project owner', 'project delegate']
-                    ):
-                        project_data['roles'][str(role_as.sodar_uuid)] = {
-                            'user': role_as.user.username,
-                            'role': role_as.role.name,
-                        }
-                        sync_data = _add_user(sync_data, role_as.user)
-
-            sync_data['projects'][str(rp.project_uuid)] = project_data
-
-        return sync_data
+    # Target Site API functions ------------------------------------------------
 
     @transaction.atomic
-    def sync_source_data(self, site, remote_data, request=None):
+    def sync_remote_data(self, site, remote_data, request=None):
         """
         Synchronize remote user and project data into the local Django database
-        and return information of additions.
+        on a target site and return information of additions.
 
         :param site: RemoteSite object for the source site
-        :param remote_data: Data returned by get_target_data() in the source
+        :param remote_data: Data returned by get_source_data() on the source
+                            site (dict)
         :param request: Request object (optional)
         :return: Dict with updated remote_data
         :raise: ValueError if user from PROJECTROLES_DEFAULT_ADMIN is not found
@@ -846,7 +1090,6 @@ class RemoteProjectAPI:
             self.default_owner = User.objects.get(
                 username=settings.PROJECTROLES_DEFAULT_ADMIN
             )
-
         except User.DoesNotExist:
             error_msg = (
                 'Local user "{}" defined in PROJECTROLES_DEFAULT_ADMIN '
@@ -860,7 +1103,7 @@ class RemoteProjectAPI:
             if (
                 v['type'] == PROJECT_TYPE_PROJECT
                 and v['parent_uuid']
-                and self._check_local_conflicts(v['parent_uuid'])
+                and self._check_local_categories(v['parent_uuid'])
             ):
                 error_msg = (
                     'Remote sync cancelled: Existing local category '
@@ -890,6 +1133,7 @@ class RemoteProjectAPI:
         ##############
         # Peer Sites
         ##############
+
         logger.info('Synchronizing Peer Sites...')
 
         if self.remote_data.get('peer_sites', None):
@@ -900,23 +1144,19 @@ class RemoteProjectAPI:
                 remote_site = RemoteSite.objects.filter(
                     sodar_uuid=remote_site_uuid
                 ).first()
-
                 if remote_site:
                     self._update_peer_site(remote_site_uuid, site_data)
-
                 else:
                     self._create_peer_site(remote_site_uuid, site_data)
-
             logger.info('Peer Site Sync OK')
-
         else:
             logger.info('No new Peer Sites to sync')
 
         ########
         # Users
         ########
-        logger.info('Synchronizing LDAP/AD users..')
 
+        logger.info('Synchronizing LDAP/AD users..')
         # NOTE: only sync LDAP/AD users
         for u_uuid, u_data in {
             k: v
@@ -924,7 +1164,6 @@ class RemoteProjectAPI:
             if '@' in v['username']
         }.items():
             self._sync_user(u_uuid, u_data)
-
         logger.info('User sync OK')
 
         ##########################
@@ -933,7 +1172,6 @@ class RemoteProjectAPI:
 
         # Update projects
         logger.info('Synchronizing projects..')
-
         for p_uuid, p_data in {
             k: v
             for k, v in self.remote_data['projects'].items()
@@ -949,7 +1187,6 @@ class RemoteProjectAPI:
         ###############
 
         logger.info('Synchronizing app settings..')
-
         for a_uuid, a_data in self.remote_data['app_settings'].items():
             try:
                 self._sync_app_setting(a_uuid, a_data)
@@ -964,159 +1201,8 @@ class RemoteProjectAPI:
                         ex,
                     )
                 )
+                if settings.DEBUG:
+                    raise ex
 
         logger.info('Synchronization OK')
         return self.remote_data
-
-    @classmethod
-    def _sync_app_setting(cls, a_uuid, a_data):
-        """
-        Create or update an AppSetting on a target site.
-
-        :param a_uuid: App setting UUID
-        :param a_data: App setting data
-        """
-        ad = deepcopy(a_data)
-        app_plugin = None
-        project = None
-        user = None
-
-        # Get app plugin (skip the rest if not found on target server)
-        if ad['app_plugin']:
-            app_plugin = get_app_plugin(ad['app_plugin'])
-            if not app_plugin:
-                logger.debug(
-                    'Skipping setting "{}": App plugin not found with name '
-                    '"{}"'.format(ad['name'], ad['app_plugin'])
-                )
-                return
-
-        if ad['project_uuid']:
-            project = Project.objects.get(sodar_uuid=ad['project_uuid'])
-        if ad['user_uuid']:
-            user = User.objects.get(sodar_uuid=ad['user_uuid'])
-
-        try:
-            obj = AppSetting.objects.get(
-                app_plugin=app_plugin,
-                name=ad['name'],
-                project=project,
-                user=user,
-            )
-            # Keep local app setting if available
-            if ad.get('local', APP_SETTING_LOCAL_DEFAULT):
-                logger.info('Keeping local setting {}'.format(str(obj)))
-                return
-            # If setting is global, update existing value by recreating object
-            action_str = 'Updating'
-            obj.delete()
-        except ObjectDoesNotExist:
-            action_str = 'Creating'
-
-        # Remove keys that are not available in the model
-        ad.pop('local', None)
-        ad.pop('project_uuid', None)
-        ad.pop('user_uuid', None)
-        # Add keys required for the model
-        ad['project'] = project
-        ad['user'] = user
-        ad['sodar_uuid'] = a_uuid
-        if app_plugin:
-            ad['app_plugin'] = app_plugin.get_model()
-
-        # Create new app setting
-        obj = AppSetting(**ad)
-        logger.info('{} setting {}'.format(action_str, str(obj)))
-        obj.save()
-        a_data['status'] = action_str.lower().replace('ing', 'ed')
-
-
-def _add_user(sync_data, user):
-    if user.username not in [
-        u['username'] for u in sync_data['users'].values()
-    ]:
-        sync_data['users'][str(user.sodar_uuid)] = {
-            'username': user.username,
-            'name': user.name,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'email': user.email,
-            'groups': [g.name for g in user.groups.all()],
-        }
-    return sync_data
-
-
-def _add_parent_categories(sync_data, category, project_level):
-    if category.parent:
-        sync_data = _add_parent_categories(
-            sync_data, category.parent, project_level
-        )
-
-    # Add if not added yet OR if a READ_ROLES project is encountered
-    if (
-        str(category.sodar_uuid) not in sync_data['projects'].keys()
-        or sync_data['projects'][str(category.sodar_uuid)]['level']
-        != REMOTE_LEVEL_READ_ROLES
-        and sync_data[project_level] == REMOTE_LEVEL_READ_ROLES
-    ):
-        cat_data = {
-            'title': category.title,
-            'type': PROJECT_TYPE_CATEGORY,
-            'parent_uuid': str(category.parent.sodar_uuid)
-            if category.parent
-            else None,
-            'description': category.description,
-            'readme': category.readme.raw,
-        }
-
-        if project_level == REMOTE_LEVEL_READ_ROLES:
-            cat_data['roles'] = {}
-            cat_data['level'] = REMOTE_LEVEL_READ_ROLES
-
-            for role_as in category.roles.all():
-                cat_data['roles'][str(role_as.sodar_uuid)] = {
-                    'user': role_as.user.username,
-                    'role': role_as.role.name,
-                }
-                sync_data = _add_user(sync_data, role_as.user)
-
-        else:
-            cat_data['level'] = REMOTE_LEVEL_READ_INFO
-
-        sync_data['projects'][str(category.sodar_uuid)] = cat_data
-    return sync_data
-
-
-def _add_peer_site(sync_data, site):
-    # Do not add sites twice
-    if not sync_data['peer_sites'].get(str(site.sodar_uuid), None):
-        sync_data['peer_sites'][str(site.sodar_uuid)] = {
-            'name': site.name,
-            'url': site.url,
-            'description': site.description,
-            'user_display': site.user_display,
-        }
-    return sync_data
-
-
-def _add_app_setting(sync_data, app_setting):
-    if not sync_data['app_settings'].get(str(app_setting.sodar_uuid)):
-        sync_data['app_settings'][str(app_setting.sodar_uuid)] = {
-            'name': app_setting.name,
-            'type': app_setting.type,
-            'value': app_setting.value,
-            'value_json': app_setting.value_json,
-            'app_plugin': app_setting.app_plugin.name  # 'app_plugin_id': app_setting.app_plugin.id
-            if app_setting.app_plugin
-            else None,
-            'project_uuid': app_setting.project.sodar_uuid
-            if app_setting.project
-            else None,
-            'user_uuid': app_setting.user.sodar_uuid
-            if app_setting.user
-            else None,  # 'user_id': app_setting.user.id if app_setting.user else None,
-            'local': AppSettingAPI._get_projectroles_settings()
-            .get(app_setting.name, {})
-            .get('local', APP_SETTING_LOCAL_DEFAULT),
-        }
-    return sync_data

@@ -1,6 +1,5 @@
 """Template tags intended for internal use within the projectroles app"""
 
-
 from django import template
 from django.conf import settings
 from django.urls import reverse
@@ -17,8 +16,8 @@ from projectroles.project_tags import get_tag_state
 from projectroles.templatetags.projectroles_common_tags import get_info_link
 
 
-# Settings
-HELP_HIGHLIGHT_DAYS = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
+register = template.Library()
+
 
 # SODAR Constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -29,17 +28,11 @@ REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
 INDENT_PX = 25
-
-# TODO: Remove
-PROJECT_TYPE_DISPLAY = {'PROJECT': 'Project', 'CATEGORY': 'Category'}
-
 # Behaviour for certain levels has not been specified/implemented yet
 ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
 ]
-
-register = template.Library()
 
 
 # SODAR and site operations ----------------------------------------------------
@@ -63,10 +56,8 @@ def get_site_app_messages(user):
     """Get messages from site apps"""
     plugins = get_active_plugins('site_app')
     ret = []
-
     for p in plugins:
         ret += p.get_messages(user)
-
     return ret
 
 
@@ -85,7 +76,6 @@ def get_remote_project_obj(site, project):
         return RemoteProject.objects.get(
             site=site, project_uuid=project.sodar_uuid
         )
-
     except RemoteProject.DoesNotExist:
         return None
 
@@ -106,21 +96,18 @@ def is_app_visible(plugin, project, user):
     """Check if app should be visible for user in a specific project"""
     can_view_app = user.has_perm(plugin.app_permission, project)
     app_hidden = False
-
     if (
         hasattr(settings, 'PROJECTROLES_HIDE_APP_LINKS')
         and plugin.name in settings.PROJECTROLES_HIDE_APP_LINKS
         and not user.is_superuser
     ):
         app_hidden = True
-
     if (
         can_view_app
         and not app_hidden
         and (project.type == PROJECT_TYPE_PROJECT or plugin.category_enable)
     ):
         return True
-
     return False
 
 
@@ -131,10 +118,8 @@ def is_app_visible(plugin, project, user):
 def get_project_list_indent(project, list_parent):
     """Return indent in pixels for project list"""
     project_depth = project.get_depth()
-
     if list_parent:
         project_depth -= list_parent.get_depth() + 1
-
     return project_depth * INDENT_PX
 
 
@@ -219,8 +204,10 @@ def is_inherited_owner(project, user):
 
 @register.simple_tag
 def get_app_link_state(app_plugin, app_name, url_name):
-    """Return "active" if plugin matches app_name and url_name is found in
-    app_plugin.urls."""
+    """
+    Return "active" if plugin matches app_name and url_name is found in
+    app_plugin.urls.
+    """
     if app_name == app_plugin.name and url_name in [
         u.name for u in app_plugin.urls
     ]:
@@ -229,20 +216,22 @@ def get_app_link_state(app_plugin, app_name, url_name):
 
 
 @register.simple_tag
-def get_pr_link_state(app_urls, url_name, link_names=None):
-    """Version of get_app_link_state() to be used within the projectroles app.
+def get_pr_link_state(app_urls, request, link_names=None):
+    """
+    Version of get_app_link_state() to be used within the projectroles app.
     If link_names is set, only return "active" if url_name is found in
-    link_names."""
+    link_names.
+    """
+    if request.resolver_match.app_name != 'projectroles':
+        return ''
+    url_name = request.resolver_match.url_name
     if url_name in [u.name for u in app_urls]:
         if link_names:
             if not isinstance(link_names, list):
                 link_names = [link_names]
-
             if url_name not in link_names:
                 return ''
-
         return 'active'
-
     return ''
 
 
@@ -261,14 +250,14 @@ def get_star(project, user):
 
 @register.simple_tag
 def get_help_highlight(user):
-    """Return classes to highlight navbar help link if user has recently
-    signed in"""
+    """
+    Return classes to highlight navbar help link if user has recently signed in
+    """
     if user.__class__.__name__ == 'User' and user.is_authenticated:
         delta_days = (timezone.now() - user.date_joined).days
-
-        if delta_days < HELP_HIGHLIGHT_DAYS:
+        highlight = getattr(settings, 'PROJECTROLES_HELP_HIGHLIGHT_DAYS', 7)
+        if delta_days < highlight:
             return 'font-weight-bold text-warning'
-
     return ''
 
 
@@ -279,12 +268,9 @@ def get_role_import_action(source_as, dest_project):
         target_as = RoleAssignment.objects.get(
             project=dest_project, user=source_as.user
         )
-
         if target_as.role == source_as.role:
             return 'No action'
-
         return 'Update'
-
     except RoleAssignment.DoesNotExist:
         return 'Import'
 
@@ -296,18 +282,15 @@ def get_login_info():
 
     if getattr(settings, 'ENABLE_LDAP', False):
         ret += ' using your ' + settings.AUTH_LDAP_DOMAIN_PRINTABLE
-
         if (
             getattr(settings, 'ENABLE_LDAP_SECONDARY', False)
             and settings.AUTH_LDAP2_DOMAIN_PRINTABLE
         ):
             ret += ' or ' + settings.AUTH_LDAP2_DOMAIN_PRINTABLE
-
         ret += (
             ' account. Enter your user name as <code>username@{}'
             '</code>'.format(settings.AUTH_LDAP_USERNAME_DOMAIN)
         )
-
         if (
             settings.ENABLE_LDAP_SECONDARY
             and settings.AUTH_LDAP2_USERNAME_DOMAIN
@@ -315,7 +298,6 @@ def get_login_info():
             ret += ' or <code>username@{}</code>'.format(
                 settings.AUTH_LDAP2_USERNAME_DOMAIN
             )
-
         if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             ret += (
                 '. To access the site with local account enter your user '
@@ -338,7 +320,6 @@ def get_target_project_select(site, project):
             project_uuid=project.sodar_uuid,
         )
         current_level = rp.level
-
     except RemoteProject.DoesNotExist:
         pass
 
@@ -351,7 +332,6 @@ def get_target_project_select(site, project):
 
     for level in ACTIVE_LEVEL_TYPES:
         selected = False
-
         if (
             level == REMOTE_LEVEL_NONE
             and current_level
@@ -361,7 +341,6 @@ def get_target_project_select(site, project):
                 REMOTE_LEVEL_REVOKED
             ]
             level_val = REMOTE_LEVEL_REVOKED
-
         else:
             legend = SODAR_CONSTANTS['REMOTE_ACCESS_LEVELS'][level]
             level_val = level

@@ -109,7 +109,7 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install django-sodar-core==0.10.4
+    $ pip install django-sodar-core==0.10.5
 
 
 Download Example Site

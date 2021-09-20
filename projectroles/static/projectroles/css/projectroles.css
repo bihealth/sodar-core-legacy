@@ -294,7 +294,6 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   overflow: hidden;
   text-overflow: ellipsis;
   padding-right: 3px;
-  border: 1px solid transparent; /* HACK for expanding table cell */
   margin-bottom: -5px;  /* HACK for expanding table cell */
 }
 
@@ -302,8 +301,7 @@ table.sodar-card-table-bordered tbody tr:last-child td {
   z-index: 1100;
   width: auto;
   background-color: #ffffe0;
-  border: 1px solid #dfdfdf;
-  box-shadow: 0 3px 3px -3px #909090;
+  box-shadow: 0 0 0 1px #dfdfdf inset, 0 3px 3px -3px #909090;
 }
 
 
@@ -460,13 +458,17 @@ a.sodar-pr-btn-copy-secret i {
 
 /* App alert badge */
 #sodar-app-alert-badge {
-    line-height: 36px !important;
-    font-size: 125%;
+  line-height: 36px !important;
+  font-size: 125%;
+}
+
+#sodar-app-alert-badge-btn-dismiss {
+  padding-top: 1px !important;
 }
 
 #sodar-app-alert-badge a:link,
 #sodar-app-alert-badge a:visited {
-    color: #fff !important;
+  color: #fff !important;
 }
 
 #sodar-app-alert-icon {
@@ -480,39 +482,39 @@ a.sodar-pr-btn-copy-secret i {
 
 /* Badge group */
 .badge-group {
-    padding: 2px;
-    display: inline-flex;
+  padding: 2px;
+  display: inline-flex;
 }
 
 .badge-group > .badge:not(:first-child):not(:last-child) {
-    border-radius: 0;
-    margin-left: 0;
-    margin-right: 0;
+  border-radius: 0;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .badge-group > .badge:first-child {
-	border-top-right-radius: 0;
-    border-bottom-right-radius: 0;
-    margin-right: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0;
 }
 
 .badge-group > .badge:last-child {
-	border-top-left-radius: 0;
-    border-bottom-left-radius: 0;
-    margin-left: 0;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: 0;
 }
 
 /* Notch visualizaton for sidebar */
 .sodar-pr-sidebar-nav-ul li.active:after {
-    content: "";
-    position: absolute;
-    right: 0;
-    top: 10px;
-    width: 0;
-    height: 0;
-    border-top: 12px solid transparent;
-    border-right: 12px solid #ffffff;
-    border-bottom: 12px solid transparent;
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 13px;
+  width: 0;
+  height: 0;
+  border-top: 12px solid transparent;
+  border-right: 12px solid #ffffff;
+  border-bottom: 12px solid transparent;
 }
 
 .sodar-pr-sidebar-nav-ul li i {

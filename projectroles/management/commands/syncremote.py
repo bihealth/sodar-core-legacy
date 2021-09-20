@@ -92,7 +92,7 @@ class Command(BaseCommand):
         remote_api = RemoteProjectAPI()
 
         try:
-            remote_api.sync_source_data(site, remote_data)
+            remote_api.sync_remote_data(site, remote_data)
 
         except Exception as ex:
             logger.error('Remote sync cancelled with exception: {}'.format(ex))

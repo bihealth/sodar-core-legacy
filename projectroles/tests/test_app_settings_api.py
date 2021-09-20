@@ -483,7 +483,7 @@ class TestAppSettingAPI(
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'STRING',
-            'label': 'String Setting',
+            'label': 'String setting',
             'default': '',
             'description': 'Example string project setting',
             'placeholder': 'Example string',
@@ -499,7 +499,7 @@ class TestAppSettingAPI(
         expected = {
             'scope': APP_SETTING_SCOPE_PROJECT,
             'type': 'STRING',
-            'label': 'String Setting',
+            'label': 'String setting',
             'default': '',
             'description': 'Example string project setting',
             'placeholder': 'Example string',
@@ -515,7 +515,7 @@ class TestAppSettingAPI(
         expected = {
             'scope': APP_SETTING_SCOPE_USER,
             'type': 'STRING',
-            'label': 'String Setting',
+            'label': 'String setting',
             'default': '',
             'description': 'Example string user setting',
             'placeholder': 'Example string',
@@ -548,7 +548,7 @@ class TestAppSettingAPI(
             'project_str_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
-                'label': 'String Setting',
+                'label': 'String setting',
                 'default': '',
                 'description': 'Example string project setting',
                 'placeholder': 'Example string',
@@ -557,7 +557,7 @@ class TestAppSettingAPI(
             'project_int_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'INTEGER',
-                'label': 'Integer Setting',
+                'label': 'Integer setting',
                 'default': 0,
                 'description': 'Example integer project setting',
                 'placeholder': 0,
@@ -567,7 +567,7 @@ class TestAppSettingAPI(
             'project_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
-                'label': 'String Setting',
+                'label': 'String setting',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
                 'description': 'Example string project setting with options',
@@ -576,7 +576,7 @@ class TestAppSettingAPI(
             'project_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'INTEGER',
-                'label': 'Integer Setting',
+                'label': 'Integer setting',
                 'default': 0,
                 'options': [0, 1],
                 'description': 'Example integer project setting with options',
@@ -586,15 +586,24 @@ class TestAppSettingAPI(
             'project_bool_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'BOOLEAN',
-                'label': 'Boolean Setting',
+                'label': 'Boolean setting',
                 'default': False,
                 'description': 'Example boolean project setting',
                 'user_modifiable': True,
             },
+            'project_global_setting': {
+                'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
+                'type': 'BOOLEAN',
+                'label': 'Global boolean setting',
+                'default': False,
+                'description': 'Example global boolean project setting',
+                'user_modifiable': True,
+                'local': False,
+            },
             'project_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'JSON',
-                'label': 'JSON Setting',
+                'label': 'JSON setting',
                 'default': {
                     'Example': 'Value',
                     'list': [1, 2, 3, 4, 5],
@@ -607,6 +616,7 @@ class TestAppSettingAPI(
             'project_hidden_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
+                'label': 'Hidden setting',
                 'default': '',
                 'description': 'Example hidden project setting',
                 'user_modifiable': False,
@@ -614,6 +624,7 @@ class TestAppSettingAPI(
             'project_hidden_json_setting': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'JSON',
+                'label': 'Hidden JSON setting',
                 'description': 'Example hidden JSON project setting',
                 'user_modifiable': False,
             },
@@ -629,7 +640,7 @@ class TestAppSettingAPI(
             'user_str_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
-                'label': 'String Setting',
+                'label': 'String setting',
                 'default': '',
                 'description': 'Example string user setting',
                 'placeholder': 'Example string',
@@ -638,7 +649,7 @@ class TestAppSettingAPI(
             'user_int_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'INTEGER',
-                'label': 'Integer Setting',
+                'label': 'Integer setting',
                 'default': 0,
                 'description': 'Example integer user setting',
                 'placeholder': 0,
@@ -648,7 +659,7 @@ class TestAppSettingAPI(
             'user_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
-                'label': 'String Setting',
+                'label': 'String setting',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
                 'description': 'Example string user setting with options',
@@ -657,7 +668,7 @@ class TestAppSettingAPI(
             'user_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'INTEGER',
-                'label': 'Integer Setting',
+                'label': 'Integer setting',
                 'default': 0,
                 'options': [0, 1],
                 'description': 'Example integer user setting with options',
@@ -667,7 +678,7 @@ class TestAppSettingAPI(
             'user_bool_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'BOOLEAN',
-                'label': 'Boolean Setting',
+                'label': 'Boolean setting',
                 'default': False,
                 'description': 'Example boolean user setting',
                 'user_modifiable': True,
@@ -675,7 +686,7 @@ class TestAppSettingAPI(
             'user_json_setting': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'JSON',
-                'label': 'JSON Setting',
+                'label': 'JSON setting',
                 'default': {
                     'Example': 'Value',
                     'list': [1, 2, 3, 4, 5],
@@ -736,13 +747,13 @@ class TestAppSettingAPI(
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT, app_name=EXAMPLE_APP_NAME
         )
-        self.assertEqual(len(defs), 8)
+        self.assertEqual(len(defs), 9)
         defs = app_settings.get_setting_defs(
             APP_SETTING_SCOPE_PROJECT,
             app_name=EXAMPLE_APP_NAME,
             user_modifiable=True,
         )
-        self.assertEqual(len(defs), 6)
+        self.assertEqual(len(defs), 7)
 
     def test_get_setting_defs_invalid_scope(self):
         """Test get_setting_defs() with an invalid scope"""

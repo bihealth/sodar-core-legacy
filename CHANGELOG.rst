@@ -7,6 +7,57 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.5 (2021-09-20)
+====================
+
+Added
+-----
+
+- **Appalerts**
+    - Display project badge in alert (#790, #801)
+    - Dismiss all link in title bar badge (#802)
+- **Projectroles**
+    - ``exact`` kwarg for ``assert_element_count()`` in UI tests (#798)
+    - Custom email header and footer (#789)
+    - ``PROJECTROLES_EMAIL_HEADER`` and ``PROJECTROLES_EMAIL_FOOTER`` settings (#789)
+    - ``get_all_defs()`` helper in ``AppSettingAPI`` (#808)
+
+Changed
+-------
+
+- **General**
+    - Unify app settings label notation (#793)
+    - Upgrade minimum Django version to v3.2.7 (#800)
+- **Appalerts**
+    - Improve alert list layout (#790)
+- **Projectroles**
+    - Improve login button locating in ``login_and_redirect_with_ui()`` (#796)
+    - Hide skipped app settings from target remote sync view (#785)
+    - Improve app settings layout in target remote sync view (#804)
+    - Minor remote sync refactoring (#721, #785, #807)
+    - Refactor ``_get_projectroles_settings()`` into ``get_projectroles_defs()`` (#803)
+
+Fixed
+-----
+
+- **Appalerts**
+    - Redundant HTML anchor in Dismiss All button (#788)
+- **Projectroles**
+    - Sidebar notch position (#787)
+    - ``sodar-overflow-container`` misalignment (#791)
+    - App settings recreated if value is identical (#785)
+    - Line separators in ``remoteproject_sync.html`` (#805)
+    - App settings remote sync only supporting projectroles (#806, #809)
+    - Plugin name incorrectly displayed in target remote sync view (#810)
+    - Active link check for projectroles URLs ignoring app name (#814)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``get_plugin_name_by_id()`` template tag (#812)
+
+
 v0.10.4 (2021-08-19)
 ====================
 

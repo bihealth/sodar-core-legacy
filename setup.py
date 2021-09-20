@@ -57,7 +57,7 @@ setup(
     long_description=README,
     long_description_content_type='text/x-rst',
     author='Berlin Institute of Health, Core Unit Bioinformatics',
-    author_email='cubi@bihealth.de',
+    author_email='cubi@bih-charite.de',
     url='https://github.com/bihealth/sodar-core',
     packages=[
         'projectroles',

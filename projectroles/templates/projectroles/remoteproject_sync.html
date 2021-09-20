@@ -1,1 +1,287 @@
-{% extends 'projectroles/base.html' %}{% load crispy_forms_filters %}{% load projectroles_tags %}{% load projectroles_common_tags %}{% block title %}  Synchronize  {% get_display_name 'PROJECT' title=True plural=True %} from {{ site.name }}{% endblock %}{% block css %}  {{ block.super }}  <style type="text/css">    .table.sodar-pr-remote-update-table thead tr th:last-child,    .table.sodar-pr-remote-update-table tbody tr td:last-child {      width: 120px;    }    @media screen and (max-width: 800px) {      .table#sodar-pr-remote-update-table-roles thead tr th:nth-child(3),      .table#sodar-pr-remote-update-table-roles tbody tr td:nth-child(3) {        display: none;      }    }  </style>{% endblock css %}{% block projectroles %}{% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}<div class="row sodar-subtitle-container">  <h2>    Synchronize    {% get_display_name 'PROJECT' title=True plural=True %}    from {{ site.name }}  </h2>  <a role="button" class="btn btn-secondary ml-auto"     href="{% url 'projectroles:remote_sites' %}">    <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back to Sites  </a></div><div class="container-fluid sodar-page-container">  {% if not update_data %}    <div class="alert alert-warning">      No remote data received from source site "<strong>{{ site.name }}</strong>".    </div>  {% else %}    {% if user_count > 0 %}      <div class="card mb-3">        <div class="card-header">          <h4>            <i class="iconify" data-icon="mdi:account"></i>            Users ({{ user_count }})          </h4>        </div>        <div class="card-body p-0">          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"                 id="sodar-pr-remote-update-table-users">            <thead>              <tr>                <th>User</th>                <th>Status</th>              </tr>            </thead>            <tbody>              {% for u_uuid, u in update_data.users.items %}                {% if u.status %}                  <tr>                    <td>                      {% get_user_by_username u.username as user_obj %}                      {% if user_obj %}                        {% get_user_html user_obj as user_html %}                        {{ user_html | safe }}                      {% else %}                        {{ u.username }}                      {% endif %}                    </td>                    <td class="text-nowrap {% if u.status == 'error' %}text-danger{% else %}text-success{% endif %}">                      {{ u.status | title }}                      {% if u.status_msg %}                        {% get_info_link content=u.status_msg as i_link %}                          {{ i_link | safe }}                      {% endif %}                    </td>                  </tr>                {% endif %}              {% endfor %}            </tbody>          </table>        </div>      </div>    {% endif %}    {% if project_count > 0 %}      <div class="card mb-3">        <div class="card-header">          <h4>            <i class="iconify" data-icon="mdi:rhombus-split"></i>            {% get_display_name 'CATEGORY' title=True plural=True %} and {% get_display_name 'PROJECT' title=True plural=True %} ({{ project_count }})          </h4>        </div>        <div class="card-body p-0">          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"                 id="sodar-pr-remote-update-table-projects">            <thead>              <tr>                <th>{% get_display_name 'CATEGORY' title=True %}/{% get_display_name 'PROJECT' title=True %}</th>                <th>Status</th>              </tr>            </thead>            <tbody>              {% for p_uuid, p in update_data.projects.items %}                {% if p.status %}                  <tr>                    <td>                      {% get_project_by_uuid p_uuid as p_obj %}                      {% if p_obj %}                        {% get_project_link p_obj full_title=True as p_link %}                        {{ p_link | safe }}                      {% else %}                        {{ p.title }}                      {% endif %}                    </td>                    <td class="text-nowrap {% if p.status == 'error' %}text-danger{% else %}text-success{% endif %}">                      {{ p.status | title }}                      {% if p.status_msg %}                        {% get_info_link content=p.status_msg as i_link %}                          {{ i_link | safe }}                      {% endif %}                    </td>                  </tr>                {% endif %}              {% endfor %}            </tbody>          </table>        </div>      </div>    {% endif %}    {% if role_count > 0 %}      <div class="card mb-3">        <div class="card-header">          <h4>            <i class="iconify" data-icon="mdi:account-group"></i>            Members ({{ role_count }})          </h4>        </div>        <div class="card-body p-0">          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"                 id="sodar-pr-remote-update-table-roles">            <thead>              <tr>                <th>{% get_display_name 'PROJECT' title=True %}</th>                <th>User</th>                <th>Role</th>                <th>Status</th>              </tr>            </thead>            <tbody>              {% for p_uuid, p in update_data.projects.items %}                {% for r_uuid, r in p.roles.items %}                  {% get_project_by_uuid p_uuid as p_obj %}                  {% get_user_by_username r.user as user_obj %}                  {% is_inherited_owner project=p_obj user=user_obj as inh_user %}                  {% if r.status %}                    <tr>                      <td>                        {% if p_obj %}                          {% get_project_link p_obj full_title=True as p_link %}                          {{ p_link | safe }}                        {% else %}                          {{ p.title }}                        {% endif %}                      </td>                      <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>                        {% if user_obj %}                          {% get_user_html user_obj as user_html %}                          {{ user_html | safe }}                        {% else %}                          {{ r.user }}                        {% endif %}                      </td>                      <td                        {% if r.status == 'deleted' %}                          class="text-strikethrough"                        {% elif inh_user %}                          class="text-muted"                        {% endif %}                      >                        {{ r.role }}                        {% if inh_user %}                          {% get_info_link content='Existing role for inherited owner' as i_link %}                          {{ i_link | safe }}                        {% endif %}                      </td>                      <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">                        {{ r.status | title }}                        {% if r.status_msg %}                          {% get_info_link content=r.status_msg as i_link %}                          {{ i_link | safe }}                        {% endif %}                      </td>                    </tr>                  {% endif %}                {% endfor %}              {% endfor %}            </tbody>          </table>        </div>      </div>    {% endif %}    {% if app_settings_count > 0 %}      <div class="card mb-3">        <div class="card-header">          <h4>            <i class="iconify" data-icon="mdi:tune"></i>            App Settings ({{ app_settings_count }})          </h4>        </div>        <div class="card-body p-0">          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"                 id="sodar-pr-remote-update-table-settings">            <thead>              <tr>                <th>{% get_display_name 'PROJECT' title=True %}</th>                <th>Name</th>                <th>Plugin</th>                <th>Value</th>                <th>Status</th>              </tr>            </thead>            <tbody>              {% for a in update_data.app_settings.values %}                {% if a.status %}                  <tr>                    <td>                      {% get_project_by_uuid a.project_uuid as p_obj %}                      {% if p_obj %}                        {% get_project_link p_obj full_title=True as p_link %}                        {{ p_link | safe }}                      {% else %}                        {{ p.title }}                      {% endif %}                    </td>                    <td>{{ a.name }}</td>                    <td>{% get_plugin_name_by_id a.plugin_id %}</td>                    <td>                      {% if a.type == 'JSON' %}                        {{ a.value_json }}                      {% elif a.type == 'BOOLEAN' %}                        {% if a.value == '1' %}True{% else %}False{% endif %}                      {% else %}                        {{ a.value }}                      {% endif %}                    </td>                    <td>{{ a.status | title }}</td>                  </tr>                {% endif %}              {% endfor %}            </tbody>          </table>        </div>      </div>    {% endif %}  {% endif %}</div>{% endblock projectroles %}
+{% extends 'projectroles/base.html' %}
+
+{% load crispy_forms_filters %}
+{% load projectroles_tags %}
+{% load projectroles_common_tags %}
+
+{% block title %}
+  Synchronize
+  {% get_display_name 'PROJECT' title=True plural=True %} from {{ site.name }}
+{% endblock %}
+
+{% block css %}
+  {{ block.super }}
+  <style type="text/css">
+    .sodar-pr-remote-update-table thead tr th:last-child,
+    .sodar-pr-remote-update-table tbody tr td:last-child {
+      width: 120px;
+    }
+
+    @media screen and (max-width: 800px) {
+      #sodar-pr-remote-update-table-roles thead tr th:nth-child(3),
+      #sodar-pr-remote-update-table-roles tbody tr td:nth-child(3) {
+        display: none;
+      }
+    }
+
+    @media screen and (max-width: 1000px) {
+      #sodar-pr-remote-update-table-settings thead tr th:nth-child(3),
+      #sodar-pr-remote-update-table-settings tbody tr td:nth-child(3) {
+        display: none;
+      }
+    }
+    @media screen and (max-width: 800px) {
+      #sodar-pr-remote-update-table-settings thead tr th:nth-child(5),
+      #sodar-pr-remote-update-table-settings tbody tr td:nth-child(5) {
+        display: none;
+      }
+    }
+  </style>
+{% endblock css %}
+
+{% block projectroles %}
+
+{% get_django_setting 'PROJECTROLES_SITE_MODE' as site_mode %}
+
+<div class="row sodar-subtitle-container">
+  <h2>
+    Synchronize
+    {% get_display_name 'PROJECT' title=True plural=True %}
+    from {{ site.name }}
+  </h2>
+  <a role="button" class="btn btn-secondary ml-auto"
+     href="{% url 'projectroles:remote_sites' %}">
+    <i class="iconify" data-icon="mdi:arrow-left-circle"></i> Back to Sites
+  </a>
+</div>
+
+<div class="container-fluid sodar-page-container">
+  {% if not update_data %}
+    <div class="alert alert-warning">
+      No remote data received from source site "<strong>{{ site.name }}</strong>".
+    </div>
+  {% else %}
+    {% if user_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:account"></i>
+            Users ({{ user_count }})
+          </h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-users">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u_uuid, u in update_data.users.items %}
+                {% if u.status %}
+                  <tr>
+                    <td>
+                      {% get_user_by_username u.username as user_obj %}
+                      {% if user_obj %}
+                        {% get_user_html user_obj as user_html %}
+                        {{ user_html | safe }}
+                      {% else %}
+                        {{ u.username }}
+                      {% endif %}
+                    </td>
+                    <td class="text-nowrap {% if u.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                      {{ u.status | title }}
+                      {% if u.status_msg %}
+                        {% get_info_link content=u.status_msg as i_link %}
+                          {{ i_link | safe }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if project_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:rhombus-split"></i>
+            {% get_display_name 'CATEGORY' title=True plural=True %} and {% get_display_name 'PROJECT' title=True plural=True %} ({{ project_count }})
+          </h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-projects">
+            <thead>
+              <tr>
+                <th>{% get_display_name 'CATEGORY' title=True %}/{% get_display_name 'PROJECT' title=True %}</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p_uuid, p in update_data.projects.items %}
+                {% if p.status %}
+                  <tr>
+                    <td>
+                      {% get_project_by_uuid p_uuid as p_obj %}
+                      {% if p_obj %}
+                        {% get_project_link p_obj full_title=True as p_link %}
+                        {{ p_link | safe }}
+                      {% else %}
+                        {{ p.title }}
+                      {% endif %}
+                    </td>
+                    <td class="text-nowrap {% if p.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                      {{ p.status | title }}
+                      {% if p.status_msg %}
+                        {% get_info_link content=p.status_msg as i_link %}
+                          {{ i_link | safe }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if role_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:account-multiple"></i>
+            Members ({{ role_count }})
+          </h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-roles">
+            <thead>
+              <tr>
+                <th>{% get_display_name 'PROJECT' title=True %}</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p_uuid, p in update_data.projects.items %}
+                {% for r_uuid, r in p.roles.items %}
+                  {% get_project_by_uuid p_uuid as p_obj %}
+                  {% get_user_by_username r.user as user_obj %}
+                  {% is_inherited_owner project=p_obj user=user_obj as inh_user %}
+                  {% if r.status %}
+                    <tr>
+                      <td>
+                        {% if p_obj %}
+                          {% get_project_link p_obj full_title=True as p_link %}
+                          {{ p_link | safe }}
+                        {% else %}
+                          {{ p.title }}
+                        {% endif %}
+                      </td>
+                      <td {% if r.status == 'deleted' %}class="text-strikethrough"{% endif %}>
+                        {% if user_obj %}
+                          {% get_user_html user_obj as user_html %}
+                          {{ user_html | safe }}
+                        {% else %}
+                          {{ r.user }}
+                        {% endif %}
+                      </td>
+                      <td
+                        {% if r.status == 'deleted' %}
+                          class="text-strikethrough"
+                        {% elif inh_user %}
+                          class="text-muted"
+                        {% endif %}
+                      >
+                        {{ r.role }}
+                        {% if inh_user %}
+                          {% get_info_link content='Existing role for inherited owner' as i_link %}
+                          {{ i_link | safe }}
+                        {% endif %}
+                      </td>
+                      <td class="text-nowrap {% if r.status == 'error' %}text-danger{% else %}text-success{% endif %}">
+                        {{ r.status | title }}
+                        {% if r.status_msg %}
+                          {% get_info_link content=r.status_msg as i_link %}
+                          {{ i_link | safe }}
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+
+    {% if app_settings_count > 0 %}
+      <div class="card mb-3">
+        <div class="card-header">
+          <h4>
+            <i class="iconify" data-icon="mdi:tune"></i>
+            App Settings ({{ app_settings_count }})
+          </h4>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-striped sodar-card-table sodar-pr-remote-update-table"
+                 id="sodar-pr-remote-update-table-settings">
+            <thead>
+              <tr>
+                <th>{% get_display_name 'PROJECT' title=True %}</th>
+                <th>Name</th>
+                <th>Plugin</th>
+                <th>Value</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in update_data.app_settings.values %}
+                {% if a.status and a.status != 'skipped' %}
+                  <tr>
+                    <td>
+                      {% get_project_by_uuid a.project_uuid as p_obj %}
+                      {% if p_obj %}
+                        {% get_project_link p_obj full_title=True as p_link %}
+                        {{ p_link | safe }}
+                      {% else %}
+                        {{ p.title }}
+                      {% endif %}
+                    </td>
+                    <td>{{ a.name }}</td>
+                    <td>
+                      {% if a.app_plugin %}{{ a.app_plugin }}{% else %}projectroles{% endif %}
+                    </td>
+                    <td>
+                      {% if a.type == 'JSON' %}
+                        {{ a.value_json }}
+                      {% elif a.type == 'BOOLEAN' %}
+                        {% if a.value == '1' %}True{% else %}False{% endif %}
+                      {% else %}
+                        {{ a.value }}
+                      {% endif %}
+                    </td>
+                    <td>{{ a.status | title }}</td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+{% endblock projectroles %}

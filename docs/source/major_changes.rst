@@ -10,6 +10,36 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.5 (2021-09-20)
+********************
+
+Release Highlights
+==================
+
+- Display project badge in app alerts
+- Custom email header and footer
+- Fix remote sync of non-projectroles app settings
+- Multiple app settings remote sync bug fixes
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.7.
+
+Template Tag Removed
+--------------------
+
+The ``get_plugin_name_by_id()`` template tag has been removed from
+``projectroles_common_tags``. There should be no reason to query app plugins by
+database ID. Please use e.g. the utilities found in ``projectroles.plugins``
+instead.
+
+
 v0.10.4 (2021-08-19)
 ********************
 

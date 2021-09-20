@@ -47,7 +47,11 @@ class TestListView(TestAlertUIBase):
         ]
         url = reverse('appalerts:list')
         self.assert_element_count(
-            expected, url, 'sodar-app-alert-item', 'class'
+            expected,
+            url,
+            'alert alert-info sodar-app-alert-item',
+            'class',
+            exact=True,
         )
 
     def test_alert_dismiss(self):
@@ -251,3 +255,20 @@ class TestTitlebarBadge(TestAlertUIBase):
         )
         self.assertEqual(alert_count.text, '1')
         self.assertEqual(alert_legend.text, 'alert')
+
+    def test_alert_dismiss_all(self):
+        """Test dismissing all alerts for the user"""
+        self.assertEqual(AppAlert.objects.filter(active=True).count(), 2)
+
+        url = reverse('home')
+        self.login_and_redirect(self.regular_user, url)
+
+        self.selenium.find_element_by_id(
+            'sodar-app-alert-badge-btn-dismiss'
+        ).click()
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.invisibility_of_element_located(
+                (By.CLASS_NAME, 'sodar-app-alert-legend')
+            )
+        )
+        self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)

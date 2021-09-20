@@ -3912,7 +3912,7 @@ class TestRemoteSiteDeleteView(RemoteSiteMixin, TestViewsBase):
         self.assertEqual(RemoteSite.objects.all().count(), 0)
 
 
-class TestRemoteProjectsBatchUpdateView(
+class TestRemoteProjectBatchUpdateView(
     ProjectMixin,
     RoleAssignmentMixin,
     RemoteSiteMixin,
