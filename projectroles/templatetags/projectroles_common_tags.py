@@ -1,7 +1,8 @@
 """Template tags provided by projectroles for use in other apps"""
 
-from importlib import import_module
 import mistune
+
+from importlib import import_module
 
 from django import template
 from django.conf import settings
@@ -19,19 +20,17 @@ from projectroles.plugins import get_backend_api, BackendPluginPoint
 from projectroles.utils import get_display_name as _get_display_name
 
 
+app_settings = AppSettingAPI()
+site = import_module(settings.SITE_PACKAGE)
+User = get_user_model()
+
+register = template.Library()
+
+
 # SODAR constants
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
-
-
-site = import_module(settings.SITE_PACKAGE)
-User = get_user_model()
-
-# App settings API
-app_settings = AppSettingAPI()
-
-register = template.Library()
 
 
 # SODAR and site operations ----------------------------------------------------
@@ -60,7 +59,6 @@ def get_project_by_uuid(sodar_uuid):
     """Return Project by sodar_uuid"""
     try:
         return Project.objects.get(sodar_uuid=sodar_uuid)
-
     except Project.DoesNotExist:
         return None
 
@@ -70,7 +68,6 @@ def get_user_by_username(username):
     """Return User by username"""
     try:
         return User.objects.get(username=username)
-
     except User.DoesNotExist:
         return None
 
@@ -85,18 +82,14 @@ def get_django_setting(name, default=None, js=False):
     is not found. Return a Javascript-safe value if js=True.
     """
     val = getattr(settings, name, default)
-
     if js and isinstance(val, bool):
         val = int(val)
-
     return val
 
 
 @register.simple_tag
 def get_app_setting(app_name, setting_name, project=None, user=None):
-    """
-    Get a project/user specific app setting from AppSettingAPI
-    """
+    """Get a project/user specific app setting from AppSettingAPI"""
     return app_settings.get_app_setting(app_name, setting_name, project, user)
 
 
@@ -112,7 +105,6 @@ def template_exists(path):
     try:
         get_template(path)
         return True
-
     except template.TemplateDoesNotExist:
         return False
 
@@ -136,10 +128,8 @@ def get_display_name(key, title=False, count=1, plural=False):
 def get_role_display_name(role_as, title=False):
     """Return display name for role assignment"""
     role_suffix = role_as.role.name.split(' ')[1]
-
     if title:
         role_suffix = role_suffix.title()
-
     return '{} {}'.format(
         _get_display_name(role_as.project.type, title=title), role_suffix
     )
@@ -149,10 +139,8 @@ def get_role_display_name(role_as, title=False):
 def get_project_title_html(project):
     """Return HTML version of the full project title including parents"""
     ret = ''
-
     if project.get_parents():
         ret += ' / '.join(project.full_title.split(' / ')[:-1]) + ' / '
-
     ret += project.title
     return ret
 
@@ -161,10 +149,8 @@ def get_project_title_html(project):
 def get_project_link(project, full_title=False, request=None):
     """Return link to project with a simple or full title"""
     remote_icon = ''
-
     if request:
         remote_icon = get_remote_icon(project, request)
-
     return (
         '<a href="{}" title="{}" data-toggle="tooltip" '
         'data-placement="top">{}</a>{}'.format(
@@ -190,9 +176,10 @@ def get_user_html(user):
 
 @register.simple_tag
 def get_backend_include(backend_name, include_type='js'):
-    """Returns import string for backend app Javascript or CSS.
-    Returns empty string if not found."""
-
+    """
+    Return import string for backend app Javascript or CSS. Returns empty string
+    if not found.
+    """
     # TODO: Replace with get_app_plugin() and if None check
     # TODO: once get_app_plugin() can be used for backend plugins
     # TODO: Don't forget to remove ObjectDoesNotExist import
@@ -238,7 +225,6 @@ def get_history_dropdown(obj, project=None):
 @register.simple_tag
 def highlight_search_term(item, terms):
     """Return string with search term highlighted"""
-
     # Skip highlighting for multiple terms (at least for now)
     if isinstance(terms, list) and len(terms) > 1:
         return item
@@ -250,17 +236,14 @@ def highlight_search_term(item, terms):
     def get_highlights(item):
         pos = item.lower().find(term.lower())
         tl = len(term)
-
         if pos == -1:
             return item  # Nothing to highlight
-
         ret = item[:pos]
         ret += (
             '<span class="sodar-search-highlight">'
             + item[pos : pos + tl]
             + '</span>'
         )
-
         if len(item[pos + tl :]) > 0:
             ret += get_highlights(item[pos + tl :])
         return ret

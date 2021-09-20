@@ -42,7 +42,7 @@ class ProjectAppPluginPoint(PluginPoint):
     #:             settings of type STRING or INTEGER
     #:             'user_modifiable': True,  # Optional, show/hide in forms
     #:             'local': False,  # Optional, show/hide in forms on target
-    #:             site
+    #:             site, sync value from source to target site if false
     #:         }
     #:     }
     # TODO: Define project specific settings in your app plugin, example above
