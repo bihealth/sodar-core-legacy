@@ -15,6 +15,8 @@ Changed
 
 - **General**
     - Upgrade to Chromedriver v93 (#818)
+- **Filesfolders**
+    - Refactor ``checkAll()`` helper (#816)
 
 
 v0.10.5 (2021-09-20)
