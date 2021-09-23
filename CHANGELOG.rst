@@ -18,6 +18,12 @@ Changed
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
 
+Fixed
+-----
+
+- **General**
+    - Github Actions CI failure by old package version (#821)
+
 
 v0.10.5 (2021-09-20)
 ====================
