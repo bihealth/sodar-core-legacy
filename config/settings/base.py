@@ -535,7 +535,7 @@ def set_logging(level=None):
     }
 
 
-LOGGING = set_logging(DEBUG)
+LOGGING = set_logging(LOGGING_LEVEL)
 
 
 # General site settings
