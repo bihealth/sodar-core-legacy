@@ -482,6 +482,9 @@ SAML2_AUTH = {
 # Logging
 # ------------------------------------------------------------------------------
 
+# Custom logging level
+LOGGING_LEVEL = env.str('LOGGING_LEVEL', 'DEBUG' if DEBUG else 'ERROR')
+
 # List of apps to include in logging
 LOGGING_APPS = env.list(
     'LOGGING_APPS',
@@ -493,13 +496,13 @@ LOGGING_APPS = env.list(
     ],
 )
 
-# Path for file logging. If not set, will log only to console.
+# Path for file logging. If not set, will log only to console
 LOGGING_FILE_PATH = env.str('LOGGING_FILE_PATH', None)
 
 
-def set_logging(debug, level=None):
+def set_logging(level=None):
     if not level:
-        level = 'DEBUG' if debug else 'ERROR'
+        level = 'DEBUG' if DEBUG else 'ERROR'
     app_logger_config = {
         'level': level,
         'handlers': ['console', 'file'] if LOGGING_FILE_PATH else ['console'],

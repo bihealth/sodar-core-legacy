@@ -10,11 +10,18 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **General**
+    - ``LOGGING_LEVEL`` setting in example configs (#822)
+
 Changed
 -------
 
 - **General**
     - Upgrade to Chromedriver v93 (#818)
+    - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
 
