@@ -38,6 +38,12 @@ REMOTE_SITE_SECRET = build_secret()
 class TestPermissionMixin:
     """Helper class for permission tests"""
 
+    def _send_request(self, url, method, req_kwargs):
+        req_method = getattr(self.client, method.lower(), None)
+        if not req_method:
+            raise ValueError('Invalid method "{}"'.format(method))
+        return req_method(url, **req_kwargs)
+
     def assert_response(
         self,
         url,
@@ -48,6 +54,7 @@ class TestPermissionMixin:
         method='GET',
         data=None,
         header=None,
+        cleanup_method=None,
     ):
         """
         Assert a response status code for url with a list of users. Also checks
@@ -61,16 +68,11 @@ class TestPermissionMixin:
         :param method: Method for request (string, optional, default='GET')
         :param data: Optional data for request (dict, optional)
         :param header: Request header (dict, optional)
+        :param cleanup_method: Callable method to clean up data after a
+               successful request
         """
         if header is None:
             header = {}
-
-        def _send_request():
-            req_method = getattr(self.client, method.lower(), None)
-            if not req_method:
-                raise ValueError('Invalid method "{}"'.format(method))
-            return req_method(url, **req_kwargs)
-
         if not isinstance(users, (list, tuple)):
             users = [users]
 
@@ -80,29 +82,28 @@ class TestPermissionMixin:
                 req_kwargs.update(header)
 
             if user:  # Authenticated user
-                redirect_url = (
-                    redirect_user if redirect_user else reverse('home')
-                )
+                re_url = redirect_user if redirect_user else reverse('home')
                 with self.login(user):
-                    response = _send_request()
+                    response = self._send_request(url, method, req_kwargs)
 
             else:  # Anonymous
                 if redirect_anon:
-                    redirect_url = redirect_anon
+                    re_url = redirect_anon
                 else:
                     url_split = url.split('?')
                     if len(url_split) > 1:
                         next_url = url_split[0] + quote('?' + url_split[1])
                     else:
                         next_url = url
-                    redirect_url = reverse('login') + '?next=' + next_url
-                response = _send_request()
+                    re_url = reverse('login') + '?next=' + next_url
+                response = self._send_request(url, method, req_kwargs)
 
             msg = 'user={}'.format(user)
             self.assertEqual(response.status_code, status_code, msg=msg)
-
             if status_code == 302:
-                self.assertEqual(response.url, redirect_url, msg=msg)
+                self.assertEqual(response.url, re_url, msg=msg)
+            if cleanup_method:
+                cleanup_method()
 
 
 class TestPermissionBase(TestPermissionMixin, TestCase):
@@ -111,8 +112,6 @@ class TestPermissionBase(TestPermissionMixin, TestCase):
 
     NOTE: To use with DRF API views, you need to use APITestCase
     """
-
-    pass
 
 
 class TestProjectPermissionBase(

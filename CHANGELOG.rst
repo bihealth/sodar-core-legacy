@@ -15,6 +15,8 @@ Added
 
 - **General**
     - ``LOGGING_LEVEL`` setting in example configs (#822)
+- **Projectroles**
+    - ``cleanup_method`` arg for ``assert_response()`` (#823)
 
 Changed
 -------
