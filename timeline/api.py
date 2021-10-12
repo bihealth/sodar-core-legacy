@@ -280,7 +280,7 @@ class TimelineAPI:
                 app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
             except Exception as ex:
                 msg = 'Error querying for plugin "{}": {}'.format(event.app, ex)
-                logger.error(msg)
+                logger.error(msg + ' (UUID={})'.format(event.sodar_uuid))
                 return (
                     '<span class="sodar-tl-plugin-error text-danger">'
                     '{}</span>'.format(msg)

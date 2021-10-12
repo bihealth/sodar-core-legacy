@@ -493,6 +493,7 @@ LOGGING_APPS = env.list(
         'siteinfo',
         'sodarcache',
         'taskflowbackend',
+        'timeline',
     ],
 )
 
