@@ -10,6 +10,22 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.6 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Timeline app bug fixes
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.8.
+
+
 v0.10.5 (2021-09-20)
 ********************
 

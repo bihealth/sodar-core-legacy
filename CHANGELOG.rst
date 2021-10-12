@@ -24,6 +24,7 @@ Changed
 - **General**
     - Upgrade to Chromedriver v93 (#818)
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
+    - Upgrade minimum Django version to v3.2.8 (#835)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
 - **Timeline**
