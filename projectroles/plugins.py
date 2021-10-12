@@ -138,7 +138,7 @@ class ProjectAppPluginPoint(PluginPoint):
 
     def get_object(self, model, uuid):
         """
-        Return object based on the model class and the object's SODAR UUID.
+        Return object based on a model class and the object's SODAR UUID.
 
         :param model: Object model class
         :param uuid: sodar_uuid of the referred object
@@ -147,33 +147,28 @@ class ProjectAppPluginPoint(PluginPoint):
         """
         try:
             return model.objects.get(sodar_uuid=uuid)
-
         except model.DoesNotExist:
             return None
 
     def get_object_link(self, model_str, uuid):
         """
-        Return the URL for referring to a object used by the app, along with a
-        label to be shown to the user for linking.
+        Return URL referring to an object used by the app, along with a label to
+        be shown to the user for linking.
 
         :param model_str: Object class (string)
         :param uuid: sodar_uuid of the referred object
         :return: Dict or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
-
         if not obj:
             return None
-
         # TODO: Implement this in your app plugin
         return None
 
     def get_extra_data_link(self, _extra_data, _name):
-        """
-        Return a link for the given timeline label that stars with ``"extra:"``.
-        """
+        """Return a link for timeline label starting with 'extra-'"""
         # TODO: Implement this in your app plugin
-        return '(unknown)'
+        return None
 
     def search(self, search_terms, user, search_type=None, keywords=None):
         """
@@ -281,6 +276,40 @@ class BackendPluginPoint(PluginPoint):
         # TODO: Implement this in your backend plugin
         return {}
 
+    def get_object(self, model, uuid):
+        """
+        Return object based on a model class and the object's SODAR UUID.
+
+        :param model: Object model class
+        :param uuid: sodar_uuid of the referred object
+        :return: Model object or None if not found
+        :raise: NameError if model is not found
+        """
+        try:
+            return model.objects.get(sodar_uuid=uuid)
+        except model.DoesNotExist:
+            return None
+
+    def get_object_link(self, model_str, uuid):
+        """
+        Return URL referring to an object used by the app, along with a label to
+        be shown to the user for linking.
+
+        :param model_str: Object class (string)
+        :param uuid: sodar_uuid of the referred object
+        :return: Dict or None if not found
+        """
+        obj = self.get_object(eval(model_str), uuid)
+        if not obj:
+            return None
+        # TODO: Implement this in your app plugin
+        return None
+
+    def get_extra_data_link(self, _extra_data, _name):
+        """Return a link for timeline label starting with 'extra-'"""
+        # TODO: Implement this in your app plugin
+        return None
+
 
 class SiteAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering site-wide apps"""
@@ -354,6 +383,40 @@ class SiteAppPluginPoint(PluginPoint):
         # TODO: Implement this in your site app plugin
         return []
 
+    def get_object(self, model, uuid):
+        """
+        Return object based on a model class and the object's SODAR UUID.
+
+        :param model: Object model class
+        :param uuid: sodar_uuid of the referred object
+        :return: Model object or None if not found
+        :raise: NameError if model is not found
+        """
+        try:
+            return model.objects.get(sodar_uuid=uuid)
+        except model.DoesNotExist:
+            return None
+
+    def get_object_link(self, model_str, uuid):
+        """
+        Return URL referring to an object used by the app, along with a label to
+        be shown to the user for linking.
+
+        :param model_str: Object class (string)
+        :param uuid: sodar_uuid of the referred object
+        :return: Dict or None if not found
+        """
+        obj = self.get_object(eval(model_str), uuid)
+        if not obj:
+            return None
+        # TODO: Implement this in your app plugin
+        return None
+
+    def get_extra_data_link(self, _extra_data, _name):
+        """Return a link for timeline label starting with 'extra-'"""
+        # TODO: Implement this in your app plugin
+        return None
+
 
 # Plugin API -------------------------------------------------------------------
 
@@ -409,13 +472,10 @@ def change_plugin_status(name, status, plugin_type='app'):
     # NOTE: Used to forge plugin to a specific status for e.g. testing
     if plugin_type == 'app':
         plugin = ProjectAppPluginPoint.get_plugin(name)
-
     elif plugin_type == 'backend':
         plugin = BackendPluginPoint.get_plugin(name)
-
     elif plugin_type == 'site':
         plugin = SiteAppPluginPoint.get_plugin(name)
-
     else:
         raise ValueError('Invalid plugin_type: "{}"'.format(plugin_type))
 
@@ -463,10 +523,8 @@ def get_backend_api(plugin_name, force=False, **kwargs):
     if plugin_name in settings.ENABLED_BACKEND_PLUGINS or force:
         try:
             plugin = BackendPluginPoint.get_plugin(plugin_name)
-
         except BackendPluginPoint.DoesNotExist:
             return None
-
         return plugin.get_api(**kwargs) if plugin.is_active() else None
 
 

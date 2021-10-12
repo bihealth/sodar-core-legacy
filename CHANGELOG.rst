@@ -17,6 +17,7 @@ Added
     - ``LOGGING_LEVEL`` setting in example configs (#822)
 - **Projectroles**
     - ``cleanup_method`` arg for ``assert_response()`` (#823)
+    - Timeline object and data helpers in site and backend plugins (#832)
 
 Changed
 -------
@@ -38,6 +39,7 @@ Fixed
 - **Timeline**
     - Crash from invalid plugin name in ``get_event_description()`` (#831)
     - Redundant database queries in ``get_event_description()`` (#834)
+    - Site and backend plugins not supported in ``get_event_description()`` (#832)
 
 
 v0.10.5 (2021-09-20)

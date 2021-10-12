@@ -101,6 +101,8 @@ Implementing the following is **optional**:
   messages for users.
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
+- ``get_object_link()``: Return object link for a Timeline event.
+- ``get_extra_data_link()``: Return extra data link for a Timeline event.
 
 
 Views

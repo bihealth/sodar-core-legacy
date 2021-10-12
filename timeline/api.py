@@ -8,7 +8,7 @@ from django.utils.text import Truncator
 
 # Projectroles dependency
 from projectroles.models import Project, RemoteSite
-from projectroles.plugins import ProjectAppPluginPoint
+from projectroles.plugins import get_app_plugin
 from projectroles.templatetags.projectroles_common_tags import get_user_html
 from projectroles.utils import get_app_names
 
@@ -26,6 +26,7 @@ User = get_user_model()
 # Local variables
 APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
+UNKNOWN_LABEL = '(unknown)'
 
 
 class TimelineAPI:
@@ -118,16 +119,18 @@ class TimelineAPI:
         :param request: Request object or None
         :return: String (contains HTML)
         """
-        unknown_label = '(unknown)'
-
+        # Special case: Extra data reference
         if ref_label.startswith('extra-'):
-            return app_plugin.get_extra_data_link(event.extra_data, ref_label)
+            desc = app_plugin.get_extra_data_link(event.extra_data, ref_label)
+            return desc if desc else UNKNOWN_LABEL
+
+        # Get object reference
         try:
             ref_obj = ProjectEventObjectRef.objects.get(
                 event=event, label=ref_label
             )
         except ProjectEventObjectRef.DoesNotExist:
-            return unknown_label
+            return UNKNOWN_LABEL
 
         # Special case: User model
         if ref_obj.object_model == 'User':
@@ -137,7 +140,7 @@ class TimelineAPI:
                     get_user_html(user), cls._get_history_link(ref_obj)
                 )
             except User.DoesNotExist:
-                return unknown_label
+                return UNKNOWN_LABEL
 
         # Special case: Project model
         elif ref_obj.object_model == 'Project':
@@ -193,8 +196,8 @@ class TimelineAPI:
         Create and save a timeline event.
 
         :param project: Project object or None
-        :param app_name: ID string of app from which event was invoked (NOTE:
-            should correspond to member "name" in app plugin!)
+        :param app_name: Name of app from which event was invoked (must
+            correspond to "name" attribute of app plugin)
         :param user: User invoking the event or None
         :param event_name: Event ID string (must match schema)
         :param description: Description of status change (may include {object
@@ -276,10 +279,9 @@ class TimelineAPI:
         app_plugin = None
 
         if event.app != 'projectroles':
-            try:
-                app_plugin = ProjectAppPluginPoint.get_plugin(name=event.app)
-            except Exception as ex:
-                msg = 'Error querying for plugin "{}": {}'.format(event.app, ex)
+            app_plugin = get_app_plugin(event.app)
+            if not app_plugin:
+                msg = 'Plugin not found: {}'.format(event.app)
                 logger.error(msg + ' (UUID={})'.format(event.sodar_uuid))
                 return (
                     '<span class="sodar-tl-plugin-error text-danger">'
@@ -293,6 +295,11 @@ class TimelineAPI:
         try:
             return event.description.format(**refs)
         except Exception as ex:  # Dispaly exception instead of crashing
+            logger.error(
+                'Error formatting event description: {} (UUID={})'.format(
+                    ex, event.sodar_uuid
+                )
+            )
             return (
                 '<span class="sodar-tl-format-error text-danger">'
                 '{}: {}</span>'.format(ex.__class__.__name__, ex)
