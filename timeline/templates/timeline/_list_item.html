@@ -1,5 +1,4 @@
 {% load timeline_tags %}
-
 {# Projectroles dependency #}
 {% load projectroles_common_tags %}
 
@@ -12,7 +11,14 @@
       {% get_timestamp event %}
     </a>
   </td>
-  <td><a href="{% get_app_url event %}">{{ event.app }}</a></td>
+  <td>
+    {% get_app_url event as app_url %}
+    {% if app_url != '#' %}
+      <a href="{% get_app_url event %}">{{ event.app }}</a>
+    {% else %}
+      <span class="text-danger">{{ event.app }}</span>
+    {% endif %}
+  </td>
   <td>{{ event.event_name }}</td>
   <td {% if not event.user %}class="text-muted"{% endif %}>
     {% if event.user %}

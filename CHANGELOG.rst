@@ -26,12 +26,17 @@ Changed
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
+- **Timeline**
+    - Refactor ``TimelineAPI``
 
 Fixed
 -----
 
 - **General**
     - Github Actions CI failure by old package version (#821)
+- **Timeline**
+    - Crash from invalid plugin name in ``get_event_description()`` (#831)
+    - Redundant database queries in ``get_event_description()`` (#834)
 
 
 v0.10.5 (2021-09-20)
