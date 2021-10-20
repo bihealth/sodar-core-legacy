@@ -28,6 +28,8 @@ Changed
     - Upgrade minimum Django version to v3.2.8 (#835)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
+- **Projectroles**
+    - Upgrade DataTables includes on search results page (#841)
 - **Timeline**
     - Refactor ``TimelineAPI``
 
@@ -36,6 +38,9 @@ Fixed
 
 - **General**
     - Github Actions CI failure by old package version (#821)
+- **Projectroles**
+    - ``sodar-overflow-container`` failing with certain tables (#830)
+    - Sort icons not displayed on search results page (#841)
 - **Timeline**
     - Crash from invalid plugin name in ``get_event_description()`` (#831)
     - Redundant database queries in ``get_event_description()`` (#834)

@@ -17,13 +17,24 @@ Release Highlights
 ==================
 
 - Timeline app bug fixes
+- Search results layout fixes
 - General bug fixes and minor updates
 - Upgraded dependencies
+
+Breaking Changes
+================
 
 System Prerequisites
 --------------------
 
 The minimum Django version has been bumped to v3.2.8.
+
+Search Results DataTables Upgrade
+---------------------------------
+
+DataTables includes on the search results page have been upgraded to version
+``bs4/dt-1.11.3/b-2.0.1``. You are advised to review the search results layout
+for your own apps to ensure everything looks correct.
 
 
 v0.10.5 (2021-09-20)
