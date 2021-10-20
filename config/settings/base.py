@@ -640,7 +640,7 @@ PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
 )
 
 # Enable profiling for debugging/analysis
-PROJECTROLES_ENABLE_PROFILING = env.bool('PROJECTROLES_ENABLE_PROFILING', True)
+PROJECTROLES_ENABLE_PROFILING = env.bool('PROJECTROLES_ENABLE_PROFILING', False)
 if PROJECTROLES_ENABLE_PROFILING:
     MIDDLEWARE += ['projectroles.middleware.ProfilerMiddleware']
 
