@@ -16,6 +16,7 @@ v0.10.6 (WIP)
 Release Highlights
 ==================
 
+- Add profiling middleware
 - Timeline app bug fixes
 - Search results layout fixes
 - General bug fixes and minor updates

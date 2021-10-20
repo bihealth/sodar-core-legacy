@@ -116,3 +116,22 @@ follows:
 - ``PROJECTROLES_TEST_UI_LEGACY_LOGIN``: If set ``True``, use the legacy UI
   login and redirect function for testing with different users. This can be used
   if e.g. issues with cookie-based logins are encountered.
+
+
+Debugging
+=========
+
+Debugging helpers and tips are detailed in this section.
+
+Profiling Middleware
+--------------------
+
+SODAR Core provides a cProfile using profiler for tracing back sources of page
+loading slowdowns. To enable the profiler middleware, include
+``projectroles.middleware.ProfilerMiddleware`` in ``MIDDLEWARE`` under your site
+configuration. It is recommended to use a settings variable for this similar to
+the example site configuration, where ``PROJECTROLES_ENABLE_PROFILING`` controls
+this.
+
+Once enabled, adding the ``?prof`` query string attribute to and URL displays
+the profiling information.

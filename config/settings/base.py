@@ -639,6 +639,11 @@ PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
     'PROJECTROLES_CUSTOM_CSS_INCLUDES', None, []
 )
 
+# Enable profiling for debugging/analysis
+PROJECTROLES_ENABLE_PROFILING = env.bool('PROJECTROLES_ENABLE_PROFILING', True)
+if PROJECTROLES_ENABLE_PROFILING:
+    MIDDLEWARE += ['projectroles.middleware.ProfilerMiddleware']
+
 
 # Bgjobs app settings
 BGJOBS_PAGINATION = env.int('BGJOBS_PAGINATION', 15)

@@ -15,6 +15,8 @@ Added
 
 - **General**
     - ``LOGGING_LEVEL`` setting in example configs (#822)
+    - ``ProfilingMiddleware`` for cProfile profiling in debug more (#839)
+    - ``PROJECTROLES_ENABLE_PROFILING`` setting for profiling (#839)
 - **Projectroles**
     - ``cleanup_method`` arg for ``assert_response()`` (#823)
     - Timeline object and data helpers in site and backend plugins (#832)
