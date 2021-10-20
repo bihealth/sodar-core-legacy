@@ -12,6 +12,7 @@ class ProfilerMiddleware(MiddlewareMixin):
     cProfile based profiling middleware.
     Based on: https://djangosnippets.org/snippets/727/
     """
+
     def process_view(self, request, callback, callback_args, callback_kwargs):
         if settings.DEBUG and 'prof' in request.GET:
             self.profiler = cProfile.Profile()

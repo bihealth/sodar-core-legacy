@@ -40,6 +40,8 @@ Fixed
 
 - **General**
     - Github Actions CI failure by old package version (#821)
+- **Appalerts**
+    - Random crashes in ``TestTitlebarBadge.test_alert_dismiss_all`` (#811)
 - **Projectroles**
     - ``sodar-overflow-container`` failing with certain tables (#830)
     - Sort icons not displayed on search results page (#841)
