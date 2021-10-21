@@ -1,15 +1,16 @@
-import logging
 import re
+import sys
 
 from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
+from projectroles.management.utils import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 
 
 User = auth.get_user_model()
-logger = logging.getLogger(__name__)
+logger = ManagementCommandLogger(__name__)
 
 
 # SODAR constants
@@ -39,8 +40,8 @@ class Command(BaseCommand):
             dest='url',
             type=str,
             required=True,
-            help='Url of the remote site. Can be provided without protocol '
-            'prefix, defaults to http in that case',
+            help='URL of the remote site. Can be provided without protocol '
+            'prefix, defaults to HTTP',
         )
         parser.add_argument(
             '-m',
@@ -90,26 +91,25 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        logger.info('Creating new Remote Site..')
-
+        logger.info('Creating remote site..')
         name = options['name']
         url = options['url']
         # Validate url
-        if not url.startswith("http://") and not url.startswith("https://"):
-            url = "".join(["http://", url])
-        pattern = re.compile(r"(http|https)\:\/\/.*\..*")
+        if not url.startswith('http://') and not url.startswith('https://'):
+            url = ''.join(['http://', url])
+        pattern = re.compile(r'(http|https)://.*\..*')
         if not pattern.match(url):
-            logger.error("Provided url '{}' seems not be a url".format(url))
-            return
+            logger.error('Invalid URL "{}"'.format(url))
+            sys.exit(1)
 
         mode = options['mode'].upper()
         # Validate mode
         if mode not in [SITE_MODE_SOURCE, SITE_MODE_TARGET]:
             if mode in [SITE_MODE_PEER]:
-                logger.error("You cant create peer mode sites!")
+                logger.error('Creating PEER sites is not allowed')
             else:
-                logger.error("Unkown mode '{}'".format(mode))
-            return
+                logger.error('Unkown mode "{}"'.format(mode))
+            sys.exit(1)
 
         description = options['description']
         secret = options['secret']
@@ -120,17 +120,15 @@ class Command(BaseCommand):
         name_exists = bool(len(RemoteSite.objects.filter(name=name)))
         url_exists = bool(len(RemoteSite.objects.filter(url=url)))
         if name_exists or url_exists:
-            log_string = (
-                "A site named '{}' already exists!".format(name)
-                if name_exists
-                else "A site with url '{}' already exists!".format(url)
+            err_msg = 'Remote site exists with {} "{}"'.format(
+                'name' if name_exists else 'URL', name if name_exists else url
             )
-
             if not suppress_error:
-                logger.error(log_string)
+                logger.error(err_msg)
+                sys.exit(1)
             else:
-                logger.info(log_string)
-            return
+                logger.info(err_msg)
+                sys.exit(0)
 
         with transaction.atomic():
             create_values = {
@@ -144,7 +142,5 @@ class Command(BaseCommand):
             site = RemoteSite.objects.create(**create_values)
 
         logger.info(
-            'Created a {name} remote site in {mode} mode'.format(
-                name=site.name, mode=site.mode
-            )
+            'Created remote site "{}" with mode {}'.format(site.name, site.mode)
         )

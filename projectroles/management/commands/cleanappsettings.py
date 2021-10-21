@@ -1,14 +1,12 @@
-import logging
-
 from django.core.management.base import BaseCommand
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.management.utils import ManagementCommandLogger
 from projectroles.models import AppSetting
 
-logger = logging.getLogger(__name__)
 
-# App settings API
 app_settings = AppSettingAPI()
+logger = ManagementCommandLogger(__name__)
 
 
 # Local constants

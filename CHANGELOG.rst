@@ -20,6 +20,7 @@ Added
 - **Projectroles**
     - ``cleanup_method`` arg for ``assert_response()`` (#823)
     - Timeline object and data helpers in site and backend plugins (#832)
+    - ``ManagementCommandLogger`` helper (#844)
 
 Changed
 -------
@@ -28,6 +29,7 @@ Changed
     - Upgrade to Chromedriver v93 (#818)
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
     - Upgrade minimum Django version to v3.2.8 (#835)
+    - Improve management command output and logging (#844)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
 - **Projectroles**

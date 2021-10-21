@@ -1,14 +1,15 @@
-import logging
+import sys
 
 from django.conf import settings
 from django.core.management.base import BaseCommand  # , CommandError
 
 # Projectroles dependency
+from projectroles.management.utils import ManagementCommandLogger
 from projectroles.models import Project
 
 from sodarcache.models import JSONCacheItem
 
-logger = logging.getLogger(__name__)
+logger = ManagementCommandLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -28,7 +29,7 @@ class Command(BaseCommand):
             logger.error(
                 'SodarCache backend not enabled in settings, cancelled!'
             )
-            return
+            sys.exit(1)
 
         project = None
 
@@ -41,24 +42,20 @@ class Command(BaseCommand):
                     )
                 )
                 items = JSONCacheItem.objects.filter(project=project)
-
             except Project.DoesNotExist:
                 logger.error(
                     'Project not found with UUID={}'.format(options['project'])
                 )
-                return
-
+                sys.exit(1)
         else:
             items = JSONCacheItem.objects.all()
 
         item_count = items.count()
-
         if item_count == 0:
             logger.info('No cached data found')
-            return
+            sys.exit(0)
 
         items.delete()
-
         logger.info(
             'Deleted {} cached data item{} from {}'.format(
                 item_count,

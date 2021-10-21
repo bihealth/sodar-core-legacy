@@ -1,17 +1,18 @@
 import json
-import logging
 import ssl
+import sys
 import urllib.request
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from django.urls import reverse
 
+from projectroles.management.utils import ManagementCommandLogger
 from projectroles.models import RemoteSite, SODAR_CONSTANTS
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
-logger = logging.getLogger(__name__)
+logger = ManagementCommandLogger(__name__)
 
 
 # SODAR constants
@@ -20,7 +21,7 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 
 
 class Command(BaseCommand):
-    help = 'Synchronizes user and project data from a remote site.'
+    help = 'Synchronizes user and project data from a remote site'
 
     def add_arguments(self, parser):
         pass
@@ -31,31 +32,27 @@ class Command(BaseCommand):
                 'Project categories and nesting disabled, '
                 'remote sync disabled'
             )
-            return
-
+            sys.exit(0)
         if settings.PROJECTROLES_SITE_MODE != SITE_MODE_TARGET:
             logger.error('Site not in TARGET mode, unable to sync')
-            return
+            sys.exit(1)
 
         try:
             site = RemoteSite.objects.get(mode=SITE_MODE_SOURCE)
-
         except RemoteSite.DoesNotExist:
             logger.error('No source site defined, unable to sync')
-            return
+            sys.exit(1)
 
         if getattr(settings, 'PROJECTROLES_ALLOW_LOCAL_USERS', False):
             logger.info(
                 'PROJECTROLES_ALLOW_LOCAL_USERS=True, will sync '
                 'roles for existing local users'
             )
-
         logger.info(
             'Retrieving data from remote site "{}" ({})..'.format(
                 site.name, site.get_url()
             )
         )
-
         api_url = site.get_url() + reverse(
             'projectroles:api_remote_get', kwargs={'secret': site.secret}
         )
@@ -79,23 +76,20 @@ class Command(BaseCommand):
                 and ex.reason.reason == 'WRONG_VERSION_NUMBER'
             ):
                 helper_text = (
-                    ' (most likely server cannot handle HTTPS requests)'
+                    ' (most likely the server cannot handle HTTPS requests)'
                 )
-
             logger.error(
                 'Unable to retrieve data from remote site: {}{}'.format(
                     ex, helper_text
                 )
             )
-            return
+            sys.exit(1)
 
         remote_api = RemoteProjectAPI()
-
         try:
             remote_api.sync_remote_data(site, remote_data)
-
         except Exception as ex:
             logger.error('Remote sync cancelled with exception: {}'.format(ex))
-            return
+            sys.exit(1)
 
         logger.info('Syncremote command OK')

@@ -64,10 +64,28 @@ used. An example can be seen below:
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
 
+Management Command Logger
+-------------------------
+
+When developing management commands for your apps, you may want to log certain
+events while also ensuring relevant output is provided to the administrator
+issuing a command. For this SODAR Core provides the
+``ManagementCommandLogger`` class. It can be called like the standard Python
+logger with shortcut commands such as ``info()``, ``debug()`` etc. If you need
+to access the actual Python logger being used, you can access it via
+``ManagementCommandLogger.logger``. Example of logger usage can be seen below.
+
+.. code-block:: python
+
+    from projectroles.management.utils import ManagementCommandLogger
+    logger = ManagementCommandLogger(__name__)
+    logger.info('Testing')
+
+
 Using Icons
 ===========
 
-To use icons in your apps, use the ``iconify``class along with the collection
+To use icons in your apps, use the ``iconify`` class along with the collection
 and icon name into the ``data-icon`` attribute. See
 `Iconify <https://docs.iconify.design/implementations/css.html>`_ and
 `django-iconify <https://edugit.org/AlekSIS/libs/django-iconify/-/blob/master/README.rst>`_

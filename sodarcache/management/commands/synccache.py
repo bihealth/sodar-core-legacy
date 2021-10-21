@@ -1,14 +1,16 @@
-import logging
+import sys
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
 # Projectroles dependency
+from projectroles.management.utils import ManagementCommandLogger
 from projectroles.models import Project
 from projectroles.plugins import get_active_plugins, get_backend_api
 
-logger = logging.getLogger(__name__)
+
+logger = ManagementCommandLogger(__name__)
 
 
 class Command(BaseCommand):
@@ -27,15 +29,14 @@ class Command(BaseCommand):
 
         if 'sodar_cache' not in settings.ENABLED_BACKEND_PLUGINS:
             logger.error(
-                'SodarCache backend not enabled in settings, cancelled!'
+                'SodarCache backend not enabled in settings, cancelled'
             )
-            return
+            sys.exit(1)
 
         cache_backend = get_backend_api('sodar_cache')
-
         if not cache_backend:
-            logger.error('SodarCache backend plugin not available, cancelled!')
-            return
+            logger.error('SodarCache backend plugin not available, cancelled')
+            sys.exit(1)
 
         update_kwargs = {}
 
@@ -48,16 +49,14 @@ class Command(BaseCommand):
                         project.title, project.sodar_uuid
                     )
                 )
-
             except Project.DoesNotExist:
                 logger.error(
                     'Project not found with UUID={}'.format(options['project'])
                 )
-                return
-
+                sys.exit(1)
             except ValidationError:
                 logger.error('Not a valid UUID: {}'.format(options['project']))
-                return
+                sys.exit(1)
 
         if not update_kwargs:
             logger.info('Synchronizing cache for all projects')
@@ -68,7 +67,6 @@ class Command(BaseCommand):
         for plugin in plugins:
             try:
                 plugin.update_cache(**update_kwargs)
-
             except Exception as ex:
                 logger.error(
                     'Update failed for plugin "{}": "{}"'.format(

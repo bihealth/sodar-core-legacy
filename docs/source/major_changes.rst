@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add profiling middleware
+- Improve management command output
 - Timeline app bug fixes
 - Search results layout fixes
 - General bug fixes and minor updates
