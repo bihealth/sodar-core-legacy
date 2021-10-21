@@ -14,7 +14,7 @@ from projectroles.utils import build_invite_url, get_display_name
 User = auth.get_user_model()
 
 # Settings
-SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX
+SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX.strip() + ' '
 EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
@@ -251,12 +251,8 @@ def get_invite_subject(project):
     :param project: Project object
     :return: string
     """
-    return (
-        SUBJECT_PREFIX
-        + ' '
-        + SUBJECT_INVITE.format(
-            project=project.title, project_label=get_display_name(project.type)
-        )
+    return SUBJECT_PREFIX + SUBJECT_INVITE.format(
+        project=project.title, project_label=get_display_name(project.type)
     )
 
 
@@ -268,7 +264,7 @@ def get_role_change_subject(change_type, project):
     :param project: Project object
     :return: String
     """
-    subject = SUBJECT_PREFIX + ' '
+    subject = SUBJECT_PREFIX
     subject_kwargs = {
         'project': project.title,
         'project_label': get_display_name(project.type),
@@ -436,14 +432,10 @@ def send_accept_note(invite, request, user):
     :param request: HTTP request
     :return: Amount of sent email (int)
     """
-    subject = (
-        SUBJECT_PREFIX
-        + ' '
-        + SUBJECT_ACCEPT.format(
-            user_name=user.get_full_name(),
-            project_label=get_display_name(invite.project.type),
-            project=invite.project.title,
-        )
+    subject = SUBJECT_PREFIX + SUBJECT_ACCEPT.format(
+        user_name=user.get_full_name(),
+        project_label=get_display_name(invite.project.type),
+        project=invite.project.title,
     )
     message = get_email_header(
         MESSAGE_HEADER.format(
@@ -475,12 +467,8 @@ def send_expiry_note(invite, request, user_name):
     :param user_name: User name of invited user
     :return: Amount of sent email (int)
     """
-    subject = (
-        SUBJECT_PREFIX
-        + ' '
-        + SUBJECT_EXPIRY.format(
-            user_name=user_name, project=invite.project.title
-        )
+    subject = SUBJECT_PREFIX + SUBJECT_EXPIRY.format(
+        user_name=user_name, project=invite.project.title
     )
     message = get_email_header(
         MESSAGE_HEADER.format(
@@ -615,7 +603,7 @@ def send_generic_mail(
     :param request: HTTP request
     :return: Amount of mail sent (int)
     """
-    subject = SUBJECT_PREFIX + ' ' + subject_body
+    subject = SUBJECT_PREFIX + subject_body
     ret = 0
 
     for recipient in recipient_list:

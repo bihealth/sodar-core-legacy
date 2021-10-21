@@ -32,6 +32,7 @@ Changed
     - Refactor ``checkAll()`` helper (#816)
 - **Projectroles**
     - Upgrade DataTables includes on search results page (#841)
+    - Improve email subject prefix formatting (#829)
 - **Timeline**
     - Refactor ``TimelineAPI``
 
