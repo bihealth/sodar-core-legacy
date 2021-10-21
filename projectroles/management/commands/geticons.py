@@ -4,7 +4,7 @@ import urllib.request
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 
 
 logger = ManagementCommandLogger(__name__)

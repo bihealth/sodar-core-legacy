@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.management.base import BaseCommand
 
 # Projectroles dependency
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import Project
 from projectroles.plugins import get_active_plugins, get_backend_api
 

@@ -1,4 +1,4 @@
-"""Management command utilities for SODAR Core based sites"""
+"""Logging helpers for management commands in SODAR Core based sites"""
 
 import logging
 

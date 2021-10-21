@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
 
 # Projectroles dependency
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import Project, Role, SODAR_CONSTANTS
 from projectroles.plugins import get_active_plugins, get_backend_api
 

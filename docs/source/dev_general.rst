@@ -77,9 +77,15 @@ to access the actual Python logger being used, you can access it via
 
 .. code-block:: python
 
-    from projectroles.management.utils import ManagementCommandLogger
+    from projectroles.management.logging import ManagementCommandLogger
     logger = ManagementCommandLogger(__name__)
     logger.info('Testing')
+
+.. note::
+
+    The use of this logger class assumes your site sets up logging simlarly to
+    the example site and the SODAR Django Site template, including the use of a
+    ``LOGGING_LEVEL`` Django settings variable.
 
 
 Using Icons

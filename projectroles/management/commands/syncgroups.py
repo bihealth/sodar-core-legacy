@@ -2,7 +2,7 @@ from django.contrib import auth
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 
 
 User = auth.get_user_model()

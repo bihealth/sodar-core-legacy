@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from projectroles.app_settings import AppSettingAPI
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import AppSetting
 
 

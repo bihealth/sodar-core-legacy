@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.management.base import BaseCommand  # , CommandError
 
 # Projectroles dependency
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import Project
 
 from sodarcache.models import JSONCacheItem

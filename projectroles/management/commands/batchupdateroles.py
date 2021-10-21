@@ -7,7 +7,7 @@ from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from django.utils import timezone
 
-from projectroles.management.utils import ManagementCommandLogger
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import (
     Project,
     Role,
