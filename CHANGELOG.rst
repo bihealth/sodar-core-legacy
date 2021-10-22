@@ -43,6 +43,7 @@ Fixed
 
 - **General**
     - Github Actions CI failure by old package version (#821)
+    - Codacy code quality badge in README (#815)
 - **Appalerts**
     - Random crashes in ``TestTitlebarBadge.test_alert_dismiss_all`` (#811)
 - **Projectroles**
