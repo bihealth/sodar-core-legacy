@@ -51,6 +51,7 @@ Fixed
 - **Projectroles**
     - ``sodar-overflow-container`` failing with certain tables (#830)
     - Sort icons not displayed on search results page (#841)
+    - App alert badge content wrapping (#846)
 - **Timeline**
     - Crash from invalid plugin name in ``get_event_description()`` (#831)
     - Redundant database queries in ``get_event_description()`` (#834)

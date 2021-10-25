@@ -55,7 +55,7 @@
                   <span id="sodar-app-alert-count">{{ app_alerts }}</span>
                   <span id="sodar-app-alert-legend">alert{% if app_alerts != 1 %}s{% endif %}</span>
                   <a id="sodar-app-alert-badge-btn-dismiss"
-                     class="pull-right text-white ml-2" role="button"
+                     class="text-white ml-1" role="button"
                      title="Dismiss all" data-toggle="tooltip"
                      data-dismiss-url="{% url 'appalerts:ajax_dismiss_all' %}">
                     <i class="iconify" data-icon="mdi:close-thick"></i>
