@@ -57,7 +57,7 @@ SUBJECT_ROLE_UPDATE = 'Membership changed in {project_label} "{project}"'
 SUBJECT_ROLE_DELETE = 'Membership removed from {project_label} "{project}"'
 
 MESSAGE_ROLE_CREATE = r'''
-{issuer_name} ({issuer_email}) has granted you the membership
+{issuer} has granted you the membership
 in {project_label} "{project}" with the role of "{role}".
 
 To access the {project_label} in {site_title}, please click on
@@ -66,7 +66,7 @@ the following link:
 '''.lstrip()
 
 MESSAGE_ROLE_UPDATE = r'''
-{issuer_name} ({issuer_email}) has changed your membership
+{issuer} has changed your membership
 role in {project_label} "{project}" into "{role}".
 
 To access the {project_label} in {site_title}, please click on
@@ -75,8 +75,7 @@ the following link:
 '''.lstrip()
 
 MESSAGE_ROLE_DELETE = r'''
-{issuer_name} ({issuer_email}) has removed your membership
-from {project_label} "{project}".
+{issuer} has removed your membership from {project_label} "{project}".
 '''.lstrip()
 
 
@@ -86,7 +85,7 @@ from {project_label} "{project}".
 SUBJECT_INVITE = 'Invitation for {project_label} "{project}"'
 
 MESSAGE_INVITE_BODY = r'''
-You have been invited by {issuer_name} ({issuer_email})
+You have been invited by {issuer}
 to share data in the {project_label} "{project}" with the
 role of "{role}".
 
@@ -112,13 +111,11 @@ Message from the sender of this invitation:
 # Invite Acceptance Notification Template --------------------------------------
 
 
-SUBJECT_ACCEPT = (
-    'Invitation accepted by {user_name} for {project_label} "{project}"'
-)
+SUBJECT_ACCEPT = 'Invitation accepted by {user} for {project_label} "{project}"'
 
 MESSAGE_ACCEPT_BODY = r'''
 Invitation sent by you for role of "{role}" in {project_label} "{project}"
-has been accepted by {user_name} ({user_email}).
+has been accepted by {user}.
 They have been granted access in the {project_label} accordingly.
 '''.lstrip()
 
@@ -143,16 +140,16 @@ to grant the user access to the {project_label}.
 # Project/Category Creation Notification Template ------------------------------
 
 
-SUBJECT_PROJECT_CREATE = '{project_type} "{project}" created by {user_name}'
+SUBJECT_PROJECT_CREATE = '{project_type} "{project}" created by {user}'
 
 MESSAGE_PROJECT_CREATE_BODY = r'''
-{user_name} ({user_email}) has created a new {project_type}
+{user} has created a new {project_type}
 under "{category}".
 You are receiving this email because you are the owner of the parent category.
 You have automatically inherited owner rights to the created {project_type}.
 
 Title: {project}
-Owner: {owner_name} ({owner_email})
+Owner: {owner}
 
 You can access the project at the following link:
 {project_url}
@@ -162,16 +159,16 @@ You can access the project at the following link:
 # Project/Category Moving Notification Template ------------------------------
 
 
-SUBJECT_PROJECT_MOVE = '{project_type} "{project}" moved by {user_name}'
+SUBJECT_PROJECT_MOVE = '{project_type} "{project}" moved by {user}'
 
 MESSAGE_PROJECT_MOVE_BODY = r'''
-{user_name} ({user_email}) has moved the {project_type} "{project}"
+{user} has moved the {project_type} "{project}"
 under "{category}".
 You are receiving this email because you are the owner of the parent category.
 You have automatically inherited owner rights to the created {project_type}.
 
 Title: {project}
-Owner: {owner_name} ({owner_email})
+Owner: {owner}
 
 You can access the project at the following link:
 {project_url}
@@ -179,6 +176,19 @@ You can access the project at the following link:
 
 
 # Email composing helpers ------------------------------------------------------
+
+
+def get_email_user(user):
+    """
+    Return a string representation of a user object for emails.
+
+    :param user: SODARUser object
+    :return: string
+    """
+    ret = user.get_full_name()
+    if user.email:
+        ret += ' ({})'.format(user.email)
+    return ret
 
 
 def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
@@ -194,8 +204,7 @@ def get_invite_body(project, issuer, role_name, invite_url, date_expire_str):
     """
     body = MESSAGE_HEADER_NO_RECIPIENT.format(site_title=SITE_TITLE)
     body += MESSAGE_INVITE_BODY.format(
-        issuer_name=issuer.get_full_name(),
-        issuer_email=issuer.email,
+        issuer=get_email_user(issuer),
         project=project.title,
         role=role_name,
         invite_url=invite_url,
@@ -298,8 +307,7 @@ def get_role_change_body(
 
     if change_type == 'create':
         body += MESSAGE_ROLE_CREATE.format(
-            issuer_name=issuer.get_full_name(),
-            issuer_email=issuer.email,
+            issuer=get_email_user(issuer),
             role=role_name,
             project=project.title,
             project_url=project_url,
@@ -309,8 +317,7 @@ def get_role_change_body(
 
     elif change_type == 'update':
         body += MESSAGE_ROLE_UPDATE.format(
-            issuer_name=issuer.get_full_name(),
-            issuer_email=issuer.email,
+            issuer=get_email_user(issuer),
             role=role_name,
             project=project.title,
             project_url=project_url,
@@ -320,8 +327,7 @@ def get_role_change_body(
 
     elif change_type == 'delete':
         body += MESSAGE_ROLE_DELETE.format(
-            issuer_name=issuer.get_full_name(),
-            issuer_email=issuer.email,
+            issuer=get_email_user(issuer),
             project=project.title,
             project_label=get_display_name(project.type),
         )
@@ -433,7 +439,7 @@ def send_accept_note(invite, request, user):
     :return: Amount of sent email (int)
     """
     subject = SUBJECT_PREFIX + SUBJECT_ACCEPT.format(
-        user_name=user.get_full_name(),
+        user=get_email_user(user),
         project_label=get_display_name(invite.project.type),
         project=invite.project.title,
     )
@@ -445,8 +451,7 @@ def send_accept_note(invite, request, user):
     message += MESSAGE_ACCEPT_BODY.format(
         role=invite.role.name,
         project=invite.project.title,
-        user_name=user.get_full_name(),
-        user_email=user.email,
+        user=get_email_user(user),
         site_title=SITE_TITLE,
         project_label=get_display_name(invite.project.type),
     )
@@ -509,7 +514,7 @@ def send_project_create_mail(project, request):
     subject = SUBJECT_PROJECT_CREATE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
-        user_name=request.user.get_full_name(),
+        user=get_email_user(request.user),
     )
     message = get_email_header(
         MESSAGE_HEADER.format(
@@ -517,13 +522,11 @@ def send_project_create_mail(project, request):
         )
     )
     message += MESSAGE_PROJECT_CREATE_BODY.format(
-        user_name=request.user.get_full_name(),
-        user_email=request.user.email,
+        user=get_email_user(request.user),
         project_type=get_display_name(project.type),
         category=parent.title,
         project=project.title,
-        owner_name=project_owner.user.get_full_name(),
-        owner_email=project_owner.user.email,
+        owner=get_email_user(project_owner.user),
         project_url=request.build_absolute_uri(
             reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
@@ -558,7 +561,7 @@ def send_project_move_mail(project, request):
     subject = SUBJECT_PROJECT_MOVE.format(
         project_type=get_display_name(project.type, title=True),
         project=project.title,
-        user_name=request.user.get_full_name(),
+        user=get_email_user(request.user),
     )
     message = get_email_header(
         MESSAGE_HEADER.format(
@@ -566,13 +569,11 @@ def send_project_move_mail(project, request):
         )
     )
     message += MESSAGE_PROJECT_MOVE_BODY.format(
-        user_name=request.user.get_full_name(),
-        user_email=request.user.email,
+        user=get_email_user(request.user),
         project_type=get_display_name(project.type),
         category=parent.title,
         project=project.title,
-        owner_name=project_owner.user.get_full_name(),
-        owner_email=project_owner.user.email,
+        owner=get_email_user(project_owner.user),
         project_url=request.build_absolute_uri(
             reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}

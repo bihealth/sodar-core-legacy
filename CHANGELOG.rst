@@ -21,6 +21,7 @@ Added
     - ``cleanup_method`` arg for ``assert_response()`` (#823)
     - Timeline object and data helpers in site and backend plugins (#832)
     - ``ManagementCommandLogger`` helper (#844)
+    - ``get_email_user()`` helper (#845)
 
 Changed
 -------
@@ -35,6 +36,7 @@ Changed
 - **Projectroles**
     - Upgrade DataTables includes on search results page (#841)
     - Improve email subject prefix formatting (#829)
+    - Update user representations in emails (#845)
 - **Timeline**
     - Refactor ``TimelineAPI``
 

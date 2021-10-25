@@ -11,6 +11,7 @@ from projectroles.email import (
     send_role_change_mail,
     send_generic_mail,
     send_project_create_mail,
+    get_email_user,
 )
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 
@@ -216,3 +217,31 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             )
             self.assertNotIn(CUSTOM_HEADER, mail.outbox[0].body)
             self.assertIn(CUSTOM_FOOTER, mail.outbox[0].body)
+
+    def test_get_email_user(self):
+        """Test get_email_user()"""
+        self.assertEqual(
+            get_email_user(self.user_owner), 'owner (owner_user@example.com)'
+        )
+
+    def test_get_email_user_no_email(self):
+        """Test get_email_user() without email"""
+        self.user_owner.email = ''
+        self.assertEqual(get_email_user(self.user_owner), 'owner')
+
+    def test_get_email_user_name(self):
+        """Test get_email_user() with name"""
+        self.user_owner.name = 'Owner User'
+        self.assertEqual(
+            get_email_user(self.user_owner),
+            'Owner User (owner_user@example.com)',
+        )
+
+    def test_get_email_user_first_last_name(self):
+        """Test get_email_user() with first and last name"""
+        self.user_owner.first_name = 'Owner'
+        self.user_owner.last_name = 'User'
+        self.assertEqual(
+            get_email_user(self.user_owner),
+            'Owner User (owner_user@example.com)',
+        )

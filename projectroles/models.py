@@ -1102,26 +1102,19 @@ class SODARUser(AbstractUser):
 
     def get_full_name(self):
         """Return full name or username if not set"""
-
         if hasattr(self, 'name') and self.name:
             return self.name
-
         elif self.first_name and self.last_name:
             return '{} {}'.format(self.first_name, self.last_name)
-
         return self.username
 
     def set_group(self):
         """Set user group based on user name."""
-
         if self.username.find('@') != -1:
             group_name = self.username.split('@')[1].lower()
-
         else:
             group_name = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
-
         group, created = Group.objects.get_or_create(name=group_name)
-
         if group not in self.groups.all():
             group.user_set.add(self)
             return group_name
