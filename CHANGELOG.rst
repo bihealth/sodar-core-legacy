@@ -27,7 +27,7 @@ Changed
 -------
 
 - **General**
-    - Upgrade to Chromedriver v93 (#818)
+    - Upgrade to Chromedriver v94 (#818, #847)
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
     - Upgrade minimum Django version to v3.2.8 (#835)
     - Improve management command output and logging (#844)
