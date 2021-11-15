@@ -1,10 +1,12 @@
 """REST API view tests for the filesfolders app"""
+
 import json
 
 from django.urls import reverse
 from test_plus.test import APITestCase
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
@@ -12,6 +14,10 @@ from filesfolders.tests.test_views import ZIP_PATH_NO_FILES, TestViewsBaseMixin
 from filesfolders.models import Folder, File, HyperLink
 
 
+# SODAR constants
+PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
+
+# Local constants
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
 
@@ -48,10 +54,7 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
                 kwargs={'project': self.project.sodar_uuid},
             )
         )
-
-        # Assert response
         self.assertEqual(response.status_code, 200, msg=response.data)
-
         expected = [
             {
                 'name': self.folder.name,
@@ -124,6 +127,22 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(new_folder.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_in_category(self):
+        """Test creation of new folder in a category (should fail)"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category, self.user, self.role_owner)
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_folder_list_create',
+                kwargs={'project': category.sodar_uuid},
+            ),
+            method='POST',
+            data=self.folder_data,
+        )
+        self.assertEqual(response.status_code, 400, msg=response.data)
 
 
 class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -319,6 +338,23 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
         }
         expected.pop('file')
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_in_category(self):
+        """Test creation of new file in a category (should fail)"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category, self.user, self.role_owner)
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_file_list_create',
+                kwargs={'project': category.sodar_uuid},
+            ),
+            method='POST',
+            format='multipart',
+            data=self.file_data,
+        )
+        self.assertEqual(response.status_code, 400, msg=response.data)
 
 
 class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -553,6 +589,22 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             'sodar_uuid': str(new_link.sodar_uuid),
         }
         self.assertEqual(json.loads(response.content), expected)
+
+    def test_create_in_category(self):
+        """Test creation of new hyperlink in a category (should fail)"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category, self.user, self.role_owner)
+        response = self.request_knox(
+            reverse(
+                'filesfolders:api_hyperlink_list_create',
+                kwargs={'project': category.sodar_uuid},
+            ),
+            method='POST',
+            data=self.hyperlink_data,
+        )
+        self.assertEqual(response.status_code, 400, msg=response.data)
 
 
 class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):

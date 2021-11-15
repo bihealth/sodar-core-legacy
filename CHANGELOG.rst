@@ -22,6 +22,7 @@ Added
     - Timeline object and data helpers in site and backend plugins (#832)
     - ``ManagementCommandLogger`` helper (#844)
     - ``get_email_user()`` helper (#845)
+    - Project type restriction in API views with ``project_type`` attribute (#850)
 
 Changed
 -------
@@ -33,6 +34,7 @@ Changed
     - Improve management command output and logging (#844)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
+    - Restrict project type in API views (#850)
 - **Projectroles**
     - Upgrade DataTables includes on search results page (#841)
     - Improve email subject prefix formatting (#829)

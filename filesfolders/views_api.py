@@ -7,6 +7,7 @@ from rest_framework.generics import (
 )
 
 # Projectroles dependency
+from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
 from projectroles.views_api import CoreAPIGenericProjectMixin
 
@@ -22,6 +23,10 @@ from filesfolders.views import (
     TL_OBJ_TYPES,
     APP_NAME,
 )
+
+
+# SODAR constants
+PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -157,6 +162,7 @@ class FolderListCreateAPIView(
     - ``description``: Folder description (string, optional)
     """
 
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = FolderSerializer
 
 
@@ -184,6 +190,7 @@ class FolderRetrieveUpdateDestroyAPIView(
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'folder'
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = FolderSerializer
 
 
@@ -212,6 +219,7 @@ class FileListCreateAPIView(
     - ``file``: File to be uploaded
     """
 
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = FileSerializer
 
 
@@ -241,6 +249,7 @@ class FileRetrieveUpdateDestroyAPIView(
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'file'
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = FileSerializer
 
 
@@ -283,6 +292,7 @@ class HyperLinkListCreateAPIView(
     - ``url``: URL for the link (string)
     """
 
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = HyperLinkSerializer
 
 
@@ -311,4 +321,5 @@ class HyperLinkRetrieveUpdateDestroyAPIView(
 
     lookup_field = 'sodar_uuid'
     lookup_url_kwarg = 'hyperlink'
+    project_type = PROJECT_TYPE_PROJECT
     serializer_class = HyperLinkSerializer

@@ -16,6 +16,7 @@ v0.10.6 (WIP)
 Release Highlights
 ==================
 
+- Add project type restriction for API views
 - Add profiling middleware
 - Improve management command output
 - Improve user representation in email
