@@ -29,7 +29,7 @@ Changed
 - **General**
     - Upgrade to Chromedriver v94 (#818, #847)
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
-    - Upgrade minimum Django version to v3.2.8 (#835)
+    - Upgrade minimum Django version to v3.2.9 (#835, #848)
     - Improve management command output and logging (#844)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)

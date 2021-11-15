@@ -30,7 +30,7 @@ Breaking Changes
 System Prerequisites
 --------------------
 
-The minimum Django version has been bumped to v3.2.8.
+The minimum Django version has been bumped to v3.2.9.
 
 Search Results DataTables Upgrade
 ---------------------------------
