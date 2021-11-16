@@ -28,10 +28,11 @@ Changed
 -------
 
 - **General**
-    - Upgrade to Chromedriver v94 (#818, #847)
+    - Upgrade to Chromedriver v96 (#818, #847, #852)
     - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
     - Upgrade minimum Django version to v3.2.9 (#835, #848)
     - Improve management command output and logging (#844)
+    - Optimize project list queries (#851)
 - **Filesfolders**
     - Refactor ``checkAll()`` helper (#816)
     - Restrict project type in API views (#850)
@@ -54,10 +55,17 @@ Fixed
     - ``sodar-overflow-container`` failing with certain tables (#830)
     - Sort icons not displayed on search results page (#841)
     - App alert badge content wrapping (#846)
+    - Nested categories with public children not displayed correctly for anon users (#853, #855)
 - **Timeline**
     - Crash from invalid plugin name in ``get_event_description()`` (#831)
     - Redundant database queries in ``get_event_description()`` (#834)
     - Site and backend plugins not supported in ``get_event_description()`` (#832)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``get_star()`` template tag (#851)
 
 
 v0.10.5 (2021-09-20)

@@ -66,9 +66,7 @@ def has_project_role(user, obj):
     """
     if obj.public_guest_access:
         return True
-    if RoleAssignment.objects.get_assignment(user, obj) or (
-        obj and obj.is_owner(user)
-    ):
+    if user.is_authenticated and obj.has_role(user):
         return True
     return False
 

@@ -1,3 +1,5 @@
+"""Models for the projectroles app"""
+
 import logging
 import re
 import uuid
@@ -174,8 +176,9 @@ class Project(models.Model):
         super().save(*args, **kwargs)
 
     def _validate_parent(self):
-        """Validate parent value to ensure project can't be set as its own
-        parent"""
+        """
+        Validate parent value to ensure project can't be set as its own parent.
+        """
         if self.parent == self:
             raise ValidationError('Project can not be set as its own parent')
 
@@ -190,8 +193,9 @@ class Project(models.Model):
             )
 
     def _validate_title(self):
-        """Validate title against parent title to ensure they don't equal
-        parent"""
+        """
+        Validate title against parent title to ensure they don't equal parent.
+        """
         if self.parent and self.title == self.parent.title:
             raise ValidationError('Project and parent titles can not be equal')
 
@@ -240,7 +244,10 @@ class Project(models.Model):
         for child in self.get_children():
             if child.public_guest_access:
                 return True
-            child.has_public_children()
+            ret = child.has_public_children()
+            if ret:
+                return True
+        return False
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
@@ -256,12 +263,9 @@ class Project(models.Model):
         Return RoleAssignment for owner (without inherited owners) or None if
         not set.
         """
-        try:
-            return self.roles.get(
-                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
-            )
-        except RoleAssignment.DoesNotExist:
-            return None
+        return self.roles.filter(
+            role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
+        ).first()
 
     def get_owners(self, inherited_only=False):
         """
@@ -272,19 +276,17 @@ class Project(models.Model):
         :return: List
         """
         owners = []
-        owner_as = self.get_owner()
-        if owner_as and not inherited_only:
-            owners.append(owner_as)
-        parent = self.parent
-
-        while parent:
-            parent_owner_as = parent.get_owner()
-            if parent_owner_as and parent_owner_as.user not in [
-                a.user for a in owners
-            ]:
-                owners.append(parent_owner_as)
-            parent = parent.parent
-
+        projects = list(self.get_parents())
+        if not inherited_only:
+            projects.append(self)
+        if projects:
+            db_owners = RoleAssignment.objects.filter(
+                role__name=SODAR_CONSTANTS['PROJECT_ROLE_OWNER'],
+                project__in=projects,
+            )
+            for parent_owner_as in db_owners:
+                if parent_owner_as.user not in [a.user for a in owners]:
+                    owners.append(parent_owner_as)
         return owners
 
     def is_owner(self, user):
@@ -353,7 +355,7 @@ class Project(models.Model):
         owners = self.get_owners() if inherited else [self.get_owner()]
         return owners + list(self.get_delegates()) + list(self.get_members())
 
-    def has_role(self, user, include_children=False):
+    def has_role(self, user, include_children=False, check_owner=True):
         """
         Return whether user has roles in Project. If include_children is
         True, return True if user has roles in ANY child project. Returns
@@ -362,14 +364,17 @@ class Project(models.Model):
         """
         if (
             self.public_guest_access
-            or self.is_owner(user)
             or self.roles.filter(user=user).count() > 0
+            or (check_owner and self.is_owner(user))
         ):
             return True
 
         if include_children:
             for child in self.children.all():
-                if child.has_role(user, include_children=True):
+                # Inherited ownership check is redundant for children
+                if child.has_role(
+                    user, include_children=True, check_owner=False
+                ):
                     return True
 
         return False
@@ -377,7 +382,7 @@ class Project(models.Model):
     def get_parents(self):
         """Return an array of parent projects in inheritance order"""
         if not self.parent:
-            return None
+            return []
         ret = []
         parent = self.parent
         while parent:
