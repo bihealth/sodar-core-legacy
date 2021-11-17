@@ -50,26 +50,27 @@
     {% endif %}
   </div>
 
-  {# Remote status #}
-  {% if project.is_remote and request.user.is_superuser %}
-    <div class="ml-auto"
-         title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %}
-                {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
-         data-toggle="tooltip" data-placement="left">
-      <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
-         data-icon="mdi:cloud" data-height="30">
-      </i>
-    </div>
-  {% endif %}
+  {# Header icons #}
+  <div class="ml-auto">
+    {# Remote status #}
+    {% if project.is_remote and request.user.is_superuser %}
+      <span title="{% if project.is_revoked %}REVOKED remote{% else %}Remote{% endif %}
+                   {% get_display_name 'PROJECT' %} from {{ project.get_source_site.name }}"
+            data-toggle="tooltip" data-placement="left">
+        <i class="iconify {% if project.is_revoked %}text-danger{% else %}text-info{% endif %}"
+           data-icon="mdi:cloud" data-height="30">
+        </i>
+      </span>
+    {% endif %}
 
-  {# Public access status #}
-  {% if project.public_guest_access %}
-    <div class="ml-auto"
-         title="Public guest access"
-         data-toggle="tooltip" data-placement="left">
-      <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
-    </div>
-  {% endif %}
+    {# Public access status #}
+    {% if project.public_guest_access %}
+      <span class=ml-2 title="Public guest access"
+            data-toggle="tooltip" data-placement="left">
+        <i class="iconify text-info" data-icon="mdi:earth" data-height="30"></i>
+      </span>
+    {% endif %}
+  </div>
 
 </div>
 
