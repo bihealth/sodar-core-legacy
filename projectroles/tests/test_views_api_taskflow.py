@@ -253,6 +253,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -305,6 +306,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'public_guest_access': True,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -354,6 +356,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -400,6 +403,7 @@ class TestProjectUpdateAPIView(TestCoreTaskflowAPIBase):
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)

@@ -23,6 +23,7 @@ Added
     - ``ManagementCommandLogger`` helper (#844)
     - ``get_email_user()`` helper (#845)
     - Project type restriction in API views with ``project_type`` attribute (#850)
+    - ``Project.has_public_children`` field (#851)
 
 Changed
 -------
@@ -66,6 +67,7 @@ Removed
 
 - **Projectroles**
     - ``get_star()`` template tag (#851)
+    - ``Project.has_public_children()`` method: use ``has_public_children`` instead (#851)
 
 
 v0.10.5 (2021-09-20)

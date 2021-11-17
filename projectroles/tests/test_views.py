@@ -498,6 +498,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
             'full_title': 'TestCategory',
+            'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
         }
         model_dict = model_to_dict(project)
@@ -596,6 +597,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'description': 'description',
             'public_guest_access': False,
             'full_title': 'TestCategory / TestProject',
+            'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
         }
         model_dict = model_to_dict(project)
@@ -729,6 +731,7 @@ class TestProjectUpdateView(
             'description': 'updated description',
             'public_guest_access': False,
             'full_title': new_category.title + ' / ' + 'updated title',
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
         model_dict = model_to_dict(self.project)
@@ -833,6 +836,7 @@ class TestProjectUpdateView(
             'description': 'updated description',
             'public_guest_access': False,
             'full_title': 'updated title',
+            'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
         model_dict = model_to_dict(self.category)
@@ -903,6 +907,35 @@ class TestProjectUpdateView(
             + ' / '
             + self.project.title,
         )
+
+    def test_update_public_access(self):
+        """Test Project updating with public guest access"""
+        self.assertEqual(self.project.public_guest_access, False)
+        self.assertEqual(self.category.has_public_children, False)
+
+        values = model_to_dict(self.project)
+        values['public_guest_access'] = True
+        values['parent'] = self.category.sodar_uuid  # NOTE: Must add parent
+        values['owner'] = self.user.sodar_uuid  # NOTE: Must add owner
+        values.update(
+            app_settings.get_all_settings(project=self.project, post_safe=True)
+        )
+
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:update',
+                    kwargs={'project': self.project.sodar_uuid},
+                ),
+                values,
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.project.refresh_from_db()
+        self.category.refresh_from_db()
+        self.assertEqual(self.project.public_guest_access, True)
+        # Assert the parent category has_public_children is set true
+        self.assertEqual(self.category.has_public_children, True)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_render_remote(self):

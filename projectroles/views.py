@@ -447,26 +447,31 @@ class ProjectListContextMixin:
             project_list = [
                 p
                 for p in project_list
-                if p.public_guest_access or p.has_public_children()
+                if p.public_guest_access or p.has_public_children
             ]
         elif not user.is_superuser:
             project_list = [
                 p
                 for p in project_list
-                if p.has_role(user, include_children=True)
+                if p.public_guest_access
+                or p.has_public_children
+                or (
+                    user.is_authenticated
+                    and p.has_role(user, include_children=True)
+                )
             ]
 
         def _append_projects(project):
             lst = [project]
             for c in project.get_children():
                 if (
-                    user.is_authenticated
-                    and (
-                        user.is_superuser
-                        or c.has_role(user, include_children=True)
+                    user.is_superuser
+                    or c.public_guest_access
+                    or c.has_public_children
+                    or (
+                        user.is_authenticated
+                        and c.has_role(user, include_children=True)
                     )
-                    or user.is_anonymous
-                    and (c.public_guest_access or c.has_public_children())
                 ):
                     lst += _append_projects(c)
             return lst
@@ -988,8 +993,10 @@ class ProjectModifyMixin:
 
     @classmethod
     def _handle_local_save(cls, project, owner, project_settings):
-        """Handle local saving of project data if SODAR Taskflow is not
-        enabled"""
+        """
+        Handle local saving of project data if SODAR Taskflow is not
+        enabled.
+        """
 
         # Modify owner role if it does exist
         try:
@@ -1225,14 +1232,25 @@ class ProjectModifyMixin:
                     'plugin "{}": {}'.format(p.name, ex)
                 )
 
+        # If public access was updated, update has_public_children for parents
+        if (
+            old_project
+            and project.parent
+            and old_project.public_guest_access != project.public_guest_access
+        ):
+            try:
+                project._update_public_children()
+            except Exception as ex:
+                logger.error(
+                    'Exception in updating has_public_children: {}'.format(ex)
+                )
+
+        # Once all is done, update timeline event, create alerts and emails
         if tl_event:
             tl_event.set_status('OK')
-
-        # Create app alerts and/or send emails
         self._notify_users(
             project, action, owner, old_data, old_parent, request
         )
-
         return project
 
 

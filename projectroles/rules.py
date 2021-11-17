@@ -83,7 +83,7 @@ def has_category_child_role(user, obj):
         or (
             user.is_anonymous
             and getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False)
-            and obj.has_public_children()
+            and obj.has_public_children
         )
     )
 

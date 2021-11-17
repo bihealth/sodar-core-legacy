@@ -20,6 +20,7 @@ Release Highlights
 - Add profiling middleware
 - Improve management command output
 - Improve user representation in email
+- Optimize project list queries
 - Timeline app bug fixes
 - Search results layout fixes
 - General bug fixes and minor updates
@@ -39,6 +40,12 @@ Search Results DataTables Upgrade
 DataTables includes on the search results page have been upgraded to version
 ``bs4/dt-1.11.3/b-2.0.1``. You are advised to review the search results layout
 for your own apps to ensure everything looks correct.
+
+Project.has_public_children() Removed
+-------------------------------------
+
+The ``Project`` model ``has_public_children()`` helper has been removed. In its
+place, you should use the ``Project.has_public_children`` field.
 
 
 v0.10.5 (2021-09-20)

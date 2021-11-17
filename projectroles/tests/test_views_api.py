@@ -329,7 +329,6 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         url = reverse('projectroles:api_project_list')
         response = self.request_knox(url, token=self.get_token(user_no_roles))
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 0)
@@ -343,7 +342,6 @@ class TestProjectListAPIView(TestCoreAPIViewsBase):
         url = reverse('projectroles:api_project_list')
         response = self.request_knox(url, token=self.get_token(user_no_roles))
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -360,7 +358,6 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
         )
         response = self.request_knox(url)
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
@@ -395,7 +392,6 @@ class TestProjectRetrieveAPIView(AppSettingMixin, TestCoreAPIViewsBase):
         )
         response = self.request_knox(url)
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
@@ -716,8 +712,6 @@ class TestProjectCreateAPIView(
 
     def test_create_category(self):
         """Test creating a root category"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -732,7 +726,6 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
@@ -750,6 +743,7 @@ class TestProjectCreateAPIView(
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': new_category.title,
+            'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
@@ -776,8 +770,6 @@ class TestProjectCreateAPIView(
 
     def test_create_category_nested(self):
         """Test creating a category under an existing category"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -792,11 +784,9 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
-        # Assert object content
         new_category = Project.objects.get(title=NEW_CATEGORY_TITLE)
         model_dict = model_to_dict(new_category)
         model_dict['readme'] = model_dict['readme'].raw
@@ -810,11 +800,10 @@ class TestProjectCreateAPIView(
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + new_category.title,
+            'has_public_children': False,
             'sodar_uuid': new_category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
-        # Assert role assignment
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=new_category, user=self.user, role=self.role_owner
@@ -822,7 +811,6 @@ class TestProjectCreateAPIView(
             1,
         )
 
-        # Assert API response
         expected = {
             'title': NEW_CATEGORY_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
@@ -836,8 +824,6 @@ class TestProjectCreateAPIView(
 
     def test_create_project(self):
         """Test creating a project under an existing category"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -852,11 +838,9 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
-        # Assert object content
         new_project = Project.objects.get(title=NEW_PROJECT_TITLE)
         model_dict = model_to_dict(new_project)
         model_dict['readme'] = model_dict['readme'].raw
@@ -870,11 +854,10 @@ class TestProjectCreateAPIView(
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + new_project.title,
+            'has_public_children': False,
             'sodar_uuid': new_project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
-        # Assert role assignment
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=new_project, user=self.user, role=self.role_owner
@@ -882,7 +865,6 @@ class TestProjectCreateAPIView(
             1,
         )
 
-        # Assert API response
         expected = {
             'title': NEW_PROJECT_TITLE,
             'type': PROJECT_TYPE_PROJECT,
@@ -896,8 +878,6 @@ class TestProjectCreateAPIView(
 
     def test_create_project_root(self):
         """Test creating a project in root (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -912,15 +892,12 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
     @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
     def test_create_project_disable_categories(self):
         """Test creating a project in root with disabled categories"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -935,14 +912,11 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
     def test_create_project_duplicate_title(self):
         """Test creating a project with a title already in category (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -957,14 +931,11 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
     def test_create_project_unknown_user(self):
         """Test creating a project with a non-existent user (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -979,14 +950,11 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
     def test_create_project_unknown_parent(self):
         """Test creating a project with a non-existent parent category (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -1001,14 +969,11 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
     def test_create_project_invalid_parent(self):
         """Test creating a project with a project as parent (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -1023,15 +988,12 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400)
         self.assertEqual(Project.objects.count(), 2)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_project_target_enabled(self):
         """Test creating a project as TARGET with target creation allowed"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -1046,14 +1008,12 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(Project.objects.count(), 3)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_project_target_remote(self):
         """Test creating a project as TARGET under a remote category (should fail)"""
-
         # Create source site
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -1062,7 +1022,6 @@ class TestProjectCreateAPIView(
             description=REMOTE_SITE_DESC,
             secret=REMOTE_SITE_SECRET,
         )
-
         # Make category remote
         self._make_remote_project(
             project_uuid=self.category.sodar_uuid,
@@ -1070,8 +1029,6 @@ class TestProjectCreateAPIView(
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -1086,7 +1043,6 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
@@ -1096,8 +1052,6 @@ class TestProjectCreateAPIView(
     )
     def test_create_project_target_disabled(self):
         """Test creating a project as TARGET with target creation disallowed (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse('projectroles:api_project_create')
@@ -1112,7 +1066,6 @@ class TestProjectCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
@@ -1124,8 +1077,6 @@ class TestProjectUpdateAPIView(
 
     def test_put_category(self):
         """Test put() for category updating"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse(
@@ -1143,11 +1094,9 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
-        # Assert object content
         self.category.refresh_from_db()
         model_dict = model_to_dict(self.category)
         model_dict['readme'] = model_dict['readme'].raw
@@ -1161,11 +1110,11 @@ class TestProjectUpdateAPIView(
             'public_guest_access': True,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert API response
         expected = {
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
@@ -1187,8 +1136,6 @@ class TestProjectUpdateAPIView(
 
     def test_put_project(self):
         """Test put() for project updating"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse(
@@ -1206,11 +1153,9 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
-        # Assert object content
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
         model_dict['readme'] = model_dict['readme'].raw
@@ -1224,11 +1169,11 @@ class TestProjectUpdateAPIView(
             'public_guest_access': True,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert API response
         expected = {
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_PROJECT,
@@ -1250,8 +1195,6 @@ class TestProjectUpdateAPIView(
 
     def test_patch_category(self):
         """Test patch() for updating category metadata"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse(
@@ -1265,11 +1208,9 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
-        # Assert object content
         self.category.refresh_from_db()
         model_dict = model_to_dict(self.category)
         model_dict['readme'] = model_dict['readme'].raw
@@ -1283,14 +1224,12 @@ class TestProjectUpdateAPIView(
             'public_guest_access': False,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.category.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
-        # Assert role assignment
         self.assertEqual(self.category.get_owner().user, self.user)
 
-        # Assert API response
         expected = {
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_CATEGORY,
@@ -1312,8 +1251,6 @@ class TestProjectUpdateAPIView(
 
     def test_patch_project(self):
         """Test patch() for updating project metadata"""
-
-        # Assert preconditions
         self.assertEqual(Project.objects.count(), 2)
 
         url = reverse(
@@ -1328,11 +1265,9 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(Project.objects.count(), 2)
 
-        # Assert object content
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
         model_dict['readme'] = model_dict['readme'].raw
@@ -1346,14 +1281,12 @@ class TestProjectUpdateAPIView(
             'public_guest_access': True,
             'submit_status': SODAR_CONSTANTS['SUBMIT_STATUS_OK'],
             'full_title': self.category.title + ' / ' + UPDATED_TITLE,
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
         self.assertEqual(model_dict, expected)
-
-        # Assert role assignment
         self.assertEqual(self.project.get_owner().user, self.user)
 
-        # Assert API response
         expected = {
             'title': UPDATED_TITLE,
             'type': PROJECT_TYPE_PROJECT,
@@ -1384,13 +1317,10 @@ class TestProjectUpdateAPIView(
         patch_data = {'owner': str(new_owner.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_move(self):
         """Test patch() for moving project under a different category"""
-
-        # Assert preconditions
         self.assertEqual(
             self.project.full_title,
             self.category.title + ' / ' + self.project.title,
@@ -1407,15 +1337,10 @@ class TestProjectUpdateAPIView(
         patch_data = {'parent': str(new_category.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 200, msg=response.content)
-
-        # Assert object content
         self.project.refresh_from_db()
         model_dict = model_to_dict(self.project)
         self.assertEqual(model_dict['parent'], new_category.pk)
-
-        # Assert role assignment
         self.assertEqual(self.project.get_owner().user, self.user)
 
         # Assert child project full title update
@@ -1423,15 +1348,12 @@ class TestProjectUpdateAPIView(
             self.project.full_title,
             new_category.title + ' / ' + self.project.title,
         )
-
-        # Assert API response
         self.assertEqual(
             json.loads(response.content)['parent'], str(new_category.sodar_uuid)
         )
 
     def test_patch_project_move_unallowed(self):
         """Test patch() for moving project without permissions (should fail)"""
-
         new_category = self._make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -1447,12 +1369,10 @@ class TestProjectUpdateAPIView(
         self.user.save()
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 403, msg=response.content)
 
     def test_patch_project_move_root(self):
         """Test patch() for moving project without permissions (should fail)"""
-
         new_category = self._make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -1465,12 +1385,10 @@ class TestProjectUpdateAPIView(
         patch_data = {'parent': ''}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 200, msg=response.content)
 
     def test_patch_project_move_root_unallowed(self):
         """Test patch() for moving project to root without permissions (should fail)"""
-
         new_category = self._make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, None
         )
@@ -1486,12 +1404,10 @@ class TestProjectUpdateAPIView(
         self.user.save()
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 403, msg=response.content)
 
     def test_patch_project_move_child(self):
         """Test patch() for moving a category inside its child (should fail)"""
-
         new_category = self._make_project(
             'NewCategory', PROJECT_TYPE_CATEGORY, self.category
         )
@@ -1503,7 +1419,6 @@ class TestProjectUpdateAPIView(
         patch_data = {'parent': str(new_category.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_project_type_change(self):
@@ -1515,13 +1430,30 @@ class TestProjectUpdateAPIView(
         patch_data = {'type': PROJECT_TYPE_CATEGORY}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
+
+    def test_patch_project_public(self):
+        """Test patch() with changed public guest access"""
+        self.assertEqual(self.project.public_guest_access, False)
+        self.assertEqual(self.category.has_public_children, False)
+
+        url = reverse(
+            'projectroles:api_project_update',
+            kwargs={'project': self.project.sodar_uuid},
+        )
+        patch_data = {'public_guest_access': True}
+        response = self.request_knox(url, method='PATCH', data=patch_data)
+
+        self.assertEqual(response.status_code, 200, msg=response.content)
+        self.project.refresh_from_db()
+        self.category.refresh_from_db()
+        self.assertEqual(self.project.public_guest_access, True)
+        # Assert the parent category has_public_children is set true
+        self.assertEqual(self.category.has_public_children, True)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_patch_project_remote(self):
         """Test patch() for updating remote project metadata (should fail)"""
-
         # Create source site and remote project
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -1548,7 +1480,6 @@ class TestProjectUpdateAPIView(
         }
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
@@ -1563,8 +1494,6 @@ class TestRoleAssignmentCreateAPIView(
 
     def test_create_contributor(self):
         """Test creating a contributor role for user"""
-
-        # Assert preconditions
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
@@ -1579,13 +1508,11 @@ class TestRoleAssignmentCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
 
-        # Assert object
         role_as = RoleAssignment.objects.filter(
             project=self.project,
             role=self.role_contributor,
@@ -1593,7 +1520,6 @@ class TestRoleAssignmentCreateAPIView(
         ).first()
         self.assertIsNotNone(role_as)
 
-        # Assert API response
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_CONTRIBUTOR,
@@ -1604,7 +1530,6 @@ class TestRoleAssignmentCreateAPIView(
 
     def test_create_owner(self):
         """Test creating an owner role (should fail)"""
-
         url = reverse(
             'projectroles:api_role_create',
             kwargs={'project': self.project.sodar_uuid},
@@ -1614,18 +1539,13 @@ class TestRoleAssignmentCreateAPIView(
             'user': str(self.assign_user.sodar_uuid),
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_create_delegate(self):
         """Test creating a delegate role for user as owner"""
-
         # Disable superuser status from self.user
         self.user.is_superuser = False
         self.user.save()
-
-        # Assert preconditions
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
@@ -1640,13 +1560,10 @@ class TestRoleAssignmentCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
-
-        # Assert object
         role_as = RoleAssignment.objects.filter(
             project=self.project, role=self.role_delegate, user=self.assign_user
         ).first()
@@ -1654,7 +1571,6 @@ class TestRoleAssignmentCreateAPIView(
 
     def test_create_delegate_unauthorized(self):
         """Test creating a delegate role without authorization (should fail)"""
-
         # Create new user and grant delegate role
         new_user = self.make_user('new_user')
         self._make_assignment(self.project, new_user, self.role_contributor)
@@ -1672,12 +1588,10 @@ class TestRoleAssignmentCreateAPIView(
             url, method='POST', data=post_data, token=new_user_token
         )
 
-        # Assert response
         self.assertEqual(response.status_code, 403, msg=response.content)
 
     def test_create_delegate_limit(self):
         """Test creating a delegate role with limit reached (should fail)"""
-
         # Create new user and grant delegate role
         new_user = self.make_user('new_user')
         self._make_assignment(self.project, new_user, self.role_delegate)
@@ -1690,16 +1604,13 @@ class TestRoleAssignmentCreateAPIView(
             'role': PROJECT_ROLE_DELEGATE,
             'user': str(self.assign_user.sodar_uuid),
         }
-
         # NOTE: Post as owner
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_create_delegate_limit_inherit(self):
         """Test creating a delegate role existing role for inherited owner"""
-
         # Set up category owner
         new_user = self.make_user('new_user')
         self.cat_owner_as.user = new_user
@@ -1715,12 +1626,10 @@ class TestRoleAssignmentCreateAPIView(
         # NOTE: Post as owner
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
-        # Assert object
         role_as = RoleAssignment.objects.filter(
             project=self.project, role=self.role_delegate, user=self.assign_user
         ).first()
@@ -1728,7 +1637,6 @@ class TestRoleAssignmentCreateAPIView(
 
     def test_create_delegate_category(self):
         """Test creating a non-owner role for category"""
-
         url = reverse(
             'projectroles:api_role_create',
             kwargs={'project': self.category.sodar_uuid},
@@ -1738,14 +1646,10 @@ class TestRoleAssignmentCreateAPIView(
             'user': str(self.assign_user.sodar_uuid),
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
-        # Assert response
         self.assertEqual(response.status_code, 201, msg=response.content)
 
     def test_create_role_existing(self):
         """Test creating a role for user already in the project"""
-
-        # Assert preconditions
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
@@ -1760,20 +1664,17 @@ class TestRoleAssignmentCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
         )
 
-        # Post again
         post_data = {
             'role': PROJECT_ROLE_GUEST,
             'user': str(self.assign_user.sodar_uuid),
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 2
@@ -1782,7 +1683,6 @@ class TestRoleAssignmentCreateAPIView(
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_remote(self):
         """Test creating a role for a remote project (should fail)"""
-
         # Create source site and remote project
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -1797,8 +1697,6 @@ class TestRoleAssignmentCreateAPIView(
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-
-        # Assert preconditions
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
         )
@@ -1813,7 +1711,6 @@ class TestRoleAssignmentCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             RoleAssignment.objects.filter(project=self.project).count(), 1
@@ -1834,8 +1731,6 @@ class TestRoleAssignmentUpdateAPIView(
 
     def test_put_role(self):
         """Test put() for role assignment updating"""
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
         url = reverse(
@@ -1848,11 +1743,9 @@ class TestRoleAssignmentUpdateAPIView(
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
-        # Assert object content
         self.update_as.refresh_from_db()
         model_dict = model_to_dict(self.update_as)
         expected = {
@@ -1864,7 +1757,6 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert API response
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_GUEST,
@@ -1885,10 +1777,8 @@ class TestRoleAssignmentUpdateAPIView(
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 200, msg=response.content)
 
-        # Assert object content
         self.update_as.refresh_from_db()
         model_dict = model_to_dict(self.update_as)
         expected = {
@@ -1900,7 +1790,6 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert API response
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_DELEGATE,
@@ -1920,8 +1809,6 @@ class TestRoleAssignmentUpdateAPIView(
             'user': str(self.assign_user.sodar_uuid),
         }
         response = self.request_knox(url, method='PUT', data=put_data)
-
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_put_change_user(self):
@@ -1938,13 +1825,10 @@ class TestRoleAssignmentUpdateAPIView(
         }
         response = self.request_knox(url, method='PUT', data=put_data)
 
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_patch_role(self):
         """Test patch() for role assignment updating"""
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
         url = reverse(
@@ -1954,11 +1838,9 @@ class TestRoleAssignmentUpdateAPIView(
         patch_data = {'role': PROJECT_ROLE_GUEST}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
-        # Assert object content
         self.update_as.refresh_from_db()
         model_dict = model_to_dict(self.update_as)
         expected = {
@@ -1970,7 +1852,6 @@ class TestRoleAssignmentUpdateAPIView(
         }
         self.assertEqual(model_dict, expected)
 
-        # Assert API response
         expected = {
             'project': str(self.project.sodar_uuid),
             'role': PROJECT_ROLE_GUEST,
@@ -1982,21 +1863,17 @@ class TestRoleAssignmentUpdateAPIView(
     def test_patch_change_user(self):
         """Test patch() with a different user (should fail)"""
         new_user = self.make_user('new_user')
-
         url = reverse(
             'projectroles:api_role_update',
             kwargs={'roleassignment': self.update_as.sodar_uuid},
         )
         patch_data = {'user': str(new_user.sodar_uuid)}
         response = self.request_knox(url, method='PATCH', data=patch_data)
-
-        # Assert response
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_patch_role_remote(self):
         """Test patch() for updating a role in a remote project (should fail)"""
-
         # Create source site and remote project
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -2019,7 +1896,6 @@ class TestRoleAssignmentUpdateAPIView(
         patch_data = {'role': PROJECT_ROLE_GUEST}
         response = self.request_knox(url, method='PATCH', data=patch_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
 
 
@@ -2038,8 +1914,6 @@ class TestRoleAssignmentDestroyAPIView(
 
     def test_delete_role(self):
         """Test delete for role assignment deletion"""
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
         url = reverse(
@@ -2048,7 +1922,6 @@ class TestRoleAssignmentDestroyAPIView(
         )
         response = self.request_knox(url, method='DELETE')
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 204, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 2)
         self.assertEqual(
@@ -2064,8 +1937,6 @@ class TestRoleAssignmentDestroyAPIView(
         delegate_as = self._make_assignment(
             self.project, new_user, self.role_delegate
         )
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 4)
 
         url = reverse(
@@ -2076,14 +1947,11 @@ class TestRoleAssignmentDestroyAPIView(
         token = self.get_token(self.assign_user)
         response = self.request_knox(url, method='DELETE', token=token)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 4)
 
     def test_delete_owner(self):
         """Test delete for owner deletion (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
         url = reverse(
@@ -2092,14 +1960,12 @@ class TestRoleAssignmentDestroyAPIView(
         )
         response = self.request_knox(url, method='DELETE')
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_delete_remote(self):
         """Test delete for a remote project (should fail)"""
-
         # Create source site and remote project
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -2114,8 +1980,6 @@ class TestRoleAssignmentDestroyAPIView(
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-
-        # Assert preconditions
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
         url = reverse(
@@ -2124,7 +1988,6 @@ class TestRoleAssignmentDestroyAPIView(
         )
         response = self.request_knox(url, method='DELETE')
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(RoleAssignment.objects.count(), 3)
 
@@ -2140,13 +2003,10 @@ class TestRoleAssignmentOwnerTransferAPIView(
 
     def test_transfer_owner(self):
         """Test transferring ownership for a project"""
-
         # Assign role to new user
         self._make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
-
-        # Assert preconditions
         self.assertEqual(self.project.get_owner().user, self.user)
 
         url = reverse(
@@ -2159,19 +2019,14 @@ class TestRoleAssignmentOwnerTransferAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.assign_user)
 
     def test_transfer_owner_category(self):
         """Test transferring ownership for a category"""
-
-        # Assign role to new user
         self._make_assignment(
             self.category, self.assign_user, self.role_contributor
         )
-
-        # Assert preconditions
         self.assertEqual(self.category.get_owner().user, self.user)
 
         url = reverse(
@@ -2184,24 +2039,20 @@ class TestRoleAssignmentOwnerTransferAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.category.get_owner().user, self.assign_user)
 
     def test_transfer_owner_inherit(self):
         """Test transferring ownership to an inherited owner"""
-
         # Assign role to new user
         self._make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
-
         # Set alt owner to current project, make self.user inherited owner
         alt_owner = self.make_user('alt_owner')
         self.owner_as.user = alt_owner
         self.owner_as.save()
 
-        # Assert preconditions
         self.assertEqual(self.project.get_owner().user, alt_owner)
         self.assertEqual(
             self.project.get_owners(inherited_only=True)[0].user, self.user
@@ -2217,7 +2068,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user)
         old_owner_as = RoleAssignment.objects.get(
@@ -2227,9 +2077,7 @@ class TestRoleAssignmentOwnerTransferAPIView(
 
     def test_transfer_owner_no_roles(self):
         """Test transferring ownership to user with no existing roles (should fail)"""
-
         # NOTE: No role given to user
-
         url = reverse(
             'projectroles:api_role_owner_transfer',
             kwargs={'project': self.project.sodar_uuid},
@@ -2239,14 +2087,11 @@ class TestRoleAssignmentOwnerTransferAPIView(
             'old_owner_role': self.role_contributor.name,
         }
         response = self.request_knox(url, method='POST', data=post_data)
-
-        # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_transfer_remote(self):
         """Test transferring ownership for a remote project (should fail)"""
-
         # Create source site and remote project
         source_site = self._make_site(
             name=REMOTE_SITE_NAME,
@@ -2261,13 +2106,10 @@ class TestRoleAssignmentOwnerTransferAPIView(
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-
         # Assign role to new user
         self._make_assignment(
             self.project, self.assign_user, self.role_contributor
         )
-
-        # Assert preconditions
         self.assertEqual(self.project.get_owner().user, self.user)
 
         url = reverse(
@@ -2280,7 +2122,6 @@ class TestRoleAssignmentOwnerTransferAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and project status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(self.project.get_owner().user, self.user)
 
@@ -2316,7 +2157,6 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         )
         response = self.request_knox(url, token=self.get_token(self.user))
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -2357,7 +2197,6 @@ class TestProjectInviteListAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         )
         response = self.request_knox(url, token=self.get_token(self.user))
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 1)
@@ -2385,8 +2224,6 @@ class TestProjectInviteCreateAPIView(
 
     def test_create(self):
         """Test creating a contributor invite for user"""
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2402,20 +2239,17 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 1
         )
 
-        # Assert data
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.email, INVITE_USER_EMAIL)
         self.assertEqual(invite.role, self.role_contributor)
         self.assertEqual(invite.issuer, self.user)
         self.assertEqual(invite.message, INVITE_MESSAGE)
 
-        # Assert response
         expected = {
             'email': INVITE_USER_EMAIL,
             'project': str(self.project.sodar_uuid),
@@ -2431,8 +2265,6 @@ class TestProjectInviteCreateAPIView(
 
     def test_create_owner(self):
         """Test creating an invite for an owner role (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2448,7 +2280,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and data
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2457,8 +2288,6 @@ class TestProjectInviteCreateAPIView(
 
     def test_create_delegate(self):
         """Test creating an invite for an delegate role"""
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2474,7 +2303,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and data
         self.assertEqual(response.status_code, 201, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 1
@@ -2488,8 +2316,6 @@ class TestProjectInviteCreateAPIView(
         """Test creating an delegate invite without perms (should fail)"""
         del_user = self.make_user('delegate')
         self._make_assignment(self.project, del_user, self.role_delegate)
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2507,7 +2333,6 @@ class TestProjectInviteCreateAPIView(
             url, method='POST', data=post_data, token=self.get_token(del_user)
         )
 
-        # Assert response and data
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2518,8 +2343,6 @@ class TestProjectInviteCreateAPIView(
         """Test creating an delegate invite with exceeded limit (should fail)"""
         del_user = self.make_user('delegate')
         self._make_assignment(self.project, del_user, self.role_delegate)
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2535,7 +2358,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and data
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2544,8 +2366,6 @@ class TestProjectInviteCreateAPIView(
 
     def test_create_invalid_email(self):
         """Test creating an invite with invalid email (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2561,7 +2381,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and data
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2573,8 +2392,6 @@ class TestProjectInviteCreateAPIView(
         user = self.make_user('new_user')
         user.email = INVITE_USER_EMAIL
         user.save()
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2590,7 +2407,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2614,8 +2430,6 @@ class TestProjectInviteCreateAPIView(
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
         )
-
-        # Assert preconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
         )
@@ -2631,7 +2445,6 @@ class TestProjectInviteCreateAPIView(
         }
         response = self.request_knox(url, method='POST', data=post_data)
 
-        # Assert response and role status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.project).count(), 0
@@ -2655,17 +2468,12 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
 
     def test_revoke(self):
         """Test revoking an invite"""
-
-        # Assert preconditions
         self.assertEqual(self.invite.active, True)
-
         url = reverse(
             'projectroles:api_invite_revoke',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and invite status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.invite.refresh_from_db()
         self.assertEqual(self.invite.active, False)
@@ -2674,28 +2482,22 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         """Test revoking an already inactive invite (should fail)"""
         self.invite.active = False
         self.invite.save()
-
         url = reverse(
             'projectroles:api_invite_revoke',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and invite status
         self.assertEqual(response.status_code, 400, msg=response.content)
 
     def test_revoke_delegate(self):
         """Test revoking a delegate invite with sufficient perms"""
         self.invite.role = self.role_delegate
         self.invite.save()
-
         url = reverse(
             'projectroles:api_invite_revoke',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and invite status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.invite.refresh_from_db()
         self.assertEqual(self.invite.active, False)
@@ -2715,7 +2517,6 @@ class TestProjectInviteRevokeAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             url, method='POST', token=self.get_token(delegate)
         )
 
-        # Assert response and invite status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.invite.refresh_from_db()
         self.assertEqual(self.invite.active, True)
@@ -2746,17 +2547,12 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
 
     def test_resend(self):
         """Test resending an invite"""
-
-        # Assert preconditions
         self.assertEqual(len(mail.outbox), 0)
-
         url = reverse(
             'projectroles:api_invite_resend',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and mail status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -2764,14 +2560,11 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         """Test resending an inactive invite (should fail)"""
         self.invite.active = False
         self.invite.save()
-
         url = reverse(
             'projectroles:api_invite_resend',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and mail status
         self.assertEqual(response.status_code, 400, msg=response.content)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -2779,14 +2572,11 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
         """Test resending a delegate invite with sufficient perms"""
         self.invite.role = self.role_delegate
         self.invite.save()
-
         url = reverse(
             'projectroles:api_invite_resend',
             kwargs={'projectinvite': self.invite.sodar_uuid},
         )
         response = self.request_knox(url, method='POST')
-
-        # Assert response and mail status
         self.assertEqual(response.status_code, 200, msg=response.content)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -2805,7 +2595,6 @@ class TestProjectInviteResendAPIView(ProjectInviteMixin, TestCoreAPIViewsBase):
             url, method='POST', token=self.get_token(delegate)
         )
 
-        # Assert response and mail status
         self.assertEqual(response.status_code, 403, msg=response.content)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -2853,7 +2642,6 @@ class TestUserListAPIView(TestCoreAPIViewsBase):
         url = reverse('projectroles:api_user_list')
         response = self.request_knox(url)  # Default token is for superuser
 
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         self.assertEqual(len(response_data), 2)
@@ -2888,8 +2676,6 @@ class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
         response = self.request_knox(
             url, token=self.get_token(self.domain_user)
         )
-
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
@@ -2904,8 +2690,6 @@ class TestCurrentUserRetrieveAPIView(TestCoreAPIViewsBase):
         """Test CurrentUserRetrieveAPIView get() as superuser"""
         url = reverse('projectroles:api_user_current')
         response = self.request_knox(url)
-
-        # Assert response
         self.assertEqual(response.status_code, 200)
         response_data = json.loads(response.content)
         expected = {
@@ -3008,28 +2792,22 @@ class TestRemoteProjectGetAPIView(
 
     def test_get(self):
         """Test retrieving project data to the target site"""
-
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get',
                 kwargs={'secret': REMOTE_SITE_SECRET},
             )
         )
-
         self.assertEqual(response.status_code, 200)
-
         expected = self.remote_api.get_source_data(self.target_site)
         response_dict = json.loads(response.content.decode('utf-8'))
-
         self.assertEqual(response_dict, expected)
 
     def test_get_invalid_secret(self):
         """Test retrieving project data with an invalid secret (should fail)"""
-
         response = self.client.get(
             reverse(
                 'projectroles:api_remote_get', kwargs={'secret': build_secret()}
             )
         )
-
         self.assertEqual(response.status_code, 401)

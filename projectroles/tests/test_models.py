@@ -307,6 +307,7 @@ class TestProject(ProjectMixin, TestCase):
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
             'public_guest_access': False,
+            'has_public_children': False,
         }
         model_dict = model_to_dict(self.project_sub)
         # HACK: Can't compare markupfields like this. Better solution?

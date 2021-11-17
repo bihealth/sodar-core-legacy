@@ -139,6 +139,13 @@ class Project(models.Model):
         help_text='Full project title with parent path (auto-generated)',
     )
 
+    #: Whether project has children with public access (auto-generated)
+    has_public_children = models.BooleanField(
+        default=False,
+        help_text='Whether project has children with public access '
+        '(auto-generated)',
+    )
+
     #: Project SODAR UUID
     sodar_uuid = models.UUIDField(
         default=uuid.uuid4, unique=True, help_text='Project SODAR UUID'
@@ -172,6 +179,10 @@ class Project(models.Model):
         self.full_title = self._get_full_title()
         for child in self.get_children():
             child.save()
+
+        # Update public children
+        # NOTE: Parents will be updated in ProjectModifyMixin.modify_project()
+        self.has_public_children = self._has_public_children()
 
         super().save(*args, **kwargs)
 
@@ -212,6 +223,33 @@ class Project(models.Model):
         ret += self.title
         return ret
 
+    def _has_public_children(self):
+        """
+        Return True if the project has any children with public guest access.
+        """
+        for child in self.get_children():
+            if child.public_guest_access:
+                return True
+            ret = child._has_public_children()
+            if ret:
+                return True
+        return False
+
+    def _update_public_children(self):
+        """Update has_public_children for this project's parents."""
+        if self.parent:
+            parent = self.parent
+            public_found = False
+            while parent:
+                if public_found:
+                    parent.has_public_children = True
+                else:
+                    parent.has_public_children = parent._has_public_children()
+                parent.save()
+                if not public_found and parent.has_public_children:
+                    public_found = True
+                parent = parent.parent
+
     # Custom row-level functions
 
     def get_children(self, flat=False):
@@ -235,19 +273,6 @@ class Project(models.Model):
         return self.children.filter(
             submit_status=SODAR_CONSTANTS['SUBMIT_STATUS_OK']
         ).order_by('title')
-
-    # TODO: Add tests
-    def has_public_children(self):
-        """
-        Return True if the project has any children with public guest access.
-        """
-        for child in self.get_children():
-            if child.public_guest_access:
-                return True
-            ret = child.has_public_children()
-            if ret:
-                return True
-        return False
 
     def get_depth(self):
         """Return depth of project in the project tree structure (root=0)"""
@@ -439,8 +464,10 @@ class Project(models.Model):
 
     def set_public(self, public=True):
         """Helper for setting value of public_guest_access"""
-        self.public_guest_access = public
-        self.save()
+        if public != self.public_guest_access:
+            self.public_guest_access = public
+            self.save()
+            self._update_public_children()  # Update for parents
 
 
 # Role -------------------------------------------------------------------------
