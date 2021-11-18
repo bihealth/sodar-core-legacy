@@ -41,7 +41,7 @@ Changed
     - Refactor ``checkAll()`` helper (#816)
     - Restrict project type in API views (#850)
 - **Projectroles**
-    - Upgrade DataTables includes on search results page (#841)
+    - Upgrade DataTables includes on search results page (#841, #856)
     - Improve email subject prefix formatting (#829)
     - Update user representations in emails (#845)
 - **Timeline**
