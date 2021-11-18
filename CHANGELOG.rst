@@ -24,6 +24,9 @@ Added
     - ``get_email_user()`` helper (#845)
     - Project type restriction in API views with ``project_type`` attribute (#850)
     - ``Project.has_public_children`` field (#851)
+    - Email sending for additional user emails (#861)
+    - ``user_email_additional`` app setting (#861)
+    - ``email.get_user_addr()`` helper (#861)
 
 Changed
 -------

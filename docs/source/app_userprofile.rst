@@ -4,9 +4,8 @@
 Userprofile App
 ^^^^^^^^^^^^^^^
 
-The ``userprofile`` app is a site app which provides a user profile
-view for projectroles-compatible Django users and management of user specific
-settings.
+The ``userprofile`` app is a site app which provides a user profile view for
+projectroles compatible Django users and management of user specific settings.
 
 
 Installation
@@ -27,8 +26,7 @@ Django Settings
 ---------------
 
 The userprofile app is available for your Django site after installing
-``django-sodar-core``. Add the app into ``THIRD_PARTY_APPS`` as
-follows:
+``django-sodar-core``. Add the app into ``THIRD_PARTY_APPS`` as follows:
 
 .. code-block:: python
 
@@ -79,3 +77,16 @@ User Settings
 
 User settings are configured in the ``app_settings`` dictionary in your project
 app plugins.
+
+User settings defined in the ``projectroles`` app, available for all SODAR Core
+using sites:
+
+Display Project UUID Copying Link
+    If set true, display a link in the project title bar for copying the project
+    UUID into the clipboard.
+Additional Email
+    In addition to the default user email, also send email notifications to
+    these addresses.
+
+In the development setup, the SODAR Core example site apps also provide
+additional settings for demonstrating settings features.

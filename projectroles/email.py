@@ -7,11 +7,14 @@ from django.core.mail import EmailMessage
 from django.urls import reverse
 from django.utils.timezone import localtime
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.utils import build_invite_url, get_display_name
 
 
-# Access Django user model
+app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
 User = auth.get_user_model()
+
 
 # Settings
 SUBJECT_PREFIX = settings.EMAIL_SUBJECT_PREFIX.strip() + ' '
@@ -19,9 +22,6 @@ EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 ADMIN_RECIPIENT = settings.ADMINS[0]
-
-
-logger = logging.getLogger(__name__)
 
 
 # Generic Elements -------------------------------------------------------------
@@ -338,6 +338,26 @@ def get_role_change_body(
     return body
 
 
+def get_user_addr(user):
+    """
+    Return all the email addresses for a user as a list. Emails set with
+    user_email_additional are included. If a user has no main email set but
+    additional emails exist, the latter are returned.
+
+    :param user: User object
+    :return: list
+    """
+    ret = []
+    if user.email:
+        ret.append(user.email)
+    add_email = app_settings.get_app_setting(
+        'projectroles', 'user_email_additional', user=user
+    )
+    if add_email:
+        ret += [e.strip() for e in add_email.strip().split(';')]
+    return ret
+
+
 def send_mail(subject, message, recipient_list, request, reply_to=None):
     """
     Wrapper for send_mail() with logging and error messaging.
@@ -400,8 +420,10 @@ def send_role_change_mail(change_type, project, user, role, request):
         issuer=request.user,
         project_url=project_url,
     )
-    reply_to = [request.user.email] if request.user.email else None
-    return send_mail(subject, message, [user.email], request, reply_to)
+    issuer_emails = get_user_addr(request.user)
+    return send_mail(
+        subject, message, get_user_addr(user), request, issuer_emails
+    )
 
 
 def send_invite_mail(invite, request):
@@ -425,8 +447,8 @@ def send_invite_mail(invite, request):
     message += get_invite_message(invite.message)
     message += get_email_footer()
     subject = get_invite_subject(invite.project)
-    reply_to = [invite.issuer.email] if invite.issuer.email else None
-    return send_mail(subject, message, [invite.email], request, reply_to)
+    issuer_emails = get_user_addr(invite.issuer)
+    return send_mail(subject, message, [invite.email], request, issuer_emails)
 
 
 def send_accept_note(invite, request, user):
@@ -459,7 +481,7 @@ def send_accept_note(invite, request, user):
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
     message += get_email_footer()
-    return send_mail(subject, message, [invite.issuer.email], request)
+    return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
 def send_expiry_note(invite, request, user_name):
@@ -493,7 +515,7 @@ def send_expiry_note(invite, request, user_name):
     if not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
         message += NO_REPLY_NOTE
     message += get_email_footer()
-    return send_mail(subject, message, [invite.issuer.email], request)
+    return send_mail(subject, message, get_user_addr(invite.issuer), request)
 
 
 def send_project_create_mail(project, request):
@@ -537,9 +559,9 @@ def send_project_create_mail(project, request):
     return send_mail(
         subject,
         message,
-        [parent_owner.user.email],
+        get_user_addr(parent_owner.user),
         request,
-        reply_to=[request.user.email],
+        reply_to=get_user_addr(request.user),
     )
 
 
@@ -584,9 +606,9 @@ def send_project_move_mail(project, request):
     return send_mail(
         subject,
         message,
-        [parent_owner.user.email],
+        get_user_addr(parent_owner.user),
         request,
-        reply_to=[request.user.email],
+        reply_to=get_user_addr(request.user),
     )
 
 
@@ -610,10 +632,10 @@ def send_generic_mail(
     for recipient in recipient_list:
         if isinstance(recipient, User):
             recp_name = recipient.get_full_name()
-            recp_email = recipient.email
+            recp_addr = get_user_addr(recipient)
         else:
             recp_name = 'recipient'
-            recp_email = recipient
+            recp_addr = [recipient]
 
         message = get_email_header(
             MESSAGE_HEADER.format(recipient=recp_name, site_title=SITE_TITLE)
@@ -622,6 +644,6 @@ def send_generic_mail(
         if not reply_to and not settings.PROJECTROLES_EMAIL_SENDER_REPLY:
             message += NO_REPLY_NOTE
         message += get_email_footer()
-        ret += send_mail(subject, message, [recp_email], request, reply_to)
+        ret += send_mail(subject, message, recp_addr, request, reply_to)
 
     return ret

@@ -58,6 +58,17 @@ PROJECTROLES_APP_SETTINGS = {
         'user_modifiable': True,
         'local': False,
     },
+    'user_email_additional': {
+        'scope': 'USER',
+        'type': 'STRING',
+        'default': '',
+        'placeholder': 'email1@example.com;email2@example.com',
+        'label': 'Additional email',
+        'description': 'Also send user emails to these addresses. Separate '
+        'multiple emails with semicolon.',
+        'user_modifiable': True,
+        'local': False,
+    },
 }
 
 # Default setting for the ``local`` flag in app settings
