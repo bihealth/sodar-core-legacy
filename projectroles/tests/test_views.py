@@ -3,14 +3,14 @@
 import json
 from urllib.parse import urlencode
 
+from django.contrib import auth
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.forms import HiddenInput
 from django.forms.models import model_to_dict
 from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib import auth
-from django.contrib.messages import get_messages
 
 from test_plus.test import TestCase
 
@@ -28,7 +28,11 @@ from projectroles.plugins import (
     get_backend_api,
     get_active_plugins,
 )
-from projectroles.utils import build_secret, get_display_name
+from projectroles.utils import (
+    build_secret,
+    get_display_name,
+    get_user_display_name,
+)
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -38,10 +42,9 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
     RemoteTargetMixin,
 )
-from projectroles.utils import get_user_display_name
 
 
-# Access Django user model
+app_settings = AppSettingAPI()
 User = auth.get_user_model()
 
 
@@ -75,8 +78,26 @@ REMOTE_SITE_NEW_SECRET = build_secret()
 EXAMPLE_APP_NAME = 'example_project_app'
 INVALID_UUID = '11111111-1111-1111-1111-111111111111'
 
-# App settings API
-app_settings = AppSettingAPI()
+PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
+    'test_setting': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': False,
+    },
+    'test_setting_local': {
+        'scope': 'PROJECT',  # PROJECT/USER
+        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
+        'default': False,
+        'label': 'Test setting',  # Optional, defaults to name/key
+        'description': 'Test setting',  # Optional
+        'user_modifiable': True,  # Optional, show/hide in forms
+        'local': True,
+    },
+}
 
 
 class TestViewsBase(TestCase):
@@ -1595,28 +1616,6 @@ class TestProjectSettingsFormTarget(
             ),
             {'Test': 'Updated'},
         )
-
-
-PROJECTROLES_APP_SETTINGS_TEST_LOCAL = {
-    'test_setting': {
-        'scope': 'PROJECT',  # PROJECT/USER
-        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
-        'default': False,
-        'label': 'Test setting',  # Optional, defaults to name/key
-        'description': 'Test setting',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
-        'local': False,
-    },
-    'test_setting_local': {
-        'scope': 'PROJECT',  # PROJECT/USER
-        'type': 'BOOLEAN',  # STRING/INTEGER/BOOLEAN
-        'default': False,
-        'label': 'Test setting',  # Optional, defaults to name/key
-        'description': 'Test setting',  # Optional
-        'user_modifiable': True,  # Optional, show/hide in forms
-        'local': True,
-    },
-}
 
 
 @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)

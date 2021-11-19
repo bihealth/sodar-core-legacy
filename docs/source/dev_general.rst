@@ -141,6 +141,20 @@ follows:
   login and redirect function for testing with different users. This can be used
   if e.g. issues with cookie-based logins are encountered.
 
+Base Test Classes and Helpers
+-----------------------------
+
+For base classes and mixins with useful helpers, see the ``projectroles.tests``
+modules. The test cases also provide useful examples on how to set up your own
+tests.
+
+.. note::
+
+    For REST API testing, SODAR Core uses separate base test classes for the
+    internal SODAR Core API, and the API views implemented in the actual site
+    built on SODAR Core. For the API views in your site, make sure to test them
+    using e.g. ``TestAPIViewsBase`` and **not** ``TestCoreAPIViewsBase``.
+
 
 Debugging
 =========
