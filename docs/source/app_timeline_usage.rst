@@ -74,7 +74,7 @@ Once you can access the timeline backend, add the event with
 
     tl_event = timeline.add_event(
         project=project,            # Project object (None for site-wide events)
-        app_name=APP_NAME,          # Name of the current app
+        app_name=APP_NAME,          # Name of the app plugin for the current app
         user=request.user,          # The user triggering the activity (can be None)
         event_name='some_event',    # You can define these yourself, not unique
         description='Description')  # Human readable description

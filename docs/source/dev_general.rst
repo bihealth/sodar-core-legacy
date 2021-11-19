@@ -64,10 +64,34 @@ used. An example can be seen below:
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
 
+Management Command Logger
+-------------------------
+
+When developing management commands for your apps, you may want to log certain
+events while also ensuring relevant output is provided to the administrator
+issuing a command. For this SODAR Core provides the
+``ManagementCommandLogger`` class. It can be called like the standard Python
+logger with shortcut commands such as ``info()``, ``debug()`` etc. If you need
+to access the actual Python logger being used, you can access it via
+``ManagementCommandLogger.logger``. Example of logger usage can be seen below.
+
+.. code-block:: python
+
+    from projectroles.management.logging import ManagementCommandLogger
+    logger = ManagementCommandLogger(__name__)
+    logger.info('Testing')
+
+.. note::
+
+    The use of this logger class assumes your site sets up logging simlarly to
+    the example site and the SODAR Django Site template, including the use of a
+    ``LOGGING_LEVEL`` Django settings variable.
+
+
 Using Icons
 ===========
 
-To use icons in your apps, use the ``iconify``class along with the collection
+To use icons in your apps, use the ``iconify`` class along with the collection
 and icon name into the ``data-icon`` attribute. See
 `Iconify <https://docs.iconify.design/implementations/css.html>`_ and
 `django-iconify <https://edugit.org/AlekSIS/libs/django-iconify/-/blob/master/README.rst>`_
@@ -116,3 +140,36 @@ follows:
 - ``PROJECTROLES_TEST_UI_LEGACY_LOGIN``: If set ``True``, use the legacy UI
   login and redirect function for testing with different users. This can be used
   if e.g. issues with cookie-based logins are encountered.
+
+Base Test Classes and Helpers
+-----------------------------
+
+For base classes and mixins with useful helpers, see the ``projectroles.tests``
+modules. The test cases also provide useful examples on how to set up your own
+tests.
+
+.. note::
+
+    For REST API testing, SODAR Core uses separate base test classes for the
+    internal SODAR Core API, and the API views implemented in the actual site
+    built on SODAR Core. For the API views in your site, make sure to test them
+    using e.g. ``TestAPIViewsBase`` and **not** ``TestCoreAPIViewsBase``.
+
+
+Debugging
+=========
+
+Debugging helpers and tips are detailed in this section.
+
+Profiling Middleware
+--------------------
+
+SODAR Core provides a cProfile using profiler for tracing back sources of page
+loading slowdowns. To enable the profiler middleware, include
+``projectroles.middleware.ProfilerMiddleware`` in ``MIDDLEWARE`` under your site
+configuration. It is recommended to use a settings variable for this similar to
+the example site configuration, where ``PROJECTROLES_ENABLE_PROFILING`` controls
+this.
+
+Once enabled, adding the ``?prof`` query string attribute to and URL displays
+the profiling information.

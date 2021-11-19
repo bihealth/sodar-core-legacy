@@ -605,6 +605,7 @@ class TestProjectCreateView(TestTaskflowBase):
             'description': 'description',
             'public_guest_access': False,
             'full_title': self.category.title + ' / TestProject',
+            'has_public_children': False,
             'sodar_uuid': project.sodar_uuid,
         }
 
@@ -684,6 +685,7 @@ class TestProjectUpdateView(TestTaskflowBase):
             'description': 'updated description',
             'public_guest_access': True,
             'full_title': self.category.title + ' / updated title',
+            'has_public_children': False,
             'sodar_uuid': self.project.sodar_uuid,
         }
 

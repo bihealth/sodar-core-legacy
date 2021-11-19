@@ -7,11 +7,11 @@ SODAR Core
 .. image:: https://github.com/bihealth/sodar-core/workflows/build/badge.svg
     :target: https://github.com/bihealth/sodar-core/actions?query=workflow%3ABuild
 
-.. image:: https://api.codacy.com/project/badge/Grade/404e8515825548b1aa5a44dbe3d45ece
-    :target: https://www.codacy.com/app/bihealth/sodar_core
+.. image:: https://app.codacy.com/project/badge/Grade/77c0057a041f4e0c9a0bfc79e9023e04
+    :target: https://www.codacy.com/app/bihealth/sodar-core/dashboard
 
 .. image:: https://app.codacy.com/project/badge/Coverage/77c0057a041f4e0c9a0bfc79e9023e04
-    :target: https://www.codacy.com/gh/bihealth/sodar_core/dashboard
+    :target: https://www.codacy.com/gh/bihealth/sodar-core/dashboard
 
 .. image:: https://img.shields.io/badge/License-MIT-green.svg
     :target: https://opensource.org/licenses/MIT
@@ -112,7 +112,7 @@ from PyPI as follows.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.5
+    pip install django-sodar-core==0.10.6
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

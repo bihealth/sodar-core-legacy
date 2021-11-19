@@ -66,8 +66,31 @@ sites.
 In the remainder of this document and other REST API documentation, *"UUID"*
 refers to the ``sodar_uuid`` field of each model unless otherwise noted.
 
-For permissions the API uses the same rules which are in effect in the SODAR Core
-GUI. That means you need to have appropriate project access for each operation.
+For permissions the API uses the same rules which are in effect in the SODAR
+Core GUI. That means you need to have appropriate project access for each
+operation.
+
+Project Type Restriction
+------------------------
+
+IF you want to explicitly restrict access for your API view to a specific
+project type, you can set the ``project_type`` attribute of your class to either
+``PROJECT_TYPE_PROJECT`` or ``PROJECT_TYPE_CATEGORY``. Attempt to call the class
+with the wrong project type will result in a ``400 Bad Request`` response.
+
+This works with any API view using ``SODARAPIProjectPermission`` as its
+permission class, which includes ``SODARAPIBaseProjectMixin`` and
+``SODARAPIGenericProjectMixin``. An example is shown below.
+
+.. code-block:: python
+
+    from rest_framework.generics import RetrieveAPIView
+    from projectroles.models import SODAR_CONSTANTS
+    from projectroles.views_api import CoreAPIGenericProjectMixin
+
+    class YourAPIView(SODARAPIGenericProjectMixin, RetrieveAPIView):
+        # ...
+        project_type = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 Return Data
 -----------

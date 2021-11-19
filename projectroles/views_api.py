@@ -9,7 +9,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.utils import timezone
 
 from rest_framework import serializers
-from rest_framework.exceptions import APIException, NotFound, PermissionDenied
+from rest_framework.exceptions import (
+    APIException,
+    NotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.generics import (
     CreateAPIView,
     ListAPIView,
@@ -92,6 +97,7 @@ CORE_API_ALLOWED_VERSIONS = [
     '0.10.3',
     '0.10.4',
     '0.10.5',
+    '0.10.6',
 ]
 
 
@@ -116,6 +122,9 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
 
     Requires implementing either permission_required or
     get_permission_required() in the view.
+
+    Project type can be restricted to PROJECT_TYPE_CATEGORY or
+    PROJECT_TYPE_PROJECT by setting the project_type attribute in the view.
     """
 
     def has_permission(self, request, view):
@@ -130,6 +139,21 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
         project = self.get_project(request=request, kwargs=view.kwargs)
         if not project:
             raise NotFound()
+
+        # Restrict project type
+        project_type = getattr(view, 'project_type', None)
+        p_types = [PROJECT_TYPE_CATEGORY, PROJECT_TYPE_PROJECT]
+        if project_type and project_type not in p_types:
+            raise ImproperlyConfigured(
+                'Invalid value "{}" for project_type, accepted values: '
+                '{}'.format(project_type, ', '.join(p_types))
+            )
+        elif project_type and project_type != project.type:
+            raise ValidationError(
+                'Project type "{}" not allowed for this API view'.format(
+                    project_type
+                )
+            )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)
 
@@ -218,9 +242,13 @@ class SODARAPIBaseProjectMixin(ProjectAccessMixin, SODARAPIBaseMixin):
     """
     API view mixin for the base DRF APIView class with project permission
     checking, but without serializers and other generic view functionality.
+
+    Project type can be restricted to PROJECT_TYPE_CATEGORY or
+    PROJECT_TYPE_PROJECT by setting the project_type attribute in the view.
     """
 
     permission_classes = [SODARAPIProjectPermission]
+    project_type = None
 
 
 class APIProjectContextMixin(ProjectAccessMixin):

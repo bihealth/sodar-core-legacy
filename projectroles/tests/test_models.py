@@ -307,6 +307,7 @@ class TestProject(ProjectMixin, TestCase):
             'sodar_uuid': self.project_sub.sodar_uuid,
             'description': '',
             'public_guest_access': False,
+            'has_public_children': False,
         }
         model_dict = model_to_dict(self.project_sub)
         # HACK: Can't compare markupfields like this. Better solution?
@@ -378,7 +379,7 @@ class TestProject(ProjectMixin, TestCase):
 
     def test_get_parents_top(self):
         """Test get parents function for top category"""
-        self.assertEqual(self.category_top.get_parents(), None)
+        self.assertEqual(self.category_top.get_parents(), [])
 
     def test_get_parents_sub(self):
         """Test get parents function for sub project"""

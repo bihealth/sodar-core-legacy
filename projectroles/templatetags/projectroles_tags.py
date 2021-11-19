@@ -236,19 +236,6 @@ def get_pr_link_state(app_urls, request, link_names=None):
 
 
 @register.simple_tag
-def get_star(project, user):
-    """Return HTML for project star tag state if it is set"""
-    if user.has_perm('projectroles.view_project', project) and get_tag_state(
-        project, user, PROJECT_TAG_STARRED
-    ):
-        return (
-            '<i class="iconify text-warning sodar-tag-starred" '
-            'data-icon="mdi:star"></i>'
-        )
-    return ''
-
-
-@register.simple_tag
 def get_help_highlight(user):
     """
     Return classes to highlight navbar help link if user has recently signed in

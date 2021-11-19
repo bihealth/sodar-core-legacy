@@ -675,6 +675,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(category_obj)
@@ -737,6 +738,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(project_obj)
@@ -994,6 +996,7 @@ class TestSyncRemoteDataCreate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE + ' / ' + new_project_title,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(new_project_uuid),
         }
         model_dict = model_to_dict(new_project_obj)
@@ -1427,6 +1430,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(self.category_obj)
@@ -1453,6 +1457,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(self.project_obj)
@@ -1802,6 +1807,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_CATEGORY_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_CATEGORY_UUID),
         }
         model_dict = model_to_dict(self.category_obj)
@@ -1828,6 +1834,7 @@ class TestSyncRemoteDataUpdate(TestSyncRemoteDataBase):
             'public_guest_access': False,
             'submit_status': SUBMIT_STATUS_OK,
             'full_title': SOURCE_PROJECT_FULL_TITLE,
+            'has_public_children': False,
             'sodar_uuid': uuid.UUID(SOURCE_PROJECT_UUID),
         }
         model_dict = model_to_dict(self.project_obj)

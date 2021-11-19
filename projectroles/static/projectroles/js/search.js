@@ -25,25 +25,6 @@ $(document).ready(function() {
             },
             dom: 'tp',
             fnDrawCallback: function() {
-                // Highlight pagination
-                var currentPage = $(this).DataTable().page.info().page;
-
-                $(this).closest('.card-body').find(
-                    '.sodar-paginate-button').each(function() {
-                    var btnPage = parseInt($(this).text());
-
-                    if (btnPage === currentPage + 1) {
-                        $(this).removeClass('btn-outline-light').removeClass(
-                            'text-primary').addClass('btn-primary').addClass(
-                                'text-white');
-                    } else {
-                        $(this).addClass('btn-outline-light').addClass(
-                            'text-primary').removeClass('btn-primary').removeClass(
-                                'text-white');
-                    }
-                });
-
-                // Update overflow status
                 modifyCellOverflow();
             }
         });

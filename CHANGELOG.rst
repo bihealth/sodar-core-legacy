@@ -7,6 +7,73 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.6 (2021-11-19)
+====================
+
+Added
+-----
+
+- **General**
+    - ``LOGGING_LEVEL`` setting in example configs (#822)
+    - ``ProfilingMiddleware`` for cProfile profiling in debug more (#839)
+    - ``PROJECTROLES_ENABLE_PROFILING`` setting for profiling (#839)
+- **Projectroles**
+    - ``cleanup_method`` arg for ``assert_response()`` (#823)
+    - Timeline object and data helpers in site and backend plugins (#832)
+    - ``ManagementCommandLogger`` helper (#844)
+    - ``get_email_user()`` helper (#845)
+    - Project type restriction in API views with ``project_type`` attribute (#850)
+    - ``Project.has_public_children`` field (#851)
+    - Email sending for additional user emails (#861)
+    - ``user_email_additional`` app setting (#861)
+    - ``email.get_user_addr()`` helper (#861)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to Chromedriver v96 (#818, #847, #852)
+    - Use ``LOGGING_LEVEL`` in example ``set_logging()`` (#822)
+    - Upgrade minimum Django version to v3.2.9 (#835, #848)
+    - Improve management command output and logging (#844)
+    - Optimize project list queries (#851)
+- **Filesfolders**
+    - Refactor ``checkAll()`` helper (#816)
+    - Restrict project type in API views (#850)
+- **Projectroles**
+    - Upgrade DataTables includes on search results page (#841, #856)
+    - Improve email subject prefix formatting (#829)
+    - Update user representations in emails (#845)
+- **Timeline**
+    - Refactor ``TimelineAPI``
+
+Fixed
+-----
+
+- **General**
+    - Github Actions CI failure by old package version (#821)
+    - Codacy code quality badge in README (#815)
+- **Appalerts**
+    - Random crashes in ``TestTitlebarBadge.test_alert_dismiss_all`` (#811)
+- **Projectroles**
+    - ``sodar-overflow-container`` failing with certain tables (#830)
+    - Sort icons not displayed on search results page (#841)
+    - App alert badge content wrapping (#846)
+    - Nested categories with public children not displayed correctly for anon users (#853, #855)
+    - Public and remote icons breaking project title bar layout (#859)
+- **Timeline**
+    - Crash from invalid plugin name in ``get_event_description()`` (#831)
+    - Redundant database queries in ``get_event_description()`` (#834)
+    - Site and backend plugins not supported in ``get_event_description()`` (#832)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``get_star()`` template tag (#851)
+    - ``Project.has_public_children()`` method: use ``has_public_children`` instead (#851)
+
+
 v0.10.5 (2021-09-20)
 ====================
 

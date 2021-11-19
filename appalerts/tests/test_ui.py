@@ -1,5 +1,7 @@
 """UI tests for the appalerts app"""
 
+import time
+
 from django.urls import reverse
 
 from selenium.common.exceptions import NoSuchElementException
@@ -271,4 +273,5 @@ class TestTitlebarBadge(TestAlertUIBase):
                 (By.CLASS_NAME, 'sodar-app-alert-legend')
             )
         )
+        time.sleep(2)  # HACK: Timing issue, must wait just in case
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)

@@ -2,12 +2,20 @@
 
 from django.contrib.auth.models import AnonymousUser
 from django.forms.models import model_to_dict
+from django.test import RequestFactory
 from django.urls import reverse
 
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.plugins import get_backend_api
+from projectroles.tests.test_models import (
+    RemoteSiteMixin,
+    REMOTE_SITE_NAME,
+    REMOTE_SITE_URL,
+)
 
+# Filesfolders dependency
+from filesfolders.tests.test_models import FolderMixin
 
 from timeline.tests.test_models import (
     TestProjectEventBase,
@@ -32,19 +40,29 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
 class TestTimelineAPI(
-    ProjectEventMixin, ProjectEventStatusMixin, TestProjectEventBase
+    ProjectEventMixin,
+    ProjectEventStatusMixin,
+    RemoteSiteMixin,
+    FolderMixin,
+    TestProjectEventBase,
 ):
+    def _get_request(self, user):
+        """Return mock request"""
+        request = RequestFactory().get(
+            'timeline:list', kwargs={'project': self.project}
+        )
+        request.user = user
+        return request
+
     def setUp(self):
         super().setUp()
         self.timeline = get_backend_api('timeline_backend')
-
-        # Init user
-        # self.user = self.make_user('user')
+        self.superuser = self.make_user('superuser')
+        self.superuser.is_superuser = True
+        self.superuser.save()
 
     def test_add_event(self):
         """Test adding an event"""
-
-        # Assert precondition
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -57,7 +75,6 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        # Assert object status after insert
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
 
@@ -74,7 +91,6 @@ class TestTimelineAPI(
         }
         self.assertEqual(model_to_dict(event), expected)
 
-        # Test Init status
         status = event.get_current_status()
         expected_status = {
             'id': status.pk,
@@ -87,8 +103,6 @@ class TestTimelineAPI(
 
     def test_add_event_with_status(self):
         """Test adding an event with status"""
-
-        # Assert preconditions
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -103,9 +117,8 @@ class TestTimelineAPI(
             status_desc='OK',
             status_extra_data={},
         )
-        status = event.get_current_status()
 
-        # Assert object status after insert
+        status = event.get_current_status()
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 2)
 
@@ -134,8 +147,6 @@ class TestTimelineAPI(
     def test_add_event_custom_init(self):
         """Test adding an event with custom INIT status"""
         custom_init_desc = 'Custom init'
-
-        # Assert precondition
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -150,10 +161,9 @@ class TestTimelineAPI(
             status_desc=custom_init_desc,
         )
 
-        # Assert object status after insert
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 1)  # Init
-        # Test Init status
+
         status = event.get_current_status()
         expected_status = {
             'id': status.pk,
@@ -166,8 +176,6 @@ class TestTimelineAPI(
 
     def test_add_event_no_user(self):
         """Test adding an event with no user"""
-
-        # Assert precondition
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -180,7 +188,6 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        # Assert object status after insert
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 1)
 
@@ -199,8 +206,6 @@ class TestTimelineAPI(
 
     def test_add_event_anon_user(self):
         """Test adding an event with AnonymousUser"""
-
-        # Assert precondition
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -213,15 +218,12 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        # Assert object status after insert
         self.assertEqual(ProjectEvent.objects.all().count(), 1)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 1)
         self.assertIsNone(event.user)
 
     def test_add_event_invalid_app(self):
         """Test adding an event with an invalid app name (should fail)"""
-
-        # Assert preconditions
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -235,14 +237,11 @@ class TestTimelineAPI(
                 extra_data={'test_key': 'test_val'},
             )
 
-        # Assert object status
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
     def test_add_event_invalid_status(self):
         """Test adding an event with an invalid status type"""
-
-        # Assert preconditions
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
@@ -257,14 +256,11 @@ class TestTimelineAPI(
                 extra_data={'test_key': 'test_val'},
             )
 
-        # Assert object status
         self.assertEqual(ProjectEvent.objects.all().count(), 0)
         self.assertEqual(ProjectEventStatus.objects.all().count(), 0)
 
     def test_add_object(self):
         """Test adding an object to an event"""
-
-        # Assert precondition
         self.assertEqual(ProjectEventObjectRef.objects.all().count(), 0)
 
         event = self.timeline.add_event(
@@ -283,9 +279,7 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        # Assert object status after insert
         self.assertEqual(ProjectEventObjectRef.objects.all().count(), 1)
-
         expected = {
             'id': ref.pk,
             'event': event.pk,
@@ -295,12 +289,10 @@ class TestTimelineAPI(
             'object_uuid': temp_obj.sodar_uuid,
             'extra_data': {'test_key': 'test_val'},
         }
-
         self.assertEqual(model_to_dict(ref), expected)
 
     def test_get_project_events(self):
         """Test get_project_events()"""
-
         event_normal = self.timeline.add_event(
             project=self.project,
             app_name='projectroles',
@@ -309,7 +301,6 @@ class TestTimelineAPI(
             description='description',
             extra_data={'test_key': 'test_val'},
         )
-
         event_classified = self.timeline.add_event(
             project=self.project,
             app_name='projectroles',
@@ -320,7 +311,6 @@ class TestTimelineAPI(
             extra_data={'test_key': 'test_val'},
         )
 
-        # Test non-classified first
         events = self.timeline.get_project_events(
             self.project, classified=False
         )
@@ -334,7 +324,6 @@ class TestTimelineAPI(
 
     def test_get_object_url(self):
         """Test get_object_url()"""
-
         expected_url = reverse(
             'timeline:list_object',
             kwargs={
@@ -348,7 +337,6 @@ class TestTimelineAPI(
 
     def test_get_object_url_no_project(self):
         """Test get_object_url() without project"""
-
         expected_url = reverse(
             'timeline:list_object_site',
             kwargs={
@@ -361,7 +349,6 @@ class TestTimelineAPI(
 
     def test_get_object_link(self):
         """Test get_object_link()"""
-
         expected_url = reverse(
             'timeline:list_object',
             kwargs={
@@ -375,7 +362,6 @@ class TestTimelineAPI(
 
     def test_get_object_link_no_project(self):
         """Test get_object_link() without project"""
-
         expected_url = reverse(
             'timeline:list_object_site',
             kwargs={
@@ -385,3 +371,125 @@ class TestTimelineAPI(
         )
         link = self.timeline.get_object_link(self.user_owner, None)
         self.assertIn(expected_url, link)
+
+    def test_get_event_description(self):
+        """Test getting event description"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='description',
+            extra_data={'test_key': 'test_val'},
+        )
+        self.assertEqual(
+            self.timeline.get_event_description(event), event.description
+        )
+
+    def test_get_event_description_user(self):
+        """Test getting event description with User object"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        event.add_object(
+            obj=self.user_owner,
+            label='obj',
+            name=self.user_owner.username,
+        )
+        desc = self.timeline.get_event_description(event)
+        self.assertIn(self.user_owner.username, desc)
+        self.assertIn('sodar-tl-object-link', desc)
+
+    def test_get_event_description_project(self):
+        """Test getting event description with Project object"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        event.add_object(
+            obj=self.project,
+            label='obj',
+            name=self.project.title,
+        )
+        desc = self.timeline.get_event_description(
+            event, self._get_request(self.user_owner)
+        )
+        self.assertIn(self.project.title, desc)
+        self.assertIn('sodar-tl-project-link', desc)
+
+    def test_get_event_description_remote_site(self):
+        """Test getting event description with RemoteSite object"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        site = self._make_site(name=REMOTE_SITE_NAME, url=REMOTE_SITE_URL)
+        event.add_object(
+            obj=site,
+            label='obj',
+            name=site.name,
+        )
+        desc = self.timeline.get_event_description(
+            event, self._get_request(self.superuser)
+        )
+        self.assertIn(site.name, desc)
+        self.assertIn('sodar-tl-object-link', desc)
+
+    def test_get_event_description_plugin_app(self):
+        """Test getting event description with app plugin"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='filesfolders',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        folder = self._make_folder(
+            name='folder',
+            project=self.project,
+            folder=None,
+            description='',
+            owner=self.user_owner,
+        )
+        event.add_object(
+            obj=folder,
+            label='obj',
+            name=folder.name,
+        )
+        desc = self.timeline.get_event_description(
+            event, self._get_request(self.superuser)
+        )
+        self.assertIn(folder.name, desc)
+        self.assertIn('sodar-tl-object-link', desc)
+
+    def test_get_event_description_invalid_app(self):
+        """Test getting event description with non-existing app plugin"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='projectroles',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        event.app = 'NOT_AN_ACTUAL_APP'
+        event.save()
+        event.add_object(
+            obj=self.project,
+            label='obj',
+            name=self.project.title,
+        )
+        desc = self.timeline.get_event_description(
+            event, self._get_request(self.superuser)
+        )
+        self.assertNotIn(self.project.title, desc)
+        self.assertIn('sodar-tl-plugin-error', desc)

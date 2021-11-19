@@ -482,6 +482,9 @@ SAML2_AUTH = {
 # Logging
 # ------------------------------------------------------------------------------
 
+# Custom logging level
+LOGGING_LEVEL = env.str('LOGGING_LEVEL', 'DEBUG' if DEBUG else 'ERROR')
+
 # List of apps to include in logging
 LOGGING_APPS = env.list(
     'LOGGING_APPS',
@@ -490,16 +493,17 @@ LOGGING_APPS = env.list(
         'siteinfo',
         'sodarcache',
         'taskflowbackend',
+        'timeline',
     ],
 )
 
-# Path for file logging. If not set, will log only to console.
+# Path for file logging. If not set, will log only to console
 LOGGING_FILE_PATH = env.str('LOGGING_FILE_PATH', None)
 
 
-def set_logging(debug, level=None):
+def set_logging(level=None):
     if not level:
-        level = 'DEBUG' if debug else 'ERROR'
+        level = 'DEBUG' if DEBUG else 'ERROR'
     app_logger_config = {
         'level': level,
         'handlers': ['console', 'file'] if LOGGING_FILE_PATH else ['console'],
@@ -532,7 +536,7 @@ def set_logging(debug, level=None):
     }
 
 
-LOGGING = set_logging(DEBUG)
+LOGGING = set_logging(LOGGING_LEVEL)
 
 
 # General site settings
@@ -634,6 +638,11 @@ PROJECTROLES_CUSTOM_JS_INCLUDES = env.list(
 PROJECTROLES_CUSTOM_CSS_INCLUDES = env.list(
     'PROJECTROLES_CUSTOM_CSS_INCLUDES', None, []
 )
+
+# Enable profiling for debugging/analysis
+PROJECTROLES_ENABLE_PROFILING = env.bool('PROJECTROLES_ENABLE_PROFILING', False)
+if PROJECTROLES_ENABLE_PROFILING:
+    MIDDLEWARE += ['projectroles.middleware.ProfilerMiddleware']
 
 
 # Bgjobs app settings

@@ -52,6 +52,7 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
+    ProjectUserTag,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
@@ -437,41 +438,40 @@ class ProjectListContextMixin:
         :param user: User for which the projects are visible
         :param parent: Project object or None
         """
-        if user.is_superuser:
-            project_list = Project.objects.filter(
-                parent=parent, submit_status='OK'
-            ).order_by('title')
-        elif user.is_anonymous:
-            allow_anon = getattr(
-                settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False
-            )
-            if not allow_anon:
+        project_list = Project.objects.filter(
+            parent=parent, submit_status=SUBMIT_STATUS_OK
+        )
+        if user.is_anonymous:
+            if not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
                 return None
             project_list = [
                 p
-                for p in Project.objects.filter(parent=parent).order_by('title')
-                if p.public_guest_access or p.has_public_children()
+                for p in project_list
+                if p.public_guest_access or p.has_public_children
             ]
-        else:
+        elif not user.is_superuser:
             project_list = [
                 p
-                for p in Project.objects.filter(
-                    parent=parent, submit_status='OK'
-                ).order_by('title')
-                if p.has_role(user, include_children=True)
+                for p in project_list
+                if p.public_guest_access
+                or p.has_public_children
+                or (
+                    user.is_authenticated
+                    and p.has_role(user, include_children=True)
+                )
             ]
 
         def _append_projects(project):
             lst = [project]
             for c in project.get_children():
                 if (
-                    user.is_authenticated
-                    and (
-                        user.is_superuser
-                        or c.has_role(user, include_children=True)
+                    user.is_superuser
+                    or c.public_guest_access
+                    or c.has_public_children
+                    or (
+                        user.is_authenticated
+                        and c.has_role(user, include_children=True)
                     )
-                    or user.is_anonymous
-                    and c.public_guest_access
                 ):
                     lst += _append_projects(c)
             return lst
@@ -530,6 +530,13 @@ class ProjectListContextMixin:
         context['project_custom_cols'] = self._get_custom_cols(
             self.request.user, context['project_list']
         )
+        if self.request.user.is_authenticated:
+            context['starred_projects'] = [
+                t.project
+                for t in ProjectUserTag.objects.filter(
+                    user=self.request.user, name=PROJECT_TAG_STARRED
+                )
+            ]
         context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
             context['project_custom_cols']
         )
@@ -986,8 +993,10 @@ class ProjectModifyMixin:
 
     @classmethod
     def _handle_local_save(cls, project, owner, project_settings):
-        """Handle local saving of project data if SODAR Taskflow is not
-        enabled"""
+        """
+        Handle local saving of project data if SODAR Taskflow is not
+        enabled.
+        """
 
         # Modify owner role if it does exist
         try:
@@ -1223,14 +1232,25 @@ class ProjectModifyMixin:
                     'plugin "{}": {}'.format(p.name, ex)
                 )
 
+        # If public access was updated, update has_public_children for parents
+        if (
+            old_project
+            and project.parent
+            and old_project.public_guest_access != project.public_guest_access
+        ):
+            try:
+                project._update_public_children()
+            except Exception as ex:
+                logger.error(
+                    'Exception in updating has_public_children: {}'.format(ex)
+                )
+
+        # Once all is done, update timeline event, create alerts and emails
         if tl_event:
             tl_event.set_status('OK')
-
-        # Create app alerts and/or send emails
         self._notify_users(
             project, action, owner, old_data, old_parent, request
         )
-
         return project
 
 

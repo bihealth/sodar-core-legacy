@@ -216,11 +216,11 @@ Implementing the following is **optional**:
 - ``info_settings``: List of names for app-specific Django settings to be
   displayed for administrators in the siteinfo app.
 - ``get_taskflow_sync_data()``: Applicable only if working with
-  ``sodar_taskflow`` and iRODS
-- ``get_object_link()``: If Django models are associated with the app. Used e.g.
-  by ``django-sodar-timeline``.
+  ``sodar_taskflow`` and iRODS.
+- ``get_object_link()``: Return object link for a Timeline event.
+- ``get_extra_data_link()``: Return extra data link for a Timeline event.
 - ``search()``: Function called when searching for data related to the app if
-  search is enabled
+  search is enabled.
 - ``get_statistics()``: Return statistics for the siteinfo app. See details in
   :ref:`the siteinfo documentation <app_siteinfo>`.
 - ``get_project_list_value()``: A function which **must** be implemented if

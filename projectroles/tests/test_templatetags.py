@@ -567,18 +567,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
 
     # TODO: Test get_pr_link_state()
 
-    def test_get_star(self):
-        """Test get_star()"""
-        user_no_roles = self.make_user('user_no_roles')
-        self.assertEqual(tags.get_star(self.project, self.user), '')
-        set_tag_state(self.project, self.user, name=PROJECT_TAG_STARRED)
-        self.assertEqual(
-            tags.get_star(self.project, self.user),
-            '<i class="iconify text-warning sodar-tag-starred" '
-            'data-icon="mdi:star"></i>',
-        )
-        self.assertEqual(tags.get_star(self.project, user_no_roles), '')
-
     def test_get_help_highlight(self):
         """Test get_help_highlight()"""
         self.assertEqual(

@@ -1,13 +1,13 @@
-import logging
 import os
-
 import urllib.request
 
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from projectroles.management.logging import ManagementCommandLogger
 
-logger = logging.getLogger(__name__)
+
+logger = ManagementCommandLogger(__name__)
 
 
 # Local constants
@@ -22,7 +22,7 @@ COLL_URL = (
 
 
 class Command(BaseCommand):
-    help = 'Retrieve or update JSON Iconify icons'
+    help = 'Retrieves or updates JSON Iconify icons'
 
     def __init__(
         self, stdout=None, stderr=None, no_color=False, sodar_url=None

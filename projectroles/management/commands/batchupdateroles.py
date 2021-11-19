@@ -1,5 +1,4 @@
 from email.utils import parseaddr
-import logging
 import sys
 
 from django.conf import settings
@@ -8,6 +7,7 @@ from django.core.management.base import BaseCommand
 from django.http import HttpRequest
 from django.utils import timezone
 
+from projectroles.management.logging import ManagementCommandLogger
 from projectroles.models import (
     Project,
     Role,
@@ -20,7 +20,7 @@ from projectroles.utils import get_expiry_date, build_secret
 
 
 User = auth.get_user_model()
-logger = logging.getLogger(__name__)
+logger = ManagementCommandLogger(__name__)
 
 
 # SODAR constants
@@ -229,6 +229,7 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             self.issuer = User.objects.filter(
                 username=settings.PROJECTROLES_DEFAULT_ADMIN
             ).first()
+
         if not self.issuer:
             logger.error(
                 'Issuer not found with username "{}"'.format(options['issuer'])
@@ -236,7 +237,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             sys.exit(1)
 
         file = options['file']
-
         try:
             with open(file, 'r') as f:
                 file_data = [d for d in (line.strip() for line in f) if d]

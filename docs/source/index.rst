@@ -6,14 +6,14 @@ Welcome to the SODAR Core documentation!
 SODAR Core is a framework for Django web application development.
 
 It was conceived to facilitate the creation of scientific data management and
-analysis web applications (but can be useful in other contexts as well).
+analysis web applications, but can be useful in other contexts as well.
 In that it is similar to the CMS or ecommerce frameworks that you can find
 `Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
 
-How to read this manual?
-------------------------
+How to Read This Manual
+-----------------------
 
-There is two ways:
+There are two ways:
 
 Front to Back
   If you have the time and patience, reading the whole manual will teach
@@ -23,7 +23,7 @@ Jump Around (recommended)
   Start with :ref:`for_the_impatient` and/or :ref:`user_stories`, skim over the
   summary of each app, and explore what interests you most.
 
-What SODAR Core is and what it is not
+What SODAR Core Is and What It is Not
 -------------------------------------
 
 SODAR Core
@@ -39,12 +39,11 @@ SODAR Core
   knowledge; you probably do not want to base your first Django web application
   on SODAR Core).
 
-What's inside SODAR Core?
--------------------------
+What's Inside SODAR Core
+------------------------
 
 The full list of apps are shown in the table of contents (on the left if you
-are reading the HTML version of this documentation) and here are some
-highlights:
+are reading the HTML version of this documentation). Here are some highlights:
 
 - Project-based user access control
 - Dynamic app content management
@@ -54,8 +53,8 @@ highlights:
 - Caching and aggregation of data from external services
 - Tracking site information and statistics
 
-What's inside this documentation?
----------------------------------
+What's Inside This Documentation
+--------------------------------
 
 Overview & Getting Started
   This part aims at getting you an birds-eye view of SODAR Core and its usage.
@@ -69,8 +68,8 @@ Project Info
   This part of the documentation provides meta information about the project
   and the full changelog.
 
-What's not inside this documentation?
--------------------------------------
+What's Not Inside This Documentation
+------------------------------------
 
 You should know the following before this documentation is useful to you:
 
