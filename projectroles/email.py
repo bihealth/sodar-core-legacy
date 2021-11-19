@@ -1,5 +1,7 @@
 """Email creation and sending for the projectroles app"""
+
 import logging
+import re
 
 from django.conf import settings
 from django.contrib import auth, messages
@@ -22,6 +24,9 @@ EMAIL_SENDER = settings.EMAIL_SENDER
 DEBUG = settings.DEBUG
 SITE_TITLE = settings.SITE_INSTANCE_TITLE
 ADMIN_RECIPIENT = settings.ADMINS[0]
+
+# Local constants
+EMAIL_RE = re.compile(r'(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)')
 
 
 # Generic Elements -------------------------------------------------------------
@@ -347,14 +352,24 @@ def get_user_addr(user):
     :param user: User object
     :return: list
     """
+
+    def _validate(user, email):
+        if re.match(EMAIL_RE, email):
+            return True
+        logger.error(
+            'Invalid email for user {}: {}'.format(user.username, email)
+        )
+
     ret = []
-    if user.email:
+    if user.email and _validate(user, user.email):
         ret.append(user.email)
     add_email = app_settings.get_app_setting(
         'projectroles', 'user_email_additional', user=user
     )
     if add_email:
-        ret += [e.strip() for e in add_email.strip().split(';')]
+        for e in add_email.strip().split(';'):
+            if _validate(user, e):
+                ret.append(e)
     return ret
 
 

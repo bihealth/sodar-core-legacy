@@ -392,7 +392,7 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
         )
 
     def test_get_user_addr(self):
-        """Test get_user_addr() with a standard user email"""
+        """Test get_user_addr() with standard user email"""
         self.assertEqual(get_user_addr(self.user), [self.user.email])
 
     def test_get_user_addr_additional(self):
@@ -417,7 +417,24 @@ class TestEmailSending(ProjectMixin, RoleAssignmentMixin, TestCase):
             user=self.user,
         )
         self.user.email = ''
-        self.user.save()
         self.assertEqual(
             get_user_addr(self.user), [USER_ADD_EMAIL, USER_ADD_EMAIL2]
+        )
+
+    def test_get_user_addr_invalid(self):
+        """Test get_user_addr() with invalid user email"""
+        self.user.email = INVALID_EMAIL
+        self.assertEqual(get_user_addr(self.user), [])
+
+    def test_get_user_addr_additional_invalid(self):
+        """Test get_user_addr() with invalid additional email"""
+        app_settings.set_app_setting(
+            'projectroles',
+            'user_email_additional',
+            '{};{}'.format(USER_ADD_EMAIL, INVALID_EMAIL),
+            user=self.user,
+        )
+        self.assertEqual(
+            get_user_addr(self.user),
+            [self.user.email, USER_ADD_EMAIL],
         )
