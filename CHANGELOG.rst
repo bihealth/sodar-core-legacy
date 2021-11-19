@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Fixed
+-----
+
+- **Projectroles**
+    - ``ManagementCommandLogger`` crash by unset ``LOGGING_LEVEL`` (#862)
+
+
 v0.10.6 (2021-11-19)
 ====================
 
