@@ -289,6 +289,7 @@ class TestCommonTemplateTags(TestTemplateTagsBase):
             c_tags.highlight_search_term(item, term),
             'Some <span class="sodar-search-highlight">Highlight</span>ed Text',
         )
+        self.assertEqual(c_tags.highlight_search_term(item, ''), item)
 
     def test_get_info_link(self):
         """Test get_info_link()"""

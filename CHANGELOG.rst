@@ -15,6 +15,8 @@ Fixed
 
 - **Projectroles**
     - ``ManagementCommandLogger`` crash by unset ``LOGGING_LEVEL`` (#862)
+    - ``highlight_search_term()`` crash on invalid term input (#867)
+    - Search bar allowing invalid input (#868)
 
 
 v0.10.6 (2021-11-19)
