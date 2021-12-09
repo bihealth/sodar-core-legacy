@@ -16,7 +16,20 @@ v0.10.7 (WIP)
 Release Highlights
 ==================
 
-TBD
+- Search bug fixes
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The following minimum versions have been bumped:
+
+- ``django>=3.2.10, <3.3``
+- ``python-ldap==3.4.0``
 
 
 v0.10.6 (2021-11-19)

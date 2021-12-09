@@ -10,6 +10,13 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.10 (#869)
+    - Upgrade to python-ldap v3.4.0 (#871)
+
 Fixed
 -----
 
