@@ -16,6 +16,8 @@ Changed
 - **General**
     - Upgrade minimum Django version to v3.2.10 (#869)
     - Upgrade to python-ldap v3.4.0 (#871)
+- **Projectroles**
+    - HTTP 403 raised instead of 400 if project type disallowed by API view (#872)
 
 Fixed
 -----
@@ -24,6 +26,7 @@ Fixed
     - ``ManagementCommandLogger`` crash by unset ``LOGGING_LEVEL`` (#862)
     - ``highlight_search_term()`` crash on invalid term input (#867)
     - Search bar allowing invalid input (#868)
+    - Wrong project type displayed in project type restriction API response (#872)
 
 
 v0.10.6 (2021-11-19)
