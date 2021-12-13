@@ -249,9 +249,10 @@ def get_email_footer():
 
     :return: string
     """
-    return getattr(
-        settings, 'PROJECTROLES_EMAIL_FOOTER', None
-    ) or MESSAGE_FOOTER.format(
+    custom_footer = getattr(settings, 'PROJECTROLES_EMAIL_FOOTER', None)
+    if custom_footer:
+        return '\n' + custom_footer
+    return MESSAGE_FOOTER.format(
         site_title=SITE_TITLE,
         admin_name=ADMIN_RECIPIENT[0],
         admin_email=ADMIN_RECIPIENT[1],
