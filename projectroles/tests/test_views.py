@@ -240,6 +240,14 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             ),
         )
 
+    def test_render_non_text_input(self):
+        """Test non-text input from standard search (should redirect)"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search') + '?s=+++'
+            )
+            self.assertRedirects(response, reverse('home'))
+
     def test_render_advanced(self):
         """Test input from advanced search"""
         new_project = self._make_project(

@@ -75,8 +75,10 @@ Project Type Restriction
 
 IF you want to explicitly restrict access for your API view to a specific
 project type, you can set the ``project_type`` attribute of your class to either
-``PROJECT_TYPE_PROJECT`` or ``PROJECT_TYPE_CATEGORY``. Attempt to call the class
-with the wrong project type will result in a ``400 Bad Request`` response.
+``PROJECT_TYPE_PROJECT`` or ``PROJECT_TYPE_CATEGORY`` as defined in
+``SODAR_CONSTANTS``. A request to the view using the wrong project type will
+result in a ``403 Not Authorized`` response, with the reason displayed in the
+``detail`` view.
 
 This works with any API view using ``SODARAPIProjectPermission`` as its
 permission class, which includes ``SODARAPIBaseProjectMixin`` and

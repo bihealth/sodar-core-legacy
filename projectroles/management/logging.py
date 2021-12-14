@@ -15,7 +15,8 @@ class ManagementCommandLogger:
     logger = None
 
     #: Site logging level
-    site_level = getattr(logging, settings.LOGGING_LEVEL, logging.INFO)
+    log_level = getattr(settings, 'LOGGING_LEVEL', 'INFO')
+    site_level = getattr(logging, log_level, 'INFO')
 
     #: Whether console logging is enabled
     console_log = CONSOLE_HANDLER in settings.LOGGING.get('handlers', {}).keys()

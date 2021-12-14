@@ -76,22 +76,43 @@ Usage
 =====
 
 When logged in as a superuser, you can find the "Site Info" link in your user
-dropdown menu in the top right corner of the site.
+dropdown menu in the top right corner of the site. This application is only
+available for users with superuser status.
 
-This application is not available for users with a non-superuser status.
+The UI is presented under three tabs:
+
+General
+    General site information along with statistics provided by the
+    ``get_statistics()`` methods implemented in app plugins.
+Apps
+    List of installed and enabled project, site and backend app plugins.
+Settings
+    Django settings for the site. Contains settings from apps as specified in
+    the ``info_settings`` member variable in the app plugin.
+
+
+.. figure:: _static/app_siteinfo/site_info.png
+    :align: center
+    :scale: 60%
+
+    Siteinfo application with the General tab selected
 
 
 Providing App Statistics
 ------------------------
 
 In your project app or backend plugin, implement the ``get_statistics()``
-function. It should return a dictionary containing, for each statistics item,
-a program friendly key and certain member fields:
+method. It should return a dictionary containing, for each statistics item, a
+program friendly key and certain member fields:
 
-- ``label``: Human readable label for the statistics item.
-- ``value``: The value to be rendered
-- ``url``: The url to link to from the value for additional information (optional)
-- ``description``: Additional information (optional)
+``label``
+    Human readable label for the statistics item.
+``value``
+    The value to be rendered.
+``url``
+    The url to link to from the value for additional information (optional).
+``description``
+    Additional information (optional).
 
 Example:
 
@@ -103,6 +124,29 @@ Example:
                 'label': 'Some statistic',
                 'value': 9000,
                 'url': reverse('home'),
-                'description': 'More information here'
+                'description': 'More information here',
             }
         }
+
+Providing Site Settings
+-----------------------
+
+The site settings to be presented in the :guilabel:`Settings` tab should be
+provided as a list in the ``info_settings`` variable of the app plugin.
+
+Example:
+
+.. code-block:: python
+
+    info_settings = [
+        'FILESFOLDERS_LINK_BAD_REQUEST_MSG',
+        'FILESFOLDERS_MAX_ARCHIVE_SIZE',
+        'FILESFOLDERS_MAX_UPLOAD_SIZE',
+        'FILESFOLDERS_SERVE_AS_ATTACHMENT',
+        'FILESFOLDERS_SHOW_LIST_COLUMNS',
+    ]
+
+.. warning::
+
+    For information security, we recommend against including settings containing
+    secret values such as passwords to be displayed in the siteinfo app.

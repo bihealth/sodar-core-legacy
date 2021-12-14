@@ -1,4 +1,4 @@
 # Optional LDAP dependencies go here
 
 django-auth-ldap==2.4.0
-python-ldap==3.3.1
+python-ldap==3.4.0

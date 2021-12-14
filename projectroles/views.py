@@ -633,6 +633,7 @@ class ProjectSearchResultsView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
         plugins = get_active_plugins(plugin_type='project_app')
+        search_terms = []
         search_type = None
         keyword_input = []
         search_keywords = {}
@@ -647,19 +648,18 @@ class ProjectSearchResultsView(
                 keyword_input = self.request.GET['k'].strip().split(' ')
             search_input = ''  # Clears input for basic search
 
-        else:
+        else:  # Single term search
             search_input = self.request.GET.get('s').strip()
             search_split = search_input.split(' ')
             search_term = search_split[0].strip()
-
             for i in range(1, len(search_split)):
                 s = search_split[i].strip()
                 if ':' in s:
                     keyword_input.append(s)
                 elif s != '':
                     search_term += ' ' + s.lower()
-
-            search_terms = [search_term]
+            if search_term:
+                search_terms = [search_term]
 
         for s in keyword_input:
             kw = s.split(':')[0].lower().strip()
@@ -731,6 +731,13 @@ class ProjectSearchResultsView(
             context['app_search_data'].append(search_res)
 
         return context
+
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(*args, **kwargs)
+        if not context['search_terms']:
+            messages.error(request, 'No search terms provided.')
+            return redirect(reverse('home'))
+        return super().get(request, *args, **kwargs)
 
 
 class ProjectAdvancedSearchView(

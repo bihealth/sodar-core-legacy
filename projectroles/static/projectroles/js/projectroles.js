@@ -95,8 +95,7 @@ $(document).ready(function () {
 // (not counting keyword)
 function modifySearch() {
     var v = $('#sodar-nav-search-input').val();
-
-    if (v.length > 2) {
+    if (v.trim().length > 2) {
         $('#sodar-nav-search-submit').attr('disabled', false);
     } else {
         $('#sodar-nav-search-submit').attr('disabled', true);

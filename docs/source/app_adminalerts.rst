@@ -89,8 +89,52 @@ output:
 Usage
 =====
 
-When logged in as a superuser, you can find the "Admin Alerts" option in your
-user dropdown menu in the top right corner of the site. Using the UI, you can
-add, modify and delete alerts shown to users.
+When logged in as a superuser, you can find the :guilabel:`Admin Alerts` option
+in your user dropdown menu in the top right corner of the site. This application
+is only available for users with superuser status.
 
-This application is not available for users with a non-superuser status.
+The initial view displays a list of alerts along with their active/inactive
+status. For each alert there is a dropdown for updating or deleting the alert.
+The :guilabel:`Status` column active/inactive badge doubles as a button for
+toggling the alert status. Inactive alerts will not be shown to users.
+
+.. figure:: _static/app_adminalerts/admin_alerts.png
+    :align: center
+    :scale: 60%
+
+    Admin alert list
+
+To create a new alert, click the :guilabel:`Create Alert` button. This presents
+a simple form for creating a new alert. The following fields can be edited:
+
+Message
+    The message displayed to users on any page of the site.
+Expiry Date
+    The date when this alert will automatically expire and no longer be
+    displayed.
+Active
+    Flag for the current state of the alert. Alerts can be activated or
+    inactivated at any time, although activating an expired alert will not cause
+    it to be displayed to users.
+Require Auth
+    If set true, this alert will only be shown to users logged in to the site.
+    If false, it will also appear in the login screen as well as for anonymous
+    users if allowed on the site.
+Description
+    A longer description, which can be accessed through the :guilabel:`Details`
+    link in the alert element. Markdown syntax is supported.
+
+.. figure:: _static/app_adminalerts/alert_form.png
+    :align: center
+    :scale: 60%
+
+    Admin alert creation form
+
+An example of an active alert along with the alert detail page can be seen in
+the following screenshot.
+
+.. figure:: _static/app_adminalerts/alert_example.png
+    :align: center
+    :scale: 55%
+
+    Admin alert example and details

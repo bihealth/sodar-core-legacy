@@ -8,7 +8,11 @@ from test_plus.test import APITestCase
 # Projectroles dependency
 from projectroles.models import SODAR_CONSTANTS
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
-from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
+from projectroles.views_api import (
+    CORE_API_MEDIA_TYPE,
+    CORE_API_DEFAULT_VERSION,
+    INVALID_PROJECT_TYPE_MSG,
+)
 
 from filesfolders.tests.test_views import ZIP_PATH_NO_FILES, TestViewsBaseMixin
 from filesfolders.models import Folder, File, HyperLink
@@ -142,7 +146,11 @@ class TestFolderListCreateAPIView(TestFilesfoldersAPIViewsBase):
             method='POST',
             data=self.folder_data,
         )
-        self.assertEqual(response.status_code, 400, msg=response.data)
+        self.assertEqual(response.status_code, 403, msg=response.data)
+        self.assertEqual(
+            str(response.data['detail']),
+            INVALID_PROJECT_TYPE_MSG.format(project_type=PROJECT_TYPE_CATEGORY),
+        )
 
 
 class TestFolderRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -354,7 +362,11 @@ class TestFileListCreateAPIView(TestFilesfoldersAPIViewsBase):
             format='multipart',
             data=self.file_data,
         )
-        self.assertEqual(response.status_code, 400, msg=response.data)
+        self.assertEqual(response.status_code, 403, msg=response.data)
+        self.assertEqual(
+            str(response.data['detail']),
+            INVALID_PROJECT_TYPE_MSG.format(project_type=PROJECT_TYPE_CATEGORY),
+        )
 
 
 class TestFileRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):
@@ -604,7 +616,11 @@ class TestHyperLinkListCreateAPIView(TestFilesfoldersAPIViewsBase):
             method='POST',
             data=self.hyperlink_data,
         )
-        self.assertEqual(response.status_code, 400, msg=response.data)
+        self.assertEqual(response.status_code, 403, msg=response.data)
+        self.assertEqual(
+            str(response.data['detail']),
+            INVALID_PROJECT_TYPE_MSG.format(project_type=PROJECT_TYPE_CATEGORY),
+        )
 
 
 class TestHyperLinkRetrieveUpdateDestroyAPIView(TestFilesfoldersAPIViewsBase):

@@ -13,7 +13,6 @@ from rest_framework.exceptions import (
     APIException,
     NotFound,
     PermissionDenied,
-    ValidationError,
 )
 from rest_framework.generics import (
     CreateAPIView,
@@ -59,6 +58,10 @@ from projectroles.views import (
 )
 
 
+User = auth.get_user_model()
+app_settings = AppSettingAPI()
+
+
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
@@ -66,7 +69,6 @@ PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
-
 
 # API constants for external SODAR Core sites
 SODAR_API_MEDIA_TYPE = getattr(
@@ -98,14 +100,13 @@ CORE_API_ALLOWED_VERSIONS = [
     '0.10.4',
     '0.10.5',
     '0.10.6',
+    '0.10.7',
 ]
 
-
-# Access Django user model
-User = auth.get_user_model()
-
-# App Settings
-app_settings = AppSettingAPI()
+# Local constants
+INVALID_PROJECT_TYPE_MSG = (
+    'Project type "{project_type}" not allowed for this API view'
+)
 
 
 # Permission / Versioning / Renderer Classes -----------------------------------
@@ -149,10 +150,8 @@ class SODARAPIProjectPermission(ProjectAccessMixin, BasePermission):
                 '{}'.format(project_type, ', '.join(p_types))
             )
         elif project_type and project_type != project.type:
-            raise ValidationError(
-                'Project type "{}" not allowed for this API view'.format(
-                    project_type
-                )
+            raise PermissionDenied(
+                INVALID_PROJECT_TYPE_MSG.format(project_type=project.type)
             )
 
         owner_or_delegate = project.is_owner_or_delegate(request.user)

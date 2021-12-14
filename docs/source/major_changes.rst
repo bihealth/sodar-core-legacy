@@ -10,6 +10,36 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.7 (2021-12-14)
+********************
+
+Release Highlights
+==================
+
+- Search bug fixes
+- REST API project type restriction fixes
+- General bug fixes and minor updates
+- Upgraded dependencies
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The following minimum versions have been bumped:
+
+- ``django>=3.2.10, <3.3``
+- ``python-ldap==3.4.0``
+
+API View Invalid Project Type Response
+--------------------------------------
+
+If ``project_type`` is set in a REST API view and that view is called with an
+disallowed value, the view will return HTTP 403 instead of 400. The cause for
+this response is included in the ``detail`` field.
+
+
 v0.10.6 (2021-11-19)
 ********************
 

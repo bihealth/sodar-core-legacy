@@ -232,6 +232,8 @@ def highlight_search_term(item, terms):
         term = terms[0]
     else:
         term = terms  # Old implementation
+    if not term:  # If something goes wrong and we end up with no search term
+        return item
 
     def get_highlights(item):
         pos = item.lower().find(term.lower())

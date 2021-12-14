@@ -33,6 +33,7 @@ analysis web applications, but can be useful in other contexts as well.
 In that it is similar to the CMS or ecommerce frameworks that you can find
 `Awesome Django List <https://github.com/wsvincent/awesome-django#content-management-systems>`__ but you will find the components/libraries provided in SODAR Core are more generic and in this reflecting the broader range of applications that we target.
 
+
 Examples / See It In Action
 ===========================
 
@@ -112,7 +113,7 @@ from PyPI as follows.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.6
+    pip install django-sodar-core==0.10.7
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.
