@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Siteinfo**
+    - Missing site settings in ``CORE_SETTINGS`` (#877)
+
+
 v0.10.7 (2021-12-14)
 ====================
 
