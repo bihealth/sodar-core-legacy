@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Display missing site settings in siteinfo app
+- Fix project creation owner assignment for non-owner category members
 
 Breaking Changes
 ================

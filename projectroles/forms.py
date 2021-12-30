@@ -524,19 +524,19 @@ class ProjectForm(SODARModelForm):
             # Hide parent selection
             self.fields['parent'].widget = forms.HiddenInput()
 
+            # Set owner
+            if self.current_user.is_superuser and parent_project:
+                self.initial['owner'] = parent_project.get_owner().user
+            else:
+                self.initial['owner'] = self.current_user
+            # Hide owner select widget for regular users
+            if not self.current_user.is_superuser:
+                self.fields['owner'].widget = forms.HiddenInput()
+
             # Creating a subproject
             if parent_project:
                 # Parent must be current parent
                 self.initial['parent'] = parent_project.sodar_uuid
-                # Set owner of parent category as initial owner
-                self.initial['owner'] = parent_project.get_owner().user
-
-                # If current user is not parent owner, disable owner select
-                if (
-                    not self.current_user.is_superuser
-                    and self.current_user != parent_project.get_owner().user
-                ):
-                    self.fields['owner'].widget = forms.HiddenInput()
 
             # Creating a top level project
             else:
@@ -549,8 +549,6 @@ class ProjectForm(SODARModelForm):
                 self.fields['type'].widget = forms.HiddenInput()
                 # Set up parent field
                 self.initial['parent'] = None
-                # Set current user as initial owner
-                self.initial['owner'] = self.current_user
 
         if self.instance.is_remote():
             self.fields['title'].widget = forms.HiddenInput()
