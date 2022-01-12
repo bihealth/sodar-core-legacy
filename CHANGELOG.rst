@@ -16,6 +16,13 @@ Added
 - **Siteinfo**
     - Missing site settings in ``CORE_SETTINGS`` (#877)
 
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Django version to v3.2.11 (#879)
+    - Upgrade Python dependencies (#884)
+
 Fixed
 -----
 

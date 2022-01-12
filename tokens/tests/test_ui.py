@@ -6,6 +6,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from knox.models import AuthToken
+from selenium.webdriver.common.by import By
+
 
 # Projectroles dependency
 from projectroles.tests.test_ui import TestUIBase
@@ -41,12 +43,12 @@ class TestTokenList(TestUIBase):
         """Test token expiry dates in token list"""
         url = reverse('tokens:list')
         self.login_and_redirect(self.regular_user, url)
-        items = self.selenium.find_elements_by_class_name('sodar-tk-list-item')
+        items = self.selenium.find_elements(By.CLASS_NAME, 'sodar-tk-list-item')
         self.assertEqual(len(items), 2)
         expiry_time = timezone.localtime(self.token.expiry).strftime(
             '%Y-%m-%d %H:%M'
         )
         values = []
         for item in items:
-            values.append(item.find_elements_by_tag_name('td')[2].text)
+            values.append(item.find_elements(By.TAG_NAME, 'td')[2].text)
         self.assertCountEqual(values, ['Never', expiry_time])

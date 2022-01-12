@@ -248,8 +248,8 @@ class TestUIBase(
         ########################
 
         try:
-            user_button = self.selenium.find_element_by_id(
-                'sodar-navbar-user-dropdown'
+            user_button = self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown'
             )
             user_button.click()
             # Wait for element to be visible
@@ -259,8 +259,8 @@ class TestUIBase(
                 )
             )
             try:
-                signout_button = self.selenium.find_element_by_id(
-                    'sodar-navbar-link-logout'
+                signout_button = self.selenium.find_element(
+                    By.ID, 'sodar-navbar-link-logout'
                 )
                 signout_button.click()
                 # Wait for redirect
@@ -278,12 +278,12 @@ class TestUIBase(
 
         self.selenium.get(self.build_selenium_url(url))
         # Submit user data into form
-        field_user = self.selenium.find_element_by_id('sodar-login-username')
+        field_user = self.selenium.find_element(By.ID, 'sodar-login-username')
         # field_user.send_keys(user.username)
         field_user.send_keys(user.username)
-        field_pass = self.selenium.find_element_by_id('sodar-login-password')
+        field_pass = self.selenium.find_element(By.ID, 'sodar-login-password')
         field_pass.send_keys('password')
-        self.selenium.find_element_by_id('sodar-login-submit').click()
+        self.selenium.find_element(By.ID, 'sodar-login-submit').click()
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
@@ -323,12 +323,12 @@ class TestUIBase(
 
             if exists:
                 self.assertIsNotNone(
-                    self.selenium.find_element_by_id(element_id)
+                    self.selenium.find_element(By.ID, element_id)
                 )
 
             else:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_id(element_id)
+                    self.selenium.find_element(By.ID, element_id)
 
     def assert_element_count(
         self,
@@ -365,8 +365,9 @@ class TestUIBase(
             if expected_count > 0:
                 self.assertEqual(
                     len(
-                        self.selenium.find_elements_by_xpath(
-                            xpath.format(path, attribute, search_string)
+                        self.selenium.find_elements(
+                            By.XPATH,
+                            xpath.format(path, attribute, search_string),
                         )
                     ),
                     expected_count,
@@ -374,8 +375,9 @@ class TestUIBase(
                 )
             else:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_xpath(
-                        xpath.format(path, attribute, search_string)
+                    self.selenium.find_element(
+                        By.XPATH,
+                        xpath.format(path, attribute, search_string),
                     )
 
     def assert_element_set(
@@ -402,11 +404,11 @@ class TestUIBase(
             elements = e[1]
             self.login_and_redirect(user, url, wait_elem, wait_loc)
             for element in elements:
-                self.assertIsNotNone(self.selenium.find_element_by_id(element))
+                self.assertIsNotNone(self.selenium.find_element(By.ID, element))
             not_expected = list(set(all_elements) ^ set(elements))
             for n in not_expected:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_id(n)
+                    self.selenium.find_element(By.ID, n)
 
     def assert_element_active(
         self,
@@ -436,14 +438,14 @@ class TestUIBase(
             ec.presence_of_element_located((By.ID, element_id))
         )
 
-        element = self.selenium.find_element_by_id(element_id)
+        element = self.selenium.find_element(By.ID, element_id)
         self.assertIsNotNone(element)
         self.assertIn('active', element.get_attribute('class'))
 
         not_expected = [e for e in all_elements if e != element_id]
         # print(not_expected)     # DEBUG
         for n in not_expected:
-            element = self.selenium.find_element_by_id(n)
+            element = self.selenium.find_element(By.ID, n)
             self.assertIsNotNone(element)
             self.assertNotIn('active', element.get_attribute('class'))
 
@@ -477,8 +479,8 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         return len(
             [
                 e
-                for e in self.selenium.find_elements_by_class_name(
-                    'sodar-pr-project-list-item'
+                for e in self.selenium.find_elements(
+                    By.CLASS_NAME, 'sodar-pr-project-list-item'
                 )
                 if e.get_attribute('style') != 'display: none;'
             ]
@@ -503,8 +505,8 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        f_input = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-filter'
+        f_input = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-filter'
         )
         f_input.send_keys('sub')
         self.assertEqual(self._get_item_vis_count(), 1)
@@ -518,14 +520,14 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-link-star'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 1)
         self.assertEqual(
-            self.selenium.find_element_by_id(
-                'sodar-pr-home-display-nostars'
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-home-display-nostars'
             ).get_attribute('style'),
             'display: none;',
         )
@@ -536,14 +538,14 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-link-star'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 0)
         self.assertNotEqual(
-            self.selenium.find_element_by_id(
-                'sodar-pr-home-display-nostars'
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-home-display-nostars'
             ).get_attribute('style'),
             'display: none;',
         )
@@ -573,7 +575,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url)
         self.assertIsNotNone(
-            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
+            self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
         )
 
     def test_inline_head_include_disabled(self):
@@ -581,7 +583,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url)
         with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
+            self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
 
 
 class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
@@ -615,9 +617,9 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         url = reverse('projectroles:remote_site_create')
         self.login_and_redirect(self.superuser, url)
 
-        name_field = self.selenium.find_element_by_id('id_name')
-        url_field = self.selenium.find_element_by_id('id_url')
-        secret_field = self.selenium.find_element_by_id('id_secret')
+        name_field = self.selenium.find_element(By.ID, 'id_name')
+        url_field = self.selenium.find_element(By.ID, 'id_url')
+        secret_field = self.selenium.find_element(By.ID, 'id_secret')
 
         name_field.send_keys('some name')
         url_field.send_keys('http://url.url')
@@ -724,7 +726,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.login_and_redirect(user, url)
 
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-btn-copy-uuid')
+                self.selenium.find_element(By.ID, 'sodar-pr-btn-copy-uuid')
 
     def test_copy_uuid_visibility_enabled(self):
         """Test UUID copy button visibility with setting enabled"""
@@ -758,11 +760,11 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         # Visibile for all users
         for user in users:
             self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            project_details = self.selenium.find_element(
+                By.ID, 'sodar-pr-details-card-remote'
             )
-            remote_project = project_details.find_element_by_class_name(
-                'btn-info'
+            remote_project = project_details.find_element(
+                By.CLASS_NAME, 'btn-info'
             )
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
@@ -778,16 +780,18 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         for user in users:
             self.login_and_redirect(user, url)
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-details-card-remote'
+                )
 
         # Greyed out for superuser and owner
         for user in [self.superuser, self.user_owner]:
             self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            project_details = self.selenium.find_element(
+                By.ID, 'sodar-pr-details-card-remote'
             )
-            remote_project = project_details.find_element_by_class_name(
-                'btn-secondary'
+            remote_project = project_details.find_element(
+                By.CLASS_NAME, 'btn-secondary'
             )
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
@@ -810,7 +814,9 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             self.login_and_redirect(user, url)
 
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-details-card-remote'
+                )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_visible(self):
@@ -846,8 +852,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in users:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 2)
             self.assertIn(
@@ -896,8 +902,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in expected_true:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 2)
             self.assertIn(
@@ -911,8 +917,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in expected_false:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 1)
             self.assertIn(
@@ -928,22 +934,22 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         self.login_and_redirect(self.superuser, url)
 
         self.assertFalse(
-            self.selenium.find_element_by_id('id_user_display').is_displayed()
+            self.selenium.find_element(By.ID, 'id_user_display').is_displayed()
         )
 
         self._add_remote_association()
         # Check Visible to User column visibility
-        remote_site_table = self.selenium.find_element_by_id(
-            'sodar-pr-remote-site-table'
+        remote_site_table = self.selenium.find_element(
+            By.ID, 'sodar-pr-remote-site-table'
         )
         with self.assertRaises(NoSuchElementException):
-            remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible to users')]"
+            remote_site_table.find_element(
+                By.XPATH, '//th[contains(text(), "Visible to users")]'
             )
 
         with self.assertRaises(NoSuchElementException):
-            remote_site_table.find_element_by_xpath(
-                "//td[contains(text(), 'Yes')]"
+            remote_site_table.find_element(
+                By.XPATH, '//td[contains(text(), "Yes")]'
             )
 
     def test_source_visibility(self):
@@ -951,17 +957,17 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         # Check Form Toggle visibility on SOURCE site
         url = reverse('projectroles:remote_site_create')
         self.login_and_redirect(self.superuser, url)
-        element = self.selenium.find_element_by_id('div_id_user_display')
+        element = self.selenium.find_element(By.ID, 'div_id_user_display')
         self.assertIsNotNone(element)
 
         self._add_remote_association()
         # Check Visible to User column visibility
-        remote_site_table = self.selenium.find_element_by_id(
-            'sodar-pr-remote-site-table'
+        remote_site_table = self.selenium.find_element(
+            By.ID, 'sodar-pr-remote-site-table'
         )
         try:
-            remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible')]"
+            remote_site_table.find_element(
+                By.XPATH, '//th[contains(text(), "Visible")]'
             )
         except NoSuchElementException:
             self.fail(
@@ -969,8 +975,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
                 'site overview'
             )
         try:
-            remote_site_table.find_element_by_xpath(
-                "//td[contains(text(), 'Yes')]"
+            remote_site_table.find_element(
+                By.XPATH, '//td[contains(text(), "Yes")]'
             )
         except NoSuchElementException:
             self.fail(
@@ -989,7 +995,6 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             good_users, url, 'sodar-pr-btn-role-op', True
         )
@@ -1000,7 +1005,6 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_list_buttons_target(self):
         """Test visibility of role list button group as target"""
-
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
@@ -1013,11 +1017,10 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.login_and_redirect(self.superuser, url)
-        btn = self.selenium.find_element_by_id('sodar-pr-btn-role-op')
-        self.assertEqual(btn.is_enabled(), False)
 
+        btn = self.selenium.find_element(By.ID, 'sodar-pr-btn-role-op')
+        self.assertEqual(btn.is_enabled(), False)
         self.assert_element_exists(
             non_superusers, url, 'sodar-pr-btn-role-op', False
         )
@@ -1033,11 +1036,9 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-invite', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-btn-role-list-invite', False
         )
@@ -1053,11 +1054,9 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-create', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-btn-role-list-create', False
         )
@@ -1084,15 +1083,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        button = self.selenium.find_element_by_id('sodar-pr-email-preview-link')
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-email-preview-link'
+        )
         button.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'sodar-email-body'))
         )
-
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body')
+            self.selenium.find_element(By.ID, 'sodar-email-body')
         )
 
     def test_invite_preview(self):
@@ -1103,17 +1102,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-invite-preview-link'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-invite-preview-link'
         )
         button.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'sodar-email-body'))
         )
-
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body')
+            self.selenium.find_element(By.ID, 'sodar-email-body')
         )
 
     def test_widget_user_options(self):
@@ -1124,24 +1121,22 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        widget = self.selenium.find_element_by_class_name(
-            'select2-container--default'
+        widget = self.selenium.find_element(
+            By.CLASS_NAME, 'select2-container--default'
         )
         widget.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'select2-id_user-results'))
         )
 
-        # assert that options are displayed
+        # Assert that options are displayed
         self.assertIsNotNone(
-            self.selenium.find_element_by_class_name('select2-results__option')
+            self.selenium.find_element(By.CLASS_NAME, 'select2-results__option')
         )
-
         self.assertEqual(
             len(
-                self.selenium.find_elements_by_class_name(
-                    'select2-selection__rendered'
+                self.selenium.find_elements(
+                    By.CLASS_NAME, 'select2-selection__rendered'
                 )
             ),
             1,
@@ -1418,7 +1413,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target_remote(self):
         """Test visibility of create link as target under a remote category"""
-
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
@@ -1472,9 +1466,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     )
     def test_create_link_target_disable(self):
         """Test visibility of create link as target with creation not allowed"""
-        # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
-
         expected_false = [
             self.superuser,
             self.owner_as.user,
@@ -1485,7 +1477,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-nav-project-create', False
         )
@@ -1498,7 +1489,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_active(
             self.superuser, 'sodar-pr-nav-project-detail', self.sidebar_ids, url
         )
@@ -1584,7 +1574,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             issuer=self.owner_as.user,
             message='',
         )
-
         self.assert_element_active(
             self.superuser,
             'sodar-pr-nav-project-roles',

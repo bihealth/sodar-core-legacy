@@ -18,11 +18,26 @@ Release Highlights
 
 - Display missing site settings in siteinfo app
 - Fix project creation owner assignment for non-owner category members
+- Upgrade third party Python package dependencies
 
 Breaking Changes
 ================
 
-N/A
+System Prerequisites
+--------------------
+
+Third party Python package dependencies have been upgraded. See the
+``requirements`` directory for up-to-date package versions and upgrade your
+project accordingly.
+
+Deprecated Selenium Methods
+---------------------------
+
+The minimum Selenium version has been upgraded to v4.0.x. Some test methods have
+been deprecated in this version and will be removed in a future releases. UI
+test helpers from this version onwards will use the non-deprecated versions. You
+should the dependency in your projects, run tests, check the output and update
+any deprecated method calls if used.
 
 
 v0.10.7 (2021-12-14)

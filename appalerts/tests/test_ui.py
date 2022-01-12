@@ -63,15 +63,15 @@ class TestListView(TestAlertUIBase):
         url = reverse('appalerts:list')
         self.login_and_redirect(self.regular_user, url)
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-count').text, '2'
+            self.selenium.find_element(By.ID, 'sodar-app-alert-count').text, '2'
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            self.selenium.find_element(By.ID, 'sodar-app-alert-legend').text,
             'alerts',
         )
 
-        button = self.selenium.find_elements_by_class_name(
-            'sodar-app-alert-btn-dismiss-single'
+        button = self.selenium.find_elements(
+            By.CLASS_NAME, 'sodar-app-alert-btn-dismiss-single'
         )[0]
         button.click()
         WebDriverWait(self.selenium, self.wait_time).until(
@@ -80,16 +80,16 @@ class TestListView(TestAlertUIBase):
             )
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-count').text, '1'
+            self.selenium.find_element(By.ID, 'sodar-app-alert-count').text, '1'
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            self.selenium.find_element(By.ID, 'sodar-app-alert-legend').text,
             'alert',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 1)
         self.assertFalse(
-            self.selenium.find_element_by_id(
-                'sodar-app-alert-empty'
+            self.selenium.find_element(
+                By.ID, 'sodar-app-alert-empty'
             ).is_displayed()
         )
 
@@ -100,15 +100,15 @@ class TestListView(TestAlertUIBase):
         url = reverse('appalerts:list')
         self.login_and_redirect(self.regular_user, url)
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-count').text, '2'
+            self.selenium.find_element(By.ID, 'sodar-app-alert-count').text, '2'
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            self.selenium.find_element(By.ID, 'sodar-app-alert-legend').text,
             'alerts',
         )
 
-        self.selenium.find_element_by_id(
-            'sodar-app-alert-btn-dismiss-all'
+        self.selenium.find_element(
+            By.ID, 'sodar-app-alert-btn-dismiss-all'
         ).click()
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.invisibility_of_element_located(
@@ -116,10 +116,10 @@ class TestListView(TestAlertUIBase):
             )
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-count').text, ''
+            self.selenium.find_element(By.ID, 'sodar-app-alert-count').text, ''
         )
         self.assertEqual(
-            self.selenium.find_element_by_id('sodar-app-alert-legend').text,
+            self.selenium.find_element(By.ID, 'sodar-app-alert-legend').text,
             '',
         )
         self.assertEqual(AppAlert.objects.filter(active=True).count(), 0)
@@ -127,8 +127,8 @@ class TestListView(TestAlertUIBase):
             ec.visibility_of_element_located((By.ID, 'sodar-app-alert-empty'))
         )
         self.assertTrue(
-            self.selenium.find_element_by_id(
-                'sodar-app-alert-empty'
+            self.selenium.find_element(
+                By.ID, 'sodar-app-alert-empty'
             ).is_displayed()
         )
 
@@ -140,12 +140,12 @@ class TestListView(TestAlertUIBase):
         url = reverse('appalerts:list')
         self.login_and_redirect(self.regular_user, url)
         self.assertTrue(
-            self.selenium.find_element_by_id(
-                'sodar-app-alert-empty'
+            self.selenium.find_element(
+                By.ID, 'sodar-app-alert-empty'
             ).is_displayed()
         )
         with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element_by_id('sodar-app-alert-reload')
+            self.selenium.find_element(By.ID, 'sodar-app-alert-reload')
 
         self._make_app_alert(user=self.regular_user, url=reverse('home'))
 
@@ -153,8 +153,8 @@ class TestListView(TestAlertUIBase):
             ec.visibility_of_element_located((By.ID, 'sodar-app-alert-reload'))
         )
         self.assertTrue(
-            self.selenium.find_element_by_id(
-                'sodar-app-alert-reload'
+            self.selenium.find_element(
+                By.ID, 'sodar-app-alert-reload'
             ).is_displayed()
         )
 
@@ -166,12 +166,12 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test existence of alert badge for user with alerts"""
         url = reverse('home')
         self.login_and_redirect(self.regular_user, url)
-        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        alert_badge = self.selenium.find_element(By.ID, 'sodar-app-alert-badge')
         self.assertIsNotNone(alert_badge)
         self.assertTrue(alert_badge.is_displayed())
-        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
-        alert_legend = self.selenium.find_element_by_id(
-            'sodar-app-alert-legend'
+        alert_count = self.selenium.find_element(By.ID, 'sodar-app-alert-count')
+        alert_legend = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-legend'
         )
         self.assertEqual(alert_count.text, '2')
         self.assertEqual(alert_legend.text, 'alerts')
@@ -180,7 +180,7 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test existence of alert badge for user without alerts"""
         url = reverse('home')
         self.login_and_redirect(self.no_alert_user, url)
-        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        alert_badge = self.selenium.find_element(By.ID, 'sodar-app-alert-badge')
         self.assertIsNotNone(alert_badge)
         self.assertFalse(alert_badge.is_displayed())
 
@@ -188,9 +188,9 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test adding an alert for user with alerts"""
         url = reverse('home')
         self.login_and_redirect(self.regular_user, url)
-        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
-        alert_legend = self.selenium.find_element_by_id(
-            'sodar-app-alert-legend'
+        alert_count = self.selenium.find_element(By.ID, 'sodar-app-alert-count')
+        alert_legend = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-legend'
         )
         self.assertEqual(alert_count.text, '2')
         self.assertEqual(alert_legend.text, 'alerts')
@@ -208,9 +208,9 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test deleting an alert from user with alerts"""
         url = reverse('home')
         self.login_and_redirect(self.regular_user, url)
-        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
-        alert_legend = self.selenium.find_element_by_id(
-            'sodar-app-alert-legend'
+        alert_count = self.selenium.find_element(By.ID, 'sodar-app-alert-count')
+        alert_legend = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-legend'
         )
         self.assertEqual(alert_count.text, '2')
         self.assertEqual(alert_legend.text, 'alerts')
@@ -228,7 +228,7 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test deleting all alerts from user with alerts"""
         url = reverse('home')
         self.login_and_redirect(self.regular_user, url)
-        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        alert_badge = self.selenium.find_element(By.ID, 'sodar-app-alert-badge')
         self.assertTrue(alert_badge.is_displayed())
 
         self.alert.delete()
@@ -242,7 +242,7 @@ class TestTitlebarBadge(TestAlertUIBase):
         """Test adding an alert for user without prior alerts"""
         url = reverse('home')
         self.login_and_redirect(self.no_alert_user, url)
-        alert_badge = self.selenium.find_element_by_id('sodar-app-alert-badge')
+        alert_badge = self.selenium.find_element(By.ID, 'sodar-app-alert-badge')
         self.assertFalse(alert_badge.is_displayed())
 
         self._make_app_alert(user=self.no_alert_user, url=reverse('home'))
@@ -251,9 +251,9 @@ class TestTitlebarBadge(TestAlertUIBase):
         )
         self.assertTrue(alert_badge.is_displayed())
 
-        alert_count = self.selenium.find_element_by_id('sodar-app-alert-count')
-        alert_legend = self.selenium.find_element_by_id(
-            'sodar-app-alert-legend'
+        alert_count = self.selenium.find_element(By.ID, 'sodar-app-alert-count')
+        alert_legend = self.selenium.find_element(
+            By.ID, 'sodar-app-alert-legend'
         )
         self.assertEqual(alert_count.text, '1')
         self.assertEqual(alert_legend.text, 'alert')
@@ -265,8 +265,8 @@ class TestTitlebarBadge(TestAlertUIBase):
         url = reverse('home')
         self.login_and_redirect(self.regular_user, url)
 
-        self.selenium.find_element_by_id(
-            'sodar-app-alert-badge-btn-dismiss'
+        self.selenium.find_element(
+            By.ID, 'sodar-app-alert-badge-btn-dismiss'
         ).click()
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.invisibility_of_element_located(
