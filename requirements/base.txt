@@ -57,7 +57,7 @@ djangorestframework>=3.13.1, <3.14
 django-rest-knox>=4.1.0, <4.2
 
 # Markdown field support
-markdown>=3.3.6, <3.4
+markdown==3.3.4  # NOTE: Markdown 3.3.6+ requires Python>=3.10
 django-markupfield>=2.0.1, <2.1
 django-pagedown>=2.2.1, <2.3
 mistune>=2.0.1, <2.1

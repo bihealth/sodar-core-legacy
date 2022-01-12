@@ -1,7 +1,7 @@
 # Test dependencies go here.
 -r base.txt
 
-flake8==4.0.1
+flake8==3.9.2  # NOTE: v4.x requires Python>=3.8
 django-test-plus==2.2.0
 factory-boy==3.2.1
 coverage==6.2
