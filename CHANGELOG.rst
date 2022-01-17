@@ -24,6 +24,8 @@ Changed
     - Upgrade Python dependencies (#884)
 - **Projectroles**
     - Display admin icon in user dropdown (#886)
+- **Timeline**
+    - Improve event list layout (#887)
 
 Fixed
 -----
