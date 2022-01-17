@@ -22,6 +22,8 @@ Changed
 - **General**
     - Upgrade minimum Django version to v3.2.11 (#879)
     - Upgrade Python dependencies (#884)
+- **Projectroles**
+    - Display admin icon in user dropdown (#886)
 
 Fixed
 -----

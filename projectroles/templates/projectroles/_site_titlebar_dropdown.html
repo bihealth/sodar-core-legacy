@@ -54,7 +54,9 @@
   <a class="nav-link sodar-nav-link-last dropdown-toggle"
      id="sodar-navbar-user-dropdown"
      data-toggle="dropdown">
-    {% if request.user.is_authenticated %}
+    {% if request.user.is_superuser %}
+      <i class="iconify" data-icon="mdi:shield-account"></i>
+    {% elif request.user.is_authenticated %}
       <i class="iconify" data-icon="mdi:user"></i>
     {% else %}
       <i class="iconify" data-icon="mdi:incognito"></i>
