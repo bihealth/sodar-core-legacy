@@ -30,6 +30,8 @@ Fixed
 
 - **Projectroles**
     - Parent owner set as owner in project create form for non-owner category members (#878)
+- **Siteinfo**
+    - Layout responsivity issues with long labels (#883)
 
 
 v0.10.7 (2021-12-14)
