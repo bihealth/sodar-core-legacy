@@ -27,6 +27,7 @@ Changed
     - Upgrade Python dependencies (#884)
 - **Projectroles**
     - Display admin icon in user dropdown (#886)
+    - Refactor UI tests (#882)
 - **Timeline**
     - Improve event list layout responsivity (#887)
     - Replace event list app column with app icon (#888)
@@ -46,6 +47,8 @@ Fixed
 Removed
 -------
 
+- **Projectroles**
+    - ``_add_remote_association()`` helper from UI tests (#882)
 - **Timeline**
     - Unused ``get_app_url()`` template tag (#888)
 
