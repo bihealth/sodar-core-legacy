@@ -15,6 +15,9 @@ Added
 
 - **Siteinfo**
     - Missing site settings in ``CORE_SETTINGS`` (#877)
+- **Timeline**
+    - ``get_plugin_lookup()`` and ``get_app_icon_html()`` template tags (#888)
+    - Template tag tests (#891)
 
 Changed
 -------
@@ -25,7 +28,10 @@ Changed
 - **Projectroles**
     - Display admin icon in user dropdown (#886)
 - **Timeline**
-    - Improve event list layout (#887)
+    - Improve event list layout responsivity (#887)
+    - Replace event list app column with app icon (#888)
+    - Set default kwarg values for model test helpers (#890)
+    - Move ``get_request()`` to ``TimelineAPIMixin``
 
 Fixed
 -----
@@ -34,6 +40,14 @@ Fixed
     - Parent owner set as owner in project create form for non-owner category members (#878)
 - **Siteinfo**
     - Layout responsivity issues with long labels (#883)
+- **Timeline**
+    - Redundant app plugin queries in event list (#889)
+
+Removed
+-------
+
+- **Timeline**
+    - Unused ``get_app_url()`` template tag (#888)
 
 
 v0.10.7 (2021-12-14)

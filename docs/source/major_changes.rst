@@ -18,6 +18,7 @@ Release Highlights
 
 - Display missing site settings in siteinfo app
 - Fix project creation owner assignment for non-owner category members
+- Improve layout in siteinfo and timeline apps
 - Upgrade third party Python package dependencies
 
 Breaking Changes

@@ -5,15 +5,13 @@
 
 <style type="text/css">
   /* Main table */
-  table#sodar-tl-details-table tbody tr td:nth-child(1) {
+  table#sodar-tl-details-table tbody tr td:nth-child(1),
+  table#sodar-tl-details-table tbody tr td:nth-child(2),
+  table#sodar-tl-details-table tbody tr td:nth-child(3) {
     white-space: nowrap;
   }
 
   table#sodar-tl-details-table tbody tr td:nth-child(4) {
-    white-space: nowrap;
-  }
-
-  table#sodar-tl-details-table tbody tr td:nth-child(5) {
     width: 100%;
   }
 
@@ -24,15 +22,15 @@
 
   /* Responsive modifications */
   @media screen and (max-width: 1300px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(2),
-    .table#sodar-tl-details-table tbody tr td:nth-child(2) {
+    .table#sodar-tl-details-table thead tr th:nth-child(3),
+    .table#sodar-tl-details-table tbody tr td:nth-child(3) {
       display: none;
     }
   }
 
   @media screen and (max-width: 1100px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(3),
-    .table#sodar-tl-details-table tbody tr td:nth-child(3) {
+    .table#sodar-tl-details-table thead tr th:nth-child(2),
+    .table#sodar-tl-details-table tbody tr td:nth-child(2) {
       display: none;
     }
   }
@@ -41,22 +39,18 @@
     .table#sodar-tl-details-table tbody tr td:nth-child(1) {
       white-space: normal;
     }
-
-    .table#sodar-tl-details-table thead tr th:nth-child(4),
-    .table#sodar-tl-details-table tbody tr td:nth-child(4) {
-      display: none;
-    }
   }
 
   @media screen and (max-width: 500px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(6),
-    .table#sodar-tl-details-table tbody tr td:nth-child(6) {
+    .table#sodar-tl-details-table thead tr th:nth-child(5),
+    .table#sodar-tl-details-table tbody tr td:nth-child(5) {
       display: none;
     }
   }
 </style>
 
 {% if can_view_timeline %}
+  {% get_plugin_lookup as plugin_lookup %}
   <table class="table table-striped sodar-card-table" id="sodar-tl-details-table">
     <thead>
       {% include 'timeline/_list_header.html' with details_card_mode=True %}
@@ -69,7 +63,7 @@
         {% endfor %}
       {% else %}
         <tr>
-          <td class="bg-faded font-italic text-center" colspan="6">No events</td>
+          <td class="bg-faded font-italic text-center" colspan="5">No events</td>
         </tr>
       {% endif %}
     </tbody>

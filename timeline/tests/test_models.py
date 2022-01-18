@@ -29,7 +29,14 @@ class ProjectEventMixin:
 
     @classmethod
     def _make_event(
-        cls, project, app, user, event_name, description, classified, extra_data
+        cls,
+        project,
+        app,
+        user,
+        event_name,
+        description='',
+        classified=False,
+        extra_data=None,
     ):
         values = {
             'project': project,
@@ -38,7 +45,7 @@ class ProjectEventMixin:
             'event_name': event_name,
             'description': description,
             'classified': classified,
-            'extra_data': extra_data,
+            'extra_data': extra_data or {},
         }
         result = ProjectEvent(**values)
         result.save()
@@ -49,14 +56,14 @@ class ProjectEventObjectRefMixin:
     """Helper mixin for ProjectEventObjectRef creation"""
 
     @classmethod
-    def _make_object_ref(cls, event, obj, label, name, uuid, extra_data):
+    def _make_object_ref(cls, event, obj, label, name, uuid, extra_data=None):
         values = {
             'event': event,
             'label': label,
             'name': name,
             'object_model': obj.__class__.__name__,
             'object_uuid': uuid,
-            'extra_data': extra_data,
+            'extra_data': extra_data or {},
         }
         result = ProjectEventObjectRef(**values)
         result.save()
@@ -67,12 +74,14 @@ class ProjectEventStatusMixin:
     """Helper mixin for ProjectEventStatus creation"""
 
     @classmethod
-    def _make_event_status(cls, event, status_type, description, extra_data):
+    def _make_event_status(
+        cls, event, status_type, description, extra_data=None
+    ):
         values = {
             'event': event,
             'status_type': status_type,
             'description': description,
-            'extra_data': extra_data,
+            'extra_data': extra_data or {},
         }
         result = ProjectEventStatus(**values)
         result.save()

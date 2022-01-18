@@ -39,21 +39,27 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
+class TimelineAPIMixin:
+    """Helpers for timeline API use"""
+
+    @classmethod
+    def get_request(cls, user, project):
+        """Return mock request"""
+        request = RequestFactory().get(
+            'timeline:list', kwargs={'project': project}
+        )
+        request.user = user
+        return request
+
+
 class TestTimelineAPI(
+    TimelineAPIMixin,
     ProjectEventMixin,
     ProjectEventStatusMixin,
     RemoteSiteMixin,
     FolderMixin,
     TestProjectEventBase,
 ):
-    def _get_request(self, user):
-        """Return mock request"""
-        request = RequestFactory().get(
-            'timeline:list', kwargs={'project': self.project}
-        )
-        request.user = user
-        return request
-
     def setUp(self):
         super().setUp()
         self.timeline = get_backend_api('timeline_backend')
@@ -419,7 +425,7 @@ class TestTimelineAPI(
             name=self.project.title,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.user_owner)
+            event, self.get_request(self.user_owner, self.project)
         )
         self.assertIn(self.project.title, desc)
         self.assertIn('sodar-tl-project-link', desc)
@@ -440,7 +446,7 @@ class TestTimelineAPI(
             name=site.name,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, self.get_request(self.superuser, self.project)
         )
         self.assertIn(site.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
@@ -467,7 +473,7 @@ class TestTimelineAPI(
             name=folder.name,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, self.get_request(self.superuser, self.project)
         )
         self.assertIn(folder.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
@@ -489,7 +495,7 @@ class TestTimelineAPI(
             name=self.project.title,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, self.get_request(self.superuser, self.project)
         )
         self.assertNotIn(self.project.title, desc)
         self.assertIn('sodar-tl-plugin-error', desc)
