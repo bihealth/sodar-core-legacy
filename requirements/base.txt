@@ -1,5 +1,5 @@
 # Wheel
-wheel==0.36.2
+wheel==0.37.1
 
 # Django
 django>=3.2.11, <3.3
