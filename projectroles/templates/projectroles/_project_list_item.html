@@ -33,7 +33,7 @@
         {% if request.user.is_superuser and remote_icon %}
           {{ remote_icon | safe }}
         {% endif %}
-        {% if p.public_guest_access %}
+        {% if p.type == 'PROJECT' and p.public_guest_access %}
           <span class="sodar-pr-project-public"
                 title="Public guest access"
                 data-toggle="tooltip" data-placement="top">

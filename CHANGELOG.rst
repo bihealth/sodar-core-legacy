@@ -39,6 +39,8 @@ Fixed
 
 - **Projectroles**
     - Parent owner set as owner in project create form for non-owner category members (#878)
+    - Project header icon tooltip alignment (#895)
+    - Redundant public access icon display for categories (#896)
 - **Siteinfo**
     - Layout responsivity issues with long labels (#883)
 - **Timeline**

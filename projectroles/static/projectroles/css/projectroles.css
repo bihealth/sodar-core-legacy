@@ -663,6 +663,10 @@ div#sodar-modal div.modal-dialog{
   color: #dfdfdf;
 }
 
+span.sodar-pr-header-icon {
+  display: inline-block;
+}
+
 a#sodar-pr-link-project-star {
   outline: 0;
   border: none;
