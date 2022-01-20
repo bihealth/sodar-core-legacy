@@ -15,11 +15,15 @@ class ManagementCommandLogger:
     logger = None
 
     #: Site logging level
-    log_level = getattr(settings, 'LOGGING_LEVEL', 'INFO')
-    site_level = getattr(logging, log_level, 'INFO')
+    site_level = getattr(
+        logging, getattr(settings, 'LOGGING_LEVEL', 'INFO'), 'INFO'
+    )
 
     #: Whether console logging is enabled
     console_log = CONSOLE_HANDLER in settings.LOGGING.get('handlers', {}).keys()
+
+    #: Disable console output if True
+    disable_output = getattr(settings, 'LOGGING_DISABLE_CMD_OUTPUT', False)
 
     def __init__(self, name):
         self.logger = logging.getLogger(name)
@@ -35,6 +39,8 @@ class ManagementCommandLogger:
         if isinstance(level, str):
             level = getattr(logging, level)
         self.logger.log(level, message)
+        if self.disable_output:
+            return
         printed = False
         if level >= self.site_level:
             printed = self.console_log

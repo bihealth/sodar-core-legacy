@@ -13,6 +13,8 @@ Unreleased
 Added
 -----
 
+- **Projectroles**
+    - Disabling ``ManagementCommandLogger`` with ``LOGGING_DISABLE_CMD_OUTPUT`` (#894)
 - **Siteinfo**
     - Missing site settings in ``CORE_SETTINGS`` (#877)
 - **Timeline**
