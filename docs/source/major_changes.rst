@@ -20,6 +20,7 @@ Release Highlights
 - Fix project creation owner assignment for non-owner category members
 - Improve layout in siteinfo and timeline apps
 - Upgrade third party Python package dependencies
+- Optimize queries in timeline app
 
 Breaking Changes
 ================
@@ -39,6 +40,13 @@ been deprecated in this version and will be removed in a future releases. UI
 test helpers from this version onwards will use the non-deprecated versions. You
 should the dependency in your projects, run tests, check the output and update
 any deprecated method calls if used.
+
+Timeline App API Updated
+------------------------
+
+If you are using ``TimelineAPI.get_event_description()`` in your own apps,
+please note that the method signature has changed. This may affect the use of
+positional arguments.
 
 
 v0.10.7 (2021-12-14)

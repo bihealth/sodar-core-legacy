@@ -262,11 +262,12 @@ class TimelineAPI:
         return events
 
     @classmethod
-    def get_event_description(cls, event, request=None):
+    def get_event_description(cls, event, plugin_lookup=None, request=None):
         """
         Return the description of a timeline event as HTML.
 
         :param event: ProjectEvent object
+        :param plugin_lookup: App plugin lookup dict (optional)
         :param request: Request object (optional)
         :return: String (contains HTML)
         """
@@ -279,7 +280,10 @@ class TimelineAPI:
         app_plugin = None
 
         if event.app != 'projectroles':
-            app_plugin = get_app_plugin(event.app)
+            if plugin_lookup:
+                app_plugin = plugin_lookup.get(event.app)
+            else:
+                app_plugin = get_app_plugin(event.app)
             if not app_plugin:
                 msg = 'Plugin not found: {}'.format(event.app)
                 logger.error(msg + ' (UUID={})'.format(event.sodar_uuid))

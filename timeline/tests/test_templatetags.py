@@ -58,14 +58,14 @@ class TestTemplateTags(
         """Test get_event_description()"""
         request = self.get_request(self.user_owner, self.project)
         self.assertEqual(
-            tags.get_event_description(self.event, request),
-            self.timeline.get_event_description(self.event, request),
+            tags.get_event_description(self.event, self.plugin_lookup, request),
+            self.timeline.get_event_description(self.event, request=request),
         )
 
     def test_get_event_description_no_request(self):
         """Test get_event_description() without a request object"""
         self.assertEqual(
-            tags.get_event_description(self.event),
+            tags.get_event_description(self.event, self.plugin_lookup),
             self.timeline.get_event_description(self.event),
         )
 
@@ -138,7 +138,7 @@ class TestTemplateTags(
 
     def test_get_app_icon_html(self):
         """Test get_app_icon_html()"""
-        ret = tags.get_app_icon_html(self.plugin_lookup, self.event)
+        ret = tags.get_app_icon_html(self.event, self.plugin_lookup)
         url = reverse(
             'projectroles:detail',
             kwargs={'project': self.project.sodar_uuid},
@@ -156,7 +156,7 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(self.plugin_lookup, event)
+        ret = tags.get_app_icon_html(event, self.plugin_lookup)
         self.assertIn(tags.ICON_PROJECTROLES, ret)
         self.assertIn('Projectroles', ret)
         self.assertNotIn('href=', ret)
@@ -175,7 +175,7 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(self.plugin_lookup, event)
+        ret = tags.get_app_icon_html(event, self.plugin_lookup)
         self.assertIn(plugin.icon, ret)
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
@@ -189,7 +189,7 @@ class TestTemplateTags(
             event_name=TEST_EVENT_NAME,
             description=TEST_EVENT_DESC,
         )
-        ret = tags.get_app_icon_html(self.plugin_lookup, event)
+        ret = tags.get_app_icon_html(event, self.plugin_lookup)
         self.assertIn(tags.ICON_UNKNOWN_APP, ret)
         self.assertIn(INVALID_APP_NAME, ret)  # No title = use app name in event
         self.assertNotIn('href=', ret)

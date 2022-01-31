@@ -12,7 +12,7 @@
     </a>
   </td>
   <td>
-    {% get_app_icon_html plugin_lookup event as event_icon %}
+    {% get_app_icon_html event plugin_lookup as event_icon %}
     {{ event_icon|safe }}
     {{ event.event_name }}
   </td>
@@ -25,9 +25,8 @@
     {% endif %}
   </td>
   <td>
-    {% autoescape off %}
-      {% get_event_description event request %}
-    {% endautoescape %}
+    {% get_event_description event plugin_lookup request as event_desc %}
+    {{ event_desc|safe }}
     {% if not details_card_mode and event|has_extra_data %}
       <a class="sodar-tl-link-extra text-primary pull-right" tabindex="0"
          data-toggle="modal" data-trigger="focus"

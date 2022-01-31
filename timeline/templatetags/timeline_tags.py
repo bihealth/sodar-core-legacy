@@ -36,19 +36,18 @@ def get_timestamp(event):
 
 
 @register.simple_tag
-def get_event_description(event, request=None):
+def get_event_description(event, plugin_lookup, request=None):
     """Return printable version of event description"""
-    return timeline.get_event_description(event, request)
+    return timeline.get_event_description(event, plugin_lookup, request)
 
 
 @register.simple_tag
 def get_details_events(project, view_classified=False):
     """Return recent events for card on project details page"""
-    events = ProjectEvent.objects.filter(project=project)
-    if not view_classified:
-        events = events.exclude(classified=True)
-    events = events.order_by('-pk')
-    return [x for x in events if x.get_current_status().status_type == 'OK'][:5]
+    c_kwargs = {'classified': False} if not view_classified else {}
+    return ProjectEvent.objects.filter(project=project, **c_kwargs).order_by(
+        '-pk'
+    )[:5]
 
 
 @register.simple_tag
@@ -58,7 +57,7 @@ def get_plugin_lookup():
 
 
 @register.simple_tag
-def get_app_icon_html(plugin_lookup, event):
+def get_app_icon_html(event, plugin_lookup):
     """Return icon link HTML for app by plugin lookup"""
     url = None
     url_kwargs = {}
