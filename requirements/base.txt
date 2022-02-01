@@ -2,7 +2,7 @@
 wheel==0.37.1
 
 # Django
-django>=3.2.11, <3.3
+django>=3.2.12, <3.3
 
 # Configuration
 django-environ>=0.8.1, <0.9
