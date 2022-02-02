@@ -28,6 +28,7 @@ Changed
     - Upgrade minimum Python version to v3.8, add v3.10 support (#885)
     - Upgrade minimum Django version to v3.2.12 (#879, #902)
     - Upgrade Python dependencies (#884, #893, #901)
+    - Upgrade to Chromedriver v97 (#905)
 - **Projectroles**
     - Display admin icon in user dropdown (#886)
     - Refactor UI tests (#882)
