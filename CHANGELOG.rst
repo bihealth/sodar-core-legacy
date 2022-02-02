@@ -47,6 +47,7 @@ Fixed
     - Project header icon tooltip alignment (#895)
     - Redundant public access icon display for categories (#896)
     - Icon size syntax (#875)
+    - Content of ``sodar-code-input`` partially hidden in Chrome (#904)
 - **Siteinfo**
     - Layout responsivity issues with long labels (#883)
 - **Timeline**
