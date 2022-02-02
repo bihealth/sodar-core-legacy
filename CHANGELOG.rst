@@ -25,6 +25,7 @@ Changed
 -------
 
 - **General**
+    - Upgrade minimum Python version to v3.8, add v3.10 support (#885)
     - Upgrade minimum Django version to v3.2.12 (#879, #902)
     - Upgrade Python dependencies (#884, #893, #901)
 - **Projectroles**

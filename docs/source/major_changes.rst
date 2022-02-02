@@ -16,6 +16,7 @@ v0.10.8 (WIP)
 Release Highlights
 ==================
 
+- Drop Python 3.7 support, add Python 3.10 support
 - Display missing site settings in siteinfo app
 - Fix project creation owner assignment for non-owner category members
 - Improve layout in siteinfo and timeline apps
@@ -27,6 +28,9 @@ Breaking Changes
 
 System Prerequisites
 --------------------
+
+SODAR Core no longer supports Python 3.7. Python 3.8 is currently both the
+minimum and default version to run SODAR Core and its dependencies.
 
 Third party Python package dependencies have been upgraded. See the
 ``requirements`` directory for up-to-date package versions and upgrade your
