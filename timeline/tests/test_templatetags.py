@@ -74,7 +74,7 @@ class TestTemplateTags(
         self.assertEqual(ProjectEvent.objects.count(), 1)
         self.assertEqual(len(tags.get_details_events(self.project)), 1)
         # Create 5 additional events for a total of 6
-        for i in range(5):
+        for _ in range(5):
             event = self._make_event(
                 project=self.project,
                 app='projectroles',

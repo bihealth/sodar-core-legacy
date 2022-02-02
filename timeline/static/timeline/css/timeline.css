@@ -43,6 +43,7 @@ a.sodar-tl-link-extra {
   .table#sodar-tl-table tbody tr td:nth-child(1) {
     white-space: normal;
   }
+
   .table#sodar-tl-table thead tr th:nth-child(3),
   .table#sodar-tl-table tbody tr td:nth-child(3) {
     display: none;
