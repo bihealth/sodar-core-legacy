@@ -28,6 +28,7 @@ from timeline.models import (
     ProjectEventObjectRef,
     DEFAULT_MESSAGES,
 )
+from timeline.templatetags import timeline_tags as tags
 
 
 # Global constants from settings
@@ -39,21 +40,27 @@ PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 
 
+class TimelineAPIMixin:
+    """Helpers for timeline API use"""
+
+    @classmethod
+    def get_request(cls, user, project):
+        """Return mock request"""
+        request = RequestFactory().get(
+            'timeline:list', kwargs={'project': project}
+        )
+        request.user = user
+        return request
+
+
 class TestTimelineAPI(
+    TimelineAPIMixin,
     ProjectEventMixin,
     ProjectEventStatusMixin,
     RemoteSiteMixin,
     FolderMixin,
     TestProjectEventBase,
 ):
-    def _get_request(self, user):
-        """Return mock request"""
-        request = RequestFactory().get(
-            'timeline:list', kwargs={'project': self.project}
-        )
-        request.user = user
-        return request
-
     def setUp(self):
         super().setUp()
         self.timeline = get_backend_api('timeline_backend')
@@ -419,7 +426,7 @@ class TestTimelineAPI(
             name=self.project.title,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.user_owner)
+            event, request=self.get_request(self.user_owner, self.project)
         )
         self.assertIn(self.project.title, desc)
         self.assertIn('sodar-tl-project-link', desc)
@@ -440,7 +447,7 @@ class TestTimelineAPI(
             name=site.name,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, request=self.get_request(self.superuser, self.project)
         )
         self.assertIn(site.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
@@ -467,7 +474,36 @@ class TestTimelineAPI(
             name=folder.name,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, request=self.get_request(self.superuser, self.project)
+        )
+        self.assertIn(folder.name, desc)
+        self.assertIn('sodar-tl-object-link', desc)
+
+    def test_get_event_description_plugin_lookup(self):
+        """Test getting event description with app plugin and lookup dict"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='filesfolders',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        folder = self._make_folder(
+            name='folder',
+            project=self.project,
+            folder=None,
+            description='',
+            owner=self.user_owner,
+        )
+        event.add_object(
+            obj=folder,
+            label='obj',
+            name=folder.name,
+        )
+        desc = self.timeline.get_event_description(
+            event,
+            plugin_lookup=tags.get_plugin_lookup(),
+            request=self.get_request(self.superuser, self.project),
         )
         self.assertIn(folder.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
@@ -489,7 +525,7 @@ class TestTimelineAPI(
             name=self.project.title,
         )
         desc = self.timeline.get_event_description(
-            event, self._get_request(self.superuser)
+            event, request=self.get_request(self.superuser, self.project)
         )
         self.assertNotIn(self.project.title, desc)
         self.assertIn('sodar-tl-plugin-error', desc)

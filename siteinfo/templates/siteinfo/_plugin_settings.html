@@ -11,11 +11,11 @@
     <div class="card-body">
       <dl class="row">
         {% for k, v in pl_data.settings.items %}
-          <dt class="col-md-5 text-nowrap">{{ k }}</dt>
+          <dt class="col-sm-5 text-nowrap">{{ k }}</dt>
           {% if v.set %}
-            <dd class="{% get_info_cls v.value %}">{% get_info_val v.value %}</dd>
+            <dd class="{% get_info_cls v.value 'col-lg-7' %}">{% get_info_val v.value %}</dd>
           {% else %}
-            <dd class="col-md-7 text-muted">(Unset)</dd>
+            <dd class="col-lg-7 text-muted">(Unset)</dd>
           {% endif %}
         {% endfor %}
       </dl>

@@ -17,12 +17,12 @@ from django.urls import reverse
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 
+from projectroles.app_settings import AppSettingAPI
 from projectroles.models import Role, SODAR_CONSTANTS, PROJECT_TAG_STARRED
 from projectroles.plugins import get_active_plugins
-from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
     RoleAssignmentMixin,
@@ -32,8 +32,11 @@ from projectroles.tests.test_models import (
     RemoteSiteMixin,
     RemoteProjectMixin,
 )
-
 from projectroles.utils import build_secret
+
+
+app_settings = AppSettingAPI()
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -60,11 +63,6 @@ REMOTE_SITE_NAME = 'Remote Site'
 REMOTE_SITE_URL = 'https://sodar.bihealth.org'
 REMOTE_SITE_DESC = 'New description'
 REMOTE_SITE_SECRET = build_secret()
-
-# App settings API
-app_settings = AppSettingAPI()
-
-User = auth.get_user_model()
 
 
 class LiveUserMixin:
@@ -116,10 +114,8 @@ class TestUIBase(
 
         # Init Chrome
         options = webdriver.ChromeOptions()
-
         for arg in self.chrome_options:
             options.add_argument(arg)
-
         self.selenium = webdriver.Chrome(chrome_options=options)
 
         # Prevent ElementNotVisibleException
@@ -143,14 +139,10 @@ class TestUIBase(
         self.user_guest = self._make_user('user_guest', False)
         self.user_no_roles = self._make_user('user_no_roles', False)
 
-        # Init projects
-
-        # Top level category
+        # Init category and project
         self.category = self._make_project(
             title='TestCategoryTop', type=PROJECT_TYPE_CATEGORY, parent=None
         )
-
-        # Subproject under category
         self.project = self._make_project(
             title='TestProjectSub',
             type=PROJECT_TYPE_PROJECT,
@@ -158,10 +150,8 @@ class TestUIBase(
         )
 
         # Init role assignments
-
         # Category
         self._make_assignment(self.category, self.user_owner, self.role_owner)
-
         # Sub level project
         self.owner_as = self._make_assignment(
             self.project, self.user_owner, self.role_owner
@@ -201,7 +191,6 @@ class TestUIBase(
         :param user: User object
         :param url: URL to redirect to (string)
         """
-
         # Legacy login mode
         if getattr(settings, 'PROJECTROLES_TEST_UI_LEGACY_LOGIN', False):
             return self.login_and_redirect_with_ui(
@@ -216,14 +205,12 @@ class TestUIBase(
         session[BACKEND_SESSION_KEY] = settings.AUTHENTICATION_BACKENDS[1]
         session[HASH_SESSION_KEY] = user.get_session_auth_hash()
         session.save()
-
         cookie = {
             'name': settings.SESSION_COOKIE_NAME,
             'value': session.session_key,
             'path': '/',
             'domain': self.build_selenium_url().split('//')[1].split(':')[0],
         }
-
         self.selenium.add_cookie(cookie)
         self.selenium.get(self.build_selenium_url(url))
 
@@ -233,7 +220,6 @@ class TestUIBase(
                 (By.ID, 'sodar-navbar-user-dropdown')
             )
         )
-
         # Wait for optional element
         if wait_elem:
             WebDriverWait(self.selenium, self.wait_time).until(
@@ -255,7 +241,6 @@ class TestUIBase(
         :param wait_loc: Locator of optional wait element (string, corresponds
                          to selenium "By" class members)
         """
-
         self.selenium.get(self.build_selenium_url('/'))
 
         ########################
@@ -263,8 +248,8 @@ class TestUIBase(
         ########################
 
         try:
-            user_button = self.selenium.find_element_by_id(
-                'sodar-navbar-user-dropdown'
+            user_button = self.selenium.find_element(
+                By.ID, 'sodar-navbar-user-dropdown'
             )
             user_button.click()
             # Wait for element to be visible
@@ -274,8 +259,8 @@ class TestUIBase(
                 )
             )
             try:
-                signout_button = self.selenium.find_element_by_id(
-                    'sodar-navbar-link-logout'
+                signout_button = self.selenium.find_element(
+                    By.ID, 'sodar-navbar-link-logout'
                 )
                 signout_button.click()
                 # Wait for redirect
@@ -293,19 +278,18 @@ class TestUIBase(
 
         self.selenium.get(self.build_selenium_url(url))
         # Submit user data into form
-        field_user = self.selenium.find_element_by_id('sodar-login-username')
+        field_user = self.selenium.find_element(By.ID, 'sodar-login-username')
         # field_user.send_keys(user.username)
         field_user.send_keys(user.username)
-        field_pass = self.selenium.find_element_by_id('sodar-login-password')
+        field_pass = self.selenium.find_element(By.ID, 'sodar-login-password')
         field_pass.send_keys('password')
-        self.selenium.find_element_by_id('sodar-login-submit').click()
+        self.selenium.find_element(By.ID, 'sodar-login-submit').click()
         # Wait for redirect
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located(
                 (By.ID, 'sodar-navbar-user-dropdown')
             )
         )
-
         # Wait for optional element
         if wait_elem:
             WebDriverWait(self.selenium, self.wait_time).until(
@@ -336,15 +320,13 @@ class TestUIBase(
         """
         for user in users:
             self.login_and_redirect(user, url, wait_elem, wait_loc)
-
             if exists:
                 self.assertIsNotNone(
-                    self.selenium.find_element_by_id(element_id)
+                    self.selenium.find_element(By.ID, element_id)
                 )
-
             else:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_id(element_id)
+                    self.selenium.find_element(By.ID, element_id)
 
     def assert_element_count(
         self,
@@ -381,8 +363,9 @@ class TestUIBase(
             if expected_count > 0:
                 self.assertEqual(
                     len(
-                        self.selenium.find_elements_by_xpath(
-                            xpath.format(path, attribute, search_string)
+                        self.selenium.find_elements(
+                            By.XPATH,
+                            xpath.format(path, attribute, search_string),
                         )
                     ),
                     expected_count,
@@ -390,8 +373,9 @@ class TestUIBase(
                 )
             else:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_xpath(
-                        xpath.format(path, attribute, search_string)
+                    self.selenium.find_element(
+                        By.XPATH,
+                        xpath.format(path, attribute, search_string),
                     )
 
     def assert_element_set(
@@ -416,17 +400,13 @@ class TestUIBase(
         for e in expected:
             user = e[0]
             elements = e[1]
-
             self.login_and_redirect(user, url, wait_elem, wait_loc)
-
             for element in elements:
-                self.assertIsNotNone(self.selenium.find_element_by_id(element))
-
+                self.assertIsNotNone(self.selenium.find_element(By.ID, element))
             not_expected = list(set(all_elements) ^ set(elements))
-
             for n in not_expected:
                 with self.assertRaises(NoSuchElementException):
-                    self.selenium.find_element_by_id(n)
+                    self.selenium.find_element(By.ID, n)
 
     def assert_element_active(
         self,
@@ -456,16 +436,13 @@ class TestUIBase(
             ec.presence_of_element_located((By.ID, element_id))
         )
 
-        element = self.selenium.find_element_by_id(element_id)
-
+        element = self.selenium.find_element(By.ID, element_id)
         self.assertIsNotNone(element)
         self.assertIn('active', element.get_attribute('class'))
 
         not_expected = [e for e in all_elements if e != element_id]
-        # print(not_expected)     # DEBUG
-
         for n in not_expected:
-            element = self.selenium.find_element_by_id(n)
+            element = self.selenium.find_element(By.ID, n)
             self.assertIsNotNone(element)
             self.assertNotIn('active', element.get_attribute('class'))
 
@@ -476,7 +453,6 @@ class TestBaseTemplate(TestUIBase):
     def test_admin_link(self):
         """Test admin site link visibility according to user permissions"""
         expected_true = [self.superuser]
-
         expected_false = [
             self.owner_as.user,
             self.delegate_as.user,
@@ -484,13 +460,10 @@ class TestBaseTemplate(TestUIBase):
             self.guest_as.user,
             self.user_no_roles,
         ]
-
         url = reverse('home')
-
         self.assert_element_exists(
             expected_true, url, 'sodar-navbar-link-admin', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-navbar-link-admin', False
         )
@@ -503,8 +476,8 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         return len(
             [
                 e
-                for e in self.selenium.find_elements_by_class_name(
-                    'sodar-pr-project-list-item'
+                for e in self.selenium.find_elements(
+                    By.CLASS_NAME, 'sodar-pr-project-list-item'
                 )
                 if e.get_attribute('style') != 'display: none;'
             ]
@@ -529,8 +502,8 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        f_input = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-filter'
+        f_input = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-filter'
         )
         f_input.send_keys('sub')
         self.assertEqual(self._get_item_vis_count(), 1)
@@ -544,14 +517,14 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-link-star'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 1)
         self.assertEqual(
-            self.selenium.find_element_by_id(
-                'sodar-pr-home-display-nostars'
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-home-display-nostars'
             ).get_attribute('style'),
             'display: none;',
         )
@@ -562,20 +535,20 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.login_and_redirect(self.owner_as.user, url)
         self.assertEqual(self._get_item_vis_count(), 2)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-project-list-link-star'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-project-list-link-star'
         )
         button.click()
         self.assertEqual(self._get_item_vis_count(), 0)
         self.assertNotEqual(
-            self.selenium.find_element_by_id(
-                'sodar-pr-home-display-nostars'
+            self.selenium.find_element(
+                By.ID, 'sodar-pr-home-display-nostars'
             ).get_attribute('style'),
             'display: none;',
         )
 
     def test_link_create_toplevel(self):
-        """Test project creation link visibility according to user permissions"""
+        """Test project creation link visibility"""
         expected_true = [self.superuser]
         expected_false = [
             self.owner_as.user,
@@ -599,7 +572,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url)
         self.assertIsNotNone(
-            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
+            self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
         )
 
     def test_inline_head_include_disabled(self):
@@ -607,16 +580,16 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url)
         with self.assertRaises(NoSuchElementException):
-            self.selenium.find_element_by_xpath('//meta[@name="keywords"]')
+            self.selenium.find_element(By.XPATH, '//meta[@name="keywords"]')
 
 
-class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
-    """Tests for the project detail page UI functionalities"""
+class TestProjectDetailView(RemoteSiteMixin, RemoteProjectMixin, TestUIBase):
+    """Tests for ProjectDetailView UI"""
 
     def _setup_remote_project(
         self, site_mode=SITE_MODE_TARGET, user_visibility=True
     ):
-        """Create a remote site and project with given user_visibility setting"""
+        """Create remote site and project with given user_visibility setting"""
         self.remote_site = self._make_site(
             name=REMOTE_SITE_NAME,
             url=REMOTE_SITE_URL,
@@ -634,32 +607,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             project=self.project,
         )
 
-    def _add_remote_association(self):
-        """Fill an submits add source/target site form"""
-        # Instead we could also set up a real RemoteProject, but this makes
-        # the test run faster
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
-
-        name_field = self.selenium.find_element_by_id('id_name')
-        url_field = self.selenium.find_element_by_id('id_url')
-        secret_field = self.selenium.find_element_by_id('id_secret')
-
-        name_field.send_keys('some name')
-        url_field.send_keys('http://url.url')
-        secret_field.send_keys('b2oitbge4rlme5yxtciqszf98vffsg2p')
-
-        secret_field.submit()
-        # Wait for form submit
-        WebDriverWait(self.selenium, self.wait_time).until(
-            ec.presence_of_element_located(
-                (By.ID, 'sodar-pr-remote-site-table')
-            )
-        )
-
     def test_project_links(self):
-        """Test visibility of project links according to user
-        permissions"""
+        """Test visibility of project links"""
         expected = [
             (
                 self.superuser,
@@ -694,17 +643,13 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
                 ['sodar-pr-link-project-roles', 'sodar-pr-link-project-star'],
             ),
         ]
-
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
     def test_project_links_category(self):
-        """Test visibility of top level category links according to user
-        permissions"""
-
+        """Test visibility of top level category links"""
         # Add user with rights only for the subproject
         sub_user = self._make_user('sub_user', False)
         self._make_assignment(self.project, sub_user, self.role_contributor)
@@ -733,7 +678,6 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
-
         self.assert_element_set(expected, PROJECT_LINK_IDS, url)
 
     def test_copy_uuid_visibility_default(self):
@@ -750,9 +694,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         )
         for user in users:
             self.login_and_redirect(user, url)
-
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-btn-copy-uuid')
+                self.selenium.find_element(By.ID, 'sodar-pr-btn-copy-uuid')
 
     def test_copy_uuid_visibility_enabled(self):
         """Test UUID copy button visibility with setting enabled"""
@@ -768,6 +711,22 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         self.assert_element_exists(
             [self.user_owner], url, 'sodar-pr-btn-copy-uuid', True
         )
+
+    def test_plugin_links(self):
+        """Test visibility of app plugin links"""
+        expected = [(self.superuser, len(get_active_plugins()))]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
+
+    def test_plugin_cards(self):
+        """Test visibility of app plugin cards"""
+        expected = [(self.superuser, len(get_active_plugins()))]
+        url = reverse(
+            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+        )
+        self.assert_element_count(expected, url, 'sodar-pr-app-item')
 
     def test_remote_project_visible(self):
         """Test project card for enabled visbility for all users"""
@@ -786,11 +745,11 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         # Visibile for all users
         for user in users:
             self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            project_details = self.selenium.find_element(
+                By.ID, 'sodar-pr-details-card-remote'
             )
-            remote_project = project_details.find_element_by_class_name(
-                'btn-info'
+            remote_project = project_details.find_element(
+                By.CLASS_NAME, 'btn-info'
             )
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
@@ -806,16 +765,17 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
         for user in users:
             self.login_and_redirect(user, url)
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
-
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-details-card-remote'
+                )
         # Greyed out for superuser and owner
         for user in [self.superuser, self.user_owner]:
             self.login_and_redirect(user, url)
-            project_details = self.selenium.find_element_by_id(
-                'sodar-pr-details-card-remote'
+            project_details = self.selenium.find_element(
+                By.ID, 'sodar-pr-details-card-remote'
             )
-            remote_project = project_details.find_element_by_class_name(
-                'btn-secondary'
+            remote_project = project_details.find_element(
+                By.CLASS_NAME, 'btn-secondary'
             )
             self.assertEqual(remote_project.text, REMOTE_SITE_NAME)
 
@@ -836,14 +796,15 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in users:
             self.login_and_redirect(user, url)
-
             with self.assertRaises(NoSuchElementException):
-                self.selenium.find_element_by_id('sodar-pr-details-card-remote')
+                self.selenium.find_element(
+                    By.ID, 'sodar-pr-details-card-remote'
+                )
 
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_visible(self):
         """Test visibility of peer projects on TARGET site (user_display=False)"""
-        # There needs to be a source mode remote project as master project
+        # There needs to be a source mode remote project as master project,
         # otherwise peer project logic wont be reached
         source_site = self._make_site(
             name='Second Remote Site',
@@ -874,8 +835,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in users:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 2)
             self.assertIn(
@@ -890,7 +851,7 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_peer_project_target_invisible(self):
         """Test invisibility of peer projects on TARGET site for users (user_display=False)"""
-        # There needs to be a source mode remote project as master project
+        # There needs to be a source mode remote project as master project,
         # otherwise peer project logic wont be reached
         source_site = self._make_site(
             name='Second Remote Site',
@@ -900,14 +861,12 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
             secret=build_secret(),
             user_display=False,
         )
-
         self._make_remote_project(
             project_uuid=self.project.sodar_uuid,
             site=source_site,
             level=SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
             project=self.project,
         )
-
         self._setup_remote_project(
             site_mode=SITE_MODE_PEER, user_visibility=False
         )
@@ -924,8 +883,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in expected_true:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 2)
             self.assertIn(
@@ -939,8 +898,8 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
 
         for user in expected_false:
             self.login_and_redirect(user, url)
-            remote_links = self.selenium.find_elements_by_class_name(
-                'sodar-pr-link-remote'
+            remote_links = self.selenium.find_elements(
+                By.CLASS_NAME, 'sodar-pr-link-remote'
             )
             self.assertEqual(len(remote_links), 1)
             self.assertIn(
@@ -948,77 +907,17 @@ class TestProjectDetail(TestUIBase, RemoteSiteMixin, RemoteProjectMixin):
                 remote_links[0].get_attribute('class'),
             )
 
-    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
-    def test_target_visibility(self):
-        """Test form toggle and remote site table column on target site"""
-        # Check Form Toggle visibility on TARGET site
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
 
-        self.assertFalse(
-            self.selenium.find_element_by_id('id_user_display').is_displayed()
-        )
-
-        self._add_remote_association()
-        # Check Visible to User column visibility
-        remote_site_table = self.selenium.find_element_by_id(
-            'sodar-pr-remote-site-table'
-        )
-        with self.assertRaises(NoSuchElementException):
-            remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible to users')]"
-            )
-
-        with self.assertRaises(NoSuchElementException):
-            remote_site_table.find_element_by_xpath(
-                "//td[contains(text(), 'Yes')]"
-            )
-
-    def test_source_visibility(self):
-        """Test form toggle and remote site table column on source site"""
-        # Check Form Toggle visibility on SOURCE site
-        url = reverse('projectroles:remote_site_create')
-        self.login_and_redirect(self.superuser, url)
-        element = self.selenium.find_element_by_id('div_id_user_display')
-        self.assertIsNotNone(element)
-
-        self._add_remote_association()
-        # Check Visible to User column visibility
-        remote_site_table = self.selenium.find_element_by_id(
-            'sodar-pr-remote-site-table'
-        )
-        try:
-            remote_site_table.find_element_by_xpath(
-                "//th[contains(text(), 'Visible')]"
-            )
-        except NoSuchElementException:
-            self.fail(
-                'User Display column (header) should exist on SOURCE remote '
-                'site overview'
-            )
-        try:
-            remote_site_table.find_element_by_xpath(
-                "//td[contains(text(), 'Yes')]"
-            )
-        except NoSuchElementException:
-            self.fail(
-                'User Display column (data) should exist on SOURCE remote site '
-                'overview'
-            )
-
-
-class TestProjectRoles(RemoteTargetMixin, TestUIBase):
-    """Tests for the project roles page UI functionalities"""
+class TestProjectRoleView(RemoteTargetMixin, TestUIBase):
+    """Tests for ProjectRoleView UI"""
 
     def test_list_buttons(self):
-        """Test visibility of role list button group according to user
-        permissions"""
+        """Test visibility of role list button group"""
         good_users = [self.superuser, self.owner_as.user, self.delegate_as.user]
         bad_users = [self.contributor_as.user, self.guest_as.user]
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             good_users, url, 'sodar-pr-btn-role-op', True
         )
@@ -1029,7 +928,6 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_list_buttons_target(self):
         """Test visibility of role list button group as target"""
-
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
@@ -1042,18 +940,16 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.login_and_redirect(self.superuser, url)
-        btn = self.selenium.find_element_by_id('sodar-pr-btn-role-op')
-        self.assertEqual(btn.is_enabled(), False)
 
+        btn = self.selenium.find_element(By.ID, 'sodar-pr-btn-role-op')
+        self.assertEqual(btn.is_enabled(), False)
         self.assert_element_exists(
             non_superusers, url, 'sodar-pr-btn-role-op', False
         )
 
     def test_role_list_invite_button(self):
-        """Test visibility of role invite button according to user
-        permissions"""
+        """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -1063,18 +959,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-invite', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-btn-role-list-invite', False
         )
 
     def test_role_list_add_button(self):
-        """Test visibility of role invite button according to user
-        permissions"""
+        """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -1084,18 +977,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:roles', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-create', True
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-btn-role-list-create', False
         )
 
     def test_role_buttons(self):
-        """Test visibility of role management buttons according to user
-        permissions"""
+        """Test visibility of role management buttons"""
         expected = [
             (self.superuser, 4),
             (self.owner_as.user, 4),
@@ -1116,15 +1006,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        button = self.selenium.find_element_by_id('sodar-pr-email-preview-link')
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-email-preview-link'
+        )
         button.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'sodar-email-body'))
         )
-
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body')
+            self.selenium.find_element(By.ID, 'sodar-email-body')
         )
 
     def test_invite_preview(self):
@@ -1135,17 +1025,15 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        button = self.selenium.find_element_by_id(
-            'sodar-pr-invite-preview-link'
+        button = self.selenium.find_element(
+            By.ID, 'sodar-pr-invite-preview-link'
         )
         button.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'sodar-email-body'))
         )
-
         self.assertIsNotNone(
-            self.selenium.find_element_by_id('sodar-email-body')
+            self.selenium.find_element(By.ID, 'sodar-email-body')
         )
 
     def test_widget_user_options(self):
@@ -1156,36 +1044,33 @@ class TestProjectRoles(RemoteTargetMixin, TestUIBase):
         )
         self.login_and_redirect(self.owner_as.user, url)
 
-        widget = self.selenium.find_element_by_class_name(
-            'select2-container--default'
+        widget = self.selenium.find_element(
+            By.CLASS_NAME, 'select2-container--default'
         )
         widget.click()
-
         WebDriverWait(self.selenium, self.wait_time).until(
             ec.presence_of_element_located((By.ID, 'select2-id_user-results'))
         )
 
-        # assert that options are displayed
+        # Assert that options are displayed
         self.assertIsNotNone(
-            self.selenium.find_element_by_class_name('select2-results__option')
+            self.selenium.find_element(By.CLASS_NAME, 'select2-results__option')
         )
-
         self.assertEqual(
             len(
-                self.selenium.find_elements_by_class_name(
-                    'select2-selection__rendered'
+                self.selenium.find_elements(
+                    By.CLASS_NAME, 'select2-selection__rendered'
                 )
             ),
             1,
         )
 
 
-class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
-    """Tests for the project invite list page UI functionalities"""
+class TestProjectInviteView(ProjectInviteMixin, TestUIBase):
+    """Tests for ProjectInviteView UI"""
 
     def test_list_buttons(self):
-        """Test visibility of invite list button group according to user
-        permissions"""
+        """Test visibility of invite list button group"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -1194,14 +1079,12 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         url = reverse(
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list', True
         )
 
     def test_role_list_invite_button(self):
-        """Test visibility of role invite button according to user
-        permissions"""
+        """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -1210,14 +1093,12 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         url = reverse(
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-invite', True
         )
 
     def test_role_list_add_button(self):
-        """Test visibility of role invite button according to user
-        permissions"""
+        """Test visibility of role invite button"""
         expected_true = [
             self.superuser,
             self.owner_as.user,
@@ -1226,15 +1107,12 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         url = reverse(
             'projectroles:invites', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-btn-role-list-create', True
         )
 
     def test_invite_buttons(self):
-        """Test visibility of invite management buttons according to user
-        permissions"""
-
+        """Test visibility of invite management buttons"""
         self._make_invite(
             email='test@example.com',
             project=self.project,
@@ -1242,7 +1120,6 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
             issuer=self.owner_as.user,
             message='',
         )
-
         expected = [
             (self.superuser, 1),
             (self.owner_as.user, 1),
@@ -1254,29 +1131,113 @@ class TestProjectInviteList(ProjectInviteMixin, TestUIBase):
         self.assert_element_count(expected, url, 'sodar-pr-btn-grp-invite')
 
 
-class TestPlugins(TestUIBase):
-    """Tests for app plugins in the UI"""
+class TestProjectCreateView(TestUIBase):
+    """Tests for ProjectCreateView UI"""
 
-    # NOTE: Setting up the plugins is done during migration
-    def setUp(self):
-        super().setUp()
-        self.plugin_count = len(get_active_plugins())
+    def test_owner_widget_top(self):
+        """Test rendering the owner widget on the top level"""
+        url = reverse('projectroles:create')
+        self.assert_element_exists([self.superuser], url, 'div_id_owner', True)
 
-    def test_plugin_links(self):
-        """Test visibility of app plugin links"""
-        expected = [(self.superuser, self.plugin_count)]
+    def test_owner_widget_sub(self):
+        """Test rendering the owner widget under a category"""
+        # Add new user, make them a contributor in category
+        new_user = self._make_user('new_user')
+        self._make_assignment(self.category, new_user, self.role_contributor)
         url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+            'projectroles:create', kwargs={'project': self.category.sodar_uuid}
         )
-        self.assert_element_count(expected, url, 'sodar-pr-link-app-plugin')
+        self.assert_element_exists([self.superuser], url, 'div_id_owner', True)
+        self.assert_element_exists(
+            [self.user_owner, new_user], url, 'div_id_owner', False
+        )
 
-    def test_plugin_cards(self):
-        """Test visibility of app plugin cards"""
-        expected = [(self.superuser, self.plugin_count)]
-        url = reverse(
-            'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
+
+class TestRemoteSiteCreateView(RemoteSiteMixin, TestUIBase):
+    """Tests for RemoteSiteCreateView UI"""
+
+    def test_source_user_toggle(self):
+        """Test site create form user display toggle on source site"""
+        url = reverse('projectroles:remote_site_create')
+        self.login_and_redirect(self.superuser, url)
+        element = self.selenium.find_element(By.ID, 'div_id_user_display')
+        self.assertIsNotNone(element)
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_target_user_toggle(self):
+        """Test site create form user display toggle on target site"""
+        url = reverse('projectroles:remote_site_create')
+        self.login_and_redirect(self.superuser, url)
+        self.assertFalse(
+            self.selenium.find_element(By.ID, 'id_user_display').is_displayed()
         )
-        self.assert_element_count(expected, url, 'sodar-pr-app-item')
+
+
+class TestRemoteSiteListView(RemoteSiteMixin, TestUIBase):
+    """Tests for RemoteSiteListView UI"""
+
+    def test_source_user_display(self):
+        """Test site list user display elements on source site"""
+        self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_TARGET,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+            user_display=True,
+        )
+        url = reverse('projectroles:remote_sites')
+        self.login_and_redirect(self.superuser, url)
+
+        # Check Visible to User column visibility
+        remote_site_table = self.selenium.find_element(
+            By.ID, 'sodar-pr-remote-site-table'
+        )
+        try:
+            remote_site_table.find_element(
+                By.XPATH, '//th[contains(text(), "Visible")]'
+            )
+        except NoSuchElementException:
+            self.fail(
+                'User Display column (header) should exist on SOURCE remote '
+                'site overview'
+            )
+        try:
+            remote_site_table.find_element(
+                By.XPATH, '//td[contains(text(), "Yes")]'
+            )
+        except NoSuchElementException:
+            self.fail(
+                'User Display column (data) should exist on SOURCE remote site '
+                'overview'
+            )
+
+    @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
+    def test_target_list_user_display(self):
+        """Test site list user display elements on target site"""
+        self._make_site(
+            name=REMOTE_SITE_NAME,
+            url=REMOTE_SITE_URL,
+            mode=SITE_MODE_SOURCE,
+            description='',
+            secret=REMOTE_SITE_SECRET,
+            user_display=True,
+        )
+        url = reverse('projectroles:remote_sites')
+        self.login_and_redirect(self.superuser, url)
+
+        # Check Visible to User column visibility
+        remote_site_table = self.selenium.find_element(
+            By.ID, 'sodar-pr-remote-site-table'
+        )
+        with self.assertRaises(NoSuchElementException):
+            remote_site_table.find_element(
+                By.XPATH, '//th[contains(text(), "Visible to users")]'
+            )
+        with self.assertRaises(NoSuchElementException):
+            remote_site_table.find_element(
+                By.XPATH, '//td[contains(text(), "Yes")]'
+            )
 
 
 class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
@@ -1284,13 +1245,11 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
 
     def setUp(self):
         super().setUp()
-
         self.sidebar_ids = [
             'sodar-pr-nav-project-detail',
             'sodar-pr-nav-project-roles',
             'sodar-pr-nav-project-update',
         ]
-
         # Add app plugin navs
         for p in get_active_plugins():
             self.sidebar_ids.append('sodar-pr-nav-app-plugin-{}'.format(p.name))
@@ -1300,7 +1259,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             [self.superuser], url, 'sodar-pr-sidebar', True
         )
@@ -1308,7 +1266,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     def test_render_home(self):
         """Test visibility of sidebar in the home view"""
         url = reverse('home')
-
         self.assert_element_exists(
             [self.superuser], url, 'sodar-pr-sidebar', True
         )
@@ -1319,7 +1276,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
         expected = [(self.superuser, len(get_active_plugins()))]
-
         self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
     @override_settings(PROJECTROLES_HIDE_APP_LINKS=['timeline'])
@@ -1332,7 +1288,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             (self.superuser, len(get_active_plugins())),
             (self.user_owner, len(get_active_plugins()) - 1),
         ]
-
         self.assert_element_count(expected, url, 'sodar-pr-nav-app-plugin')
 
     def test_update_link(self):
@@ -1346,7 +1301,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_true, url, 'sodar-pr-nav-project-update', True
         )
@@ -1363,7 +1317,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_update_link_target(self):
         """Test visibility of update link as target"""
-
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
@@ -1445,7 +1398,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target_remote(self):
         """Test visibility of create link as target under a remote category"""
-
         # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
 
@@ -1470,7 +1422,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     @override_settings(PROJECTROLES_SITE_MODE=SITE_MODE_TARGET)
     def test_create_link_target_local(self):
         """Test visibility of create link as target under a local category"""
-
         expected_true = [self.superuser, self.owner_as.user]
         expected_false = [
             self.delegate_as.user,
@@ -1500,10 +1451,7 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
     )
     def test_create_link_target_disable(self):
         """Test visibility of create link as target with creation not allowed"""
-
-        # Set up site as target
         self._set_up_as_target(projects=[self.category, self.project])
-
         expected_false = [
             self.superuser,
             self.owner_as.user,
@@ -1514,7 +1462,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.category.sodar_uuid}
         )
-
         self.assert_element_exists(
             expected_false, url, 'sodar-pr-nav-project-create', False
         )
@@ -1527,7 +1474,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:detail', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_active(
             self.superuser, 'sodar-pr-nav-project-detail', self.sidebar_ids, url
         )
@@ -1613,7 +1559,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             issuer=self.owner_as.user,
             message='',
         )
-
         self.assert_element_active(
             self.superuser,
             'sodar-pr-nav-project-roles',
@@ -1633,7 +1578,6 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
             issuer=self.owner_as.user,
             message='',
         )
-
         self.assert_element_active(
             self.superuser,
             'sodar-pr-nav-project-roles',
@@ -1649,14 +1593,13 @@ class TestProjectSidebar(ProjectInviteMixin, RemoteTargetMixin, TestUIBase):
         url = reverse(
             'projectroles:update', kwargs={'project': self.project.sodar_uuid}
         )
-
         self.assert_element_active(
             self.superuser, 'sodar-pr-nav-project-update', self.sidebar_ids, url
         )
 
 
-class TestProjectSearch(TestUIBase):
-    """Tests for the project search UI functionalities"""
+class TestProjectSearchResultsView(TestUIBase):
+    """Tests for ProjectSearchResultsView UI"""
 
     def test_search_results(self):
         """Test project search items visibility according to user permissions"""

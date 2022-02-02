@@ -7,6 +7,62 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.8 (2022-02-02)
+====================
+
+Added
+-----
+
+- **Projectroles**
+    - Disabling ``ManagementCommandLogger`` with ``LOGGING_DISABLE_CMD_OUTPUT`` (#894)
+- **Siteinfo**
+    - Missing site settings in ``CORE_SETTINGS`` (#877)
+- **Timeline**
+    - ``get_plugin_lookup()`` and ``get_app_icon_html()`` template tags (#888)
+    - Template tag tests (#891)
+
+Changed
+-------
+
+- **General**
+    - Upgrade minimum Python version to v3.8, add v3.10 support (#885)
+    - Upgrade minimum Django version to v3.2.12 (#879, #902)
+    - Upgrade Python dependencies (#884, #893, #901)
+    - Upgrade to Chromedriver v97 (#905)
+- **Projectroles**
+    - Display admin icon in user dropdown (#886)
+    - Refactor UI tests (#882)
+- **Timeline**
+    - Improve event list layout responsivity (#887)
+    - Replace event list app column with app icon (#888)
+    - Set default kwarg values for model test helpers (#890)
+    - Move ``get_request()`` to ``TimelineAPIMixin``
+    - Display recent events regardless of status in details card (#899)
+    - Optimize ``get_details_events()`` (#899)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Parent owner set as owner in project create form for non-owner category members (#878)
+    - Project header icon tooltip alignment (#895)
+    - Redundant public access icon display for categories (#896)
+    - Icon size syntax (#875)
+    - Content of ``sodar-code-input`` partially hidden in Chrome (#904)
+- **Siteinfo**
+    - Layout responsivity issues with long labels (#883)
+- **Timeline**
+    - Redundant app plugin queries in event list (#889, #900)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``_add_remote_association()`` helper from UI tests (#882)
+- **Timeline**
+    - Unused ``get_app_url()`` template tag (#888)
+
+
 v0.10.7 (2021-12-14)
 ====================
 

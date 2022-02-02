@@ -149,11 +149,11 @@
         <div class="card-body">
           <dl class="row">
             {% for plugin in project_plugins.keys %}
-            <dt class="col-md-3">
+            <dt class="col-md-4">
               <i class="iconify" data-icon="{{ plugin.icon }}"></i>
               {{ plugin.title }}
             </dt>
-            <dd class="col-md-9">{{ plugin.description }}</dd>
+            <dd class="col-md-8">{{ plugin.description }}</dd>
             {% endfor %}
           </dl>
         </div>
@@ -166,11 +166,11 @@
         <div class="card-body">
           <dl class="row">
             {% for plugin in site_plugins %}
-            <dt class="col-md-3">
+            <dt class="col-md-4">
               <i class="iconify" data-icon="{{ plugin.icon }}"></i>
               {{ plugin.title }}
             </dt>
-            <dd class="col-md-9">{{ plugin.description }}</dd>
+            <dd class="col-md-8">{{ plugin.description }}</dd>
             {% endfor %}
           </dl>
         </div>
@@ -183,11 +183,11 @@
         <div class="card-body">
           <dl class="row">
             {% for plugin in backend_plugins.keys %}
-            <dt class="col-md-3">
+            <dt class="col-md-4">
               <i class="iconify" data-icon="{{ plugin.icon }}"></i>
               {{ plugin.title }}
             </dt>
-            <dd class="col-md-9">{{ plugin.description }}</dd>
+            <dd class="col-md-8">{{ plugin.description }}</dd>
             {% endfor %}
           </dl>
         </div>
@@ -209,11 +209,11 @@
         <div class="card-body">
           <dl class="row">
             {% for k, v in settings_core.items %}
-              <dt class="col-md-5 text-nowrap">{{ k }}</dt>
+              <dt class="col-sm-5 text-nowrap">{{ k }}</dt>
               {% if v.set %}
-                <dd class="{% get_info_cls v.value %}">{% get_info_val v.value %}</dd>
+                <dd class="{% get_info_cls v.value 'col-lg-7' %}">{% get_info_val v.value %}</dd>
               {% else %}
-                <dd class="col-md-7 text-muted">(Unset)</dd>
+                <dd class="col-lg-7 text-muted">(Unset)</dd>
               {% endif %}
             {% endfor %}
           </dl>

@@ -112,9 +112,9 @@ class TestProjectListView(
     def test_render_details(self):
         """Test visibility of events on the project details page"""
         expected = [
-            (self.superuser, 1),
-            (self.owner_as.user, 1),
-            (self.delegate_as.user, 1),
+            (self.superuser, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
             (self.contributor_as.user, 1),
             (self.guest_as.user, 1),
         ]

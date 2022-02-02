@@ -63,7 +63,6 @@ used. An example can be seen below:
 
     {% include 'projectroles/_pagination.html' with pg_small=True %}
 
-
 Management Command Logger
 -------------------------
 
@@ -86,6 +85,12 @@ to access the actual Python logger being used, you can access it via
     The use of this logger class assumes your site sets up logging simlarly to
     the example site and the SODAR Django Site template, including the use of a
     ``LOGGING_LEVEL`` Django settings variable.
+
+.. hint::
+
+    To disable redundant console output from commands using this logger in e.g.
+    your site's test configuration, you can set the
+    ``LOGGING_DISABLE_CMD_OUTPUT`` Django setting to ``True``.
 
 
 Using Icons

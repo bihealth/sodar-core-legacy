@@ -54,7 +54,7 @@ PostgreSQL
     administrative user.
 
 Development Essentials
-    We assume that you have ``git``, Python 3.7 or above, and other essential
+    We assume that you have ``git``, Python 3.8 or above, and other essential
     tools installed.
     If you are using a mainstream Unix-like distribution (Mac qualifies) then
     you should be good to go.
@@ -109,7 +109,7 @@ We simply use ``pip`` for this:
 
     # you must have your miniconda3 install sourced, skip if done already
     $ source ~/miniconda3/bin/activate
-    $ pip install django-sodar-core==0.10.7
+    $ pip install django-sodar-core==0.10.8
 
 
 Download Example Site

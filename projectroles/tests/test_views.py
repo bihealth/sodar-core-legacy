@@ -140,7 +140,7 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
 
     def test_render(self):
-        """Test to ensure the home view renders correctly"""
+        """Test rendering the home view"""
         with self.login(self.user):
             response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
@@ -414,7 +414,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
         self._make_assignment(category, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.make_user('newuser')
+        self.make_user('new_user')
 
         with self.login(self.user):
             response = self.client.get(
@@ -441,13 +441,35 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             ],
         )
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertEqual(form.initial['owner'], self.user)
+
+    def test_render_sub_cat_member(self):
+        """Test rendering under a category as a category non-owner"""
+        category = self._make_project(
+            'TestCategory', PROJECT_TYPE_CATEGORY, None
+        )
+        self._make_assignment(category, self.user, self.role_owner)
+        new_user = self.make_user('new_user')
+        self._make_assignment(category, new_user, self.role_contributor)
+
+        with self.login(new_user):
+            response = self.client.get(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                )
+            )
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        # Current user should be the initial value for owner
+        self.assertEqual(form.initial['owner'], new_user)
 
     def test_render_sub_project(self):
         """Test rendering if creating under a project (should fail)"""
         project = self._make_project('TestProject', PROJECT_TYPE_PROJECT, None)
         self._make_assignment(project, self.user, self.role_owner)
         # Create another user to enable checking for owner selection
-        self.make_user('newuser')
+        self.make_user('new_user')
 
         with self.login(self.user):
             response = self.client.get(
@@ -474,7 +496,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         category = self._make_project(
             'TestCategory', PROJECT_TYPE_CATEGORY, None
         )
-        user_new = self.make_user('newuser')
+        user_new = self.make_user('new_user')
         self._make_assignment(category, user_new, self.role_owner)
 
         with self.login(self.user):
@@ -599,7 +621,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 APP_SETTING_SCOPE_PROJECT, post_safe=True
             )
         )
-
         with self.login(self.user):
             response = self.client.post(
                 reverse(
@@ -612,7 +633,6 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Project.objects.all().count(), 2)
         project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
-        self.assertIsNotNone(project)
         # No alerts or emails should be sent as the same user triggered this
         self.assertEqual(self.app_alert_model.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
@@ -644,6 +664,46 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             'sodar_uuid': owner_as.sodar_uuid,
         }
         self.assertEqual(model_to_dict(owner_as), expected)
+
+    def test_create_project_cat_member(self):
+        """Test Project creation as category member"""
+        # Create category and add new user as member
+        category = self._make_project(
+            title='TestCategory', type=PROJECT_TYPE_CATEGORY, parent=None
+        )
+        self._make_assignment(category, self.user, self.role_owner)
+        new_user = self.make_user('new_user')
+        self._make_assignment(category, new_user, self.role_contributor)
+
+        values = {
+            'title': 'TestProject',
+            'type': PROJECT_TYPE_PROJECT,
+            'parent': category.sodar_uuid,
+            'owner': new_user.sodar_uuid,
+            'description': 'description',
+            'public_guest_access': False,
+        }
+        values.update(
+            app_settings.get_all_defaults(
+                APP_SETTING_SCOPE_PROJECT, post_safe=True
+            )
+        )
+        with self.login(self.user):
+            response = self.client.post(
+                reverse(
+                    'projectroles:create',
+                    kwargs={'project': category.sodar_uuid},
+                ),
+                values,
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Project.objects.all().count(), 2)
+        project = Project.objects.get(type=PROJECT_TYPE_PROJECT)
+        self.assertEqual(project.get_owner().user, new_user)
+        # Alert and email for parent owner should be created
+        self.assertEqual(self.app_alert_model.objects.count(), 1)
+        self.assertEqual(len(mail.outbox), 1)
 
 
 class TestProjectUpdateView(
@@ -688,7 +748,7 @@ class TestProjectUpdateView(
     def test_render_parent(self):
         """Test current parent selectability without parent role"""
         # Create new user and project, make new user the owner
-        user_new = self.make_user('newuser')
+        user_new = self.make_user('new_user')
         self.owner_as.user = user_new
         self.owner_as.save()
         # Create another category with new user as owner
@@ -2342,7 +2402,7 @@ class TestRoleAssignmentUpdateView(
         )
 
         # Create guest user and role
-        self.user_new = self.make_user('newuser')
+        self.user_new = self.make_user('new_user')
         self.role_as = self._make_assignment(
             self.project, self.user_new, self.role_guest
         )

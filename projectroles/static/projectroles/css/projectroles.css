@@ -663,6 +663,10 @@ div#sodar-modal div.modal-dialog{
   color: #dfdfdf;
 }
 
+span.sodar-pr-header-icon {
+  display: inline-block;
+}
+
 a#sodar-pr-link-project-star {
   outline: 0;
   border: none;
@@ -696,6 +700,7 @@ pre#sodar-email-body {
 .sodar-code-input {
   font-family: monospace;
   font-size: 85%;
+  line-height: 36px; /* Fix for Chrome rendering issue (#904) */
 }
 
 .spin {

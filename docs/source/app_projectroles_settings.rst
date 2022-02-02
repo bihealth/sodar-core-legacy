@@ -645,3 +645,7 @@ production, ``ERROR`` debug level is recommended.
 The example site and SODAR Django Site template provide the ``LOGGING_APPS`` and
 ``LOGGING_FILE_PATH`` helpers for easily adding SODAR Core apps to logging and
 providing a system path for optional log file writing.
+
+If you are using ``ManagementCommandLogger`` for logging your management command
+output, you can disable redundant console input in e.g. your test configuration
+by setting ``LOGGING_DISABLE_CMD_OUTPUT`` to ``True``.

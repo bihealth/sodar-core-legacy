@@ -10,6 +10,49 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.8 (2022-02-02)
+********************
+
+Release Highlights
+==================
+
+- Drop Python 3.7 support, add Python 3.10 support
+- Display missing site settings in siteinfo app
+- Fix project creation owner assignment for non-owner category members
+- Improve layout in siteinfo and timeline apps
+- Upgrade third party Python package dependencies
+- Optimize queries in timeline app
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+SODAR Core no longer supports Python 3.7. Python 3.8 is currently both the
+minimum and default version to run SODAR Core and its dependencies.
+
+Third party Python package dependencies have been upgraded. See the
+``requirements`` directory for up-to-date package versions and upgrade your
+project accordingly.
+
+Deprecated Selenium Methods
+---------------------------
+
+The minimum Selenium version has been upgraded to v4.0.x. Some test methods have
+been deprecated in this version and will be removed in a future releases. UI
+test helpers from this version onwards will use the non-deprecated versions. You
+should the dependency in your projects, run tests, check the output and update
+any deprecated method calls if used.
+
+Timeline App API Updated
+------------------------
+
+If you are using ``TimelineAPI.get_event_description()`` in your own apps,
+please note that the method signature has changed. This may affect the use of
+positional arguments.
+
+
 v0.10.7 (2021-12-14)
 ********************
 
