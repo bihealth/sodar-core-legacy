@@ -481,12 +481,11 @@ class ProjectListContextMixin:
             flat_list += _append_projects(p)
         return flat_list
 
-    def _get_custom_cols(self, user, project_list):
+    def _get_custom_cols(self, user):
         """
         Return list of custom columns for projects including project data.
 
         :param user: User object
-        :param project_list: Flat list of Project objects
         """
         i = 0
         cols = []
@@ -501,22 +500,11 @@ class ProjectListContextMixin:
             ):
                 continue
             for k, v in app_plugin.project_list_columns.items():
+                if not v['active']:
+                    continue
                 v['app_plugin'] = app_plugin
-                v['key'] = k
+                v['column_id'] = k
                 v['ordering'] = v.get('ordering') or i
-                v['data'] = {}
-                for p in [
-                    p for p in project_list if p.type == PROJECT_TYPE_PROJECT
-                ]:
-                    try:
-                        val = app_plugin.get_project_list_value(
-                            k, p, self.request.user
-                        )
-                        v['data'][str(p.sodar_uuid)] = (
-                            val if val is not None else ''
-                        )
-                    except Exception:
-                        v['data'][str(p.sodar_uuid)] = ''
                 cols.append(v)
                 i += 1
         return sorted(cols, key=lambda x: x['ordering'])
@@ -528,7 +516,7 @@ class ProjectListContextMixin:
             self.request.user, parent
         )
         context['project_custom_cols'] = self._get_custom_cols(
-            self.request.user, context['project_list']
+            self.request.user
         )
         if self.request.user.is_authenticated:
             context['starred_projects'] = [

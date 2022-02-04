@@ -1,5 +1,9 @@
 """Ajax API views for the projectroles app"""
 
+import logging
+
+from dal import autocomplete
+
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import EmailValidator
@@ -7,7 +11,6 @@ from django.db.models import Q
 from django.http import JsonResponse, HttpResponseForbidden
 from django.urls import reverse
 
-from dal import autocomplete
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.renderers import JSONRenderer
@@ -20,7 +23,7 @@ from projectroles.models import (
     PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
 )
-from projectroles.plugins import get_backend_api
+from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
 from projectroles.views import (
     ProjectAccessMixin,
@@ -28,6 +31,12 @@ from projectroles.views import (
     User,
 )
 from projectroles.views_api import SODARAPIProjectPermission
+
+
+logger = logging.getLogger(__name__)
+
+
+# SODAR Consants
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -66,6 +75,76 @@ class SODARBaseProjectAjaxView(ProjectAccessMixin, SODARBaseAjaxView):
 
 
 # Projectroles Ajax Views ------------------------------------------------------
+
+
+class ProjectListColumnAjaxView(SODARBaseAjaxView):
+    """View to retrieve project list extra column data from the client"""
+
+    @classmethod
+    def _get_column_value(cls, app_plugin, column_id, project, user):
+        """
+        Return project list extra column value for a specific project and
+        column.
+
+        :param app_plugin: Project app plugin object
+        :param column_id: Column ID string corresponding to
+                          plugin.project_list_columns (string)
+        :param project: Project object
+        :param user: SODARUser object
+        :return: String (may contain HTML)
+        """
+        try:
+            val = app_plugin.get_project_list_value(column_id, project, user)
+            return {'html': str(val) if val is not None else ''}
+        except Exception as ex:
+            logger.error(
+                'Exception in {}.get_project_list_value(): "{}" '
+                '(column_id={}; project={}; user={})'.format(
+                    app_plugin.name,
+                    ex,
+                    column_id,
+                    project.sodar_uuid,
+                    user.username,
+                )
+            )
+            return {'html': ''}
+
+    def post(self, request, *args, **kwargs):
+        ret = {}
+        projects = Project.objects.filter(
+            type=SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'],
+            sodar_uuid__in=request.data.get('projects'),
+        )
+        plugins = [
+            ap
+            for ap in get_active_plugins(plugin_type='project_app')
+            if ap.project_list_columns
+            and (
+                ap.name != 'filesfolders'
+                or getattr(settings, 'FILESFOLDERS_SHOW_LIST_COLUMNS', False)
+            )
+        ]
+        for project in projects:
+            # Only provide results for projects in which user has access
+            if not request.user.has_perm('projectroles.view_project', project):
+                logger.error(
+                    'ProjectListColumnAjaxView: User {} not authorized to view '
+                    'project "{}" ({})'.format(
+                        request.user.username,
+                        project.title,
+                        project.sodar_uuid,
+                    )
+                )
+                continue
+            p_uuid = str(project.sodar_uuid)
+            ret[p_uuid] = {}
+            for app_plugin in plugins:
+                ret[p_uuid][app_plugin.name] = {}
+                for k, v in app_plugin.project_list_columns.items():
+                    ret[p_uuid][app_plugin.name][k] = self._get_column_value(
+                        app_plugin, k, project, request.user
+                    )
+        return Response(ret, status=200)
 
 
 class ProjectStarringAjaxView(SODARBaseProjectAjaxView):

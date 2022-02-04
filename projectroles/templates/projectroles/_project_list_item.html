@@ -10,8 +10,9 @@
   {% get_remote_icon p request as remote_icon %}
 {% endif %}
 
-<tr class="sodar-pr-project-list-item"
+<tr class="sodar-pr-project-list-item sodar-pr-project-list-item-{{ p.type|lower }}"
     id="sodar-pr-project-list-item-{{ p.sodar_uuid }}"
+    data-uuid="{{ p.sodar_uuid }}"
     data-title="{{ p.title }}"
     data-full-title="{{ p.full_title }}"
     data-starred="{% if p in starred_projects %}1{% else %}0{% endif %}">
@@ -47,16 +48,13 @@
     </div>
   </td>
   {% for col in project_custom_cols %}
-    {% if col.active %}
-      {% if p.type == 'PROJECT' %}
-        <td class="sodar-pr-project-list-custom text-{{ col.align }}"
-            {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}>
-          {% get_project_column_value col p as col_val %}
-          {{ col_val | safe }}
-        </td>
-      {% else %}
-        <td></td>
-      {% endif %}
+    {% if p.type == 'PROJECT' %}
+      <td class="sodar-pr-project-list-custom text-{{ col.align }}"
+          {% if col.width %} style="width: {{ col.width }}px !important"{% endif %}>
+        <i class="iconify spin text-muted" data-icon="mdi:loading"></i>
+      </td>
+    {% else %}
+      <td></td>
     {% endif %}
   {% endfor %}
   <td>

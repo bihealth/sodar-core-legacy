@@ -19,8 +19,34 @@ PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 class TestProjectViews(TestProjectPermissionBase):
     """Permission tests for Project Ajax views"""
 
+    def test_project_list_column_ajax(self):
+        """Test permissions for ProjectListColumnAjaxView"""
+        url = reverse('projectroles:ajax_project_list_columns')
+        data = {'projects': [str(self.project.sodar_uuid)]}
+        req_kwargs = {'content_type': 'application/json'}
+        good_users = [
+            self.superuser,
+            self.owner_as.user,
+            self.delegate_as.user,
+            self.contributor_as.user,
+            self.guest_as.user,
+            self.user_no_roles,
+        ]
+        bad_users = [self.anonymous]
+        self.assert_response(
+            url,
+            good_users,
+            200,
+            method='POST',
+            data=data,
+            req_kwargs=req_kwargs,
+        )
+        self.assert_response(
+            url, bad_users, 403, method='POST', data=data, req_kwargs=req_kwargs
+        )
+
     def test_starring_ajax(self):
-        """Test permissions for project starring Ajax view"""
+        """Test permissions for ProjectStarringAjaxView"""
         url = reverse(
             'projectroles:ajax_star',
             kwargs={'project': self.project.sodar_uuid},

@@ -1,5 +1,4 @@
 // Project list filtering
-
 $(document).ready(function () {
     $('#sodar-pr-home-display-notfound').hide();
     $('#sodar-pr-home-display-nostars').hide();
@@ -32,7 +31,6 @@ $(document).ready(function () {
                         titleLink.html(fullTitle.replace(
                             pattern, '<span class="sodar-search-highlight">' + titleVal + '</span>'));
                     }
-
                     $(this).show();
                     valFound = true;
                     $('#sodar-pr-home-display-notfound').hide();
@@ -40,7 +38,6 @@ $(document).ready(function () {
                     $(this).hide();
                 }
             });
-
             if (valFound === false) {
                 $('#sodar-pr-home-display-notfound').show();
             }
@@ -98,5 +95,44 @@ $(document).ready(function () {
 
         // Update overflow status
         modifyCellOverflow();
+    });
+});
+
+// Retrieve custom column data
+$(document).ready(function () {
+    // Grab column app names and IDs from header into a list
+    var colIds = [];
+    $('.sodar-pr-project-list-custom-header').each(function () {
+        colIds.push({
+            app: $(this).attr('data-app-name'),
+            id: $(this).attr('data-column-id')
+        });
+    });
+    if (colIds.length === 0) return; // Skip if no columns were found
+
+    // Get UUIDs (skip categories)
+    var projectUuids = [];
+    $('.sodar-pr-project-list-item-project').each(function () {
+        projectUuids.push($(this).attr('data-uuid'));
+    });
+    if (projectUuids.length === 0) return; // Skip if there are no projects
+
+    // Retrieve column data
+    $.ajax({
+        url: $('.sodar-pr-project-list-header').attr('data-custom-col-url'),
+        method: 'POST',
+        dataType: 'json',
+        contentType : 'application/json',
+        data: JSON.stringify({'projects': projectUuids})
+    }).done(function (data) {
+        // Update columns
+        $('.sodar-pr-project-list-item-project').each(function () {
+            var projectData = data[$(this).attr('data-uuid')];
+            var i = 0;
+            $(this).find('.sodar-pr-project-list-custom').each(function () {
+                $(this).html(projectData[colIds[i].app][colIds[i].id].html);
+                i += 1;
+            });
+        });
     });
 });

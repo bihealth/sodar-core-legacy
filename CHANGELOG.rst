@@ -7,6 +7,22 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - ``req_kwargs`` arg for ``TestPermissionMixin.assert_response()`` (#909)
+
+Changed
+-------
+
+- **Projectroles**
+    - Ajax loading of project list custom columns (#825, #908)
+
+
 v0.10.8 (2022-02-02)
 ====================
 

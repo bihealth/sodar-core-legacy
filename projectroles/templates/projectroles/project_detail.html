@@ -1,6 +1,7 @@
 {% extends 'projectroles/base.html' %}
 
 {% load rules %}
+{% load static %}
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
@@ -176,6 +177,9 @@
 
 {% block javascript %}
   {{ block.super }}
+
+  {# Project list JQuery #}
+  <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">

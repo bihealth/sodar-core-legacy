@@ -152,11 +152,8 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         # Assert the custom project list column is provided
         custom_cols = response.context['project_custom_cols']
         self.assertEqual(len(custom_cols), 2)
-        self.assertEqual(custom_cols[0]['key'], 'links')  # Assert ordering
-        self.assertEqual(
-            custom_cols[0]['data'][str(self.project.sodar_uuid)], 0
-        )
-        # Assert project column count
+        # Assert ordering
+        self.assertEqual(custom_cols[0]['column_id'], 'links')
         self.assertEqual(response.context['project_col_count'], 4)
 
     @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)

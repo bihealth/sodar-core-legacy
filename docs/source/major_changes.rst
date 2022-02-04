@@ -10,6 +10,20 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.9 (WIP)
+*************
+
+Release Highlights
+==================
+
+- Client side loading of project list custom columns
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.10.8 (2022-02-02)
 ********************
 
