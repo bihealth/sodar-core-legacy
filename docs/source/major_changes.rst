@@ -16,7 +16,8 @@ v0.10.9 (WIP)
 Release Highlights
 ==================
 
-- Client side loading of project list custom columns
+- Add anonymous access support for Ajax API views
+- Update project list for client side loading
 
 Breaking Changes
 ================

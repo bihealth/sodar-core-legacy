@@ -472,6 +472,18 @@ class TestBaseTemplate(TestUIBase):
 class TestHomeView(ProjectUserTagMixin, TestUIBase):
     """Tests for the home view and project list UI"""
 
+    #: Arguments for waiting for the list to get poplulated on the client side
+    wait_kwargs = {
+        'wait_elem': 'sodar-pr-project-list-item',
+        'wait_loc': 'CLASS_NAME',
+    }
+
+    #: Arguments for populating an empty list with a message
+    wait_kwargs_empty = {
+        'wait_elem': 'sodar-pr-project-list-message',
+        'wait_loc': 'ID',
+    }
+
     def _get_item_vis_count(self):
         return len(
             [
@@ -491,15 +503,50 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
             (self.delegate_as.user, 2),
             (self.contributor_as.user, 2),
             (self.guest_as.user, 2),
-            (self.user_no_roles, 0),
         ]
         url = reverse('home')
-        self.assert_element_count(expected, url, 'sodar-pr-project-list-item')
+        self.assert_element_count(
+            expected, url, 'sodar-pr-project-list-item', **self.wait_kwargs
+        )
+        self.assert_element_count(
+            [(self.user_no_roles, 0)],
+            url,
+            'sodar-pr-project-list-item',
+            **self.wait_kwargs_empty,
+        )
+
+    def test_project_list_items_public(self):
+        """Test visibility of project list items with public access project"""
+        self.project.set_public()
+        expected = [
+            (self.superuser, 2),
+            (self.owner_as.user, 2),
+            (self.delegate_as.user, 2),
+            (self.contributor_as.user, 2),
+            (self.guest_as.user, 2),
+            (self.user_no_roles, 2),
+        ]
+        url = reverse('home')
+        self.assert_element_count(
+            expected, url, 'sodar-pr-project-list-item', **self.wait_kwargs
+        )
+
+    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
+    def test_project_list_items_anon(self):
+        """Test visibility of project list items with anonymous access"""
+        self.project.set_public()
+        self.selenium.get(self.build_selenium_url(reverse('home')))
+        WebDriverWait(self.selenium, self.wait_time).until(
+            ec.presence_of_element_located(
+                (getattr(By, 'CLASS_NAME'), 'sodar-pr-project-list-item')
+            )
+        )
+        self.assertEqual(self._get_item_vis_count(), 2)
 
     def test_project_list_filter(self):
         """Test filtering project list items"""
         url = reverse('home')
-        self.login_and_redirect(self.owner_as.user, url)
+        self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
 
         f_input = self.selenium.find_element(
@@ -514,7 +561,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
             self.project, self.owner_as.user, name=PROJECT_TAG_STARRED
         )
         url = reverse('home')
-        self.login_and_redirect(self.owner_as.user, url)
+        self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
 
         button = self.selenium.find_element(
@@ -524,7 +571,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.assertEqual(self._get_item_vis_count(), 1)
         self.assertEqual(
             self.selenium.find_element(
-                By.ID, 'sodar-pr-home-display-nostars'
+                By.ID, 'sodar-pr-project-list-message'
             ).get_attribute('style'),
             'display: none;',
         )
@@ -532,7 +579,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
     def test_project_list_star_no_project(self):
         """Test project list star filter with no project"""
         url = reverse('home')
-        self.login_and_redirect(self.owner_as.user, url)
+        self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
 
         button = self.selenium.find_element(
@@ -542,7 +589,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         self.assertEqual(self._get_item_vis_count(), 0)
         self.assertNotEqual(
             self.selenium.find_element(
-                By.ID, 'sodar-pr-home-display-nostars'
+                By.ID, 'sodar-pr-project-list-message'
             ).get_attribute('style'),
             'display: none;',
         )

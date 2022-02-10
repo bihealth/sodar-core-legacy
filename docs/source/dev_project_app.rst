@@ -812,6 +812,10 @@ Django session authentication by default, so Knox token authentication will not
 work. Versioning is omitted. Base views without project permission checks can
 also be used in site apps.
 
+If you want to enable anonymous access to an Ajax API view when
+``PROJECTROLES_ALLOW_ANONYMOUS`` is enabled in your site's Django settings, you
+can use the ``allow_anonymous`` property of the view.
+
 API documentation for the base classes Ajax API views can be found in
 :ref:`app_projectroles_api_django`.
 

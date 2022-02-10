@@ -99,37 +99,7 @@
     {# Subprojects #}
 
     {% if object.type == 'CATEGORY' %}
-      {% if project_list|length > 0 %}
-        <div class="card">
-          <div class="card-header">
-            <h4>
-              <i class="iconify" data-icon="mdi:rhombus-split"></i>
-              {% get_display_name 'PROJECT' title=True plural=True %}
-            </h4>
-          </div>
-          <div class="card-body p-0">
-            <table class="table table-hover sodar-card-table sodar-card-table-borderless sodar-pr-project-list-table" id="sodar-pr-project-list-table">
-             <thead>
-               {% include 'projectroles/_project_list_header.html' %}
-             </thead>
-             <tbody>
-               {% if project_list|length > 0 %}
-                 {% for p in project_list %}
-                   {% include 'projectroles/_project_list_item.html' with list_parent=object %}
-                 {% endfor %}
-               {% else %}
-                 <tr>
-                   <td class="bg-faded font-italic text-center text-danger"
-                       colspan="{{ project_col_count }}">
-                     No {% get_display_name 'CATEGORY' title=False count=2 %}
-                     or {% get_display_name 'PROJECT' title=False count=2 %} found</td>
-                 </tr>
-               {% endif %}
-             </tbody>
-           </table>
-          </div>
-        </div>
-      {% endif %}
+      {% include 'projectroles/_project_list.html' with parent=object %}
     {% endif %}
 
     {# App Plugin Cards #}
@@ -179,7 +149,9 @@
   {{ block.super }}
 
   {# Project list JQuery #}
-  <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
+  {% if object.type == 'CATEGORY' %}
+    <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
+  {% endif %}
 
   {# Tour content #}
   <script type="text/javascript">

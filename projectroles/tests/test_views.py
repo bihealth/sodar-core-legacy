@@ -144,15 +144,8 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         with self.login(self.user):
             response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
-        # Assert the project list is provided in the view context
-        self.assertIsNotNone(response.context['project_list'])
-        self.assertEqual(
-            response.context['project_list'][1].pk, self.project.pk
-        )
-        # Assert the custom project list column is provided
         custom_cols = response.context['project_custom_cols']
         self.assertEqual(len(custom_cols), 2)
-        # Assert ordering
         self.assertEqual(custom_cols[0]['column_id'], 'links')
         self.assertEqual(response.context['project_col_count'], 4)
 
@@ -161,21 +154,6 @@ class TestHomeView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         """Test rendering with anonymous access"""
         response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
-        # Assert the project list is provided in the view context
-        self.assertIsNotNone(response.context['project_list'])
-        self.assertEqual(len(response.context['project_list']), 0)
-
-    @override_settings(PROJECTROLES_ALLOW_ANONYMOUS=True)
-    def test_render_anon_public_project(self):
-        """Test rendering with anonymous access and public project"""
-        self.project.set_public()
-        response = self.client.get(reverse('home'))
-        self.assertEqual(response.status_code, 200)
-        # Assert the project list is provided in the view context
-        self.assertIsNotNone(response.context['project_list'])
-        self.assertEqual(
-            response.context['project_list'][1].pk, self.project.pk
-        )
 
 
 class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):

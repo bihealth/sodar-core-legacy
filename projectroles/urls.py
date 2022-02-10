@@ -143,9 +143,19 @@ urls_ui = [
 # Ajax API views
 urls_ajax = [
     url(
-        regex=r'^ajax/list/columns',
+        regex=r'^ajax/list$',
+        view=views_ajax.ProjectListAjaxView.as_view(),
+        name='ajax_project_list',
+    ),
+    url(
+        regex=r'^ajax/list/columns$',
         view=views_ajax.ProjectListColumnAjaxView.as_view(),
         name='ajax_project_list_columns',
+    ),
+    url(
+        regex=r'^ajax/list/roles',
+        view=views_ajax.ProjectListRoleAjaxView.as_view(),
+        name='ajax_project_list_roles',
     ),
     url(
         regex=r'^ajax/star/(?P<project>[0-9a-f-]+)',
