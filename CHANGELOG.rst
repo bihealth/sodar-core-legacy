@@ -23,6 +23,7 @@ Changed
 
 - **Projectroles**
     - Project list client side loading (#825, #908, #913)
+    - Optimize project list queries (#922, #923)
 
 Fixed
 -----

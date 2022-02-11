@@ -116,17 +116,11 @@ class ProjectListAjaxView(SODARBaseAjaxView):
         """
         project_list = Project.objects.filter(
             submit_status=SUBMIT_STATUS_OK,
-            parent=parent,
         )
-
         if user.is_anonymous:
-            if not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
-                return None
-            project_list = [
-                p
-                for p in project_list
-                if p.public_guest_access or p.has_public_children
-            ]
+            project_list = project_list.filter(
+                Q(public_guest_access=True) | Q(has_public_children=True)
+            )
         elif not user.is_superuser:
             project_list = [
                 p
@@ -135,29 +129,30 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 or p.has_public_children
                 or (
                     user.is_authenticated
-                    and p.has_role(user, include_children=True)
+                    and p.roles.filter(user=user).count() > 0
                 )
             ]
 
-        def _append_projects(project):
-            lst = [project]
-            for c in project.get_children():
-                if (
-                    user.is_superuser
-                    or c.public_guest_access
-                    or c.has_public_children
-                    or (
-                        user.is_authenticated
-                        and c.has_role(user, include_children=True)
-                    )
-                ):
-                    lst += _append_projects(c)
-            return lst
-
-        flat_list = []
+        # Populate final list
+        ret = []
         for p in project_list:
-            flat_list += _append_projects(p)
-        return flat_list
+            if (
+                p not in ret
+                and p != parent
+                and (
+                    not parent
+                    or p.full_title.startswith(parent.full_title + ' / ')
+                )
+            ):
+                ret.append(p)
+                p_parent = p.parent
+                while p_parent and p_parent != parent:
+                    if p_parent not in ret:
+                        ret.append(p_parent)
+                    p_parent = p_parent.parent
+
+        # HACK: Sort by full title
+        return sorted(ret, key=lambda x: x.full_title)
 
     def get(self, request, *args, **kwargs):
         parent_uuid = request.GET.get('parent', None)
