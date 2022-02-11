@@ -100,8 +100,10 @@ $(document).ready(function () {
 
         // Display rows
         $('#sodar-pr-project-list-table').addClass('sodar-card-table-borderless');
+        var projectCount = data['projects'].length;
+        var starredCount = 0;
 
-        for (var i = 0; i < data['projects'].length; i++) {
+        for (var i = 0; i < projectCount; i++) {
             var p = data['projects'][i];
             var icon;
             var titleClass = '';
@@ -121,6 +123,7 @@ $(document).ready(function () {
                 .attr('data-full-title', p['full_title'])
                 .attr('data-starred', + p['starred'])
             );
+            if (p['starred']) starredCount += 1;
             var row = tableBody.find('tr:last');
 
             // Title column
@@ -202,8 +205,12 @@ $(document).ready(function () {
         }
 
         // Enable starred button and filter
-        $('#sodar-pr-project-list-link-star').prop('disabled', false);
-        $('#sodar-pr-project-list-filter').prop('disabled', false);
+        if (starredCount > 0 && starredCount < projectCount) {
+            $('#sodar-pr-project-list-link-star').prop('disabled', false);
+        }
+        if (projectCount > 1) {
+            $('#sodar-pr-project-list-filter').prop('disabled', false);
+        }
 
         // Get UUIDs
         var allUuids = [];

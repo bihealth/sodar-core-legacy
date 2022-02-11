@@ -135,14 +135,12 @@ class ProjectListAjaxView(SODARBaseAjaxView):
 
         # Populate final list
         ret = []
+        parent_prefix = parent.full_title + ' / ' if parent else None
         for p in project_list:
             if (
                 p not in ret
                 and p != parent
-                and (
-                    not parent
-                    or p.full_title.startswith(parent.full_title + ' / ')
-                )
+                and (not parent or p.full_title.startswith(parent_prefix))
             ):
                 ret.append(p)
                 p_parent = p.parent
@@ -169,7 +167,6 @@ class ProjectListAjaxView(SODARBaseAjaxView):
             )
 
         project_list = self._get_project_list(request.user, parent)
-
         starred_projects = []
         if request.user.is_authenticated:
             starred_projects = [
@@ -178,13 +175,14 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                     user=request.user, name=PROJECT_TAG_STARRED
                 )
             ]
+        full_title_idx = len(parent.full_title) + 3 if parent else 0
 
         ret = {
             'projects': [
                 {
                     'title': p.title,
                     'type': p.type,
-                    'full_title': p.full_title,
+                    'full_title': p.full_title[full_title_idx:],
                     'public_guest_access': p.public_guest_access,
                     'remote': p.is_remote(),
                     'revoked': p.is_revoked(),

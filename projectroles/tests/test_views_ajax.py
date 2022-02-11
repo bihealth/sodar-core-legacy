@@ -90,7 +90,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                     {
                         'title': self.project.title,
                         'type': self.project.type,
-                        'full_title': self.project.full_title,
+                        'full_title': self.project.title,  # Not full_title
                         'public_guest_access': self.project.public_guest_access,
                         'remote': False,
                         'revoked': False,

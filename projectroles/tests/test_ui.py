@@ -577,7 +577,7 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         )
 
     def test_project_list_star_no_project(self):
-        """Test project list star filter with no project"""
+        """Test project list star filter with no starred project"""
         url = reverse('home')
         self.login_and_redirect(self.owner_as.user, url, **self.wait_kwargs)
         self.assertEqual(self._get_item_vis_count(), 2)
@@ -585,14 +585,8 @@ class TestHomeView(ProjectUserTagMixin, TestUIBase):
         button = self.selenium.find_element(
             By.ID, 'sodar-pr-project-list-link-star'
         )
+        self.assertFalse(button.is_enabled())
         button.click()
-        self.assertEqual(self._get_item_vis_count(), 0)
-        self.assertNotEqual(
-            self.selenium.find_element(
-                By.ID, 'sodar-pr-project-list-message'
-            ).get_attribute('style'),
-            'display: none;',
-        )
 
     def test_link_create_toplevel(self):
         """Test project creation link visibility"""

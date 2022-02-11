@@ -312,6 +312,14 @@ table.sodar-pr-project-list-table {
   table-layout: fixed;
 }
 
+table.sodar-pr-project-list-table tbody tr {
+  height: 51px !important;
+}
+
+table.sodar-pr-project-list-table tbody tr td {
+  vertical-align: middle;
+}
+
 tr.sodar-pr-project-list-header th:last-child {
   width: 120px;
 }
