@@ -143,13 +143,14 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 and (not parent or p.full_title.startswith(parent_prefix))
             ):
                 ret.append(p)
+                if p.parent and p.parent in ret:
+                    continue  # Skip already collected parents
                 p_parent = p.parent
                 while p_parent and p_parent != parent:
                     if p_parent not in ret:
                         ret.append(p_parent)
                     p_parent = p_parent.parent
-
-        # HACK: Sort by full title
+        # Sort by full title
         return sorted(ret, key=lambda x: x.full_title)
 
     def get(self, request, *args, **kwargs):

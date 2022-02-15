@@ -22,7 +22,7 @@ Changed
 -------
 
 - **Projectroles**
-    - Project list client side loading (#825, #908, #913)
+    - Project list client side loading (#825, #908, #913, #933)
     - Optimize project list queries (#922, #923)
 - **Timeline**
     - Display event details as a modal (#910, #912)
