@@ -1,4 +1,4 @@
-"""UI views for the timeline Django app"""
+"""UI views for the timeline app"""
 
 from django.conf import settings
 from django.views.generic import ListView

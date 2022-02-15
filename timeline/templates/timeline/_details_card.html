@@ -1,57 +1,14 @@
 {% load timeline_tags %}
 {% load rules %}
+{% load static %}
 {% has_perm 'timeline.view_timeline' request.user project as can_view_timeline %}
 {% has_perm 'timeline.view_classified_event' request.user project as can_view_classified %}
 
-<style type="text/css">
-  /* Main table */
-  table#sodar-tl-details-table tbody tr td:nth-child(1),
-  table#sodar-tl-details-table tbody tr td:nth-child(2),
-  table#sodar-tl-details-table tbody tr td:nth-child(3) {
-    white-space: nowrap;
-  }
-
-  table#sodar-tl-details-table tbody tr td:nth-child(4) {
-    width: 100%;
-  }
-
-  a.sodar-tl-link-detail:hover {
-        cursor: pointer;
-        text-decoration: underline;
-    }
-
-  /* Responsive modifications */
-  @media screen and (max-width: 1300px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(3),
-    .table#sodar-tl-details-table tbody tr td:nth-child(3) {
-      display: none;
-    }
-  }
-
-  @media screen and (max-width: 1100px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(2),
-    .table#sodar-tl-details-table tbody tr td:nth-child(2) {
-      display: none;
-    }
-  }
-
-  @media screen and (max-width: 900px) {
-    .table#sodar-tl-details-table tbody tr td:nth-child(1) {
-      white-space: normal;
-    }
-  }
-
-  @media screen and (max-width: 500px) {
-    .table#sodar-tl-details-table thead tr th:nth-child(5),
-    .table#sodar-tl-details-table tbody tr td:nth-child(5) {
-      display: none;
-    }
-  }
-</style>
+<link rel="stylesheet" type="text/css" href="{% static 'timeline/css/timeline.css' %}" />
 
 {% if can_view_timeline %}
   {% get_plugin_lookup as plugin_lookup %}
-  <table class="table table-striped sodar-card-table" id="sodar-tl-details-table">
+  <table class="table table-striped sodar-card-table" id="sodar-tl-table">
     <thead>
       {% include 'timeline/_list_header.html' with details_card_mode=True %}
     </thead>
@@ -68,4 +25,7 @@
       {% endif %}
     </tbody>
   </table>
+
+  {# Event list JQuery #}
+  <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
 {% endif %}

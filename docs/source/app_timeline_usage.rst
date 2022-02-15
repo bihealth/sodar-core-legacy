@@ -15,8 +15,8 @@ You can browse events by navigating to a project or a category and selecting the
 events (not linked to a project) can be found in the user menu on the top right
 corner of the site.
 
-By clicking on the time stamp for each event, you can see details of the event
-execution (in case of e.g. asynchronous events).
+By clicking on the time stamp for each event, you can view the details on
+different stages of event execution, in case of e.g. asynchronous events.
 
 By clicking on the clock icon next to an object link in the event description,
 you can view the event history of that object. The link itself will take you

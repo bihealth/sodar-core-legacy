@@ -75,7 +75,7 @@ class ProjectEventStatusMixin:
 
     @classmethod
     def _make_event_status(
-        cls, event, status_type, description, extra_data=None
+        cls, event, status_type, description='', extra_data=None
     ):
         values = {
             'event': event,

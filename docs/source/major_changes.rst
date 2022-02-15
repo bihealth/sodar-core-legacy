@@ -18,6 +18,7 @@ Release Highlights
 
 - Add anonymous access support for Ajax API views
 - Update project list for client side loading
+- Update timeline app status change retrieval and rendering
 
 Breaking Changes
 ================

@@ -102,36 +102,6 @@ def get_status_style(status):
 
 
 @register.simple_tag
-def get_event_details(event):
-    """Return HTML data for event detail popover"""
-    ret = (
-        '<table class="table table-striped sodar-card-table '
-        'sodar-tl-table-detail">\n'
-        '<thead>\n<tr><th>Timestamp</th>\n<th>Description</th>\n'
-        '<th>Status</th></tr>\n</thead>\n<tbody>'
-    )
-    status_changes = event.get_status_changes(reverse=True)
-
-    for status in status_changes:
-        ret += (
-            '\n<tr><td>{}</td>\n<td>{}</td>\n'
-            '<td class="{}">{}</td>\n</tr>'.format(
-                localtime(status.timestamp).strftime('%Y-%m-%d %H:%M:%S'),
-                status.description[:256]
-                + (
-                    '<em class="text-muted"> (...)</em>'
-                    if len(status.description) > 256
-                    else ''
-                ),
-                get_status_style(status),
-                status.status_type,
-            )
-        )
-    ret += '\n</tbody>\n</table>'
-    return ret
-
-
-@register.simple_tag
 def get_event_extra_data(event):
     return json_to_html(event.extra_data)
 

@@ -24,18 +24,25 @@ Changed
 - **Projectroles**
     - Project list client side loading (#825, #908, #913)
     - Optimize project list queries (#922, #923)
+- **Timeline**
+    - Display event details as a modal (#910, #912)
+    - Make ``description`` optional for ``_make_event_status()`` (#890)
 
 Fixed
 -----
 
 - **Projectroles**
     - Project list JQuery loaded in project detail view (#914)
+- **Timeline**
+    - Event status layout overflowing (#911)
 
 Removed
 -------
 
 - **Projectroles**
     - Unused project list templates and template tags (#913)
+- **Timeline**
+    - Unused ``get_event_details()`` template tag
 
 
 v0.10.8 (2022-02-02)

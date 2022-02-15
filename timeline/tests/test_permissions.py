@@ -1,4 +1,4 @@
-"""Permission tests for the timeline app"""
+"""UI view permission tests for the timeline app"""
 
 from django.test import override_settings
 from django.urls import reverse
