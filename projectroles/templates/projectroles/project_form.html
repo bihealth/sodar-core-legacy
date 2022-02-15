@@ -1,6 +1,7 @@
 {% extends 'projectroles/base.html' %}
 
 {% load rules %}
+{% load static %}
 {% load crispy_forms_filters %}
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
@@ -70,3 +71,9 @@
   </div>
 
 {% endblock projectroles %}
+
+{% block javascript %}
+  {{ block.super }}
+  <!-- Project starring -->
+  <script type="text/javascript" src="{% static 'projectroles/js/project_star.js' %}"></script>
+{% endblock javascript %}

@@ -24,6 +24,7 @@ Changed
 - **Projectroles**
     - Project list client side loading (#825, #908, #913, #933)
     - Optimize project list queries (#922, #923)
+    - Move project starring JQuery into ``project_star.js`` (#930)
 - **Timeline**
     - Display event details as a modal (#910, #912)
     - Make ``description`` optional for ``_make_event_status()`` (#890)
@@ -34,6 +35,7 @@ Fixed
 - **Projectroles**
     - Project list JQuery loaded in project detail view (#914)
     - ``sodar-modal-wait`` layout (#931)
+    - Redundant project starring JQuery includes (#930)
 - **Timeline**
     - Event status layout overflowing (#911)
 

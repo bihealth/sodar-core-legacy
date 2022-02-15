@@ -148,10 +148,13 @@
 {% block javascript %}
   {{ block.super }}
 
-  {# Project list JQuery #}
   {% if object.type == 'CATEGORY' %}
+    <!-- Project list -->
     <script type="text/javascript" src="{% static 'projectroles/js/project_list.js' %}"></script>
   {% endif %}
+
+  <!-- Project starring -->
+  <script type="text/javascript" src="{% static 'projectroles/js/project_star.js' %}"></script>
 
   {# Tour content #}
   <script type="text/javascript">
