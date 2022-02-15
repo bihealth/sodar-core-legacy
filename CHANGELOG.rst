@@ -21,6 +21,8 @@ Added
 Changed
 -------
 
+- **General**
+    - Use ``LATEST_RELEASE`` in Chromedriver install (#906)
 - **Projectroles**
     - Project list client side loading (#825, #908, #913, #933)
     - Optimize project list queries (#922, #923)
