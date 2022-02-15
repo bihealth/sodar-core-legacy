@@ -33,6 +33,7 @@ Fixed
 
 - **Projectroles**
     - Project list JQuery loaded in project detail view (#914)
+    - ``sodar-modal-wait`` layout (#931)
 - **Timeline**
     - Event status layout overflowing (#911)
 
