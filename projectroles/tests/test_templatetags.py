@@ -5,7 +5,6 @@ import mistune
 import uuid
 
 from django.conf import settings
-from django.contrib.auth.models import AnonymousUser
 from django.test import override_settings, RequestFactory
 from django.urls import reverse
 
@@ -510,34 +509,7 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.project, superuser), True
         )
 
-    # TODO: Refactor and test get_project_list_indent()
-
     # TODO: Test get_not_found_alert()
-
-    def test_get_user_role_html(self):
-        """Test get_user_role_html()"""
-        superuser = self.make_user('superuser')
-        superuser.is_superuser = True
-        superuser.save()
-        user_no_roles = self.make_user('user_no_roles')
-        self.assertEqual(
-            tags.get_user_role_html(self.project, self.user), 'Owner'
-        )
-        self.assertEqual(
-            tags.get_user_role_html(self.project, superuser),
-            '<span class="text-danger">Superuser</span>',
-        )
-        self.assertEqual(
-            tags.get_user_role_html(self.project, user_no_roles),
-            '<span class="text-muted">N/A</span>',
-        )
-        self.project.set_public()
-        self.assertEqual(
-            tags.get_user_role_html(self.project, user_no_roles), 'Guest'
-        )
-        self.assertEqual(
-            tags.get_user_role_html(self.project, AnonymousUser()), 'Guest'
-        )
 
     def test_is_inherited_owner(self):
         """Test is_inherited_owner()"""

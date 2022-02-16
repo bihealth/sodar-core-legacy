@@ -64,7 +64,11 @@
 
 {% block javascript %}
   {{ block.super }}
-  {# Tour content #}
+
+  <!-- Event list -->
+  <script type="text/javascript" src="{% static 'timeline/js/timeline.js' %}"></script>
+
+  <!-- Tour content -->
   <script type="text/javascript">
       tourEnabled = true;
 

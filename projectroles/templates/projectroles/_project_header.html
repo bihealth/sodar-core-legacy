@@ -18,8 +18,9 @@
 
   {# Project starring/unstarring #}
   {% if request.user.is_authenticated %}
-    <a role="link" class="btn btn-link ml-0 mr-2 sodar-pr-btn-title sodar-pr-btn-star"
-       href="#" id="sodar-pr-link-project-star"
+    <a role="link"
+       class="btn btn-link ml-0 mr-2 sodar-pr-btn-title sodar-pr-btn-star"
+       id="sodar-pr-link-project-star"
        star-url="{% url 'projectroles:ajax_star' project=project.sodar_uuid %}"
        title="{% if project_starred %}Unstar{% else %}Star{% endif %}"
        data-toggle="tooltip" data-placement="top">

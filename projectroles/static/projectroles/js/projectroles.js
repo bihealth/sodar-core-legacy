@@ -159,34 +159,6 @@ $(window).resize(function () {
 });
 
 
-/* Star/unstar project ------------------------------------------------------ */
-
-
-$(document).ready(function () {
-    $('#sodar-pr-link-project-star').click(function () {
-        $.post({
-            url: $(this).attr('star-url'),
-            method: 'POST',
-            dataType: 'json'
-        }).done(function (data) {
-            if (data === 1) {
-                $('#sodar-pr-link-project-star').html(
-                    '<i class="iconify text-warning" ' +
-                    'data-icon="mdi:star" height="30"></i>'
-                ).attr('data-original-title', 'Unstar');
-            } else {
-                $('#sodar-pr-link-project-star').html(
-                    '<i class="iconify text-muted" ' +
-                    'data-icon="mdi:star-outline" height="30"></i>'
-                ).attr('data-original-title', 'Star');
-            }
-        }).fail(function () {
-            alert('Error: unable to set project star!');
-        });
-    });
-});
-
-
 /* Improve the responsiveness of the title bar ------------------------------ */
 
 
@@ -219,6 +191,7 @@ $(document).ready(function () {
 
 
 /* Initialize Clipboard.js for common buttons ------------------------------- */
+
 
 $(document).ready(function() {
     /***************

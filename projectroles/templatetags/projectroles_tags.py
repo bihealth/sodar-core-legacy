@@ -13,7 +13,6 @@ from projectroles.models import (
 )
 from projectroles.plugins import get_active_plugins
 from projectroles.project_tags import get_tag_state
-from projectroles.templatetags.projectroles_common_tags import get_info_link
 
 
 register = template.Library()
@@ -27,7 +26,6 @@ REMOTE_LEVEL_NONE = SODAR_CONSTANTS['REMOTE_LEVEL_NONE']
 REMOTE_LEVEL_REVOKED = SODAR_CONSTANTS['REMOTE_LEVEL_REVOKED']
 
 # Local constants
-INDENT_PX = 25
 # Behaviour for certain levels has not been specified/implemented yet
 ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
@@ -115,15 +113,6 @@ def is_app_visible(plugin, project, user):
 
 
 @register.simple_tag
-def get_project_list_indent(project, list_parent):
-    """Return indent in pixels for project list"""
-    project_depth = project.get_depth()
-    if list_parent:
-        project_depth -= list_parent.get_depth() + 1
-    return project_depth * INDENT_PX
-
-
-@register.simple_tag
 def get_not_found_alert(project_results, app_search_data, search_type):
     """Return alert HTML for data which was not found during search, if any"""
     not_found = []
@@ -159,35 +148,6 @@ def get_not_found_alert(project_results, app_search_data, search_type):
         return ret
 
     return ''
-
-
-@register.simple_tag
-def get_project_column_value(col, project):
-    """Return value of a custom project list column for a project"""
-    return col['data'].get(str(project.sodar_uuid))
-
-
-@register.simple_tag
-def get_user_role_html(project, user):
-    """Return user role HTML"""
-    role_as = None
-    if user.is_superuser:
-        return '<span class="text-danger">Superuser</span>'
-    if user.is_authenticated:
-        role_as = RoleAssignment.objects.filter(
-            project=project, user=user
-        ).first()
-        if project.is_owner(user):
-            if role_as and role_as.role.name == PROJECT_ROLE_OWNER:
-                return 'Owner'
-            return '<span class="text-muted">Owner</span> {}'.format(
-                get_info_link('Ownership inherited from parent category')
-            )
-        if role_as:
-            return role_as.role.name.split(' ')[1].capitalize()
-    if project.public_guest_access and not role_as:
-        return 'Guest'
-    return '<span class="text-muted">N/A</span>'
 
 
 @register.simple_tag

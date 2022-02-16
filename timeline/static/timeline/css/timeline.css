@@ -10,13 +10,13 @@ table#sodar-tl-table tbody tr td:nth-child(4) {
 }
 
 /* Detail table */
-table#sodar-tl-table-detail tbody tr td:nth-child(1) {
+table#sodar-tl-table-detail tbody tr td:nth-child(1),
+table#sodar-tl-table-detail tbody tr td:nth-child(3) {
   white-space: nowrap;
 }
 
 table#sodar-tl-table-detail tbody tr td:nth-child(2) {
-  max-width: 300px;
-  white-space: normal;
+  width: 100%;
 }
 
 a.sodar-tl-link-detail:hover {

@@ -7,6 +7,49 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.9 (2022-02-16)
+====================
+
+Added
+-----
+
+- **Projectroles**
+    - ``req_kwargs`` arg for ``TestPermissionMixin.assert_response()`` (#909)
+    - Starring and filtering controls for category subproject list (#56)
+    - Enable anonymous access for Ajax views with ``allow_anonymous`` (#916)
+
+Changed
+-------
+
+- **General**
+    - Use ``LATEST_RELEASE`` in Chromedriver install (#906)
+- **Projectroles**
+    - Project list client side loading (#825, #908, #913, #933)
+    - Optimize project list queries (#922, #923)
+    - Move project starring JQuery into ``project_star.js`` (#930)
+- **Timeline**
+    - Display event details as a modal (#910, #912)
+    - Make ``description`` optional for ``_make_event_status()`` (#890)
+
+Fixed
+-----
+
+- **Projectroles**
+    - Project list JQuery loaded in project detail view (#914)
+    - ``sodar-modal-wait`` layout (#931)
+    - Redundant project starring JQuery includes (#930)
+- **Timeline**
+    - Event status layout overflowing (#911)
+
+Removed
+-------
+
+- **Projectroles**
+    - Unused project list templates and template tags (#913)
+- **Timeline**
+    - Unused ``get_event_details()`` template tag
+
+
 v0.10.8 (2022-02-02)
 ====================
 

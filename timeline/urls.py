@@ -1,6 +1,8 @@
+"""URLs for the timeline app"""
+
 from django.conf.urls import url
 
-from timeline import views, views_taskflow
+from timeline import views, views_ajax, views_taskflow
 
 
 app_name = 'timeline'
@@ -30,6 +32,20 @@ urls_ui = [
     ),
 ]
 
+# Ajax API views
+urls_ajax = [
+    url(
+        regex=r'^ajax/detail/(?P<projectevent>[0-9a-f-]+)$',
+        view=views_ajax.ProjectEventDetailAjaxView.as_view(),
+        name='ajax_detail_project',
+    ),
+    url(
+        regex=r'^ajax/detail/site/(?P<projectevent>[0-9a-f-]+)$',
+        view=views_ajax.SiteEventDetailAjaxView.as_view(),
+        name='ajax_detail_site',
+    ),
+]
+
 # Taskflow API views
 urls_taskflow = [
     url(
@@ -39,4 +55,4 @@ urls_taskflow = [
     )
 ]
 
-urlpatterns = urls_ui + urls_taskflow
+urlpatterns = urls_ui + urls_ajax + urls_taskflow

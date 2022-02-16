@@ -55,6 +55,7 @@ class TestPermissionMixin:
         data=None,
         header=None,
         cleanup_method=None,
+        req_kwargs=None,
     ):
         """
         Assert a response status code for url with a list of users. Also checks
@@ -70,6 +71,7 @@ class TestPermissionMixin:
         :param header: Request header (dict, optional)
         :param cleanup_method: Callable method to clean up data after a
                successful request
+        :param req_kwargs: Optional request kwargs override (dict or None)
         """
         if header is None:
             header = {}
@@ -77,7 +79,9 @@ class TestPermissionMixin:
             users = [users]
 
         for user in users:
-            req_kwargs = {'data': data, **header} if data else {}
+            req_kwargs = req_kwargs if req_kwargs else {}
+            if data:
+                req_kwargs.update({'data': data})
             if header:
                 req_kwargs.update(header)
 
@@ -85,7 +89,6 @@ class TestPermissionMixin:
                 re_url = redirect_user if redirect_user else reverse('home')
                 with self.login(user):
                     response = self._send_request(url, method, req_kwargs)
-
             else:  # Anonymous
                 if redirect_anon:
                     re_url = redirect_anon

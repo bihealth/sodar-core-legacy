@@ -52,7 +52,6 @@ from projectroles.models import (
     ProjectInvite,
     RemoteSite,
     RemoteProject,
-    ProjectUserTag,
     SODAR_CONSTANTS,
     PROJECT_TAG_STARRED,
 )
@@ -430,63 +429,11 @@ class ProjectContextMixin(
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
-    @classmethod
-    def _get_project_list(cls, user, parent=None):
-        """
-        Return a flat list of projects.
-
-        :param user: User for which the projects are visible
-        :param parent: Project object or None
-        """
-        project_list = Project.objects.filter(
-            parent=parent, submit_status=SUBMIT_STATUS_OK
-        )
-        if user.is_anonymous:
-            if not getattr(settings, 'PROJECTROLES_ALLOW_ANONYMOUS', False):
-                return None
-            project_list = [
-                p
-                for p in project_list
-                if p.public_guest_access or p.has_public_children
-            ]
-        elif not user.is_superuser:
-            project_list = [
-                p
-                for p in project_list
-                if p.public_guest_access
-                or p.has_public_children
-                or (
-                    user.is_authenticated
-                    and p.has_role(user, include_children=True)
-                )
-            ]
-
-        def _append_projects(project):
-            lst = [project]
-            for c in project.get_children():
-                if (
-                    user.is_superuser
-                    or c.public_guest_access
-                    or c.has_public_children
-                    or (
-                        user.is_authenticated
-                        and c.has_role(user, include_children=True)
-                    )
-                ):
-                    lst += _append_projects(c)
-            return lst
-
-        flat_list = []
-        for p in project_list:
-            flat_list += _append_projects(p)
-        return flat_list
-
-    def _get_custom_cols(self, user, project_list):
+    def _get_custom_cols(self, user):
         """
         Return list of custom columns for projects including project data.
 
         :param user: User object
-        :param project_list: Flat list of Project objects
         """
         i = 0
         cols = []
@@ -501,42 +448,20 @@ class ProjectListContextMixin:
             ):
                 continue
             for k, v in app_plugin.project_list_columns.items():
+                if not v['active']:
+                    continue
                 v['app_plugin'] = app_plugin
-                v['key'] = k
+                v['column_id'] = k
                 v['ordering'] = v.get('ordering') or i
-                v['data'] = {}
-                for p in [
-                    p for p in project_list if p.type == PROJECT_TYPE_PROJECT
-                ]:
-                    try:
-                        val = app_plugin.get_project_list_value(
-                            k, p, self.request.user
-                        )
-                        v['data'][str(p.sodar_uuid)] = (
-                            val if val is not None else ''
-                        )
-                    except Exception:
-                        v['data'][str(p.sodar_uuid)] = ''
                 cols.append(v)
                 i += 1
         return sorted(cols, key=lambda x: x['ordering'])
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        parent = context.get('project')
-        context['project_list'] = self._get_project_list(
-            self.request.user, parent
-        )
         context['project_custom_cols'] = self._get_custom_cols(
-            self.request.user, context['project_list']
+            self.request.user
         )
-        if self.request.user.is_authenticated:
-            context['starred_projects'] = [
-                t.project
-                for t in ProjectUserTag.objects.filter(
-                    user=self.request.user, name=PROJECT_TAG_STARRED
-                )
-            ]
         context['project_col_count'] = PROJECT_COLUMN_COUNT + len(
             context['project_custom_cols']
         )

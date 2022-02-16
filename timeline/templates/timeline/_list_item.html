@@ -4,12 +4,18 @@
 
 <tr id="sodar-tl-list-event-{{ event.sodar_uuid }}">
   <td>
-    <a class="sodar-tl-link-detail text-primary" tabindex="0"
-       data-toggle="popover" data-trigger="focus"
-       data-placement="right" data-html="true"
-       data-content="{% get_event_details event %}">
-      {% get_timestamp event %}
-    </a>
+    {% get_timestamp event as event_time %}
+    {% if event.project %}
+      <a class="sodar-tl-link-detail text-primary"
+         data-url="{% url 'timeline:ajax_detail_project' projectevent=event.sodar_uuid %}">
+        {{ event_time }}
+      </a>
+    {% else %}
+      <a class="sodar-tl-link-detail text-primary"
+         data-url="{% url 'timeline:ajax_detail_site' projectevent=event.sodar_uuid %}">
+        {{ event_time }}
+      </a>
+    {% endif %}
   </td>
   <td>
     {% get_app_icon_html event plugin_lookup as event_icon %}
