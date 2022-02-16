@@ -329,6 +329,9 @@ tr.sodar-pr-project-list-item td:first-child {
   text-overflow: ellipsis;
 }
 
+tr#sodar-pr-project-list-loading {
+  height: 85px !important;
+}
 
 
 /* Popups ------------------------------------------------------------------- */

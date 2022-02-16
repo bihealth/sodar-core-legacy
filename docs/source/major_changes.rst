@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.9 (WIP)
-*************
+v0.10.9 (2022-02-16)
+********************
 
 Release Highlights
 ==================
@@ -19,6 +19,8 @@ Release Highlights
 - Add anonymous access support for Ajax API views
 - Update project list for client side loading
 - Update timeline app status change retrieval and rendering
+- Optimize project list queries
+- General bug fixes and minor updates
 
 Breaking Changes
 ================

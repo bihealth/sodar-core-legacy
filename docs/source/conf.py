@@ -23,13 +23,13 @@ django.setup()
 # -- Project information -----------------------------------------------------
 
 project = 'SODAR Core'
-copyright = '2021, Berlin Institute of Health'
+copyright = '2018-2022, Berlin Institute of Health'
 author = 'BIH Core Unit Bioinformatics'
 
 # The short X.Y version
 version = '0.10'
 # The full version, including alpha/beta/rc tags
-release = '0.10.9-WIP'
+release = '0.10.9'
 
 
 # -- General configuration ---------------------------------------------------

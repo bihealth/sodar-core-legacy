@@ -41,6 +41,11 @@ SODAR Core is a framework for developing Django web applications. The following
 data management and analysis web applications are based on SODAR Core and have
 been made available as open source:
 
+- **SODAR** is the system for Omics data access and retrieval. It is used to
+  model study metadata and manage associated data files in different Omics
+  research projects. SODAR Core was created by separating re-usable research
+  project management components from the SODAR project. The source code of SODAR
+  can be found on `github.com/bihealth/sodar-server <https://github.com/bihealth/sodar-server>`__.
 - **VarFish** is a web-based tool for the analysis of variants.
   It showcases how to build a complex data warehousing and data analysis web
   appliction using SODAR Core.
@@ -109,11 +114,13 @@ Installation
 ============
 
 The ``django-sodar-core`` package can be installed into your Django project
-from PyPI as follows.
+from PyPI as follows. Note that it is strongly recommended to freeze the
+dependency to a specific version, as this package is under active development
+and breaking changes are possible.
 
 .. code-block:: console
 
-    pip install django-sodar-core==0.10.8
+    pip install django-sodar-core==0.10.9
 
 For installing a development version you can point your dependency to a specific
 commit ID in GitHub. Note that these versions may not be stable.

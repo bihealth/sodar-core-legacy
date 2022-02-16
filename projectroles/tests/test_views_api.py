@@ -2458,7 +2458,7 @@ class TestAPIVersioning(TestCoreAPIViewsBase):
         response = self.request_knox(
             self.url,
             media_type=CORE_API_MEDIA_TYPE_INVALID,
-            version=views_api.CORE_API_MEDIA_TYPE,
+            version=views_api.CORE_API_DEFAULT_VERSION,
         )
         self.assertEqual(response.status_code, 406)
 

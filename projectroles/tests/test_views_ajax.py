@@ -44,37 +44,37 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
             )
-            self.assertEqual(response.status_code, 200)
-            expected = {
-                'projects': [
-                    {
-                        'title': self.category.title,
-                        'type': self.category.type,
-                        'full_title': self.category.full_title,
-                        'public_guest_access': self.category.public_guest_access,
-                        'remote': False,
-                        'revoked': False,
-                        'starred': False,
-                        'depth': 0,
-                        'uuid': str(self.category.sodar_uuid),
-                    },
-                    {
-                        'title': self.project.title,
-                        'type': self.project.type,
-                        'full_title': self.project.full_title,
-                        'public_guest_access': self.project.public_guest_access,
-                        'remote': False,
-                        'revoked': False,
-                        'starred': False,
-                        'depth': 1,
-                        'uuid': str(self.project.sodar_uuid),
-                    },
-                ],
-                'parent_depth': 0,
-                'messages': {},
-                'user': {'superuser': True},
-            }
-            self.assertEqual(response.data, expected)
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'projects': [
+                {
+                    'title': self.category.title,
+                    'type': self.category.type,
+                    'full_title': self.category.full_title,
+                    'public_guest_access': self.category.public_guest_access,
+                    'remote': False,
+                    'revoked': False,
+                    'starred': False,
+                    'depth': 0,
+                    'uuid': str(self.category.sodar_uuid),
+                },
+                {
+                    'title': self.project.title,
+                    'type': self.project.type,
+                    'full_title': self.project.full_title,
+                    'public_guest_access': self.project.public_guest_access,
+                    'remote': False,
+                    'revoked': False,
+                    'starred': False,
+                    'depth': 1,
+                    'uuid': str(self.project.sodar_uuid),
+                },
+            ],
+            'parent_depth': 0,
+            'messages': {},
+            'user': {'superuser': True},
+        }
+        self.assertEqual(response.data, expected)
 
     def test_get_parent(self):
         """Test project list retrieval with a parent project"""
@@ -84,26 +84,26 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 + '?parent='
                 + str(self.category.sodar_uuid),
             )
-            self.assertEqual(response.status_code, 200)
-            expected = {
-                'projects': [
-                    {
-                        'title': self.project.title,
-                        'type': self.project.type,
-                        'full_title': self.project.title,  # Not full_title
-                        'public_guest_access': self.project.public_guest_access,
-                        'remote': False,
-                        'revoked': False,
-                        'starred': False,
-                        'depth': 1,
-                        'uuid': str(self.project.sodar_uuid),
-                    },
-                ],
-                'parent_depth': 1,
-                'messages': {},
-                'user': {'superuser': True},
-            }
-            self.assertEqual(response.data, expected)
+        self.assertEqual(response.status_code, 200)
+        expected = {
+            'projects': [
+                {
+                    'title': self.project.title,
+                    'type': self.project.type,
+                    'full_title': self.project.title,  # Not full_title
+                    'public_guest_access': self.project.public_guest_access,
+                    'remote': False,
+                    'revoked': False,
+                    'starred': False,
+                    'depth': 1,
+                    'uuid': str(self.project.sodar_uuid),
+                },
+            ],
+            'parent_depth': 1,
+            'messages': {},
+            'user': {'superuser': True},
+        }
+        self.assertEqual(response.data, expected)
 
     def test_get_no_results(self):
         """Test project list retrieval with no results"""
@@ -112,9 +112,9 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response = self.client.get(
                 reverse('projectroles:ajax_project_list'),
             )
-            self.assertEqual(response.status_code, 200)
-            self.assertEqual(response.data['projects'], [])
-            self.assertIsNotNone(response.data['messages'].get('no_projects'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['projects'], [])
+        self.assertIsNotNone(response.data['messages'].get('no_projects'))
 
     def test_get_project_parent(self):
         """Test project list retrieval with project as parent (should fail)"""
@@ -124,7 +124,7 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
                 + '?parent='
                 + str(self.project.sodar_uuid),
             )
-            self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, 400)
 
 
 class TestProjectListColumnAjaxView(

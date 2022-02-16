@@ -283,7 +283,7 @@ $(document).ready(function () {
                 }
             });
             if (valFound === false) {
-                showMessageRow('Nothing found matching current filter.');
+                showMessageRow('Nothing found matching the current filter.');
             } else hideMessageRow();
         } else {
             hideMessageRow();
@@ -323,9 +323,6 @@ $(document).ready(function () {
             $('#sodar-pr-project-list-link-star').html(
                 '<i class="iconify" data-icon="mdi:star"></i> Starred');
             $(this).attr('data-star-enabled', '1');
-            if (starCount === 0) {
-                showMessageRow('No starred items found for user.');
-            }
         } else if ($(this).attr('data-star-enabled') === '1') {
             $('.sodar-pr-project-list-item').each(function () {
                 $(this).find('.sodar-pr-project-indent').show();
