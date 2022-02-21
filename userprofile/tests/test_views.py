@@ -1,18 +1,21 @@
 """Tests for views in the userprofile Django app"""
 
 from django.contrib import auth
+from django.contrib.messages import get_messages
 from django.test import RequestFactory
 from django.urls import reverse
 
 from test_plus.test import TestCase
 
+# Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 from projectroles.tests.test_models import EXAMPLE_APP_NAME, AppSettingMixin
+
+from userprofile.views import SETTING_UPDATE_MSG
 
 
 # App settings API
 app_settings = AppSettingAPI()
-
 
 # Access Django user model
 User = auth.get_user_model()
@@ -23,7 +26,6 @@ class TestViewsBase(TestCase):
 
     def setUp(self):
         self.req_factory = RequestFactory()
-
         # Init superuser
         self.user = self.make_user('superuser')
         self.user.is_staff = True
@@ -42,7 +44,6 @@ class TestUserDetailView(TestViewsBase):
         with self.login(self.user):
             response = self.client.get(reverse('userprofile:detail'))
         self.assertEqual(response.status_code, 200)
-
         self.assertIsNotNone(response.context['user_settings'])
 
 
@@ -204,6 +205,10 @@ class TestUserSettingsForm(AppSettingMixin, TestViewsBase):
         # Assert redirect
         with self.login(self.user):
             self.assertRedirects(response, reverse('userprofile:detail'))
+        self.assertEqual(
+            list(get_messages(response.wsgi_request))[0].message,
+            SETTING_UPDATE_MSG,
+        )
 
         # Assert settings state after update
         self.assertEqual(

@@ -10,6 +10,14 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Tokens**
+    - Success messages for token creation and deletion (#935)
+- **Userprofile**
+    - Success message for user settings update (#936)
+
 Changed
 -------
 

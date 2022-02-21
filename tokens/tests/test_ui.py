@@ -8,7 +8,6 @@ from django.utils import timezone
 from knox.models import AuthToken
 from selenium.webdriver.common.by import By
 
-
 # Projectroles dependency
 from projectroles.tests.test_ui import TestUIBase
 

@@ -1,4 +1,5 @@
 from django.conf.urls import url
+
 from tokens import views
 
 app_name = 'tokens'

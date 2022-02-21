@@ -1,5 +1,6 @@
 import datetime
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import render
 from django.views.generic.edit import DeleteView, FormView
@@ -11,6 +12,11 @@ from knox.models import AuthToken
 from projectroles.views import LoggedInPermissionMixin
 
 from tokens.forms import UserTokenCreateForm
+
+
+# Local constants
+TOKEN_CREATE_MSG = 'Token created.'
+TOKEN_DELETE_MSG = 'Token deleted.'
 
 
 class UserTokenListView(LoginRequiredMixin, LoggedInPermissionMixin, ListView):
@@ -34,6 +40,7 @@ class UserTokenCreateView(
         ttl = datetime.timedelta(hours=form.clean().get('ttl')) or None
         context = self.get_context_data()
         _, context['token'] = AuthToken.objects.create(self.request.user, ttl)
+        messages.success(self.request, TOKEN_CREATE_MSG)
         return render(self.request, 'tokens/token_create_success.html', context)
 
 
@@ -45,6 +52,7 @@ class UserTokenDeleteView(
     template_name = 'tokens/token_confirm_delete.html'
 
     def get_success_url(self):
+        messages.success(self.request, TOKEN_DELETE_MSG)
         return reverse('tokens:list')
 
     def get_queryset(self):

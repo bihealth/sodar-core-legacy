@@ -102,6 +102,24 @@ MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
 ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
 ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
+MSG_USER_PROFILE_UPDATE = 'User profile updated, please log in again.'
+MSG_USER_PROFILE_LDAP = 'Error: Profile editing not allowed for LDAP users.'
+MSG_INVITE_LDAP_LOCAL_VIEW = (
+    'Error: Invite was issued for LDAP user, but local invite view '
+    'was requested.'
+)
+MSG_INVITE_LOCAL_NOT_ALLOWED = (
+    'Error: Invite of non-LDAP user, but local users are not allowed!'
+)
+MSG_INVITE_LOGGED_IN_ACCEPT = (
+    'Error: Logged in user is not allowed to accept invites for other users.'
+)
+MSG_INVITE_USER_NOT_EQUAL = (
+    'Error: Invited user exists, but logged in user is not invited user.'
+)
+MSG_INVITE_USER_EXISTS = (
+    'A user with that email already exists. Please login to accept the invite.'
+)
 
 
 # Access Django user model
@@ -2401,20 +2419,12 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
-            messages.error(
-                self.request,
-                'Error: Invite of non-LDAP user, but local users are not '
-                'allowed!',
-            )
+            messages.error(self.request, MSG_INVITE_LOCAL_NOT_ALLOWED)
             return redirect(reverse('home'))
 
         # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
-            messages.error(
-                self.request,
-                'Error: Invite was issued for LDAP user, but local invite '
-                'view was requested.',
-            )
+            messages.error(self.request, MSG_INVITE_LDAP_LOCAL_VIEW)
             return redirect(reverse('home'))
 
         # Check if invited user exists
@@ -2430,8 +2440,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             if user:
                 messages.info(
                     self.request,
-                    'A user with that email already exists. Please login '
-                    'first to accept the invite.',
+                    MSG_INVITE_USER_EXISTS,
                 )
                 return redirect(
                     reverse('login')
@@ -2449,8 +2458,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not user:
             messages.error(
                 self.request,
-                'Error: Logged in user is not allowed to accept other\'s '
-                'invites.',
+                MSG_INVITE_LOGGED_IN_ACCEPT,
             )
             return redirect(reverse('home'))
 
@@ -2458,8 +2466,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not self.request.user == user:
             messages.error(
                 self.request,
-                'Error: Invited user exists, but logged in user is not '
-                'invited user.',
+                MSG_INVITE_USER_NOT_EQUAL,
             )
             return redirect(reverse('home'))
 
@@ -2671,16 +2678,12 @@ class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
 
     def get(self, *args, **kwargs):
         if not self.request.user.is_local():
-            messages.error(
-                self.request, 'Error: LDAP user can\'t edit user details'
-            )
+            messages.error(self.request, MSG_USER_PROFILE_LDAP)
             return redirect(reverse('home'))
         return super().get(*args, **kwargs)
 
     def get_success_url(self):
-        messages.success(
-            self.request, 'User successfully updated, please log in again'
-        )
+        messages.success(self.request, MSG_USER_PROFILE_UPDATE)
         return reverse('home')
 
 
