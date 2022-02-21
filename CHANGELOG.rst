@@ -7,6 +7,17 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Improve project list loading layout (#937)
+    - Make project list responsive when under category (#938)
+
+
 v0.10.9 (2022-02-16)
 ====================
 

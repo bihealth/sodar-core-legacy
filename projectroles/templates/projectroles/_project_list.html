@@ -39,7 +39,7 @@
       </div>
     </h4>
   </div>
-  <div class="card-body p-0">
+  <div class="card-body p-0 {% if parent %}sodar-pr-project-list-body-parent{% endif %}">
     <table class="table sodar-card-table sodar-pr-project-list-table"
            id="sodar-pr-project-list-table"
            data-list-url="{% url 'projectroles:ajax_project_list' %}{% if parent %}?parent={{ parent.sodar_uuid }}{% endif %}"
@@ -73,9 +73,12 @@
       </thead>
       <tbody>
         <tr id="sodar-pr-project-list-loading">
-          <td class="text-center text-muted pt-3"
+          <td class="text-center text-muted {% if not parent %}sodar-pr-project-list-loading-home{% endif %}"
               colspan="{{ project_col_count }}">
-            <i class="iconify spin" data-icon="mdi:loading" data-height="48"></i>
+            <i class="iconify spin {% if not parent %}mt-2{% endif %}"
+               data-icon="mdi:loading"
+               {% if not parent %}data-height="48"{% endif %}>
+            </i>
           </td>
         </tr>
       </tbody>
