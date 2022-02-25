@@ -303,6 +303,17 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         )
         self.assertEqual(len(response.context['project_results']), 2)
 
+    def test_render_advanced_dupe(self):
+        """Test input from advanced search with a duplicate term"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'xxx\r\nxxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['xxx'])
+
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
         """Test redirecting the view due to search being disabled"""

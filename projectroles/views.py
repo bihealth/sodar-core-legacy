@@ -558,12 +558,11 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
             messages.error(request, 'Search not enabled')
             return redirect('home')
-        context = self.get_context_data(*args, **kwargs)
-        return super().render_to_response(context)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ProjectSearchResultsView(
@@ -590,7 +589,6 @@ class ProjectSearchResultsView(
             if self.request.GET.get('k'):
                 keyword_input = self.request.GET['k'].strip().split(' ')
             search_input = ''  # Clears input for basic search
-
         else:  # Single term search
             search_input = self.request.GET.get('s').strip()
             search_split = search_input.split(' ')
@@ -603,6 +601,7 @@ class ProjectSearchResultsView(
                     search_term += ' ' + s.lower()
             if search_term:
                 search_terms = [search_term]
+        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
             kw = s.split(':')[0].lower().strip()
@@ -680,7 +679,7 @@ class ProjectSearchResultsView(
         if not context['search_terms']:
             messages.error(request, 'No search terms provided.')
             return redirect(reverse('home'))
-        return super().get(request, *args, **kwargs)
+        return super().render_to_response(context)
 
 
 class ProjectAdvancedSearchView(

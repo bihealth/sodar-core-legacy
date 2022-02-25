@@ -16,7 +16,8 @@ v0.10.10 (WIP)
 Release Highlights
 ==================
 
-TODO
+- Layout improvements
+- Fix search issues
 
 Breaking Changes
 ================

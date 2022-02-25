@@ -25,6 +25,13 @@ Changed
     - Improve project list loading layout (#937)
     - Make project list responsive when under category (#938)
 
+Fixed
+-----
+
+- **Projectroles**
+    - Duplicate terms not removed in advanced search (#943)
+    - ``ProjectSearchResultsView.get_context_data()`` called twice (#944)
+
 
 v0.10.9 (2022-02-16)
 ====================
