@@ -31,6 +31,7 @@ Fixed
 - **Projectroles**
     - Duplicate terms not removed in advanced search (#943)
     - ``ProjectSearchResultsView.get_context_data()`` called twice (#944)
+    - Redundant backend API initialization in ``check_backend()`` (#946)
 
 
 v0.10.9 (2022-02-16)
