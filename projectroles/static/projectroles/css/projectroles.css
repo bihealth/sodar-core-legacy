@@ -308,12 +308,17 @@ table.sodar-card-table-bordered tbody tr:last-child td {
 /* Project list table ------------------------------------------------------- */
 
 
+.sodar-pr-project-list-body-parent {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 table.sodar-pr-project-list-table {
   table-layout: fixed;
 }
 
 table.sodar-pr-project-list-table tbody tr {
-  height: 51px !important;
+  height: 53px !important;
 }
 
 table.sodar-pr-project-list-table tbody tr td {
@@ -329,7 +334,7 @@ tr.sodar-pr-project-list-item td:first-child {
   text-overflow: ellipsis;
 }
 
-tr#sodar-pr-project-list-loading {
+tr.sodar-pr-project-list-loading-home {
   height: 85px !important;
 }
 

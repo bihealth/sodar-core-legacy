@@ -50,8 +50,8 @@ def core_version():
 
 @register.simple_tag
 def check_backend(name):
-    """Return True if backend app is available, else False"""
-    return True if get_backend_api(name) else False
+    """Return True if backend app is available and enabled, else False"""
+    return True if name in settings.ENABLED_BACKEND_PLUGINS else False
 
 
 @register.simple_tag

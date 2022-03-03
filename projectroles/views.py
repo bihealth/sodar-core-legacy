@@ -3,18 +3,17 @@
 import json
 import logging
 import re
-import ssl
-from ipaddress import ip_address, ip_network
-
 import requests
-from urllib.parse import unquote_plus
+import ssl
 import urllib.request
+from ipaddress import ip_address, ip_network
+from urllib.parse import unquote_plus
 
 from django.apps import apps
-from django.core.exceptions import ImproperlyConfigured
-from django.contrib import auth
-from django.contrib import messages
+from django.conf import settings
+from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import redirect
@@ -34,7 +33,6 @@ from django.views.generic.detail import ContextMixin
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from django.conf import settings
 from projectroles import email
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import (
@@ -65,14 +63,10 @@ from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 
 
+app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+User = auth.get_user_model()
 
-
-# Access Django user model
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
-# Settings
-SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -96,19 +90,30 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
-KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
+SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
 ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
 ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
-
-
-# Access Django user model
-User = auth.get_user_model()
-
-# App settings API
-app_settings = AppSettingAPI()
+MSG_USER_PROFILE_UPDATE = 'User profile updated, please log in again.'
+MSG_USER_PROFILE_LDAP = 'Error: Profile editing not allowed for LDAP users.'
+MSG_INVITE_LDAP_LOCAL_VIEW = (
+    'Error: Invite was issued for LDAP user, but local invite view '
+    'was requested.'
+)
+MSG_INVITE_LOCAL_NOT_ALLOWED = (
+    'Error: Invite of non-LDAP user, but local users are not allowed!'
+)
+MSG_INVITE_LOGGED_IN_ACCEPT = (
+    'Error: Logged in user is not allowed to accept invites for other users.'
+)
+MSG_INVITE_USER_NOT_EQUAL = (
+    'Error: Invited user exists, but logged in user is not invited user.'
+)
+MSG_INVITE_USER_EXISTS = (
+    'A user with that email already exists. Please login to accept the invite.'
+)
 
 
 # General mixins ---------------------------------------------------------------
@@ -418,7 +423,9 @@ class ProjectContextMixin(
             context['project'] = self.get_project()
 
         # Project tagging/starring
-        if 'project' in context and not KIOSK_MODE:
+        if 'project' in context and not getattr(
+            settings, 'PROJECTROLES_KIOSK_MODE', False
+        ):
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )
@@ -540,12 +547,11 @@ class ProjectDetailView(
 class ProjectSearchMixin:
     """Common functionalities for search views"""
 
-    def get(self, request, *args, **kwargs):
+    def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
             messages.error(request, 'Search not enabled')
             return redirect('home')
-        context = self.get_context_data(*args, **kwargs)
-        return super().render_to_response(context)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ProjectSearchResultsView(
@@ -572,7 +578,6 @@ class ProjectSearchResultsView(
             if self.request.GET.get('k'):
                 keyword_input = self.request.GET['k'].strip().split(' ')
             search_input = ''  # Clears input for basic search
-
         else:  # Single term search
             search_input = self.request.GET.get('s').strip()
             search_split = search_input.split(' ')
@@ -585,6 +590,7 @@ class ProjectSearchResultsView(
                     search_term += ' ' + s.lower()
             if search_term:
                 search_terms = [search_term]
+        search_terms = list(dict.fromkeys(search_terms))  # Remove dupes
 
         for s in keyword_input:
             kw = s.split(':')[0].lower().strip()
@@ -662,7 +668,7 @@ class ProjectSearchResultsView(
         if not context['search_terms']:
             messages.error(request, 'No search terms provided.')
             return redirect(reverse('home'))
-        return super().get(request, *args, **kwargs)
+        return super().render_to_response(context)
 
 
 class ProjectAdvancedSearchView(
@@ -2401,20 +2407,12 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
-            messages.error(
-                self.request,
-                'Error: Invite of non-LDAP user, but local users are not '
-                'allowed!',
-            )
+            messages.error(self.request, MSG_INVITE_LOCAL_NOT_ALLOWED)
             return redirect(reverse('home'))
 
         # Check invite for correct type
         if self.get_invite_type(invite) == 'ldap':
-            messages.error(
-                self.request,
-                'Error: Invite was issued for LDAP user, but local invite '
-                'view was requested.',
-            )
+            messages.error(self.request, MSG_INVITE_LDAP_LOCAL_VIEW)
             return redirect(reverse('home'))
 
         # Check if invited user exists
@@ -2430,8 +2428,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             if user:
                 messages.info(
                     self.request,
-                    'A user with that email already exists. Please login '
-                    'first to accept the invite.',
+                    MSG_INVITE_USER_EXISTS,
                 )
                 return redirect(
                     reverse('login')
@@ -2449,8 +2446,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not user:
             messages.error(
                 self.request,
-                'Error: Logged in user is not allowed to accept other\'s '
-                'invites.',
+                MSG_INVITE_LOGGED_IN_ACCEPT,
             )
             return redirect(reverse('home'))
 
@@ -2458,8 +2454,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not self.request.user == user:
             messages.error(
                 self.request,
-                'Error: Invited user exists, but logged in user is not '
-                'invited user.',
+                MSG_INVITE_USER_NOT_EQUAL,
             )
             return redirect(reverse('home'))
 
@@ -2671,16 +2666,12 @@ class UserUpdateView(LoginRequiredMixin, HTTPRefererMixin, UpdateView):
 
     def get(self, *args, **kwargs):
         if not self.request.user.is_local():
-            messages.error(
-                self.request, 'Error: LDAP user can\'t edit user details'
-            )
+            messages.error(self.request, MSG_USER_PROFILE_LDAP)
             return redirect(reverse('home'))
         return super().get(*args, **kwargs)
 
     def get_success_url(self):
-        messages.success(
-            self.request, 'User successfully updated, please log in again'
-        )
+        messages.success(self.request, MSG_USER_PROFILE_UPDATE)
         return reverse('home')
 
 

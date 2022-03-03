@@ -1,7 +1,6 @@
 """Ajax API views for the projectroles app"""
 
 import logging
-
 from dal import autocomplete
 
 from django.conf import settings

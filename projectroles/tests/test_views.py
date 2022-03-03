@@ -42,6 +42,14 @@ from projectroles.tests.test_models import (
     AppSettingMixin,
     RemoteTargetMixin,
 )
+from projectroles.views import (
+    MSG_USER_PROFILE_LDAP,
+    MSG_INVITE_LDAP_LOCAL_VIEW,
+    MSG_INVITE_LOCAL_NOT_ALLOWED,
+    MSG_INVITE_LOGGED_IN_ACCEPT,
+    MSG_INVITE_USER_NOT_EQUAL,
+    MSG_INVITE_USER_EXISTS,
+)
 
 
 app_settings = AppSettingAPI()
@@ -294,6 +302,17 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
             response.context['search_terms'], ['testproject', 'xxx']
         )
         self.assertEqual(len(response.context['project_results']), 2)
+
+    def test_render_advanced_dupe(self):
+        """Test input from advanced search with a duplicate term"""
+        with self.login(self.user):
+            response = self.client.get(
+                reverse('projectroles:search')
+                + '?'
+                + urlencode({'m': 'xxx\r\nxxx', 'k': ''})
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['search_terms'], ['xxx'])
 
     @override_settings(PROJECTROLES_ENABLE_SEARCH=False)
     def test_disable_search(self):
@@ -2958,7 +2977,7 @@ class TestProjectInviteCreateView(
 
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
-    def test_accept_invite_ldap(self):
+    def test_accept_ldap(self):
         """Test accepting an LDAP invite"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3017,7 +3036,7 @@ class TestProjectInviteCreateView(
 
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
-    def test_accept_invite_expired_ldap(self):
+    def test_accept_ldap_expired(self):
         """Test accepting an expired LDAP invite"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3073,7 +3092,7 @@ class TestProjectInviteCreateView(
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_accept_invite_local(self):
+    def test_accept_local(self):
         """Test accepting local invite (user doesn't exist and no user is logged in)"""
         # Init invite
         invite = self._make_invite(
@@ -3169,7 +3188,7 @@ class TestProjectInviteCreateView(
         self.assertEqual(response.status_code, 200)
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
-    def test_accept_invite_expired_local(self):
+    def test_accept_expired_local(self):
         """Test user accepting an expired local invite"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3227,7 +3246,7 @@ class TestProjectInviteCreateView(
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
-    def test_accept_invite_wrong_type_local(self):
+    def test_accept_wrong_type_local(self):
         """Test accepting a local invite in the view processing LDAP invites"""
         invite = self._make_invite(
             email='test@different.com',
@@ -3259,7 +3278,7 @@ class TestProjectInviteCreateView(
     @override_settings(AUTH_LDAP_USERNAME_DOMAIN='EXAMPLE')
     @override_settings(AUTH_LDAP_DOMAIN_PRINTABLE='EXAMPLE')
     @override_settings(ENABLE_LDAP=True)
-    def test_accept_invite_wrong_type_ldap(self):
+    def test_accept_wrong_type_ldap(self):
         """Test accepting a LDAP invite in the view processing local invites"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3282,12 +3301,11 @@ class TestProjectInviteCreateView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: Invite was issued for LDAP user, but local invite view '
-            'was requested.',
+            MSG_INVITE_LDAP_LOCAL_VIEW,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
-    def test_accept_invite_accept_local_user_not_allowed(self):
+    def test_accept_local_user_not_allowed(self):
         """Test accepting a local invite while local users are disabled"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3320,7 +3338,7 @@ class TestProjectInviteCreateView(
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=False)
-    def test_accept_invite_process_local_user_not_allowed(self):
+    def test_process_local_user_not_allowed(self):
         """Test processing local invite while local users are disabled"""
         invite = self._make_invite(
             email=INVITE_EMAIL,
@@ -3343,7 +3361,7 @@ class TestProjectInviteCreateView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: Invite of non-LDAP user, but local users are not allowed!',
+            MSG_INVITE_LOCAL_NOT_ALLOWED,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -3369,7 +3387,7 @@ class TestProjectInviteCreateView(
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: Logged in user is not allowed to accept other\'s invites.',
+            MSG_INVITE_LOGGED_IN_ACCEPT,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -3398,8 +3416,7 @@ class TestProjectInviteCreateView(
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: Invited user exists, but logged in user is not invited '
-            'user.',
+            MSG_INVITE_USER_NOT_EQUAL,
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)
@@ -3473,8 +3490,7 @@ class TestProjectInviteCreateView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'A user with that email already exists. Please login first to '
-            'accept the invite.',
+            MSG_INVITE_USER_EXISTS,
         )
 
     def test_accept_role_exists(self):
@@ -4143,7 +4159,7 @@ class TestUserUpdateView(TestViewsBase):
         self.assertRedirects(response, reverse('home'))
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Error: LDAP user can\'t edit user details',
+            MSG_USER_PROFILE_LDAP,
         )
 
     def test_submit_local_user(self):

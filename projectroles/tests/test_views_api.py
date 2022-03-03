@@ -11,7 +11,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from knox.models import AuthToken
-
 from test_plus.test import APITestCase
 
 from projectroles import views_api
@@ -64,6 +63,9 @@ INVITE_USER_EMAIL = 'new1@example.com'
 INVITE_USER2_EMAIL = 'new2@example.com'
 INVITE_MESSAGE = 'Message'
 
+# Special value to use for empty knox token
+EMPTY_KNOX_TOKEN = '__EmpTy_KnoX_tOkEn_FoR_tEsT_oNlY_0xDEADBEEF__'
+
 
 # Base Classes -----------------------------------------------------------------
 
@@ -96,8 +98,11 @@ class SODARAPIViewTestMixin:
 
         :param user: User object
         :param full_result: Return full result of AuthToken creation if True
-        :return: Token string or AuthToken creation tuple
+        :return: Token string or AuthToken creation tuple (EMPTY_KNOX_TOKEN if
+                 user is None)
         """
+        if user is None:
+            return EMPTY_KNOX_TOKEN
         result = AuthToken.objects.create(user=user)
         return result if full_result else result[1]
 
@@ -155,9 +160,12 @@ class SODARAPIViewTestMixin:
         Return auth header based on token.
 
         :param token: Token string
-        :return: Dict
+        :return: Dict, empty if token is None
         """
-        return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
+        if token is EMPTY_KNOX_TOKEN:
+            return {}
+        else:
+            return {'HTTP_AUTHORIZATION': 'token {}'.format(token)}
 
     def request_knox(
         self,

@@ -1,4 +1,6 @@
-from django.contrib import auth
+"""UI views for the userprofile app"""
+
+from django.contrib import auth, messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView, FormView
@@ -12,17 +14,18 @@ from projectroles.views import (
     HTTPRefererMixin,
 )
 
-from .forms import UserSettingsForm
+from userprofile.forms import UserSettingsForm
+
+
+User = auth.get_user_model()
+app_settings = AppSettingAPI()
 
 
 # SODAR Constants
 APP_SETTING_SCOPE_USER = SODAR_CONSTANTS['APP_SETTING_SCOPE_USER']
 
-# The user model to use
-User = auth.get_user_model()
-
-# App settings API
-app_settings = AppSettingAPI()
+# Local Constants
+SETTING_UPDATE_MSG = 'User settings updated.'
 
 
 class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
@@ -30,12 +33,6 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
 
     template_name = 'userprofile/detail.html'
     permission_required = 'userprofile.view_detail'
-
-    def get_context_data(self, **kwargs):
-        result = super().get_context_data(**kwargs)
-        result['user_settings'] = list(self._get_user_settings())
-        result['local_user'] = self.request.user.is_local()
-        return result
 
     def _get_user_settings(self):
         plugins = get_active_plugins(
@@ -61,11 +58,17 @@ class UserDetailView(LoginRequiredMixin, LoggedInPermissionMixin, TemplateView):
                     'description': s_val.get('description'),
                 }
 
+    def get_context_data(self, **kwargs):
+        result = super().get_context_data(**kwargs)
+        result['user_settings'] = list(self._get_user_settings())
+        result['local_user'] = self.request.user.is_local()
+        return result
+
 
 class UserSettingUpdateView(
     LoginRequiredMixin, LoggedInPermissionMixin, HTTPRefererMixin, FormView
 ):
-    """Display and process the settings update view"""
+    """User settings update view"""
 
     form_class = UserSettingsForm
     permission_required = 'userprofile.view_detail'
@@ -79,11 +82,11 @@ class UserSettingUpdateView(
 
     def form_valid(self, form):
         result = super().form_valid(form)
-
         for key, value in form.cleaned_data.items():
             if key.startswith('settings.'):
                 _, app_name, setting_name = key.split('.', 3)
                 app_settings.set_app_setting(
                     app_name, setting_name, value, user=self.request.user
                 )
+        messages.success(self.request, SETTING_UPDATE_MSG)
         return result

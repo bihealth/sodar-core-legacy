@@ -7,6 +7,34 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.10 (2022-03-03)
+=====================
+
+Added
+-----
+
+- **Tokens**
+    - Success messages for token creation and deletion (#935)
+- **Userprofile**
+    - Success message for user settings update (#936)
+
+Changed
+-------
+
+- **Projectroles**
+    - Improve project list loading layout (#937)
+    - Make project list responsive when under category (#938)
+    - Enable testing knox auth for REST API views without a token
+
+Fixed
+-----
+
+- **Projectroles**
+    - Duplicate terms not removed in advanced search (#943)
+    - ``ProjectSearchResultsView.get_context_data()`` called twice (#944)
+    - Redundant backend API initialization in ``check_backend()`` (#946)
+
+
 v0.10.9 (2022-02-16)
 ====================
 

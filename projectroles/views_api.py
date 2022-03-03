@@ -58,8 +58,8 @@ from projectroles.views import (
 )
 
 
-User = auth.get_user_model()
 app_settings = AppSettingAPI()
+User = auth.get_user_model()
 
 
 # SODAR constants
@@ -103,6 +103,7 @@ CORE_API_ALLOWED_VERSIONS = [
     '0.10.7',
     '0.10.8',
     '0.10.9',
+    '0.10.10',
 ]
 
 # Local constants
