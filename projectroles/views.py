@@ -3,18 +3,17 @@
 import json
 import logging
 import re
-import ssl
-from ipaddress import ip_address, ip_network
-
 import requests
-from urllib.parse import unquote_plus
+import ssl
 import urllib.request
+from ipaddress import ip_address, ip_network
+from urllib.parse import unquote_plus
 
 from django.apps import apps
-from django.core.exceptions import ImproperlyConfigured
-from django.contrib import auth
-from django.contrib import messages
+from django.conf import settings
+from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
+from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import redirect
@@ -34,7 +33,6 @@ from django.views.generic.detail import ContextMixin
 
 from rules.contrib.views import PermissionRequiredMixin, redirect_to_login
 
-from django.conf import settings
 from projectroles import email
 from projectroles.app_settings import AppSettingAPI
 from projectroles.forms import (
@@ -65,14 +63,10 @@ from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.utils import get_expiry_date, get_display_name
 
 
+app_settings = AppSettingAPI()
 logger = logging.getLogger(__name__)
+User = auth.get_user_model()
 
-
-# Access Django user model
-AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
-# Settings
-SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 
 # SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
@@ -96,7 +90,7 @@ APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
 # Local constants
 APP_NAME = 'projectroles'
-KIOSK_MODE = getattr(settings, 'PROJECTROLES_KIOSK_MODE', False)
+SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
 MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
@@ -120,13 +114,6 @@ MSG_INVITE_USER_NOT_EQUAL = (
 MSG_INVITE_USER_EXISTS = (
     'A user with that email already exists. Please login to accept the invite.'
 )
-
-
-# Access Django user model
-User = auth.get_user_model()
-
-# App settings API
-app_settings = AppSettingAPI()
 
 
 # General mixins ---------------------------------------------------------------
@@ -436,7 +423,9 @@ class ProjectContextMixin(
             context['project'] = self.get_project()
 
         # Project tagging/starring
-        if 'project' in context and not KIOSK_MODE:
+        if 'project' in context and not getattr(
+            settings, 'PROJECTROLES_KIOSK_MODE', False
+        ):
             context['project_starred'] = get_tag_state(
                 context['project'], self.request.user, PROJECT_TAG_STARRED
             )

@@ -7,8 +7,8 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
-Unreleased
-==========
+v0.10.10 (2022-03-03)
+=====================
 
 Added
 -----
@@ -24,6 +24,7 @@ Changed
 - **Projectroles**
     - Improve project list loading layout (#937)
     - Make project list responsive when under category (#938)
+    - Enable testing knox auth for REST API views without a token
 
 Fixed
 -----
