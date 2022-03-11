@@ -21,6 +21,8 @@ Changed
 Fixed
 -----
 
+- **General**
+    - Incorrect version for ipdb dependency (#951)
 - **Projectroles**
     -  App search results template included if no results found (#958)
 
