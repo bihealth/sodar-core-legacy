@@ -113,44 +113,6 @@ def is_app_visible(plugin, project, user):
 
 
 @register.simple_tag
-def get_not_found_alert(project_results, app_search_data, search_type):
-    """Return alert HTML for data which was not found during search, if any"""
-    not_found = []
-
-    if len(project_results) == 0 and (
-        not search_type or search_type == 'project'
-    ):
-        not_found.append('Projects')
-
-    for results in [a['results'] for a in app_search_data]:
-        if not results:
-            continue
-        for k, result in results.items():
-            type_match = True if search_type else False
-            if (
-                not type_match
-                and 'search_type' in result
-                and search_type in result['search_types']
-            ):
-                type_match = True
-            if (type_match or not search_type) and (not result['items']):
-                not_found.append(result['title'])
-
-    if not_found:
-        ret = (
-            '<div class="alert alert-info pb-0 d-none" '
-            'id="sodar-search-not-found-alert">\n'
-            'No results found:\n<ul>\n'
-        )
-        for n in not_found:
-            ret += '<li>{}</li>\n'.format(n)
-        ret += '</ul>\n</div>\n'
-        return ret
-
-    return ''
-
-
-@register.simple_tag
 def is_inherited_owner(project, user):
     """Return True if user is inherited owner"""
     if (

@@ -15,6 +15,7 @@ from django.contrib import auth, messages
 from django.contrib.auth.mixins import AccessMixin
 from django.core.exceptions import ImproperlyConfigured
 from django.db import transaction
+from django.db.models import QuerySet
 from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import resolve, reverse, reverse_lazy
@@ -561,9 +562,108 @@ class ProjectSearchResultsView(
 
     template_name = 'projectroles/search_results.html'
 
+    def _get_app_results(self, search_terms, search_type, search_keywords):
+        """
+        Return app plugin search results.
+
+        :param search_terms: Search terms (list of strings)
+        :param search_type: Optional type keyword for search (string or None)
+        :param search_keywords: Optional keywords (list of strings or None)
+        :return: List
+        """
+        plugins = get_active_plugins(plugin_type='project_app')
+        ret = []
+
+        if search_type:
+            search_apps = sorted(
+                [
+                    p
+                    for p in plugins
+                    if (p.search_enable and search_type in p.search_types)
+                ],
+                key=lambda x: x.plugin_ordering,
+            )
+        else:
+            search_apps = sorted(
+                [p for p in plugins if p.search_enable],
+                key=lambda x: x.plugin_ordering,
+            )
+
+        for plugin in search_apps:
+            search_kwargs = {
+                'user': self.request.user,
+                'search_type': search_type,
+                'search_terms': search_terms,
+                'keywords': search_keywords,
+            }
+            search_res = {
+                'plugin': plugin,
+                'results': None,
+                'error': None,
+                'has_results': False,
+            }
+            try:
+                search_res['results'] = plugin.search(**search_kwargs)
+                for v in search_res['results'].values():
+                    items = v.get('items')
+                    if items and (
+                        (isinstance(items, QuerySet) and items.count() > 0)
+                        or (isinstance(items, list) and len(items) > 0)
+                    ):
+                        search_res['has_results'] = True
+                        break
+            except Exception as ex:
+                if settings.DEBUG:
+                    raise ex
+                search_res['error'] = str(ex)
+                logger.error(
+                    'Exception raised by search() in {}: "{}" ({})'.format(
+                        plugin.name,
+                        ex,
+                        '; '.join(
+                            [
+                                '{}={}'.format(k, v)
+                                for k, v in search_kwargs.items()
+                            ]
+                        ),
+                    )
+                )
+            ret.append(search_res)
+
+        return ret
+
+    @classmethod
+    def _get_not_found(cls, search_type, project_results, app_results):
+        """
+        Return list of apps for which objects were search for but not returned.
+
+        :param search_type: Type keyword for search if set
+        :param project_results: Results for projectroles search
+        :param app_results: Results for app plugin search
+        :return: List
+        """
+        ret = []
+        if len(project_results) == 0 and (
+            not search_type or search_type == 'project'
+        ):
+            ret.append('Projects')
+        for results in [a['results'] for a in app_results]:
+            if not results:
+                continue
+            for k, result in results.items():
+                type_match = True if search_type else False
+                if (
+                    not type_match
+                    and 'search_type' in result
+                    and search_type in result['search_types']
+                ):
+                    type_match = True
+                if (type_match or not search_type) and (not result['items']):
+                    ret.append(result['title'])
+        return ret
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(**kwargs)
-        plugins = get_active_plugins(plugin_type='project_app')
         search_terms = []
         search_type = None
         keyword_input = []
@@ -604,7 +704,6 @@ class ProjectSearchResultsView(
         context['search_terms'] = search_terms
         context['search_type'] = search_type
         context['search_keywords'] = search_keywords
-
         # Get project results
         if not search_type or search_type == 'project':
             context['project_results'] = [
@@ -614,53 +713,16 @@ class ProjectSearchResultsView(
                 )
                 if self.request.user.has_perm('projectroles.view_project', p)
             ]
-
         # Get app results
-        if search_type:
-            search_apps = sorted(
-                [
-                    p
-                    for p in plugins
-                    if (p.search_enable and search_type in p.search_types)
-                ],
-                key=lambda x: x.plugin_ordering,
-            )
-        else:
-            search_apps = sorted(
-                [p for p in plugins if p.search_enable],
-                key=lambda x: x.plugin_ordering,
-            )
-
-        context['app_search_data'] = []
-
-        for plugin in search_apps:
-            search_kwargs = {
-                'user': self.request.user,
-                'search_type': search_type,
-                'search_terms': search_terms,
-                'keywords': search_keywords,
-            }
-            search_res = {'plugin': plugin, 'results': None, 'error': None}
-            try:
-                search_res['results'] = plugin.search(**search_kwargs)
-            except Exception as ex:
-                if settings.DEBUG:
-                    raise ex
-                search_res['error'] = str(ex)
-                logger.error(
-                    'Exception raised by search() in {}: "{}" ({})'.format(
-                        plugin.name,
-                        ex,
-                        '; '.join(
-                            [
-                                '{}={}'.format(k, v)
-                                for k, v in search_kwargs.items()
-                            ]
-                        ),
-                    )
-                )
-            context['app_search_data'].append(search_res)
-
+        context['app_results'] = self._get_app_results(
+            search_terms, search_type, search_keywords
+        )
+        # List apps for which no results were found
+        context['not_found'] = self._get_not_found(
+            search_type,
+            context.get('project_results') or [],
+            context['app_results'],
+        )
         return context
 
     def get(self, request, *args, **kwargs):

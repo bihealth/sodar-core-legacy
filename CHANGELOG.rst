@@ -7,6 +7,28 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #956)
+
+Fixed
+-----
+
+- **Projectroles**
+    -  App search results template included if no results found (#956)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``get_not_found_alert()`` template tag (#955)
+
+
 v0.10.10 (2022-03-03)
 =====================
 

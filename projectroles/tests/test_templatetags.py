@@ -509,8 +509,6 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
             tags.is_app_visible(app_plugin, self.project, superuser), True
         )
 
-    # TODO: Test get_not_found_alert()
-
     def test_is_inherited_owner(self):
         """Test is_inherited_owner()"""
         owner_cat = self.make_user('user_cat_owner')

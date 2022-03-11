@@ -10,6 +10,20 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.11 (WIP)
+**************
+
+Release Highlights
+==================
+
+TBD
+
+Breaking Changes
+================
+
+N/A
+
+
 v0.10.10 (2022-03-03)
 *********************
 
