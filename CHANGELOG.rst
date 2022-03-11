@@ -13,6 +13,8 @@ Unreleased
 Changed
 -------
 
+- **General**
+    - Upgrade to setuptools v59.6.0 (#948)
 - **Projectroles**
     - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #958)
 
