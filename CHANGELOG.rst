@@ -14,13 +14,13 @@ Changed
 -------
 
 - **Projectroles**
-    - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #956)
+    - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #958)
 
 Fixed
 -----
 
 - **Projectroles**
-    -  App search results template included if no results found (#956)
+    -  App search results template included if no results found (#958)
 
 Removed
 -------
