@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Projectroles**
+    - Sidebar icon scaling using ``PROJECTROLES_SIDEBAR_ICON_SIZE`` (#843)
+
 Changed
 -------
 
@@ -24,7 +30,8 @@ Fixed
 - **General**
     - Incorrect version for ipdb dependency (#951)
 - **Projectroles**
-    -  App search results template included if no results found (#958)
+    - App search results template included if no results found (#958)
+    - Inconsistent sidebar icon size (#960)
 
 Removed
 -------

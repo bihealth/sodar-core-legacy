@@ -520,18 +520,7 @@ a.sodar-pr-btn-copy-secret i {
   margin-left: 0;
 }
 
-/* Notch visualizaton for sidebar */
-.sodar-pr-sidebar-nav-ul li.active:after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 13px;
-  width: 0;
-  height: 0;
-  border-top: 12px solid transparent;
-  border-right: 12px solid #ffffff;
-  border-bottom: 12px solid transparent;
-}
+/* NOTE: Notch visualizaton for sidebar moved into base.html */
 
 .sodar-pr-sidebar-nav-ul li i {
   padding-bottom: 4px;

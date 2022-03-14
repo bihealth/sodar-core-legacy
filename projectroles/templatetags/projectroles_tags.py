@@ -1,4 +1,6 @@
-"""Template tags intended for internal use within the projectroles app"""
+"""Template tags for internal use within the projectroles app"""
+
+from math import ceil
 
 from django import template
 from django.conf import settings
@@ -18,7 +20,7 @@ from projectroles.project_tags import get_tag_state
 register = template.Library()
 
 
-# SODAR Constants
+# SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -31,6 +33,8 @@ ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
 ]
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
 
 
 # SODAR and site operations ----------------------------------------------------
@@ -279,6 +283,30 @@ def get_remote_access_legend(level):
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
+
+
+@register.simple_tag
+def get_sidebar_icon_size():
+    """Return sidebar icon size with a min/max limit"""
+    return sorted(
+        [
+            SIDEBAR_ICON_MIN_SIZE,
+            getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
+            SIDEBAR_ICON_MAX_SIZE,
+        ]
+    )[1]
+
+
+@register.simple_tag
+def get_sidebar_notch_pos():
+    """Return sidebar notch position"""
+    return ceil(get_sidebar_icon_size() / 3)
+
+
+@register.simple_tag
+def get_sidebar_notch_size():
+    """Return sidebar notch size"""
+    return min(ceil(get_sidebar_icon_size() / 2), 12)
 
 
 @register.simple_tag

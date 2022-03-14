@@ -5,8 +5,30 @@
 {% load projectroles_tags %}
 {% load projectroles_common_tags %}
 
+{% block css %}
+  {{ block.super }}
+  {% get_sidebar_notch_size as sidebar_notch_size %}
+  {% get_sidebar_notch_pos as sidebar_notch_pos %}
+  <style type="text/css">
+    /* Notch visualizaton for sidebar */
+    .sodar-pr-sidebar-nav-ul li.active a span.sodar-pr-sidebar-icon:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: {{ sidebar_notch_pos }}px;
+      bottom: 0;
+      width: 0;
+      height: 0;
+      border-top: {{ sidebar_notch_size }}px solid transparent;
+      border-right: {{ sidebar_notch_size }}px solid #ffffff;
+      border-bottom: {{ sidebar_notch_size }}px solid transparent;
+    }
+  </style>
+{% endblock %}
+
 {% block content %}
   {% get_django_setting 'PROJECTROLES_KIOSK_MODE' as kiosk_mode %}
+  {% get_sidebar_icon_size as sidebar_icon_size %}
 
   {# Ensure passing CSRF token to Ajax API views #}
   {% csrf_token %}
@@ -14,16 +36,16 @@
   {# Sidebar #}
   {% if not kiosk_mode %}
     <div class="sodar-content-left" id="sodar-content-left">
-
       <div class="col h-100 bg-dark text-center sodar-pr-sidebar collapse show" id="sodar-pr-sidebar">
         <nav class="nav navbar-expand-lg navbar-dark bg-dark sodar-pr-sidebar-nav">
           <div class="navbar-collapse" id="sodar-pr-sidebar-navbar">
             <ul class="navbar-nav flex-column sodar-pr-sidebar-nav-ul">
               <li id="sodar-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                <a class="nav-link"
-                   href="{% url 'home' %}"
-                   id="sodar-pr-nav-home-link">
-                  <i class="iconify" data-icon="mdi:home" data-height="32"></i><br />Home
+                <a class="nav-link" href="{% url 'home' %}" id="sodar-pr-nav-home-link">
+                  <span class="sodar-pr-sidebar-icon">
+                    <i class="iconify" data-icon="mdi:home" data-height="{{ sidebar_icon_size }}"></i>
+                  </span>
+                  <br />Home
                 </a>
               </li>
               {% block sidebar %} {# Actual sidebar content #}
@@ -33,7 +55,6 @@
           </div>
         </nav>
       </div>
-
     </div> <!-- /sodar-content-left -->
   {% endif %}
 
@@ -68,7 +89,6 @@
     {% endblock navi_sub_project %}
 
     <div class="sodar-app-container" id="sodar-app-container">
-
       {# Django messages / site app messages #}
       {% include 'projectroles/_messages.html' %}
 
