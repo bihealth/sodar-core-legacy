@@ -103,7 +103,7 @@ class BackgroundJobClearViewBase(
                     status_type='OK',
                 )
             messages.success(
-                self.request, 'Removed {} background jobs'.format(bg_job_count)
+                self.request, 'Removed {} background jobs.'.format(bg_job_count)
             )
         except Exception as ex:
             messages.error(

@@ -43,6 +43,7 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.views import (
+    MSG_PROJECT_WELCOME,
     MSG_USER_PROFILE_LDAP,
     MSG_INVITE_LDAP_LOCAL_VIEW,
     MSG_INVITE_LOCAL_NOT_ALLOWED,
@@ -3451,8 +3452,11 @@ class TestProjectInviteCreateView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Welcome to project "TestProject"! You have been assigned the '
-            'role of project contributor.',
+            MSG_PROJECT_WELCOME.format(
+                project_type='project',
+                project_title='TestProject',
+                role='project contributor',
+            ),
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)

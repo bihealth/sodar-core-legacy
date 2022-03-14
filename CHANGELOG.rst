@@ -21,6 +21,7 @@ Changed
 
 - **General**
     - Upgrade to setuptools v59.6.0 (#948)
+    - Unify Django messages in UI (#961)
 - **Projectroles**
     - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #958)
 
@@ -32,6 +33,7 @@ Fixed
 - **Projectroles**
     - App search results template included if no results found (#958)
     - Inconsistent sidebar icon size (#960)
+    - ``get_display_name()`` not used for projects in all Django messages (#952)
 
 Removed
 -------

@@ -94,9 +94,11 @@ APP_NAME = 'projectroles'
 SEND_EMAIL = settings.PROJECTROLES_SEND_EMAIL
 PROJECT_COLUMN_COUNT = 2  # Default columns
 MSG_NO_AUTH = 'User not authorized for requested action'
-MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in'
-ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
-ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
+MSG_NO_AUTH_LOGIN = MSG_NO_AUTH + ', please log in.'
+MSG_PROJECT_WELCOME = (
+    'Welcome to {project_type} "{project_title}". You have been assigned the '
+    'role of {role}.'
+)
 MSG_USER_PROFILE_UPDATE = 'User profile updated, please log in again.'
 MSG_USER_PROFILE_LDAP = 'Error: Profile editing not allowed for LDAP users.'
 MSG_INVITE_LDAP_LOCAL_VIEW = (
@@ -104,7 +106,7 @@ MSG_INVITE_LDAP_LOCAL_VIEW = (
     'was requested.'
 )
 MSG_INVITE_LOCAL_NOT_ALLOWED = (
-    'Error: Invite of non-LDAP user, but local users are not allowed!'
+    'Error: Invite of non-LDAP user, but local users are not allowed.'
 )
 MSG_INVITE_LOGGED_IN_ACCEPT = (
     'Error: Logged in user is not allowed to accept invites for other users.'
@@ -115,6 +117,8 @@ MSG_INVITE_USER_NOT_EQUAL = (
 MSG_INVITE_USER_EXISTS = (
     'A user with that email already exists. Please login to accept the invite.'
 )
+ALERT_MSG_ROLE_CREATE = 'Membership granted with the role of "{role}".'
+ALERT_MSG_ROLE_UPDATE = 'Member role changed to "{role}".'
 
 
 # General mixins ---------------------------------------------------------------
@@ -122,8 +126,8 @@ MSG_INVITE_USER_EXISTS = (
 
 class LoginRequiredMixin(AccessMixin):
     """
-    Customized variant of the one from ``django.contrib.auth.mixins``.
-    Allows disabling by overriding function ``is_login_required``.
+    Customized variant of the one from django.contrib.auth.mixins.
+    Allows disabling by overriding function is_login_required().
     """
 
     def is_login_required(self):
@@ -140,8 +144,10 @@ class LoginRequiredMixin(AccessMixin):
 
 
 class LoggedInPermissionMixin(PermissionRequiredMixin):
-    """Mixin for handling redirection for both unlogged users and authenticated
-    users without permissions"""
+    """
+    Mixin for handling redirection for both unlogged users and authenticated
+    users without permissions.
+    """
 
     def has_permission(self):
         """
@@ -160,7 +166,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
     def handle_no_permission(self):
         """Override to redirect user"""
         if self.request.user.is_authenticated:
-            messages.error(self.request, MSG_NO_AUTH)
+            messages.error(self.request, MSG_NO_AUTH + '.')
             return redirect(reverse('home'))
         else:
             messages.error(self.request, MSG_NO_AUTH_LOGIN)
@@ -170,8 +176,7 @@ class LoggedInPermissionMixin(PermissionRequiredMixin):
 class ProjectAccessMixin:
     """Mixin for providing access to a Project object from request kwargs"""
 
-    #: The model class to use for projects.  You can override this to replace it
-    #: with a proxy model, for example.
+    #: Model class to use for projects. Can be overridden by e.g. a proxy model
     project_class = Project
 
     def get_project(self, request=None, kwargs=None):
@@ -214,7 +219,6 @@ class ProjectAccessMixin:
                     break
                 except LookupError:
                     pass
-
         if not model:
             return None
 
@@ -232,8 +236,10 @@ class ProjectAccessMixin:
 
 
 class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
-    """Mixin for providing a Project object and queryset for permission
-    checking"""
+    """
+    Mixin for providing a Project object and queryset for permission
+    checking.
+    """
 
     def get_permission_object(self):
         return self.get_project()
@@ -313,8 +319,10 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
 class ProjectModifyPermissionMixin(
     LoggedInPermissionMixin, ProjectPermissionMixin
 ):
-    """Mixin for handling access to project modifying views, denying access even
-    for local superusers if the project is remote and thus immutable"""
+    """
+    Mixin for handling access to project modifying views, denying access even
+    for local superusers if the project is remote and thus immutable.
+    """
 
     def has_permission(self):
         """Override has_permission() to check remote project status"""
@@ -335,7 +343,7 @@ class ProjectModifyPermissionMixin(
         if project and project.is_remote():
             messages.error(
                 self.request,
-                'Modifications are not allowed for remote {}'.format(
+                'Modifications are not allowed for remote {}.'.format(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                 ),
             )
@@ -349,8 +357,10 @@ class ProjectModifyPermissionMixin(
 
 
 class RolePermissionMixin(ProjectModifyPermissionMixin):
-    """Mixin to ensure permissions for RoleAssignment according to user role in
-    project"""
+    """
+    Mixin to ensure permissions for RoleAssignment according to user role in
+    project.
+    """
 
     def has_permission(self):
         """Override has_permission to check perms depending on role"""
@@ -381,8 +391,10 @@ class RolePermissionMixin(ProjectModifyPermissionMixin):
 
 
 class HTTPRefererMixin:
-    """Mixin for updating a correct referer url in session cookie regardless of
-    page reload"""
+    """
+    Mixin for updating a correct referer url in session cookie regardless of
+    page reload.
+    """
 
     def get(self, request, *args, **kwargs):
         if 'HTTP_REFERER' in request.META:
@@ -409,8 +421,10 @@ class PluginContextMixin(ContextMixin):
 class ProjectContextMixin(
     HTTPRefererMixin, PluginContextMixin, ProjectAccessMixin
 ):
-    """Mixin for adding context data to Project base view and other views
-    extending it. Includes HTTPRefererMixin for correct referer URL"""
+    """
+    Mixin for adding context data to Project base view and other views
+    extending it. Includes HTTPRefererMixin for correct referer URL.
+    """
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -550,7 +564,7 @@ class ProjectSearchMixin:
 
     def dispatch(self, request, *args, **kwargs):
         if not getattr(settings, 'PROJECTROLES_ENABLE_SEARCH', False):
-            messages.error(request, 'Search not enabled')
+            messages.error(request, 'Search is not enabled.')
             return redirect('home')
         return super().dispatch(request, *args, **kwargs)
 
@@ -792,9 +806,7 @@ class ProjectModifyMixin:
                 if s_val['type'] == 'JSON':
                     if s_data is None:
                         s_data = {}
-
                     project_settings[s_name] = json.dumps(s_data)
-
                 elif s_data is not None:
                     project_settings[s_name] = s_data
 
@@ -837,10 +849,8 @@ class ProjectModifyMixin:
             s_name = k.split('.')[2]
             s_def = app_settings.get_setting_def(s_name, app_name=a_name)
             old_v = app_settings.get_app_setting(a_name, s_name, project)
-
             if s_def['type'] == 'JSON':
                 v = json.loads(v)
-
             if old_v != v:
                 extra_data[k] = v
                 upd_fields.append(k)
@@ -852,10 +862,8 @@ class ProjectModifyMixin:
         cls, project, action, owner, old_data, project_settings, request
     ):
         timeline = get_backend_api('timeline_backend')
-
         if not timeline:
             return None
-
         type_str = project.type.capitalize()
 
         if action == 'create':
@@ -866,16 +874,13 @@ class ProjectModifyMixin:
                 'description': project.description,
                 'readme': project.readme.raw,
             }
-
             # Add settings to extra data
             for k, v in project_settings.items():
                 a_name = k.split('.')[1]
                 s_name = k.split('.')[2]
                 s_def = app_settings.get_setting_def(s_name, app_name=a_name)
-
                 if s_def['type'] == 'JSON':
                     v = json.loads(v)
-
                 extra_data[k] = v
 
         else:  # Update
@@ -883,7 +888,6 @@ class ProjectModifyMixin:
             extra_data, upd_fields = cls._get_project_update_data(
                 old_data, project, owner, project_settings
             )
-
             if len(upd_fields) > 0:
                 tl_desc += ' (' + ', '.join(x for x in upd_fields) + ')'
 
@@ -895,10 +899,8 @@ class ProjectModifyMixin:
             description=tl_desc,
             extra_data=extra_data,
         )
-
         if action == 'create':
             tl_event.add_object(owner, 'owner', owner.username)
-
         return tl_event
 
     @classmethod
@@ -926,10 +928,8 @@ class ProjectModifyMixin:
         :raise: FlowSubmitException if SODAR Taskflow submission fails
         """
         taskflow = get_backend_api('taskflow')
-
         if tl_event:
             tl_event.set_status('SUBMIT')
-
         flow_data = {
             'project_title': project.title,
             'project_description': project.description,
@@ -948,7 +948,6 @@ class ProjectModifyMixin:
             flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
             flow_data['old_owner_username'] = old_owner.username
             flow_data['project_readme'] = project.readme.raw
-
             if old_parent:
                 # Get inherited owners for project and its children to add
                 new_roles = taskflow.get_inherited_users(project)
@@ -960,7 +959,6 @@ class ProjectModifyMixin:
                 flow_data['roles_delete'] = [
                     r for r in old_roles if r['username'] not in new_users
                 ]
-
         else:  # Create
             flow_data['roles_add'] = [
                 {
@@ -977,7 +975,6 @@ class ProjectModifyMixin:
                 flow_data=flow_data,
                 request=request,
             )
-
         except (
             requests.exceptions.ConnectionError,
             taskflow.FlowSubmitException,
@@ -985,10 +982,8 @@ class ProjectModifyMixin:
             # NOTE: No need to update status as project will be deleted
             if action == 'create':
                 project.delete()
-
             elif tl_event:  # Update
                 tl_event.set_status('FAILED', str(ex))
-
             raise ex
 
     @classmethod
@@ -997,7 +992,6 @@ class ProjectModifyMixin:
         Handle local saving of project data if SODAR Taskflow is not
         enabled.
         """
-
         # Modify owner role if it does exist
         try:
             assignment = RoleAssignment.objects.get(
@@ -1005,7 +999,6 @@ class ProjectModifyMixin:
             )
             assignment.user = owner
             assignment.save()
-
         # Else create a new one
         except RoleAssignment.DoesNotExist:
             assignment = RoleAssignment(
@@ -1242,7 +1235,7 @@ class ProjectModifyMixin:
                 project._update_public_children()
             except Exception as ex:
                 logger.error(
-                    'Exception in updating has_public_children: {}'.format(ex)
+                    'Exception in updating has_public_children(): {}'.format(ex)
                 )
 
         # Once all is done, update timeline event, create alerts and emails
@@ -1267,7 +1260,6 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
                 'projectroles:detail',
                 kwargs={'project': instance.parent.sodar_uuid},
             )
-
         else:
             redirect_url = reverse('home')
 
@@ -1278,12 +1270,14 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
                 instance=form.instance if instance else None,
             )
             messages.success(
-                self.request, '{} {}d'.format(project.type.capitalize(), action)
+                self.request,
+                '{} {}d.'.format(
+                    get_display_name(project.type, title=True), action
+                ),
             )
             redirect_url = reverse(
                 'projectroles:detail', kwargs={'project': project.sodar_uuid}
             )
-
         except Exception as ex:
             messages.error(
                 self.request,
@@ -1291,7 +1285,6 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
                     action, form.cleaned_data['type'].lower(), ex
                 ),
             )
-
             if settings.DEBUG:
                 raise ex
 
@@ -1358,7 +1351,7 @@ class ProjectCreateView(
         ):
             messages.error(
                 request,
-                'Creating local {} not allowed'.format(
+                'Creating local {} is not allowed.'.format(
                     get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                 ),
             )
@@ -1370,7 +1363,7 @@ class ProjectCreateView(
             if project.type != PROJECT_TYPE_CATEGORY:
                 messages.error(
                     self.request,
-                    'Creating nested {} is not allowed'.format(
+                    'Creating nested {} is not allowed.'.format(
                         get_display_name(PROJECT_TYPE_PROJECT, plural=True)
                     ),
                 )
@@ -1433,14 +1426,12 @@ class ProjectRoleView(
         context['members'] = [
             a for a in project.get_members() if a.user not in inherited_users
         ]
-
         if project.is_remote():
             context[
                 'remote_roles_url'
             ] = project.get_source_site().url + reverse(
                 'projectroles:roles', kwargs={'project': project.sodar_uuid}
             )
-
         return context
 
 
@@ -1522,7 +1513,6 @@ class RoleAssignmentModifyMixin:
             role_as.role = role
 
         role_as.save()
-
         if tl_event:
             tl_event.set_status('OK')
 
@@ -1558,10 +1548,8 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         change_type = self.request.resolver_match.url_name.split('_')[1]
         project = self.get_project()
-
         if change_type != 'delete':
             context['preview_subject'] = email.get_role_change_subject(
                 change_type, project
@@ -1579,7 +1567,6 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                     )
                 ),
             ).replace('\n', '\\n')
-
         return context
 
     def form_valid(self, form):
@@ -1603,7 +1590,6 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
                     self.object.role.name,
                 ),
             )
-
         except Exception as ex:
             messages.error(
                 self.request, 'Membership updating failed: {}'.format(ex)
@@ -1664,7 +1650,6 @@ class RoleAssignmentDeleteMixin:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
                 raise ex
-
         # Local save without Taskflow
         else:
             instance.delete()
@@ -1759,9 +1744,8 @@ class RoleAssignmentDeleteView(
             messages.error(
                 self.request,
                 'You do not have permission to remove the '
-                'membership of {}'.format(self.object.role.name),
+                'membership of {}.'.format(self.object.role.name),
             )
-
         else:
             try:
                 self.object = self.delete_assignment(
@@ -1771,7 +1755,6 @@ class RoleAssignmentDeleteView(
                     self.request,
                     'Membership of {} removed.'.format(user.username),
                 )
-
             except Exception as ex:
                 messages.error(
                     self.request,
@@ -1827,7 +1810,6 @@ class RoleAssignmentOwnerTransferMixin:
                     project, old_owner_as.user
                 ),
             }
-
             # Submit taskflow (Requires SODAR Taskflow v0.4.0+)
             # NOTE: Can raise exception
             taskflow.submit(
@@ -1847,14 +1829,12 @@ class RoleAssignmentOwnerTransferMixin:
         if role_as:
             role_as.role = role_owner
             role_as.save()
-
         elif new_owner in [
             a.user for a in project.get_owners(inherited_only=True)
         ]:
             RoleAssignment.objects.create(
                 project=project, user=new_owner, role=role_owner
             )
-
         else:
             # We should already catch this earlier, but just in case..
             raise Exception(
@@ -1944,6 +1924,8 @@ class RoleAssignmentOwnerTransferView(
     RoleAssignmentOwnerTransferMixin,
     FormView,
 ):
+    """Project owner RoleAssignment transfer view"""
+
     permission_required = 'projectroles.update_project_owner'
     template_name = 'projectroles/roleassignment_owner_transfer.html'
     form_class = RoleAssignmentOwnerTransferForm
@@ -1979,7 +1961,6 @@ class RoleAssignmentOwnerTransferView(
             self.transfer_owner(
                 project, new_owner, old_owner_as, old_owner_role
             )
-
         except Exception as ex:
             # TODO: Add logging
             messages.error(
@@ -1990,10 +1971,8 @@ class RoleAssignmentOwnerTransferView(
             'Successfully transferred ownership from '
             '{} to {}.'.format(old_owner.username, new_owner.username)
         )
-
         if SEND_EMAIL:
             success_msg += ' Notification(s) have been sent by email.'
-
         messages.success(self.request, success_msg)
         return redirect(redirect_url)
 
@@ -2048,7 +2027,7 @@ class ProjectInviteMixin:
         if add_message and status_type == 'OK':
             messages.success(
                 request,
-                'Invite for "{}" role in {} sent to {}, expires on {}'.format(
+                'Invite for "{}" role in {} sent to {}, expires on {}.'.format(
                     invite.role.name,
                     invite.project.title,
                     invite.email,
@@ -2064,11 +2043,9 @@ class ProjectInviteMixin:
     @classmethod
     def revoke_invite(cls, invite, project, request):
         timeline = get_backend_api('timeline_backend')
-
         if invite:
             invite.active = False
             invite.save()
-
         # Add event in Timeline
         if timeline:
             timeline.add_event(
@@ -2081,7 +2058,6 @@ class ProjectInviteMixin:
                 ),
                 status_type='OK' if invite else 'FAILED',
             )
-
         return invite
 
 
@@ -2099,13 +2075,11 @@ class ProjectInviteView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         context['invites'] = ProjectInvite.objects.filter(
             project=context['project'],
             active=True,
             date_expire__gt=timezone.now(),
         )
-
         return context
 
 
@@ -2125,9 +2099,7 @@ class ProjectInviteCreateView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         project = self.get_permission_object()
-
         context['preview_subject'] = email.get_invite_subject(project)
         context['preview_body'] = email.get_invite_body(
             project=project,
@@ -2142,28 +2114,21 @@ class ProjectInviteCreateView(
         context['preview_footer'] = email.get_email_footer().replace(
             '\n', '\\n'
         )
-
         return context
 
     def get_form_kwargs(self):
         """Pass current user and optional email/role to form"""
         kwargs = super().get_form_kwargs()
         kwargs.update({'project': self.get_permission_object().sodar_uuid})
-
         email = self.request.GET.get('e', None)
-        role_pk = self.request.GET.get('r', None)
-
         kwargs.update({'mail': unquote_plus(email) if email else None})
-        kwargs.update({'role': role_pk})
-
+        kwargs.update({'role': self.request.GET.get('r', None)})
         return kwargs
 
     def form_valid(self, form):
         self.object = form.save()
-
         # Send mail and add to timeline
         self.handle_invite(invite=self.object, request=self.request)
-
         return redirect(
             reverse(
                 'projectroles:invites',
@@ -2180,17 +2145,14 @@ class ProjectInviteProcessMixin:
         """Return invite type ("ldap", "local" or "error")"""
         # Check if domain is associated with LDAP
         domain = invite.email.split('@')[1].split('.')[0].lower()
-
         if settings.ENABLE_LDAP and domain in (
             getattr(settings, 'AUTH_LDAP_USERNAME_DOMAIN', '').lower(),
             getattr(settings, 'AUTH_LDAP2_USERNAME_DOMAIN', '').lower(),
             *[a.lower() for a in getattr(settings, 'LDAP_ALT_DOMAINS', [])],
         ):
             return 'ldap'
-
         elif settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             return 'local'
-
         return 'error'
 
     @classmethod
@@ -2200,7 +2162,6 @@ class ProjectInviteProcessMixin:
         """Set invite.active to False and save the invite"""
         invite.active = False
         invite.save()
-
         if failed and timeline and user:
             # Add event in Timeline
             timeline.add_event(
@@ -2218,11 +2179,11 @@ class ProjectInviteProcessMixin:
         try:
             return ProjectInvite.objects.get(secret=secret)
         except ProjectInvite.DoesNotExist:
-            messages.error(self.request, 'Error: Invite does not exist!')
+            messages.error(self.request, 'Invite does not exist.')
 
     def user_role_exists(self, invite, user, timeline=None):
         """
-        Display message and revoke invite if user already has roles in project
+        Display message and revoke invite if user already has roles in project.
         """
         if invite.project.has_role(user):
             messages.warning(
@@ -2255,12 +2216,9 @@ class ProjectInviteProcessMixin:
         if invite.date_expire < timezone.now():
             messages.error(
                 self.request,
-                'Error: Your invite has expired! '
-                'Please contact the person who invited you: {} ({})'.format(
-                    invite.issuer.name, invite.issuer.email
-                ),
+                'Your invite has expired. Please contact the inviter: '
+                '{} ({})'.format(invite.issuer.name, invite.issuer.email),
             )
-
             # Send notification of expiry to issuer
             if SEND_EMAIL:
                 email.send_expiry_note(
@@ -2268,7 +2226,6 @@ class ProjectInviteProcessMixin:
                     self.request,
                     user_name=user.get_full_name() if user else invite.email,
                 )
-
             self.revoke_failed_invite(
                 invite, user, failed=True, fail_desc='Invite expired'
             )
@@ -2280,7 +2237,6 @@ class ProjectInviteProcessMixin:
         taskflow = get_backend_api('taskflow')
         app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
-
         if timeline:
             tl_event = timeline.add_event(
                 project=invite.project,
@@ -2302,7 +2258,6 @@ class ProjectInviteProcessMixin:
                 'user_uuid': str(user.sodar_uuid),
                 'role_pk': invite.role.pk,
             }
-
             try:
                 taskflow.submit(
                     project_uuid=str(invite.project.sodar_uuid),
@@ -2310,17 +2265,14 @@ class ProjectInviteProcessMixin:
                     flow_data=flow_data,
                     request=self.request,
                 )
-
             except taskflow.FlowSubmitException as ex:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
-
                 messages.error(self.request, str(ex))
                 return False
 
             # Get object
             RoleAssignment.objects.get(project=invite.project, user=user)
-
             tl_event.set_status('OK')
 
         # Local save without Taskflow
@@ -2329,11 +2281,10 @@ class ProjectInviteProcessMixin:
                 user=user, project=invite.project, role=invite.role
             )
             role_as.save()
-
             if tl_event:
                 tl_event.set_status('OK')
 
-        # ..notify the issuer by alert and email..
+        # Notify the issuer by alert and email..
         if app_alerts:
             app_alerts.add_alert(
                 app_name=APP_NAME,
@@ -2352,20 +2303,18 @@ class ProjectInviteProcessMixin:
         if SEND_EMAIL:
             email.send_accept_note(invite, self.request, user)
 
-        # ..deactivate the invite..
+        # Deactivate the invite..
         self.revoke_failed_invite(invite, user, failed=False, timeline=timeline)
 
-        # ..and finally redirect user to the project front page
+        # Finally, redirect user to the project front page
         messages.success(
             self.request,
-            'Welcome to {} "{}"! You have been assigned the role of '
-            '{}.'.format(
-                get_display_name(invite.project.type),
-                invite.project.title,
-                invite.role.name,
+            MSG_PROJECT_WELCOME.format(
+                project_type=get_display_name(invite.project.type),
+                project_title=invite.project.title,
+                role=invite.role.name,
             ),
         )
-
         return True
 
 
@@ -2373,12 +2322,11 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
     """View to handle accepting a project invite"""
 
     def get(self, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
         invite = self.get_invite(secret=kwargs['secret'])
-        user = self.request.user
-
         if not invite:
             return redirect(reverse('home'))
+        timeline = get_backend_api('timeline_backend')
+        user = self.request.user
 
         if (
             not user.is_anonymous
@@ -2389,7 +2337,6 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
             return redirect(reverse('home'))
 
         invite_type = self.get_invite_type(invite)
-
         if invite_type == 'ldap':
             return redirect(
                 reverse(
@@ -2397,7 +2344,6 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
                     kwargs={'secret': kwargs['secret']},
                 )
             )
-
         elif invite_type == 'local':
             return redirect(
                 reverse(
@@ -2405,9 +2351,10 @@ class ProjectInviteAcceptView(ProjectInviteProcessMixin, View):
                     kwargs={'secret': kwargs['secret']},
                 )
             )
-
         # Error
-        messages.error(self.request, 'Local users not allowed on this site.')
+        messages.error(
+            self.request, 'Local users are not allowed on this site.'
+        )
         return redirect(reverse('home'))
 
 
@@ -2417,18 +2364,17 @@ class ProjectInviteProcessLDAPView(
     """View to handle accepting a project LDAP invite"""
 
     def get(self, *args, **kwargs):
-        timeline = get_backend_api('timeline_backend')
         invite = self.get_invite(kwargs['secret'])
-
         if not invite:
             return redirect(reverse('home'))
+        timeline = get_backend_api('timeline_backend')
 
         # Check invite has correct type
         if self.get_invite_type(invite) == 'local':
             messages.error(
                 self.request,
-                'Error: Invite was issued for local user, but LDAP invite '
-                'view was requested.',
+                'Invite was issued for local user, but LDAP invite view was '
+                'requested.',
             )
             return redirect(reverse('home'))
 
@@ -2445,7 +2391,6 @@ class ProjectInviteProcessLDAPView(
             invite, self.request.user, timeline=timeline
         ):
             return redirect(reverse('home'))
-
         return redirect(
             reverse(
                 'projectroles:detail',
@@ -2462,10 +2407,9 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
     def get(self, *args, **kwargs):
         invite = self.get_invite(self.kwargs['secret'])
-        timeline = get_backend_api('timeline_backend')
-
         if not invite:
             return redirect(reverse('home'))
+        timeline = get_backend_api('timeline_backend')
 
         # Check if local users are enabled
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
@@ -2522,9 +2466,7 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
 
         # User exists but is not local
         if not user.is_local():
-            messages.error(
-                self.request, 'Error: User exists, but is not local.'
-            )
+            messages.error(self.request, 'User exists, but is not local.')
             return redirect(reverse('home'))
 
         # Create role if user exists
@@ -2541,7 +2483,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
     def get_initial(self):
         """Returns the initial data for the form."""
         initial = super().get_initial()
-
         try:
             invite = ProjectInvite.objects.get(secret=self.kwargs['secret'])
         except ProjectInvite.DoesNotExist:
@@ -2561,18 +2502,17 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         return initial
 
     def form_valid(self, form):
-        timeline = get_backend_api('timeline_backend')
         invite = self.get_invite(self.kwargs['secret'])
-
         if not invite:
             return redirect(reverse('home'))
+        timeline = get_backend_api('timeline_backend')
 
         # Check if local users are allowed
         if not settings.PROJECTROLES_ALLOW_LOCAL_USERS:
             messages.error(
                 self.request,
-                'Error: Invite of non-LDAP user, but local users are not '
-                'allowed!',
+                'Invite was issued to non-LDAP user, but local users are not '
+                'allowed.',
             )
             return redirect(reverse('home'))
 
@@ -2580,8 +2520,8 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if self.get_invite_type(invite) == 'ldap':
             messages.error(
                 self.request,
-                'Error: Invite was issued for LDAP user, but local invite '
-                'view was requested.',
+                'Invite was issued for LDAP user, but local invite view was '
+                'requested.',
             )
             return redirect(reverse('home'))
 
@@ -2596,7 +2536,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
             first_name=form.cleaned_data['first_name'],
             last_name=form.cleaned_data['last_name'],
         )
-
         if self.user_role_exists(invite, user, timeline=timeline):
             return redirect(
                 reverse(
@@ -2609,7 +2548,6 @@ class ProjectInviteProcessLocalView(ProjectInviteProcessMixin, FormView):
         if not self.create_assignment(invite, user, timeline=timeline):
             user.delete()
             redirect(reverse('home'))
-
         return redirect(
             reverse(
                 'projectroles:detail',
@@ -2630,9 +2568,8 @@ class ProjectInviteResendView(
             invite = ProjectInvite.objects.get(
                 sodar_uuid=self.kwargs['projectinvite'], active=True
             )
-
         except ProjectInvite.DoesNotExist:
-            messages.error(self.request, 'Error: Invite not found!')
+            messages.error(self.request, 'Invite not found.')
             return redirect(
                 reverse(
                     'projectroles:invites',
@@ -2643,7 +2580,6 @@ class ProjectInviteResendView(
         # Reset invite expiration date
         invite.date_expire = get_expiry_date()
         invite.save()
-
         # Resend mail and add to timeline
         self.handle_invite(invite=invite, request=self.request, resend=True)
 
@@ -2670,16 +2606,13 @@ class ProjectInviteRevokeView(
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
         context['project'] = self.get_project()
-
         if 'projectinvite' in self.kwargs:
             try:
                 context['invite'] = ProjectInvite.objects.get(
                     sodar_uuid=self.kwargs['projectinvite']
                 )
-
             except ProjectInvite.DoesNotExist:
                 pass
-
         return context
 
     def post(self, request, **kwargs):
@@ -2696,14 +2629,15 @@ class ProjectInviteRevokeView(
                 'projectroles.update_project_delegate', project
             )
         ):
-            invite = None  # Causes revoke_failed_invite() to add failed timeline event
+            # Causes revoke_failed_invite() to add failed timeline event
+            invite = None
             messages.error(
-                self.request, 'No perms for updating delegate invite!'
+                self.request, 'No permissions for updating delegate invite.'
             )
         elif invite:
             messages.success(self.request, 'Invite revoked.')
         else:
-            messages.error(self.request, 'Invite not found!')
+            messages.error(self.request, 'Invite not found.')
 
         self.revoke_invite(invite, project, request)
         return redirect(
@@ -2750,21 +2684,17 @@ class RemoteSiteListView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         site_mode = (
             SITE_MODE_TARGET
             if settings.PROJECTROLES_SITE_MODE == SITE_MODE_SOURCE
             else SITE_MODE_SOURCE
         )
-
         sites = RemoteSite.objects.filter(mode=site_mode).order_by('name')
-
         if (
             sites.count() > 0
             and settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
         ):
             sites = sites[:1]
-
         context['sites'] = sites
         return context
 
@@ -2774,14 +2704,13 @@ class RemoteSiteListView(
             messages.warning(
                 request,
                 '{} {} and nesting disabled, '
-                'remote {} sync disabled'.format(
+                'remote {} sync disabled.'.format(
                     get_display_name(PROJECT_TYPE_PROJECT, title=True),
                     get_display_name(PROJECT_TYPE_CATEGORY, plural=True),
                     get_display_name(PROJECT_TYPE_PROJECT),
                 ),
             )
             return redirect('home')
-
         return super().get(request, *args, **kwargs)
 
 
@@ -2789,18 +2718,14 @@ class RemoteSiteModifyMixin(ModelFormMixin):
     def form_valid(self, form):
         if self.object:
             form_action = 'updated'
-
         elif settings.PROJECTROLES_SITE_MODE == 'TARGET':
             form_action = 'set'
-
         else:
             form_action = 'created'
-
         self.object = form.save()
-
         messages.success(
             self.request,
-            '{} site "{}" {}'.format(
+            '{} site "{}" {}.'.format(
                 self.object.mode.capitalize(), self.object.name, form_action
             ),
         )
@@ -2822,15 +2747,16 @@ class RemoteSiteCreateView(
     permission_required = 'projectroles.update_remote'
 
     def get(self, request, *args, **kwargs):
-        """Override get() to disallow rendering this view if current site is
-        in TARGET mode and a source site already exists"""
+        """
+        Override get() to disallow rendering this view if current site is
+        in TARGET mode and a source site already exists.
+        """
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET
             and RemoteSite.objects.filter(mode=SITE_MODE_SOURCE).count() > 0
         ):
             messages.error(request, 'Source site has already been set')
             return redirect(reverse('projectroles:remote_sites'))
-
         return super().get(request, args, kwargs)
 
 
@@ -2874,7 +2800,6 @@ class RemoteSiteDeleteView(
                 self.object.mode.capitalize(), self.object.name
             ),
         )
-
         return reverse('projectroles:remote_sites')
 
 
@@ -2888,7 +2813,6 @@ class RemoteProjectListView(
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-
         site = RemoteSite.objects.get(sodar_uuid=self.kwargs['remotesite'])
         context['site'] = site
 
@@ -2904,7 +2828,6 @@ class RemoteProjectListView(
 
         if projects:
             context['projects'] = projects.order_by('full_title')
-
         return context
 
 
@@ -3091,7 +3014,6 @@ class RemoteProjectSyncView(
             )
             response = urllib.request.urlopen(api_req)
             remote_data = json.loads(response.read().decode('utf-8'))
-
         except Exception as ex:
             ex_str = str(ex)
             if (
@@ -3152,7 +3074,7 @@ class RemoteProjectSyncView(
         ):
             messages.warning(
                 request,
-                'No changes in remote site detected, nothing to synchronize',
+                'No changes in remote site detected, nothing to synchronize.',
             )
             return redirect(redirect_url)
 
@@ -3163,7 +3085,7 @@ class RemoteProjectSyncView(
         context['app_settings_count'] = app_settings_count
         messages.success(
             request,
-            '{} data updated according to source site'.format(
+            '{} data updated according to source site.'.format(
                 get_display_name(PROJECT_TYPE_PROJECT, title=True)
             ),
         )
