@@ -33,7 +33,7 @@ Fixed
 - **Projectroles**
     - App search results template included if no results found (#958)
     - Inconsistent sidebar icon size (#960)
-    - ``get_display_name()`` not used for projects in all Django messages (#952)
+    - ``get_display_name()`` use in Django messages and forms (#952)
 
 Removed
 -------
