@@ -1,17 +1,22 @@
+"""Template tags for the filesfolders app"""
+
+import logging
+
 from django import template
+from django.conf import settings
 
 # Projectroles dependency
 from projectroles.app_settings import AppSettingAPI
 
-from ..models import File, HyperLink, FILESFOLDERS_FLAGS
+from filesfolders.models import File, HyperLink, FILESFOLDERS_FLAGS
+
+
+app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
+register = template.Library()
 
 
 APP_NAME = 'filesfolders'
-
-register = template.Library()
-
-# App settings API
-app_settings = AppSettingAPI()
 
 
 @register.filter
@@ -41,7 +46,17 @@ def allow_public_links(project):
 def get_file_icon(file):
     """Return file icon"""
     ret = 'file-outline'
-    mt = file.file.file.mimetype
+    try:
+        mt = file.file.file.mimetype
+    except Exception as ex:
+        if settings.DEBUG:
+            raise ex
+        logger.error(
+            'Exception in accessing file data (UUID={}): {}'.format(
+                file.sodar_uuid, ex
+            )
+        )
+        return ret
     if mt == 'application/pdf':
         ret = 'file-pdf-outline'
     elif (
@@ -70,13 +85,11 @@ def get_flag(flag_name, tooltip=True):
     """Return item flag HTML"""
     f = FILESFOLDERS_FLAGS[flag_name]
     tip_str = ''
-
     if tooltip:
         tip_str = (
             'title="{}" data-toggle="tooltip" '
             'data-placement="top"'.format(f['label'])
         )
-
     return (
         '<i class="iconify text-{} sodar-ff-flag-icon" data-icon="{}" {}>'
         '</i>'.format(f['color'], f['icon'], tip_str)

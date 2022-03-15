@@ -80,13 +80,11 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
 
     def perform_destroy(self, instance):
         instance.delete()
-
         timeline = get_backend_api('timeline_backend')
 
         # Add event in Timeline
         if timeline:
             obj_type = TL_OBJ_TYPES[instance.__class__.__name__]
-
             # Add event in Timeline
             tl_event = timeline.add_event(
                 project=instance.project,
@@ -96,7 +94,6 @@ class RetrieveUpdateDestroyAPITimelineMixin(FilesfoldersTimelineMixin):
                 description='delete {} {{{}}}'.format(obj_type, obj_type),
                 status_type='OK',
             )
-
             tl_event.add_object(
                 obj=instance,
                 label=obj_type,
@@ -112,7 +109,6 @@ class ListCreatePermissionMixin:
     def get_permission_required(self):
         if self.request.method == 'POST':
             return 'filesfolders.add_data'
-
         else:
             return 'filesfolders.view_data'
 
@@ -126,13 +122,10 @@ class RetrieveUpdateDestroyPermissionMixin:
     def get_permission_required(self):
         if self.request.method == 'GET':
             return 'filesfolders.view_data'
-
         else:
             obj = self.get_object()
-
             if obj.owner == self.request.user:
                 return 'filesfolders.update_data_own'
-
             else:
                 return 'filesfolders.update_data_all'
 

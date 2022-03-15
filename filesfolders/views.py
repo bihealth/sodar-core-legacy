@@ -1,3 +1,7 @@
+"""UI views for the filesfolders app"""
+
+import logging
+
 from wsgiref.util import FileWrapper  # For db files
 from zipfile import ZipFile
 
@@ -20,9 +24,9 @@ from django.views.generic.edit import ModelFormMixin, DeletionMixin
 
 from db_file_storage.storage import DatabaseFileStorage
 
-from .forms import FolderForm, FileForm, HyperLinkForm
-from .models import Folder, File, FileData, HyperLink
-from .utils import build_public_url
+from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
+from filesfolders.models import Folder, File, FileData, HyperLink
+from filesfolders.utils import build_public_url
 
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
@@ -39,16 +43,17 @@ from projectroles.views import (
 )
 
 
-# Settings and constants
+app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
+storage = DatabaseFileStorage()
+
+
+# Local constants
 APP_NAME = 'filesfolders'
 TL_OBJ_TYPES = {'Folder': 'folder', 'File': 'file', 'HyperLink': 'hyperlink'}
 DEFAULT_UPDATE_ATTRS = ['name', 'folder', 'description', 'flag']
-
 LINK_BAD_REQUEST_MSG = settings.FILESFOLDERS_LINK_BAD_REQUEST_MSG
 SERVE_AS_ATTACHMENT = settings.FILESFOLDERS_SERVE_AS_ATTACHMENT
-
-storage = DatabaseFileStorage()
-app_settings = AppSettingAPI()
 
 
 # Mixins -----------------------------------------------------------------
@@ -266,7 +271,6 @@ class FileServeMixin:
         # Open file for serving
         try:
             file_content = storage.open(file_data.file_name)
-
         except Exception:
             messages.error(self.request, 'Error opening file.')
             return redirect(
@@ -279,7 +283,6 @@ class FileServeMixin:
         response = HttpResponse(
             FileWrapper(file_content), content_type=file_data.content_type
         )
-
         if SERVE_AS_ATTACHMENT:
             response['Content-Disposition'] = 'attachment; filename={}'.format(
                 file.name
@@ -396,14 +399,24 @@ class ProjectFileView(
         )
         readme_file = readme_md if readme_md else readme_txt
         if readme_file:
-            context['readme_name'] = readme_file.name
-            context['readme_mime'] = readme_file.file.file.mimetype
-            if context['readme_mime'] == 'text/markdown':
-                context['readme_data'] = readme_file.file.read().decode('utf-8')
-                if readme_txt:
-                    context['readme_alt'] = readme_txt.name
-            else:
-                context['readme_data'] = readme_file.file.read()
+            try:
+                context['readme_name'] = readme_file.name
+                context['readme_mime'] = readme_file.file.file.mimetype
+                if context['readme_mime'] == 'text/markdown':
+                    context['readme_data'] = readme_file.file.read().decode(
+                        'utf-8'
+                    )
+                    if readme_txt:
+                        context['readme_alt'] = readme_txt.name
+                else:
+                    context['readme_data'] = readme_file.file.read()
+            except Exception as ex:
+                if settings.DEBUG:
+                    raise ex
+                logger.error(
+                    'Exception in accessing readme file data (UUID={}): '
+                    '{}'.format(readme_file.sodar_uuid, ex)
+                )
 
         return context
 

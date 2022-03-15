@@ -30,6 +30,8 @@ Fixed
 
 - **General**
     - Incorrect version for ipdb dependency (#951)
+- **Filesfolders**
+    - Template crashes from missing ``FileData`` (#962)
 - **Projectroles**
     - App search results template included if no results found (#958)
     - Inconsistent sidebar icon size (#960)

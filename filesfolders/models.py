@@ -1,3 +1,5 @@
+"""Models for the filesfolders app"""
+
 import uuid
 
 from django.conf import settings
@@ -166,17 +168,14 @@ class Folder(BaseFilesfoldersClass):
             self.name,
             self.folder if self.folder else '/',
         )
-
         return 'Folder({})'.format(', '.join(repr(v) for v in values))
 
     def get_path(self):
         """Return full path as str"""
         if self.folder:
             ret = self.folder.get_path()
-
         else:
             ret = 'root/'
-
         ret += '{}/'.format(self.name)
         return ret
 
@@ -192,10 +191,8 @@ class Folder(BaseFilesfoldersClass):
         """Return True if folder exists in this folder's parent path"""
         if self.folder == folder:
             return True
-
         elif self.folder:
             return self.folder.has_in_path(folder)
-
         return False
 
 
@@ -229,16 +226,13 @@ class FileManager(FilesfoldersManager):
         :param mimetype: Mimetype of the readme (default=text/markdown)
         :return: File or None
         """
-
         # NOTE: Can't just use get() with file__file__mimetype here
         readme_files = File.objects.filter(
             name__istartswith='readme.', project=project_pk, folder=folder_pk
         )
-
         for f in readme_files:
             if f.file.file.mimetype == mimetype:
                 return f
-
         return None
 
 

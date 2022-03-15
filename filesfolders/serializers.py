@@ -22,7 +22,6 @@ class FilesfoldersSerializerMixin:
     def get_folder(self, obj):
         if obj.folder:
             return obj.folder.sodar_uuid
-
         else:
             return None
 
@@ -34,7 +33,6 @@ class FilesfoldersSerializerMixin:
                 sodar_uuid=folder_uuid,
             )
             validated_data['folder'] = folder
-
         return validated_data
 
     def update(self, instance, validated_data):
