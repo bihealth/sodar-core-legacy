@@ -403,6 +403,20 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertEqual(form.initial['owner'], self.user)
 
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_render_top_disable_categories(self):
+        """Test rendering top level creation with categories disabled"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:create'))
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertEqual(form.initial['type'], PROJECT_TYPE_PROJECT)
+        self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertEqual(form.initial['owner'], self.user)
+
     def test_render_sub(self):
         """Test rendering if creating a subproject"""
         category = self._make_project(
