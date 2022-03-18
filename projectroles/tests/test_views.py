@@ -15,6 +15,7 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.forms import EMPTY_CHOICE_LABEL
 from projectroles.models import (
     Project,
     Role,
@@ -425,6 +426,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(
             form.fields['type'].choices,
             [
+                (None, EMPTY_CHOICE_LABEL),
                 (
                     PROJECT_TYPE_CATEGORY,
                     get_display_name(PROJECT_TYPE_CATEGORY, title=True),

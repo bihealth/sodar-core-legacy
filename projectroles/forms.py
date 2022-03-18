@@ -31,6 +31,10 @@ from projectroles.utils import (
 )
 from projectroles.app_settings import AppSettingAPI, APP_SETTING_LOCAL_DEFAULT
 
+
+User = auth.get_user_model()
+
+
 # SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
@@ -38,13 +42,6 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
-PROJECT_TYPE_CHOICES = [
-    (
-        PROJECT_TYPE_CATEGORY,
-        get_display_name(PROJECT_TYPE_CATEGORY, title=True),
-    ),
-    (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
-]
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
 SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
@@ -52,12 +49,17 @@ SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
 
-# Local constants and settings
+# Local constants
 APP_NAME = 'projectroles'
-INVITE_EXPIRY_DAYS = settings.PROJECTROLES_INVITE_EXPIRY_DAYS
-
-
-User = auth.get_user_model()
+EMPTY_CHOICE_LABEL = '--------'
+PROJECT_TYPE_CHOICES = [
+    (None, EMPTY_CHOICE_LABEL),
+    (
+        PROJECT_TYPE_CATEGORY,
+        get_display_name(PROJECT_TYPE_CATEGORY, title=True),
+    ),
+    (PROJECT_TYPE_PROJECT, get_display_name(PROJECT_TYPE_PROJECT, title=True)),
+]
 
 
 # Base Classes and Mixins ------------------------------------------------------
@@ -253,7 +255,7 @@ class ProjectForm(SODARModelForm):
                 and getattr(settings, 'PROJECTROLES_DISABLE_CATEGORIES', False)
             )
         ):
-            ret.append((None, '--------'))
+            ret.append((None, EMPTY_CHOICE_LABEL))
 
         categories = Project.objects.filter(type=PROJECT_TYPE_CATEGORY).exclude(
             pk=instance.pk
@@ -522,6 +524,8 @@ class ProjectForm(SODARModelForm):
             if parent_project:
                 # Parent must be current parent
                 self.initial['parent'] = parent_project.sodar_uuid
+                # Set initial value for type
+                self.initial['type'] = None
             # Creating a top level project
             else:
                 # Force project type
@@ -990,7 +994,7 @@ class ProjectInviteForm(SODARModelForm):
         obj.project = self.project
         obj.issuer = self.current_user
         obj.date_expire = timezone.now() + timezone.timedelta(
-            days=INVITE_EXPIRY_DAYS
+            days=settings.PROJECTROLES_INVITE_EXPIRY_DAYS
         )
         obj.secret = build_secret()
         obj.save()
