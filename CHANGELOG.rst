@@ -37,6 +37,7 @@ Fixed
     - App search results template included if no results found (#958)
     - Inconsistent sidebar icon size (#960)
     - ``get_display_name()`` use in Django messages and forms (#952)
+    - Projects not displayed in project list for inherited owner (#966)
 
 Removed
 -------

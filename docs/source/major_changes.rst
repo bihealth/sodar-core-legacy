@@ -16,7 +16,10 @@ v0.10.11 (WIP)
 Release Highlights
 ==================
 
-TBD
+- Add sidebar icon resizing
+- Change project create form to require manual setting of project type
+- Fix project visibility in project list for inherited owners
+- General bug fixes and minor updates
 
 Breaking Changes
 ================
