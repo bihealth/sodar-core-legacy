@@ -21,6 +21,7 @@ from projectroles.models import (
     RemoteSite,
     SODAR_CONSTANTS,
     APP_SETTING_VAL_MAXLENGTH,
+    CAT_DELIMITER,
 )
 
 from projectroles.plugins import get_active_plugins
@@ -273,12 +274,21 @@ class ProjectForm(SODARModelForm):
                 )
             )
             # Add categories with inherited ownership
+            role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
+            owned_cats = [
+                r.project.full_title + CAT_DELIMITER
+                for r in RoleAssignment.objects.filter(
+                    project__type=PROJECT_TYPE_CATEGORY,
+                    user=user,
+                    role=role_owner,
+                )
+            ]
             other_categories = Project.objects.filter(
                 type=PROJECT_TYPE_CATEGORY
             ).exclude(pk__in=categories)
             categories = list(categories)
             for c in other_categories:
-                if c.is_owner(user):
+                if any(c.full_title.startswith(t) for t in owned_cats):
                     categories.append(c)
 
         # If instance is category, exclude children

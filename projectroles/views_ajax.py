@@ -24,6 +24,7 @@ from projectroles.models import (
     ProjectUserTag,
     PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
@@ -48,7 +49,6 @@ SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
 # Local constants
 INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
-CAT_DELIMITER = ' / '
 
 
 # Base Classes and Mixins ------------------------------------------------------

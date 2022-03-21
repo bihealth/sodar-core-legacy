@@ -25,6 +25,7 @@ Changed
 - **Projectroles**
     - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #958)
     - Force user to select type in project create form (#963)
+    - Optimize parent queries in project update form (#965)
 
 Fixed
 -----
