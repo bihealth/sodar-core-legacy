@@ -298,8 +298,9 @@ class ProjectPermissionMixin(PermissionRequiredMixin, ProjectAccessMixin):
         return super().has_permission()
 
     def get_queryset(self, *args, **kwargs):
-        """Override ``get_queryset()`` to filter down to the currently selected
-        object."""
+        """
+        Override get_queryset() to filter down to the currently selected object.
+        """
         qs = super().get_queryset(*args, **kwargs)
         if qs.model == ProjectAccessMixin.project_class:
             return qs
@@ -1343,7 +1344,6 @@ class ProjectCreateView(
 
     def get(self, request, *args, **kwargs):
         """Override get() to limit project creation under other projects"""
-
         # If site is in target mode and target creation is not allowed, redirect
         if (
             settings.PROJECTROLES_SITE_MODE == SITE_MODE_TARGET

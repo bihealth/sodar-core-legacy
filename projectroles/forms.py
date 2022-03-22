@@ -314,6 +314,94 @@ class ProjectForm(SODARModelForm):
         ret += [(c.sodar_uuid, c.full_title) for c in categories]
         return sorted(ret, key=lambda x: x[1])
 
+    def _set_app_setting_widget(self, app_name, s_field, s_key, s_val):
+        """Internal helper for setting app setting widget and value"""
+        s_widget_attrs = s_val.get('widget_attrs') or {}
+        if 'placeholder' in s_val:
+            s_widget_attrs['placeholder'] = s_val.get('placeholder')
+        setting_kwargs = {
+            'required': False,
+            'label': s_val.get('label') or '{}.{}'.format(app_name, s_key),
+            'help_text': s_val['description'],
+        }
+        if s_val['type'] == 'JSON':
+            # NOTE: Attrs MUST be supplied here (#404)
+            if 'class' in s_widget_attrs:
+                s_widget_attrs['class'] += ' sodar-json-input'
+            else:
+                s_widget_attrs['class'] = 'sodar-json-input'
+            self.fields[s_field] = forms.CharField(
+                widget=forms.Textarea(attrs=s_widget_attrs), **setting_kwargs
+            )
+            if self.instance.pk:
+                json_data = self.app_settings.get_app_setting(
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=self.instance,
+                )
+            else:
+                json_data = self.app_settings.get_default_setting(
+                    app_name=app_name, setting_name=s_key
+                )
+            self.initial[s_field] = json.dumps(json_data)
+        else:
+            if s_val.get('options'):
+                self.fields[s_field] = forms.ChoiceField(
+                    choices=[
+                        (int(option), int(option))
+                        if s_val['type'] == 'INTEGER'
+                        else (option, option)
+                        for option in s_val.get('options')
+                    ],
+                    **setting_kwargs
+                )
+            elif s_val['type'] == 'STRING':
+                self.fields[s_field] = forms.CharField(
+                    max_length=APP_SETTING_VAL_MAXLENGTH,
+                    widget=forms.TextInput(attrs=s_widget_attrs),
+                    **setting_kwargs
+                )
+            elif s_val['type'] == 'INTEGER':
+                self.fields[s_field] = forms.IntegerField(
+                    widget=forms.NumberInput(attrs=s_widget_attrs),
+                    **setting_kwargs
+                )
+            elif s_val['type'] == 'BOOLEAN':
+                self.fields[s_field] = forms.BooleanField(**setting_kwargs)
+
+            # Add optional attributes from plugin (#404)
+            # NOTE: Experimental! Use at your own risk!
+            self.fields[s_field].widget.attrs.update(s_widget_attrs)
+
+            # Set initial value
+            if self.instance.pk:
+                self.initial[s_field] = self.app_settings.get_app_setting(
+                    app_name=app_name,
+                    setting_name=s_key,
+                    project=self.instance,
+                )
+            else:
+                self.initial[s_field] = self.app_settings.get_default_setting(
+                    app_name=app_name, setting_name=s_key
+                )
+
+    def _set_app_setting_notes(self, s_field, s_val):
+        """Internal helper for setting app setting label notes"""
+        if s_val.get('user_modifiable') is False:
+            self.fields[s_field].label += ' [HIDDEN]'
+            self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
+        if s_val.get('local', APP_SETTING_LOCAL_DEFAULT) is False:
+            if self.instance.is_remote():
+                self.fields[s_field].label += ' [DISABLED]'
+                self.fields[
+                    s_field
+                ].help_text += ' [Only editable on source site]'
+                self.fields[s_field].disabled = True
+            else:
+                self.fields[
+                    s_field
+                ].help_text += ' [Not editable on target sites]'
+
     def _init_app_settings(self):
         # Set up setting query kwargs
         self.p_kwargs = {}
@@ -326,125 +414,23 @@ class ProjectForm(SODARModelForm):
         for plugin in self.app_plugins + [None]:
             # Show non-modifiable settings to superusers
             if plugin:
-                name = plugin.name
+                app_name = plugin.name
                 p_settings = self.app_settings.get_setting_defs(
                     APP_SETTING_SCOPE_PROJECT, plugin=plugin, **self.p_kwargs
                 )
             else:
-                name = APP_NAME
+                app_name = APP_NAME
                 p_settings = self.app_settings.get_setting_defs(
-                    APP_SETTING_SCOPE_PROJECT, app_name=name, **self.p_kwargs
+                    APP_SETTING_SCOPE_PROJECT,
+                    app_name=app_name,
+                    **self.p_kwargs
                 )
-
             for s_key, s_val in p_settings.items():
-                s_field = 'settings.{}.{}'.format(name, s_key)
-                s_widget_attrs = s_val.get('widget_attrs') or {}
-                if 'placeholder' in s_val:
-                    s_widget_attrs['placeholder'] = s_val.get('placeholder')
-                setting_kwargs = {
-                    'required': False,
-                    'label': s_val.get('label') or '{}.{}'.format(name, s_key),
-                    'help_text': s_val['description'],
-                }
-
-                if s_val['type'] == 'JSON':
-                    # NOTE: Attrs MUST be supplied here (#404)
-                    if 'class' in s_widget_attrs:
-                        s_widget_attrs['class'] += ' sodar-json-input'
-                    else:
-                        s_widget_attrs['class'] = 'sodar-json-input'
-
-                    self.fields[s_field] = forms.CharField(
-                        widget=forms.Textarea(attrs=s_widget_attrs),
-                        **setting_kwargs
-                    )
-                    if self.instance.pk:
-                        self.initial[s_field] = json.dumps(
-                            self.app_settings.get_app_setting(
-                                app_name=name,
-                                setting_name=s_key,
-                                project=self.instance,
-                            )
-                        )
-                    else:
-                        self.initial[s_field] = json.dumps(
-                            self.app_settings.get_default_setting(
-                                app_name=name, setting_name=s_key
-                            )
-                        )
-                else:
-                    if s_val['type'] == 'STRING':
-                        if 'options' in s_val:
-                            self.fields[s_field] = forms.ChoiceField(
-                                choices=[
-                                    (option, option)
-                                    for option in s_val.get('options')
-                                ],
-                                **setting_kwargs
-                            )
-                        else:
-                            self.fields[s_field] = forms.CharField(
-                                max_length=APP_SETTING_VAL_MAXLENGTH,
-                                widget=forms.TextInput(attrs=s_widget_attrs),
-                                **setting_kwargs
-                            )
-
-                    elif s_val['type'] == 'INTEGER':
-                        if 'options' in s_val:
-                            self.fields[s_field] = forms.ChoiceField(
-                                choices=[
-                                    (int(option), int(option))
-                                    for option in s_val.get('options')
-                                ],
-                                **setting_kwargs
-                            )
-                        else:
-                            self.fields[s_field] = forms.IntegerField(
-                                widget=forms.NumberInput(attrs=s_widget_attrs),
-                                **setting_kwargs
-                            )
-
-                    elif s_val['type'] == 'BOOLEAN':
-                        self.fields[s_field] = forms.BooleanField(
-                            **setting_kwargs
-                        )
-
-                    # Add optional attributes from plugin (#404)
-                    # NOTE: Experimental! Use at your own risk!
-                    self.fields[s_field].widget.attrs.update(s_widget_attrs)
-
-                    # Set initial value
-                    if self.instance.pk:
-                        self.initial[
-                            s_field
-                        ] = self.app_settings.get_app_setting(
-                            app_name=name,
-                            setting_name=s_key,
-                            project=self.instance,
-                        )
-                    else:
-                        self.initial[
-                            s_field
-                        ] = self.app_settings.get_default_setting(
-                            app_name=name, setting_name=s_key
-                        )
-
-                # Add hidden note
-                if s_val.get('user_modifiable') is False:
-                    self.fields[s_field].label += ' [HIDDEN]'
-                    self.fields[s_field].help_text += ' [HIDDEN FROM USERS]'
-
-                if s_val.get('local', APP_SETTING_LOCAL_DEFAULT) is False:
-                    if self.instance.is_remote():
-                        self.fields[s_field].label += ' [DISABLED]'
-                        self.fields[
-                            s_field
-                        ].help_text += ' [Only editable on source site]'
-                        self.fields[s_field].disabled = True
-                    else:
-                        self.fields[
-                            s_field
-                        ].help_text += ' [Not editable on target sites]'
+                s_field = 'settings.{}.{}'.format(app_name, s_key)
+                # Set widget and value
+                self._set_app_setting_widget(app_name, s_field, s_key, s_val)
+                # Set label notes
+                self._set_app_setting_notes(s_field, s_val)
 
     def __init__(self, project=None, current_user=None, *args, **kwargs):
         """Override for form initialization"""
@@ -1110,7 +1096,8 @@ def get_role_choices(
     project, current_user, allow_delegate=True, allow_owner=False
 ):
     """
-    Return valid role choices according to permissions of current user
+    Return valid role choices according to permissions of current user.
+
     :param project: Project in which role will be assigned
     :param current_user: User for whom the form is displayed
     :param allow_delegate: Whether delegate setting should be allowed (bool)

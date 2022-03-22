@@ -3,8 +3,8 @@ WSGI config for the SODAR Projectroles Example project.
 
 This module contains the WSGI application used by Django's development server
 and any production WSGI deployments. It should expose a module-level variable
-named ``application``. Django's ``runserver`` and ``runfcgi`` commands discover
-this application via the ``WSGI_APPLICATION`` setting.
+named application. Django's runserver and runfcgi commands discover
+this application via the WSGI_APPLICATION setting.
 
 Usually you will have the standard Django WSGI application here, but it also
 might make sense to replace the whole Django WSGI application with a custom one

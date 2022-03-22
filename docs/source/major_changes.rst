@@ -10,8 +10,8 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
-v0.10.11 (WIP)
-**************
+v0.10.11 (2022-03-22)
+*********************
 
 Release Highlights
 ==================
@@ -24,7 +24,14 @@ Release Highlights
 Breaking Changes
 ================
 
-N/A
+Search Result Context Data in Tests
+-----------------------------------
+
+In context data for ``ProjectSearchResultsView``, the ``app_search_data``
+dictionary has been renamed into ``app_results``. This does not affect
+implementing the search functionality from your apps, but if you test that
+functionality by asserting search view output, you have to rename this dict in
+your test cases.
 
 
 v0.10.10 (2022-03-03)

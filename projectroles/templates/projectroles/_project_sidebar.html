@@ -25,9 +25,13 @@
        id="sodar-pr-link-project-detail">
       <span class="sodar-pr-sidebar-icon">
         {% if project.type == PROJECT_TYPE_CATEGORY %}
-          <i class="iconify" data-icon="mdi:rhombus-split" data-height="{{ sidebar_icon_size }}"></i>
+          <i class="iconify"
+             data-icon="mdi:rhombus-split"
+             data-height="{{ sidebar_icon_size }}"></i>
         {% else %}
-          <i class="iconify" data-icon="mdi:cube" data-height="{{ sidebar_icon_size }}"></i>
+          <i class="iconify"
+             data-icon="mdi:cube"
+             data-height="{{ sidebar_icon_size }}"></i>
         {% endif %}
       </span>
       <br />{% get_display_name project.type title=True %}<br />Overview
@@ -45,7 +49,9 @@
            href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
            id="sodar-pr-link-app-plugin-{{ plugin.name }}">
          <span class="sodar-pr-sidebar-icon">
-           <i class="iconify" data-icon="{{ plugin.icon }}" data-height="{{ sidebar_icon_size }}"></i>
+           <i class="iconify"
+              data-icon="{{ plugin.icon }}"
+              data-height="{{ sidebar_icon_size }}"></i>
          </span>
          <br />{{ app_legend | safe }}
         </a>
@@ -61,7 +67,10 @@
          href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-roles">
         <span class="sodar-pr-sidebar-icon">
-          <i class="iconify" data-icon="mdi:account-multiple" data-height="{{ sidebar_icon_size }}"></i><br />Members
+          <i class="iconify"
+             data-icon="mdi:account-multiple"
+             data-height="{{ sidebar_icon_size }}"></i>
+          <br />Members
         </span>
       </a>
     </li>
@@ -73,7 +82,10 @@
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
         <span class="sodar-pr-sidebar-icon">
-          <i class="iconify" data-icon="mdi:lead-pencil" data-height="{{ sidebar_icon_size }}"></i><br />Update<br />{% get_display_name project.type title=True %}
+          <i class="iconify"
+             data-icon="mdi:lead-pencil"
+             data-height="{{ sidebar_icon_size }}"></i>
+          <br />Update<br />{% get_display_name project.type title=True %}
         </span>
       </a>
     </li>
@@ -91,20 +103,25 @@
          href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
         <span class="sodar-pr-sidebar-icon">
-          <i class="iconify" data-icon="mdi:plus-thick" data-height="{{ sidebar_icon_size }}"></i>
+          <i class="iconify"
+             data-icon="mdi:plus-thick"
+             data-height="{{ sidebar_icon_size }}"></i>
         </span>
         <br />Create<br />{{ project_display }} or<br />{{ category_display }}
       </a>
     </li>
   {% endif %}
-{% elif disable_categories and request.user.is_superuser %} {# Allow project creation under root #}
+{# Allow project creation under root #}
+{% elif disable_categories and request.user.is_superuser %}
   <li id="sodar-pr-nav-project-create"
       class="nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
     <a class="nav-link"
        href="{% url 'projectroles:create' %}"
        id="sodar-pr-link-project-create">
       <span class="sodar-pr-sidebar-icon">
-        <i class="iconify" data-icon="mdi:plus-thick" data-height="{{ sidebar_icon_size }}"></i>
+        <i class="iconify"
+           data-icon="mdi:plus-thick"
+           data-height="{{ sidebar_icon_size }}"></i>
       </span>
       <br />Create<br />{{ project_display }}
     </a>
@@ -118,7 +135,9 @@
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-home-link-create">
         <span class="sodar-pr-sidebar-icon">
-          <i class="iconify" data-icon="mdi:plus-thick" data-height="{{ sidebar_icon_size }}"></i>
+          <i class="iconify"
+             data-icon="mdi:plus-thick"
+             data-height="{{ sidebar_icon_size }}"></i>
         </span>
         <br />Create<br />{{ category_display }}
       </a>

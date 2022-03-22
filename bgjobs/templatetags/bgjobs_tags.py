@@ -1,7 +1,7 @@
 from django import template
 
-from ..models import BackgroundJob
-from ..plugins import BackgroundJobsPluginPoint
+from bgjobs.models import BackgroundJob
+from bgjobs.plugins import BackgroundJobsPluginPoint
 
 register = template.Library()
 
@@ -14,14 +14,15 @@ def get_details_backgroundjobs(project):
 
 @register.filter
 def specialize_job(bg_job):
-    """Given a ``BackgroundJob``, return the specialized job if any.
-
-    Specialized job models are linked back to the ``BackgroundJob`` through a
-    ``OneToOneField`` named ``bg_job``.
     """
-    # Global map from job specialization name to model class.
+    Given a BackgroundJob, return the specialized job if any.
+
+    Specialized job models are linked back to the BackgroundJob through a
+    OneToOneField named "bg_job".
+    """
+    # Global map from job specialization name to model class
     job_specs = {}
-    # Setup the global map.
+    # Setup the global map
     for plugin in BackgroundJobsPluginPoint.get_plugins():
         assert not (
             set(plugin.job_specs) & set(job_specs)
