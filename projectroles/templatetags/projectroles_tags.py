@@ -1,4 +1,6 @@
-"""Template tags intended for internal use within the projectroles app"""
+"""Template tags for internal use within the projectroles app"""
+
+from math import ceil
 
 from django import template
 from django.conf import settings
@@ -18,7 +20,7 @@ from projectroles.project_tags import get_tag_state
 register = template.Library()
 
 
-# SODAR Constants
+# SODAR constants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
@@ -31,6 +33,8 @@ ACTIVE_LEVEL_TYPES = [
     SODAR_CONSTANTS['REMOTE_LEVEL_NONE'],
     SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES'],
 ]
+SIDEBAR_ICON_MIN_SIZE = 18
+SIDEBAR_ICON_MAX_SIZE = 42
 
 
 # SODAR and site operations ----------------------------------------------------
@@ -110,44 +114,6 @@ def is_app_visible(plugin, project, user):
 
 
 # Template rendering -----------------------------------------------------------
-
-
-@register.simple_tag
-def get_not_found_alert(project_results, app_search_data, search_type):
-    """Return alert HTML for data which was not found during search, if any"""
-    not_found = []
-
-    if len(project_results) == 0 and (
-        not search_type or search_type == 'project'
-    ):
-        not_found.append('Projects')
-
-    for results in [a['results'] for a in app_search_data]:
-        if not results:
-            continue
-        for k, result in results.items():
-            type_match = True if search_type else False
-            if (
-                not type_match
-                and 'search_type' in result
-                and search_type in result['search_types']
-            ):
-                type_match = True
-            if (type_match or not search_type) and (not result['items']):
-                not_found.append(result['title'])
-
-    if not_found:
-        ret = (
-            '<div class="alert alert-info pb-0 d-none" '
-            'id="sodar-search-not-found-alert">\n'
-            'No results found:\n<ul>\n'
-        )
-        for n in not_found:
-            ret += '<li>{}</li>\n'.format(n)
-        ret += '</ul>\n</div>\n'
-        return ret
-
-    return ''
 
 
 @register.simple_tag
@@ -317,6 +283,30 @@ def get_remote_access_legend(level):
 def get_sidebar_app_legend(title):
     """Return sidebar link legend HTML"""
     return '<br />'.join(title.split(' '))
+
+
+@register.simple_tag
+def get_sidebar_icon_size():
+    """Return sidebar icon size with a min/max limit"""
+    return sorted(
+        [
+            SIDEBAR_ICON_MIN_SIZE,
+            getattr(settings, 'PROJECTROLES_SIDEBAR_ICON_SIZE', 32),
+            SIDEBAR_ICON_MAX_SIZE,
+        ]
+    )[1]
+
+
+@register.simple_tag
+def get_sidebar_notch_pos():
+    """Return sidebar notch position"""
+    return ceil(get_sidebar_icon_size() / 3)
+
+
+@register.simple_tag
+def get_sidebar_notch_size():
+    """Return sidebar notch size"""
+    return min(ceil(get_sidebar_icon_size() / 2), 12)
 
 
 @register.simple_tag

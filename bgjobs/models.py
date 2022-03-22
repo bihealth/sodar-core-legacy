@@ -1,39 +1,36 @@
-"""Models and model helper code provided by the ``bgjobs`` app.
+"""
+Models and model helper code provided by the bgjobs app.
 
-The central class is ``BackgroundJob`` that stores the core information about a
+The central class is BackgroundJob that stores the core information about a
 background job.  You can "subclass" this class by creating your own models in
-your apps and having a ``bg_job`` field referencing ``BackgroundJob``
-through a ``OneToOneField``.
+your apps and having a bg_job field referencing BackgroundJob
+through a OneToOneField.
 
-Further, the ``BackgroundJobLogEntry`` model allows to manage background log
-entries for your background jobs.  Use the ``JobModelMessageMixin`` for adding
+Further, the BackgroundJobLogEntry model allows to manage background log
+entries for your background jobs.  Use the JobModelMessageMixin for adding
 helper functions for applying state changes and adding log messages.
 """
+
 import contextlib
 import uuid as uuid_object
 
 from django.conf import settings
 from django.db import models
 
+# Projectroles dependency
 from projectroles.models import Project
 
 
-#: Access Django user model
+# Access Django user model
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
-
-# Levels to use in ``BackgroundJobLogEntry``.
-
-#: Debug log message.
+# Levels to use in BackgroundJobLogEntry
 LOG_LEVEL_DEBUG = 'debug'
-#: Info log message.
 LOG_LEVEL_INFO = 'info'
-#: Warning log message.
 LOG_LEVEL_WARNING = 'warning'
-#: Error log message.
 LOG_LEVEL_ERROR = 'error'
 
-#: Choices to use in ``CharField`` for log level.
+# Choices to use in CharField for log level
 LOG_LEVEL_CHOICES = (
     (LOG_LEVEL_DEBUG, 'debug'),
     (LOG_LEVEL_INFO, 'info'),
@@ -41,19 +38,13 @@ LOG_LEVEL_CHOICES = (
     (LOG_LEVEL_ERROR, 'error'),
 )
 
-
-# The possible states of ``BackgroundJob`` objects and their labels.
-
-#: Job has been created but not started.
+# The possible states of BackgroundJob objects and their labels
 JOB_STATE_INITIAL = 'initial'
-#: Job is running.
 JOB_STATE_RUNNING = 'running'
-#: Job succeeded.
 JOB_STATE_DONE = 'done'
-#: Job failed.
 JOB_STATE_FAILED = 'failed'
 
-#: Choices to use in the ``CharField``.
+#: Choices to use in the CharField
 JOB_STATE_CHOICES = (
     (JOB_STATE_INITIAL, 'initial'),
     ('running', 'running'),
@@ -84,22 +75,22 @@ class BackgroundJob(models.Model):
         help_text='Project in which this objects belongs',
         on_delete=models.CASCADE,
     )
-    #: The user initiating the job.
+    #: The user initiating the job
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=False,
         related_name='background_jobs',
         on_delete=models.CASCADE,
     )
-    #: Specializing string of the job.
+    #: Specializing string of the job
     job_type = models.CharField(
         max_length=512, null=False, help_text='Type of the job'
     )
-    #: A human-readable name for this job.
+    #: A human-readable name for this job
     name = models.CharField(max_length=512)
-    #: An optional, extend description for this job.
+    #: An optional, extend description for this job
     description = models.TextField()
-    #: The job status.
+    #: The job status
     status = models.CharField(
         max_length=50, choices=JOB_STATE_CHOICES, default=JOB_STATE_INITIAL
     )
@@ -108,12 +99,14 @@ class BackgroundJob(models.Model):
         ordering = ["-date_created"]
 
     def get_human_readable_type(self):
-        """Also implement in your sub classes to show human-readable type in the
-        views."""
+        """
+        Also implement in your sub classes to show human-readable type in the
+        views.
+        """
         return '(generic job)'
 
     def add_log_entry(self, message, level=LOG_LEVEL_INFO):
-        """Add and return a new ``BackgroundJobLogEntry``."""
+        """Add and return a new BackgroundJobLogEntry."""
         return self.log_entries.create(level=level, message=message)
 
     def __str__(self):
@@ -123,12 +116,12 @@ class BackgroundJob(models.Model):
 class BackgroundJobLogEntry(models.Model):
     """Log entry for background job"""
 
-    #: Creation time of log entry.
+    #: Creation time of log entry
     date_created = models.DateTimeField(
         auto_now_add=True, help_text='DateTime of creation'
     )
 
-    #: The ``BackgroundJob`` that the log entry is for.
+    #: The BackgroundJob that the log entry is for
     job = models.ForeignKey(
         BackgroundJob,
         related_name='log_entries',
@@ -136,11 +129,11 @@ class BackgroundJobLogEntry(models.Model):
         on_delete=models.CASCADE,
     )
 
-    #: The entry's log level.
+    #: The entry's log level
     level = models.CharField(
         max_length=50, choices=LOG_LEVEL_CHOICES, help_text='Level of log entry'
     )
-    #: The message contained by the log entry.
+    #: The message contained by the log entry
     message = models.TextField(help_text="Log level's message")
 
     class Meta:
@@ -148,10 +141,11 @@ class BackgroundJobLogEntry(models.Model):
 
 
 class JobModelMessageMixin:
-    """Mixin with shortcuts for marking job state and adding log entry.
+    """
+    Mixin with shortcuts for marking job state and adding log entry.
 
-    Use this in your ``BackgroundJob`` "subclasses" (sub classing meaning
-    ``OneToOneField`` specializations).
+    Use this in your BackgroundJob "subclasses" (sub classing meaning
+    OneToOneField specializations).
     """
 
     task_desc = None
@@ -192,5 +186,5 @@ class JobModelMessageMixin:
         self.bg_job.save()
 
     def add_log_entry(self, *args, **kwargs):
-        """Add a log entry through the related ``BackgroundJob``."""
+        """Add a log entry through the related BackgroundJob."""
         return self.bg_job.add_log_entry(*args, **kwargs)

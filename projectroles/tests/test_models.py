@@ -841,7 +841,7 @@ class TestProjectManager(ProjectMixin, RoleAssignmentMixin, TestCase):
 class TestProjectSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.AppSetting with ``user == None``"""
+    """Tests for model.AppSetting with user == None"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):
@@ -985,7 +985,7 @@ class TestProjectSetting(
 class TestUserSetting(
     ProjectMixin, RoleAssignmentMixin, AppSettingMixin, TestCase
 ):
-    """Tests for model.AppSetting with ``project == None``"""
+    """Tests for model.AppSetting with project == None"""
 
     # NOTE: This assumes an example app is available
     def setUp(self):

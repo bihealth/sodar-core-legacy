@@ -1,3 +1,7 @@
+"""UI views for the filesfolders app"""
+
+import logging
+
 from wsgiref.util import FileWrapper  # For db files
 from zipfile import ZipFile
 
@@ -20,9 +24,9 @@ from django.views.generic.edit import ModelFormMixin, DeletionMixin
 
 from db_file_storage.storage import DatabaseFileStorage
 
-from .forms import FolderForm, FileForm, HyperLinkForm
-from .models import Folder, File, FileData, HyperLink
-from .utils import build_public_url
+from filesfolders.forms import FolderForm, FileForm, HyperLinkForm
+from filesfolders.models import Folder, File, FileData, HyperLink
+from filesfolders.utils import build_public_url
 
 # Projectroles dependency
 from projectroles.models import Project, SODAR_CONSTANTS
@@ -39,16 +43,17 @@ from projectroles.views import (
 )
 
 
-# Settings and constants
+app_settings = AppSettingAPI()
+logger = logging.getLogger(__name__)
+storage = DatabaseFileStorage()
+
+
+# Local constants
 APP_NAME = 'filesfolders'
 TL_OBJ_TYPES = {'Folder': 'folder', 'File': 'file', 'HyperLink': 'hyperlink'}
 DEFAULT_UPDATE_ATTRS = ['name', 'folder', 'description', 'flag']
-
 LINK_BAD_REQUEST_MSG = settings.FILESFOLDERS_LINK_BAD_REQUEST_MSG
 SERVE_AS_ATTACHMENT = settings.FILESFOLDERS_SERVE_AS_ATTACHMENT
-
-storage = DatabaseFileStorage()
-app_settings = AppSettingAPI()
 
 
 # Mixins -----------------------------------------------------------------
@@ -245,7 +250,7 @@ class FileServeMixin:
         try:
             file = File.objects.get(sodar_uuid=kwargs['file'])
         except File.DoesNotExist:
-            messages.error(self.request, 'File object not found!')
+            messages.error(self.request, 'File object not found.')
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -256,7 +261,7 @@ class FileServeMixin:
         try:
             file_data = FileData.objects.get(file_name=file.file.name)
         except FileData.DoesNotExist:
-            messages.error(self.request, 'File data not found!')
+            messages.error(self.request, 'File data not found.')
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -266,9 +271,8 @@ class FileServeMixin:
         # Open file for serving
         try:
             file_content = storage.open(file_data.file_name)
-
         except Exception:
-            messages.error(self.request, 'Error opening file!')
+            messages.error(self.request, 'Error opening file.')
             return redirect(
                 reverse(
                     'filesfolders:list', kwargs={'project': kwargs['project']}
@@ -279,7 +283,6 @@ class FileServeMixin:
         response = HttpResponse(
             FileWrapper(file_content), content_type=file_data.content_type
         )
-
         if SERVE_AS_ATTACHMENT:
             response['Content-Disposition'] = 'attachment; filename={}'.format(
                 file.name
@@ -396,14 +399,24 @@ class ProjectFileView(
         )
         readme_file = readme_md if readme_md else readme_txt
         if readme_file:
-            context['readme_name'] = readme_file.name
-            context['readme_mime'] = readme_file.file.file.mimetype
-            if context['readme_mime'] == 'text/markdown':
-                context['readme_data'] = readme_file.file.read().decode('utf-8')
-                if readme_txt:
-                    context['readme_alt'] = readme_txt.name
-            else:
-                context['readme_data'] = readme_file.file.read()
+            try:
+                context['readme_name'] = readme_file.name
+                context['readme_mime'] = readme_file.file.file.mimetype
+                if context['readme_mime'] == 'text/markdown':
+                    context['readme_data'] = readme_file.file.read().decode(
+                        'utf-8'
+                    )
+                    if readme_txt:
+                        context['readme_alt'] = readme_txt.name
+                else:
+                    context['readme_data'] = readme_file.file.read()
+            except Exception as ex:
+                if settings.DEBUG:
+                    raise ex
+                logger.error(
+                    'Exception in accessing readme file data (UUID={}): '
+                    '{}'.format(readme_file.sodar_uuid, ex)
+                )
 
         return context
 
@@ -564,7 +577,7 @@ class FileCreateView(ViewActionMixin, BaseCreateView):
 
         messages.success(
             self.request,
-            'Extracted {} files in folder "{}" from archive "{}"'.format(
+            'Extracted {} files in folder "{}" from archive "{}".'.format(
                 len([f for f in zip_file.infolist() if not f.is_dir()]),
                 folder.name if folder else 'root',
                 file.name,
@@ -661,7 +674,7 @@ class FilePublicLinkView(
         try:
             file = File.objects.get(sodar_uuid=self.kwargs['file'])
         except File.DoesNotExist:
-            messages.error(self.request, 'File not found!')
+            messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
 
         if not app_settings.get_app_setting(
@@ -669,7 +682,7 @@ class FilePublicLinkView(
         ):
             messages.error(
                 self.request,
-                'Sharing public links not allowed for this {}'.format(
+                'Sharing public links not allowed for this {}.'.format(
                     get_display_name(SODAR_CONSTANTS['PROJECT_TYPE_PROJECT'])
                 ),
             )
@@ -689,11 +702,11 @@ class FilePublicLinkView(
         try:
             file = File.objects.get(sodar_uuid=self.kwargs['file'])
         except File.DoesNotExist:
-            messages.error(self.request, 'File not found!')
+            messages.error(self.request, 'File not found.')
             return redirect(reverse('home'))
 
         if not file.public_url:
-            messages.error(self.request, 'Public URL for file not enabled!')
+            messages.error(self.request, 'Public URL for file not enabled.')
             return redirect(
                 reverse(
                     'filesfolders:list',
@@ -835,7 +848,7 @@ class BatchEditView(
             messages.warning(
                 self.request,
                 'Unable to edit {} item{}, check '
-                'permissions and target folder! Failed: {}'.format(
+                'permissions and target folder. Failed: {}'.format(
                     len(self.failed),
                     fail_suffix,
                     ', '.join(f.name for f in self.failed),

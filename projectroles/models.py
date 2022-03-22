@@ -39,6 +39,7 @@ APP_SETTING_TYPE_CHOICES = [
 APP_SETTING_VAL_MAXLENGTH = 255
 PROJECT_SEARCH_TYPES = ['project']
 PROJECT_TAG_STARRED = 'STARRED'
+CAT_DELIMITER = ' / '
 
 
 # Project ----------------------------------------------------------------------
@@ -219,9 +220,12 @@ class Project(models.Model):
     def _get_full_title(self):
         """Return full title of project with path."""
         parents = self.get_parents()
-        ret = ' / '.join([p.title for p in parents]) + ' / ' if parents else ''
-        ret += self.title
-        return ret
+        ret = (
+            CAT_DELIMITER.join([p.title for p in parents]) + CAT_DELIMITER
+            if parents
+            else ''
+        )
+        return ret + self.title
 
     def _has_public_children(self):
         """

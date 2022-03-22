@@ -7,6 +7,46 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.11 (2022-03-22)
+=====================
+
+Added
+-----
+
+- **Projectroles**
+    - Sidebar icon scaling using ``PROJECTROLES_SIDEBAR_ICON_SIZE`` (#843)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to setuptools v59.6.0 (#948)
+    - Unify Django messages in UI (#961)
+- **Projectroles**
+    - Refactor ``ProjectSearchResultsView`` and ``search_results.html`` (#955, #958)
+    - Force user to select type in project create form (#963)
+    - Optimize parent queries in project update form (#965)
+
+Fixed
+-----
+
+- **General**
+    - Incorrect version for ipdb dependency (#951)
+- **Filesfolders**
+    - Template crashes from missing ``FileData`` (#962)
+- **Projectroles**
+    - App search results template included if no results found (#958)
+    - Inconsistent sidebar icon size (#960)
+    - ``get_display_name()`` use in Django messages and forms (#952)
+    - Projects not displayed in project list for inherited owner (#966)
+
+Removed
+-------
+
+- **Projectroles**
+    - ``get_not_found_alert()`` template tag (#955)
+
+
 v0.10.10 (2022-03-03)
 =====================
 

@@ -122,10 +122,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         :return: Dict or None if not found
         """
         obj = self.get_object(eval(model_str), uuid)
-
         if not obj:
             return None
-
         elif obj.__class__ == File:
             return {
                 'url': reverse(
@@ -135,7 +133,6 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 'label': obj.name,
                 'blank': True,
             }
-
         elif obj.__class__ == Folder:
             return {
                 'url': reverse(
@@ -143,10 +140,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 ),
                 'label': obj.name,
             }
-
         elif obj.__class__ == HyperLink:
             return {'url': obj.url, 'label': obj.name, 'blank': True}
-
         return None
 
     def search(self, search_terms, user, search_type=None, keywords=None):
@@ -221,10 +216,8 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         """
         if column_id == 'files':
             count = File.objects.filter(project=project).count()
-
         elif column_id == 'links':
             count = HyperLink.objects.filter(project=project).count()
-
         if count > 0:
             return '<a href="{}">{}</a>'.format(
                 reverse(
@@ -232,5 +225,4 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
                 ),
                 count,
             )
-
         return 0

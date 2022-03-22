@@ -105,6 +105,21 @@ class TestProjectListAjaxView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         }
         self.assertEqual(response.data, expected)
 
+    def test_get_inherited_owner(self):
+        """Test project list retrieval for inherited owner"""
+        cat_owner = self.make_user('cat_owner')
+        self.owner_as_cat.user = cat_owner
+        self.owner_as_cat.save()
+        pro_owner = self.make_user('pro_owner')
+        self.owner_as.user = pro_owner
+        self.owner_as.save()
+        with self.login(cat_owner):
+            response = self.client.get(
+                reverse('projectroles:ajax_project_list'),
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data['projects']), 2)
+
     def test_get_no_results(self):
         """Test project list retrieval with no results"""
         new_user = self.make_user('new_user')  # User with no roles

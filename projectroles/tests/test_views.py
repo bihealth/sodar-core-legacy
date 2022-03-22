@@ -15,6 +15,7 @@ from django.utils import timezone
 from test_plus.test import TestCase
 
 from projectroles.app_settings import AppSettingAPI
+from projectroles.forms import EMPTY_CHOICE_LABEL
 from projectroles.models import (
     Project,
     Role,
@@ -43,6 +44,7 @@ from projectroles.tests.test_models import (
     RemoteTargetMixin,
 )
 from projectroles.views import (
+    MSG_PROJECT_WELCOME,
     MSG_USER_PROFILE_LDAP,
     MSG_INVITE_LDAP_LOCAL_VIEW,
     MSG_INVITE_LOCAL_NOT_ALLOWED,
@@ -192,7 +194,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['search_type'], None)
         self.assertEqual(response.context['search_input'], 'test')
         self.assertEqual(
-            len(response.context['app_search_data']),
+            len(response.context['app_results']),
             len([p for p in self.plugins if p.search_enable]),
         )
 
@@ -210,7 +212,7 @@ class TestProjectSearchView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(response.context['search_type'], 'file')
         self.assertEqual(response.context['search_input'], 'test type:file')
         self.assertEqual(
-            len(response.context['app_search_data']),
+            len(response.context['app_results']),
             len(
                 [
                     p
@@ -401,6 +403,20 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
         self.assertEqual(form.initial['owner'], self.user)
 
+    @override_settings(PROJECTROLES_DISABLE_CATEGORIES=True)
+    def test_render_top_disable_categories(self):
+        """Test rendering top level creation with categories disabled"""
+        with self.login(self.user):
+            response = self.client.get(reverse('projectroles:create'))
+
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertIsNotNone(form)
+        self.assertEqual(form.initial['type'], PROJECT_TYPE_PROJECT)
+        self.assertIsInstance(form.fields['type'].widget, HiddenInput)
+        self.assertIsInstance(form.fields['parent'].widget, HiddenInput)
+        self.assertEqual(form.initial['owner'], self.user)
+
     def test_render_sub(self):
         """Test rendering if creating a subproject"""
         category = self._make_project(
@@ -424,6 +440,7 @@ class TestProjectCreateView(ProjectMixin, RoleAssignmentMixin, TestViewsBase):
         self.assertEqual(
             form.fields['type'].choices,
             [
+                (None, EMPTY_CHOICE_LABEL),
                 (
                     PROJECT_TYPE_CATEGORY,
                     get_display_name(PROJECT_TYPE_CATEGORY, title=True),
@@ -3451,8 +3468,11 @@ class TestProjectInviteCreateView(
         )
         self.assertEqual(
             list(get_messages(response.wsgi_request))[0].message,
-            'Welcome to project "TestProject"! You have been assigned the '
-            'role of project contributor.',
+            MSG_PROJECT_WELCOME.format(
+                project_type='project',
+                project_title='TestProject',
+                role='project contributor',
+            ),
         )
 
     @override_settings(PROJECTROLES_ALLOW_LOCAL_USERS=True)

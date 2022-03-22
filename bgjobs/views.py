@@ -40,7 +40,7 @@ class ProjectBackgroundJobView(
     ProjectContextMixin,
     ListView,
 ):
-    """Display all ``BackgroundJob`` records for the project."""
+    """Display all BackgroundJob records for the project."""
 
     template_name = 'bgjobs/project_backgroundjobs.html'
     permission_required = 'bgjobs.view_jobs_own'
@@ -65,11 +65,11 @@ class BackgroundJobClearViewBase(
 ):
     """Base class for view clearing jobs."""
 
-    #: The template is the same for both sub classes.
+    #: The template is the same for both sub classes
     template_name = 'bgjobs/backgroundjob_confirm_clear.html'
-    #: Set in sub class.
+    #: Set in sub class
     which_jobs = None
-    #: Set in sub class.
+    #: Set in sub class
     permission_required = None
 
     def get_context_data(self, *args, **kwargs):
@@ -103,7 +103,7 @@ class BackgroundJobClearViewBase(
                     status_type='OK',
                 )
             messages.success(
-                self.request, 'Removed {} background jobs'.format(bg_job_count)
+                self.request, 'Removed {} background jobs.'.format(bg_job_count)
             )
         except Exception as ex:
             messages.error(

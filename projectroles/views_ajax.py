@@ -19,10 +19,12 @@ from rules.contrib.views import PermissionRequiredMixin
 
 from projectroles.models import (
     Project,
+    Role,
     RoleAssignment,
     ProjectUserTag,
     PROJECT_TAG_STARRED,
     SODAR_CONSTANTS,
+    CAT_DELIMITER,
 )
 from projectroles.plugins import get_active_plugins, get_backend_api
 from projectroles.project_tags import get_tag_state, set_tag_state
@@ -38,14 +40,14 @@ from projectroles.views_api import SODARAPIProjectPermission
 logger = logging.getLogger(__name__)
 
 
-# SODAR Consants
+# SODAR consants
 PROJECT_TYPE_PROJECT = SODAR_CONSTANTS['PROJECT_TYPE_PROJECT']
 PROJECT_TYPE_CATEGORY = SODAR_CONSTANTS['PROJECT_TYPE_CATEGORY']
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SYSTEM_USER_GROUP = SODAR_CONSTANTS['SYSTEM_USER_GROUP']
 
-# Local Constants
+# Local constants
 INHERITED_OWNER_INFO = 'Ownership inherited from parent category'
 
 
@@ -121,20 +123,28 @@ class ProjectListAjaxView(SODARBaseAjaxView):
                 Q(public_guest_access=True) | Q(has_public_children=True)
             )
         elif not user.is_superuser:
+            # Quick and dirty filtering for inheritance using full_title
+            role_owner = Role.objects.filter(name=PROJECT_ROLE_OWNER).first()
+            owned_cats = [
+                r.project.full_title + CAT_DELIMITER
+                for r in RoleAssignment.objects.filter(
+                    project__type=PROJECT_TYPE_CATEGORY,
+                    user=user,
+                    role=role_owner,
+                )
+            ]
             project_list = [
                 p
                 for p in project_list
                 if p.public_guest_access
                 or p.has_public_children
-                or (
-                    user.is_authenticated
-                    and p.roles.filter(user=user).count() > 0
-                )
+                or any(p.full_title.startswith(c) for c in owned_cats)
+                or p.roles.filter(user=user).count() > 0
             ]
 
         # Populate final list
         ret = []
-        parent_prefix = parent.full_title + ' / ' if parent else None
+        parent_prefix = parent.full_title + CAT_DELIMITER if parent else None
         for p in project_list:
             if (
                 p not in ret

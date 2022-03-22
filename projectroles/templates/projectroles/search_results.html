@@ -126,11 +126,10 @@
 </div>
 
 <div class="container-fluid sodar-page-container">
-  {% if search_type and search_type != 'project' and app_search_data|length == 0 %}
+  {% if search_type and search_type != 'project' and app_results|length == 0 %}
     <div class="alert alert-danger" role="alert">
       <strong>Error:</strong> Search type "{{ search_type }}" not recognized!
     </div>
-
   {% else %}
     {# Project Search #}
     {% if not search_type or search_type == 'project' %}
@@ -154,10 +153,9 @@
         {% include 'projectroles/_search_footer.html' %}
       {% endif %}
     {% endif %}
-
     {# App Search #}
-    {% for app in app_search_data %}
-      {% if app.plugin.search_template and not app.error %}
+    {% for app in app_results %}
+      {% if app.plugin.search_template and app.has_results and not app.error %}
         {% include app.plugin.search_template with plugin=app.plugin search_results=app.results %}
       {% elif app.error %}
         <div class="alert alert-error">
@@ -166,12 +164,18 @@
         </div>
       {% endif %}
     {% endfor %}
-
   {% endif %}
 
-  {% autoescape off %}
-    {% get_not_found_alert project_results app_search_data search_type %}
-  {% endautoescape %}
+  {% if not_found %}
+    <div class="alert alert-info d-none" id="sodar-search-not-found-alert">
+      No results found:
+      <ul class="mb-0">
+        {% for n in not_found %}
+          <li>{{ n }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
 
 </div>
 

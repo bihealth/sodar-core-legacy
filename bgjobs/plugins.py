@@ -1,20 +1,15 @@
-"""Code related to ``django-plugins``.
-
-First, it creates a ``ProjectAppPluginPoint`` for the ``bgjobs`` app.
-
-Second, it creates a new plugin point for the registering ``BackgroundJob``
-specializations.
-"""
+"""Plugins for the bgjobs app"""
 
 from djangoplugins.point import PluginPoint
 
+# Projectroles dependency
 from projectroles.plugins import ProjectAppPluginPoint, SiteAppPluginPoint
-from .urls import urlpatterns
+
+from bgjobs.urls import urlpatterns
 
 
 class ProjectAppPlugin(ProjectAppPluginPoint):
-    """Plugin for registering app with the ``ProjectAppPluginPoint`` from the
-    ``projectroles`` app."""
+    """Plugin for registering app with Projectroles"""
 
     name = 'bgjobs'
     title = 'Background Jobs'
@@ -53,8 +48,10 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
 
 
 class BackgroundJobsPluginPoint(PluginPoint):
-    """Definition of a plugin point for registering background job types with
-    the ``bgjobs`` app."""
+    """
+    Definition of a plugin point for registering background job types with the
+    bgjobs app.
+    """
 
     #: Mapping from job specialization name to specialization class
     # (OneToOneField "inheritance").

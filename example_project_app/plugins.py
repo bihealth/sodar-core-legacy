@@ -47,7 +47,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'project_str_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'STRING',
-            'label': 'String setting',
+            'label': 'String setting with options',
             'default': 'string1',
             'description': 'Example string project setting with options',
             'options': ['string1', 'string2'],
@@ -56,7 +56,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'project_int_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT'],
             'type': 'INTEGER',
-            'label': 'Integer setting',
+            'label': 'Integer setting with options',
             'default': 0,
             'description': 'Example integer project setting with options',
             'options': [0, 1],
@@ -130,7 +130,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'user_str_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'STRING',
-            'label': 'String setting',
+            'label': 'String setting with options',
             'default': 'string1',
             'options': ['string1', 'string2'],
             'description': 'Example string user setting with options',
@@ -139,7 +139,7 @@ class ProjectAppPlugin(ProjectAppPluginPoint):
         'user_int_setting_options': {
             'scope': SODAR_CONSTANTS['APP_SETTING_SCOPE_USER'],
             'type': 'INTEGER',
-            'label': 'Integer setting',
+            'label': 'Integer setting with options',
             'default': 0,
             'options': [0, 1],
             'description': 'Example integer user setting with options',

@@ -1,4 +1,5 @@
 """Project and user settings API"""
+
 import json
 import logging
 
@@ -6,6 +7,9 @@ from django.conf import settings
 
 from projectroles.models import AppSetting, APP_SETTING_TYPES, SODAR_CONSTANTS
 from projectroles.plugins import get_app_plugin, get_active_plugins
+
+
+logger = logging.getLogger(__name__)
 
 
 # SODAR constants
@@ -71,11 +75,8 @@ PROJECTROLES_APP_SETTINGS = {
     },
 }
 
-# Default setting for the ``local`` flag in app settings
+# Default value for the "local" flag in app settings
 APP_SETTING_LOCAL_DEFAULT = True
-
-
-logger = logging.getLogger(__name__)
 
 
 class AppSettingAPI:

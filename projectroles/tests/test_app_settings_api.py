@@ -80,10 +80,7 @@ class TestAppSettingAPI(
             'name': 'project_str_setting_options',
             'setting_type': 'STRING',
             'value': 'string1',
-            'options': [
-                'string1',
-                'string2',
-            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'options': ['string1', 'string2'],
             'update_value': 'string2',
             'non_valid_value': 'string3',
         }
@@ -93,10 +90,7 @@ class TestAppSettingAPI(
             'name': 'project_int_setting_options',
             'setting_type': 'INTEGER',
             'value': 0,
-            'options': [
-                0,
-                1,
-            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'options': [0, 1],
             'update_value': 1,
             'non_valid_value': 2,
         }
@@ -149,10 +143,7 @@ class TestAppSettingAPI(
             'setting_type': 'STRING',
             'value': 'string1',
             'update_value': 'string2',
-            'options': [
-                'string1',
-                'string2',
-            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'options': ['string1', 'string2'],
             'non_valid_value': False,
         }
         self.user_setting_int_values_options = {
@@ -162,10 +153,7 @@ class TestAppSettingAPI(
             'setting_type': 'INTEGER',
             'value': 0,
             'update_value': 1,
-            'options': [
-                0,
-                1,
-            ],  # Options must match the entry in example_project_app.plugins.ProjectAppPlugin
+            'options': [0, 1],
             'non_valid_value': 'Nan',
         }
         self.user_setting_bool_values = {
@@ -567,7 +555,7 @@ class TestAppSettingAPI(
             'project_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'STRING',
-                'label': 'String setting',
+                'label': 'String setting with options',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
                 'description': 'Example string project setting with options',
@@ -576,7 +564,7 @@ class TestAppSettingAPI(
             'project_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_PROJECT,
                 'type': 'INTEGER',
-                'label': 'Integer setting',
+                'label': 'Integer setting with options',
                 'default': 0,
                 'options': [0, 1],
                 'description': 'Example integer project setting with options',
@@ -659,7 +647,7 @@ class TestAppSettingAPI(
             'user_str_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'STRING',
-                'label': 'String setting',
+                'label': 'String setting with options',
                 'default': 'string1',
                 'options': ['string1', 'string2'],
                 'description': 'Example string user setting with options',
@@ -668,7 +656,7 @@ class TestAppSettingAPI(
             'user_int_setting_options': {
                 'scope': APP_SETTING_SCOPE_USER,
                 'type': 'INTEGER',
-                'label': 'Integer setting',
+                'label': 'Integer setting with options',
                 'default': 0,
                 'options': [0, 1],
                 'description': 'Example integer user setting with options',

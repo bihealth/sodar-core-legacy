@@ -1,6 +1,8 @@
-"""Rule definitions for the ``bgjobs`` app."""
+"""Rule definitions for the bgjobs app"""
 
 import rules
+
+# Projectroles dependency
 from projectroles import rules as pr_rules  # To access common predicates
 
 

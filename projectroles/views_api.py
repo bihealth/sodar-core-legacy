@@ -104,6 +104,7 @@ CORE_API_ALLOWED_VERSIONS = [
     '0.10.8',
     '0.10.9',
     '0.10.10',
+    '0.10.11',
 ]
 
 # Local constants
