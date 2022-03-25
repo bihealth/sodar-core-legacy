@@ -9,6 +9,7 @@
   {{ block.super }}
   {% get_sidebar_notch_size as sidebar_notch_size %}
   {% get_sidebar_notch_pos as sidebar_notch_pos %}
+  {% get_sidebar_padding as sidebar_padding %}
   <style type="text/css">
     /* Notch visualizaton for sidebar */
     .sodar-pr-sidebar-nav-ul li.active a span.sodar-pr-sidebar-icon:after {
@@ -22,6 +23,11 @@
       border-top: {{ sidebar_notch_size }}px solid transparent;
       border-right: {{ sidebar_notch_size }}px solid #ffffff;
       border-bottom: {{ sidebar_notch_size }}px solid transparent;
+    }
+
+    /* Padding for sidebar items */
+    .sodar-pr-sidebar-nav-item {
+      padding-bottom: {{ sidebar_padding }}px !important;
     }
   </style>
 {% endblock %}
@@ -40,7 +46,7 @@
         <nav class="nav navbar-expand-lg navbar-dark bg-dark sodar-pr-sidebar-nav">
           <div class="navbar-collapse" id="sodar-pr-sidebar-navbar">
             <ul class="navbar-nav flex-column sodar-pr-sidebar-nav-ul">
-              <li id="sodar-pr-nav-home" class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+              <li id="sodar-pr-nav-home" class="nav-item sodar-pr-sidebar-nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
                 <a class="nav-link" href="{% url 'home' %}" id="sodar-pr-nav-home-link">
                   <span class="sodar-pr-sidebar-icon">
                     <i class="iconify" data-icon="mdi:home" data-height="{{ sidebar_icon_size }}"></i>

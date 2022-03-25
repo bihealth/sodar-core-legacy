@@ -19,7 +19,7 @@
   {# Overview #}
 
   <li id="sodar-pr-nav-project-detail"
-      class="nav-item {% get_pr_link_state projectroles_urls request 'detail' %}">
+      class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'detail' %}">
     <a class="nav-link sodar-pr-sidebar-nav-link"
        href="{% url 'projectroles:detail' project=project.sodar_uuid %}"
        id="sodar-pr-link-project-detail">
@@ -44,7 +44,7 @@
     {% if app_link_visible %}
       {% get_sidebar_app_legend plugin.title as app_legend %}
       <li id="sodar-pr-nav-app-plugin-{{ plugin.name }}"
-          class="nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
+          class="nav-item sodar-pr-sidebar-nav-item {% get_app_link_state plugin request.resolver_match.app_name request.resolver_match.url_name %}">
         <a class="nav-link"
            href="{% url plugin.entry_point_url_id project=project.sodar_uuid %}"
            id="sodar-pr-link-app-plugin-{{ plugin.name }}">
@@ -62,7 +62,7 @@
   {# Role and project editing #}
   {% if can_view_roles %}
     <li id="sodar-pr-nav-project-roles"
-        class="nav-item {% get_pr_link_state projectroles_urls request role_urls %}">
+        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request role_urls %}">
       <a class="nav-link"
          href="{% url 'projectroles:roles' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-roles">
@@ -77,7 +77,7 @@
   {% endif %}
   {% if can_update_project %}
     <li id="sodar-pr-nav-project-update"
-        class="nav-item {% get_pr_link_state projectroles_urls request 'update' %}">
+        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'update' %}">
       <a class="nav-link"
          href="{% url 'projectroles:update' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-update">
@@ -98,7 +98,7 @@
   {% has_perm 'projectroles.create_project' request.user project as can_create_project %}
   {% if allow_creation and can_create_project and not project.is_remote %}
     <li id="sodar-pr-nav-project-create"
-        class="nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
+        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' project=project.sodar_uuid %}"
          id="sodar-pr-link-project-create">
@@ -114,7 +114,7 @@
 {# Allow project creation under root #}
 {% elif disable_categories and request.user.is_superuser %}
   <li id="sodar-pr-nav-project-create"
-      class="nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
+      class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
     <a class="nav-link"
        href="{% url 'projectroles:create' %}"
        id="sodar-pr-link-project-create">
@@ -130,7 +130,7 @@
   {% has_perm 'projectroles.create_project' request.user as can_create_project %}
   {% if allow_creation and can_create_project %}
     <li id="sodar-pr-nav-project-create"
-        class="nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
+        class="nav-item sodar-pr-sidebar-nav-item {% get_pr_link_state projectroles_urls request 'create' %}">
       <a class="nav-link"
          href="{% url 'projectroles:create' %}"
          id="sodar-pr-home-link-create">

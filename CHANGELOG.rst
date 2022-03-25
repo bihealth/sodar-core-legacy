@@ -7,6 +7,16 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Changed
+-------
+
+- **Projectroles**
+    - Update sidebar icon padding on resize (#967)
+
+
 v0.10.11 (2022-03-22)
 =====================
 
