@@ -87,8 +87,6 @@ LOCAL_APPS = [
     'siteinfo.apps.SiteinfoConfig',
     # API Tokens site app
     'tokens.apps.TokensConfig',
-    # SODAR Taskflow backend app
-    'taskflowbackend.apps.TaskflowbackendConfig',
     # Background Jobs app
     'bgjobs.apps.BgjobsConfig',
     # External Data Cache app
@@ -492,7 +490,6 @@ LOGGING_APPS = env.list(
         'projectroles',
         'siteinfo',
         'sodarcache',
-        'taskflowbackend',
         'timeline',
     ],
 )
@@ -681,8 +678,10 @@ APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
 
 
 # Taskflow backend settings
+'''
 TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
 TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
+'''
 
 
 # SODAR constants

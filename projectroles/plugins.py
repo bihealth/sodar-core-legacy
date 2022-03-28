@@ -226,12 +226,34 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
-    def handle_project_update(self, project, old_data):
+    def perform_project_create(
+        self,
+        project,
+        owner,
+        project_settings,
+        request,
+    ):
         """
-        Perform actions to handle project update.
-        # NOTE: This is a WIP feature to be altered/expanded in a later release
+        Perform additional actions to finalize project creation.
 
-        :param project: Current project (Project)
+        :param project: Project object
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the update
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def perform_project_update(
+        self, project, owner, project_settings, request, old_data
+    ):
+        """
+        Perform additional actions to finalize project update.
+
+        :param project: Current project object (Project)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the update
         :param old_data: Old project data prior to update (dict)
         """
         # TODO: Implement this in your app plugin (optional)
@@ -309,6 +331,39 @@ class BackendPluginPoint(PluginPoint):
         """Return a link for timeline label starting with 'extra-'"""
         # TODO: Implement this in your app plugin
         return None
+
+    def perform_project_create(
+        self,
+        project,
+        owner,
+        project_settings,
+        request,
+    ):
+        """
+        Perform additional actions to finalize project creation.
+
+        :param project: Project object
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the update
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def perform_project_update(
+        self, project, owner, project_settings, request, old_data
+    ):
+        """
+        Perform additional actions to finalize project update.
+
+        :param project: Current project object (Project)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the update
+        :param old_data: Old project data prior to update (dict)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
 
 
 class SiteAppPluginPoint(PluginPoint):

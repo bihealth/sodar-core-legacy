@@ -67,7 +67,6 @@ setup(
         'filesfolders',
         'siteinfo',
         'sodarcache',
-        'taskflowbackend',
         'timeline',
         'tokens',
         'userprofile',

@@ -8,7 +8,6 @@ recursive-include bgjobs *
 recursive-include filesfolders *
 recursive-include siteinfo *
 recursive-include sodarcache *
-recursive-include taskflowbackend *
 recursive-include timeline *
 recursive-include tokens *
 recursive-include userprofile *

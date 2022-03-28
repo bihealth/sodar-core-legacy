@@ -1,5 +1,7 @@
 """Taskflow API views for the projectroles app"""
 
+# TODO: Remove thsese once functionality has been implemented in SODAR (#387)
+
 import json
 
 from django.conf import settings

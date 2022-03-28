@@ -3,7 +3,6 @@
 import json
 import logging
 import re
-import requests
 import ssl
 import urllib.request
 from ipaddress import ip_address, ip_network
@@ -904,6 +903,9 @@ class ProjectModifyMixin:
             tl_event.add_object(owner, 'owner', owner.username)
         return tl_event
 
+    # TODO: Move logic into SODAR under taskflowbackend
+    # TODO: Replace with calls to plugin functions
+    '''
     @classmethod
     def _submit_with_taskflow(
         cls,
@@ -986,30 +988,29 @@ class ProjectModifyMixin:
             elif tl_event:  # Update
                 tl_event.set_status('FAILED', str(ex))
             raise ex
+    '''
 
     @classmethod
-    def _handle_local_save(cls, project, owner, project_settings):
-        """
-        Handle local saving of project data if SODAR Taskflow is not
-        enabled.
-        """
-        # Modify owner role if it does exist
+    def _update_owner(cls, project, owner):
+        """Create or update project owner"""
         try:
-            assignment = RoleAssignment.objects.get(
+            role_as = RoleAssignment.objects.get(
                 project=project, role__name=PROJECT_ROLE_OWNER
             )
-            assignment.user = owner
-            assignment.save()
-        # Else create a new one
+            role_as.user = owner
+            role_as.save()
         except RoleAssignment.DoesNotExist:
-            assignment = RoleAssignment(
+            role_as = RoleAssignment(
                 project=project,
                 user=owner,
                 role=Role.objects.get(name=PROJECT_ROLE_OWNER),
             )
-            assignment.save()
+            role_as.save()
+        return role_as
 
-        # Modify settings
+    @classmethod
+    def _update_settings(cls, project, project_settings):
+        """Update project settings"""
         for k, v in project_settings.items():
             app_settings.set_app_setting(
                 app_name=k.split('.')[1],
@@ -1104,20 +1105,17 @@ class ProjectModifyMixin:
                 if SEND_EMAIL:
                     email.send_project_move_mail(project, request)
 
+    @transaction.atomic
     def modify_project(self, data, request, instance=None):
         """
-        Create or update a Project, either locally or using the SODAR Taskflow.
-        This method should be called either in form_valid() in a Django form
-        view or save() in a DRF serializer.
+        Create or update a Project. This method should be called either in
+        form_valid() in a Django form view or save() in a DRF serializer.
 
         :param data: Cleaned data from a form or serializer
         :param request: Request initiating the action
         :param instance: Existing Project object or None
-        :raise: ConnectionError if unable to connect to SODAR Taskflow
-        :raise: FlowSubmitException if SODAR Taskflow submission fails
         :return: Created or updated Project object
         """
-        taskflow = get_backend_api('taskflow')
         action = 'update' if instance else 'create'
         old_data = {}
         old_project = None
@@ -1151,29 +1149,6 @@ class ProjectModifyMixin:
                 public_guest_access=data.get('public_guest_access') or False,
             )
 
-        use_taskflow = (
-            True
-            if taskflow and data.get('type') == PROJECT_TYPE_PROJECT
-            else False
-        )
-
-        if action == 'create':
-            project.submit_status = (
-                SUBMIT_STATUS_PENDING_TASKFLOW
-                if use_taskflow
-                else SUBMIT_STATUS_PENDING
-            )
-            # HACK to avoid db error when running tests with DRF serializer
-            # See: https://stackoverflow.com/a/60331668
-            with transaction.atomic():
-                project.save()  # Always save locally if creating (to get UUID)
-        else:
-            project.submit_status = SUBMIT_STATUS_OK
-
-        # Save project with changes if updating without taskflow
-        if action == 'update' and not use_taskflow:
-            project.save()
-
         owner = data.get('owner')
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
@@ -1183,7 +1158,6 @@ class ProjectModifyMixin:
         tl_event = self._create_timeline_event(
             project, action, owner, old_data, project_settings, request
         )
-
         # Get old parent for project moving
         old_parent = (
             old_project.parent
@@ -1193,38 +1167,23 @@ class ProjectModifyMixin:
             else None
         )
 
-        # Submit with Taskflow if enabled
-        # NOTE: may raise an exception which needs to be handled in caller
-        if use_taskflow:
-            self._submit_with_taskflow(
-                project,
-                owner,
-                project_settings,
-                action,
-                request,
-                old_parent,
-                tl_event,
-            )
-        # Local save without Taskflow
-        else:
-            self._handle_local_save(project, owner, project_settings)
+        # Update owner and settings
+        self._update_owner(project, owner)
+        self._update_settings(project, project_settings)
 
         # Post submit/save
-        if action == 'create' and project.submit_status != SUBMIT_STATUS_OK:
-            project.submit_status = SUBMIT_STATUS_OK
-            project.save()
+        project.submit_status = SUBMIT_STATUS_OK
+        project.save()
 
-        # Call for additional actions for project update in plugins
-        # NOTE: This is a WIP feature to be altered/expanded in a later release
+        # Call for additional actions for project creation/update in plugins
         app_plugins = get_active_plugins(plugin_type='project_app')
         for p in app_plugins:
-            try:
-                p.handle_project_update(project, old_data)
-            except Exception as ex:
-                logger.error(
-                    'Exception when calling handle_project_update() for app '
-                    'plugin "{}": {}'.format(p.name, ex)
-                )
+            args = [project, owner, project_settings, request]
+            if action == 'create':
+                p.perform_project_create(*args)
+            else:  # Update
+                args.append(old_data)
+                p.perform_project_update(*args)
 
         # If public access was updated, update has_public_children for parents
         if (
