@@ -1176,15 +1176,14 @@ class ProjectModifyMixin:
         project.save()
 
         # Call for additional actions for project creation/update in plugins
-        app_plugins = get_active_plugins('project_app') + get_active_plugins(
-            'backend'
+        app_plugins = get_active_plugins('backend') + get_active_plugins(
+            'project_app'
         )
-        method = 'perform_project_' + action
         args = [project, owner, project_settings, request]
         if action == 'update':
             args.append(old_data)
         for p in app_plugins:
-            getattr(p, method)(*args)
+            p.perform_project_update(*args)
 
         # If public access was updated, update has_public_children for parents
         if (

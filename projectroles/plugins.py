@@ -226,35 +226,17 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
-    def perform_project_create(
-        self,
-        project,
-        owner,
-        project_settings,
-        request,
-    ):
-        """
-        Perform additional actions to finalize project creation.
-
-        :param project: Project object
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the update
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
-
     def perform_project_update(
-        self, project, owner, project_settings, request, old_data
+        self, project, owner, project_settings, request, old_data=None
     ):
         """
-        Perform additional actions to finalize project update.
+        Perform additional actions to finalize project creation or update.
 
         :param project: Current project object (Project)
         :param owner: User object of project owner
         :param project_settings: Dict
-        :param request: Request object for triggering the update
-        :param old_data: Old project data prior to update (dict)
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data prior to update (dict or None)
         """
         # TODO: Implement this in your app plugin (optional)
         pass
@@ -332,35 +314,17 @@ class BackendPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return None
 
-    def perform_project_create(
-        self,
-        project,
-        owner,
-        project_settings,
-        request,
-    ):
-        """
-        Perform additional actions to finalize project creation.
-
-        :param project: Project object
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the update
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
-
     def perform_project_update(
-        self, project, owner, project_settings, request, old_data
+        self, project, owner, project_settings, request, old_data=None
     ):
         """
-        Perform additional actions to finalize project update.
+        Perform additional actions to finalize project creation or update.
 
         :param project: Current project object (Project)
         :param owner: User object of project owner
         :param project_settings: Dict
-        :param request: Request object for triggering the update
-        :param old_data: Old project data prior to update (dict)
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data prior to update (dict or None)
         """
         # TODO: Implement this in your app plugin (optional)
         pass
