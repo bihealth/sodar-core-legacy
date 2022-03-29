@@ -13,6 +13,8 @@ Unreleased
 Changed
 -------
 
+- **General**
+    - Upgrade to black v22.3.0 (#972)
 - **Projectroles**
     - Update sidebar icon padding on resize (#967)
     - Batch loading for project list columns (#968)
