@@ -87,6 +87,8 @@ REMOTE_LEVEL_VIEW_AVAIL = SODAR_CONSTANTS['REMOTE_LEVEL_VIEW_AVAIL']
 REMOTE_LEVEL_READ_INFO = SODAR_CONSTANTS['REMOTE_LEVEL_READ_INFO']
 REMOTE_LEVEL_READ_ROLES = SODAR_CONSTANTS['REMOTE_LEVEL_READ_ROLES']
 APP_SETTING_SCOPE_PROJECT = SODAR_CONSTANTS['APP_SETTING_SCOPE_PROJECT']
+PROJECT_ACTION_CREATE = SODAR_CONSTANTS['PROJECT_ACTION_CREATE']
+PROJECT_ACTION_UPDATE = SODAR_CONSTANTS['PROJECT_ACTION_UPDATE']
 
 # Local constants
 APP_NAME = 'projectroles'
@@ -866,7 +868,7 @@ class ProjectModifyMixin:
             return None
         type_str = project.type.capitalize()
 
-        if action == 'create':
+        if action == PROJECT_ACTION_CREATE:
             tl_desc = 'create ' + type_str.lower() + ' with {owner} as owner'
             extra_data = {
                 'title': project.title,
@@ -895,11 +897,11 @@ class ProjectModifyMixin:
             project=project,
             app_name=APP_NAME,
             user=request.user,
-            event_name='project_{}'.format(action),
+            event_name='project_{}'.format(action.lower()),
             description=tl_desc,
             extra_data=extra_data,
         )
-        if action == 'create':
+        if action == PROJECT_ACTION_CREATE:
             tl_event.add_object(owner, 'owner', owner.username)
         return tl_event
 
@@ -1033,7 +1035,7 @@ class ProjectModifyMixin:
         owner_as = RoleAssignment.objects.get_assignment(owner, project)
         # Owner change notification
         if request.user != owner and (
-            action == 'create' or old_data['owner'] != owner
+            action == PROJECT_ACTION_CREATE or old_data['owner'] != owner
         ):
             if app_alerts:
                 app_alerts.add_alert(
@@ -1051,7 +1053,7 @@ class ProjectModifyMixin:
                 )
             if SEND_EMAIL:
                 email.send_role_change_mail(
-                    action,
+                    action.lower(),
                     project,
                     owner,
                     owner_as.role,
@@ -1064,7 +1066,7 @@ class ProjectModifyMixin:
             and project.parent.get_owner().user != request.user
         ):
             parent_owner = project.parent.get_owner().user
-            if action == 'create' and request.user != parent_owner:
+            if action == PROJECT_ACTION_CREATE and request.user != parent_owner:
                 if app_alerts:
                     app_alerts.add_alert(
                         app_name=APP_NAME,
@@ -1116,7 +1118,7 @@ class ProjectModifyMixin:
         :param instance: Existing Project object or None
         :return: Created or updated Project object
         """
-        action = 'update' if instance else 'create'
+        action = PROJECT_ACTION_UPDATE if instance else PROJECT_ACTION_CREATE
         old_data = {}
         old_project = None
 
@@ -1148,10 +1150,12 @@ class ProjectModifyMixin:
                 parent=data.get('parent'),
                 public_guest_access=data.get('public_guest_access') or False,
             )
+            project.save()
 
         owner = data.get('owner')
         if not owner and old_project:  # In case of a PATCH request
             owner = old_project.get_owner().user
+
         # Get settings
         project_settings = self._get_app_settings(data, instance)
         # Create timeline event
@@ -1179,11 +1183,36 @@ class ProjectModifyMixin:
         app_plugins = get_active_plugins('backend') + get_active_plugins(
             'project_app'
         )
-        args = [project, owner, project_settings, request]
-        if action == 'update':
+        args = [project, action, owner, project_settings, request]
+        called_plugins = []
+        if action == PROJECT_ACTION_UPDATE:
             args.append(old_data)
         for p in app_plugins:
-            p.perform_project_update(*args)
+            try:
+                logger.info(
+                    'Calling perform_project_modification() for plugin '
+                    '"{}"'.format(p.name)
+                )
+                p.perform_project_modification(*args)
+                called_plugins.append(p)
+            except Exception as ex:
+                logger.error(
+                    'Exception in perform_project_modification() for plugin '
+                    '"{}": {}'.format(p.name, ex)
+                )
+                if len(called_plugins) > 0:
+                    logger.info(
+                        'Calling revert_project_modification() for plugin '
+                        '"{}"'.format(p.name)
+                    )
+                    try:
+                        p.revert_project_modification(*args)
+                    except Exception as ex_revert:
+                        logger.error(
+                            'Exception in revert_project_modification for '
+                            'plugin "{}": {}'.format(p.name, ex_revert)
+                        )
+                raise ex
 
         # If public access was updated, update has_public_children for parents
         if (
@@ -1213,7 +1242,7 @@ class ProjectModifyFormMixin(ProjectModifyMixin):
     def form_valid(self, form):
         """Handle project updating if form is valid"""
         instance = form.instance if form.instance.pk else None
-        action = 'update' if instance else 'create'
+        action = 'update' if instance else 'create'  # TODO: Update
 
         if instance and instance.parent:
             redirect_url = reverse(

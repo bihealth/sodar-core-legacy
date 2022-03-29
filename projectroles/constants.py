@@ -46,6 +46,9 @@ SODAR_CONSTANTS = {
     },
     # System user group
     'SYSTEM_USER_GROUP': 'system',
+    # Project modification
+    'PROJECT_ACTION_CREATE': 'CREATE',
+    'PROJECT_ACTION_UPDATE': 'UPDATE',
 }
 
 

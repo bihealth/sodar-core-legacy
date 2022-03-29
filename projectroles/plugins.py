@@ -226,17 +226,34 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
-    def perform_project_update(
-        self, project, owner, project_settings, request, old_data=None
+    def perform_project_modification(
+        self, project, action, owner, project_settings, request, old_data=None
     ):
         """
         Perform additional actions to finalize project creation or update.
 
         :param project: Current project object (Project)
+        :param action: Action to perform (CREATE or UPDATE)
         :param owner: User object of project owner
         :param project_settings: Dict
         :param request: Request object for triggering the creation or update
-        :param old_data: Old project data prior to update (dict or None)
+        :param old_data: Old project data in case of an update (dict or None)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def revert_project_modification(
+        self, project, action, owner, project_settings, request, old_data=None
+    ):
+        """
+        Revert project creation or update if errors have occurred in other apps.
+
+        :param project: Current project object (Project)
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data in case of an update (dict or None)
         """
         # TODO: Implement this in your app plugin (optional)
         pass
@@ -314,17 +331,34 @@ class BackendPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin
         return None
 
-    def perform_project_update(
-        self, project, owner, project_settings, request, old_data=None
+    def perform_project_modification(
+        self, project, action, owner, project_settings, request, old_data=None
     ):
         """
         Perform additional actions to finalize project creation or update.
 
         :param project: Current project object (Project)
+        :param action: Action to perform (CREATE or UPDATE)
         :param owner: User object of project owner
         :param project_settings: Dict
         :param request: Request object for triggering the creation or update
-        :param old_data: Old project data prior to update (dict or None)
+        :param old_data: Old project data in case of an update (dict or None)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def revert_project_modification(
+        self, project, action, owner, project_settings, request, old_data=None
+    ):
+        """
+        Revert project creation or update if errors have occurred in other apps.
+
+        :param project: Current project object (Project)
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data in case of an update (dict or None)
         """
         # TODO: Implement this in your app plugin (optional)
         pass
