@@ -19,6 +19,7 @@ Changed
     - Update sidebar icon padding on resize (#967)
     - Batch loading for project list columns (#968)
     - Optimize ``ProjectListRoleAjaxView``
+    - Refactor sidebar toggling (#970)
 
 
 v0.10.11 (2022-03-22)

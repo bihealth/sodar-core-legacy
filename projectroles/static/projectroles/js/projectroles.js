@@ -285,30 +285,31 @@ $(document).ready(function () {
 });
 
 
-/* Hide sidebar based on element count -------------------------------------- */
+/* Hide sidebar based on content and browser window size -------------------- */
 
 
 function toggleSidebar() {
-    if (window.sidebar && !window.sidebar.is(':visible')) {
+    var sidebar = $('#sodar-pr-sidebar');
+    var sidebarAltBtn = $('#sodar-pr-sidebar-alt-btn');
+    if (sidebar && !sidebar.is(':visible')) {
         if (window.sidebarMinWindowHeight < window.innerHeight &&
                 window.innerWidth > 1000) {
-            window.sidebar.show();
-            window.sidebar_alt_btn.hide();
+            sidebar.show();
+            sidebarAltBtn.hide();
         }
     } else if (window.sidebarMinWindowHeight > window.innerHeight ||
             window.innerWidth < 1000) {
-        window.sidebar_alt_btn.show();
-        window.sidebar.hide();
+        sidebarAltBtn.show();
+        sidebar.hide();
     }
 }
 
 $(document).ready(function () {
     // Remember sidebar total height
-    window.sidebar = $('#sodar-pr-sidebar');
-    window.sidebar_alt_btn = $('#sodar-pr-sidebar-alt-btn');
-    let sidebarContent = $('#sodar-pr-sidebar-navbar').get(0);
+    var sidebarContent = $('#sodar-pr-sidebar-navbar').get(0);
     if (sidebarContent)
-        window.sidebarMinWindowHeight = sidebarContent.scrollHeight + sidebarContent.getBoundingClientRect().top;
+        window.sidebarMinWindowHeight = sidebarContent.scrollHeight +
+            sidebarContent.getBoundingClientRect().top;
     toggleSidebar();
 
 });
