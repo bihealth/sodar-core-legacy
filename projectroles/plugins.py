@@ -31,7 +31,14 @@ class ProjectModifyPluginAPIMixin:
     """
 
     def perform_project_modify(
-        self, project, action, owner, project_settings, request, old_data=None
+        self,
+        project,
+        action,
+        owner,
+        project_settings,
+        request,
+        old_data=None,
+        old_settings=None,
     ):
         """
         Perform additional actions to finalize project creation or update.
@@ -39,15 +46,23 @@ class ProjectModifyPluginAPIMixin:
         :param project: Current project object (Project)
         :param action: Action to perform (CREATE or UPDATE)
         :param owner: User object of project owner
-        :param project_settings: Dict
+        :param project_settings: Project app settings (dict)
         :param request: Request object for triggering the creation or update
         :param old_data: Old project data in case of an update (dict or None)
+        :param old_settings: Old app settings in case of update (dict or None)
         """
-        # TODO: Implement this in your app plugin (optional)
+        # TODO: Implement this in your app plugin
         pass
 
     def revert_project_modify(
-        self, project, action, owner, project_settings, request, old_data=None
+        self,
+        project,
+        action,
+        owner,
+        project_settings,
+        request,
+        old_data=None,
+        old_settings=None,
     ):
         """
         Revert project creation or update if errors have occurred in other apps.
@@ -55,11 +70,12 @@ class ProjectModifyPluginAPIMixin:
         :param project: Current project object (Project)
         :param action: Action which was performed (CREATE or UPDATE)
         :param owner: User object of project owner
-        :param project_settings: Dict
+        :param project_settings: Project app settings (dict)
         :param request: Request object for triggering the creation or update
-        :param old_data: Old project data in case of an update (dict or None)
+        :param old_data: Old project data in case of update (dict or None)
+        :param old_settings: Old app settings in case of update (dict or None)
         """
-        # TODO: Implement this in your app plugin (optional)
+        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_modify(self, role_as, action, request, old_role=None):
@@ -72,7 +88,7 @@ class ProjectModifyPluginAPIMixin:
         :param request: Request object for triggering the creation or update
         :param old_role: Role object for previous role in case of an update
         """
-        # TODO: Implement this in your app plugin (optional)
+        # TODO: Implement this in your app plugin
         pass
 
     def revert_role_modify(self, role_as, action, request, old_role=None):
@@ -85,7 +101,7 @@ class ProjectModifyPluginAPIMixin:
         :param request: Request object for triggering the creation or update
         :param old_role: Role object for previous role in case of an update
         """
-        # TODO: Implement this in your app plugin (optional)
+        # TODO: Implement this in your app plugin
         pass
 
     def perform_role_delete(self, role_as, request):
@@ -95,7 +111,7 @@ class ProjectModifyPluginAPIMixin:
         :param role_as: RoleAssignment object
         :param request: Request object for triggering the creation or update
         """
-        # TODO: Implement this in your app plugin (optional)
+        # TODO: Implement this in your app plugin
         pass
 
 

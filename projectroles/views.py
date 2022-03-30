@@ -846,7 +846,6 @@ class ProjectModifyMixin(ModifyPluginAPIViewMixin):
             for s_key, s_val in p_settings.items():
                 s_name = 'settings.{}.{}'.format(name, s_key)
                 s_data = data.get(s_name)
-
                 if s_data is None and not instance:
                     s_data = app_settings.get_default_setting(name, s_key)
 
@@ -863,29 +862,23 @@ class ProjectModifyMixin(ModifyPluginAPIViewMixin):
     def _get_project_update_data(old_data, project, owner, project_settings):
         extra_data = {}
         upd_fields = []
-
         if old_data['title'] != project.title:
             extra_data['title'] = project.title
             upd_fields.append('title')
-
         if old_data['parent'] != project.parent:
             extra_data['parent'] = (
                 str(project.parent.sodar_uuid) if project.parent else None
             )
             upd_fields.append('parent')
-
         if old_data['owner'] != owner:
             extra_data['owner'] = owner.username
             upd_fields.append('owner')
-
         if old_data['description'] != project.description:
             extra_data['description'] = project.description
             upd_fields.append('description')
-
         if old_data['readme'] != project.readme.raw:
             extra_data['readme'] = project.readme.raw
             upd_fields.append('readme')
-
         if old_data['public_guest_access'] != project.public_guest_access:
             extra_data['public_guest_access'] = project.public_guest_access
             upd_fields.append('public_guest_access')
@@ -949,93 +942,6 @@ class ProjectModifyMixin(ModifyPluginAPIViewMixin):
         if action == PROJECT_ACTION_CREATE:
             tl_event.add_object(owner, 'owner', owner.username)
         return tl_event
-
-    # TODO: Move logic into SODAR under taskflowbackend
-    # TODO: Replace with calls to plugin functions
-    '''
-    @classmethod
-    def _submit_with_taskflow(
-        cls,
-        project,
-        owner,
-        project_settings,
-        action,
-        request,
-        old_parent=None,
-        tl_event=None,
-    ):
-        """
-        Submit project modification flow via SODAR Taskflow.
-
-        :param project: Project object
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param action: "create" or "update" (string)
-        :param request: Request object for triggering the update
-        :param old_parent: Project object of old parent if it was changed
-        :param tl_event: Timeline ProjectEvent object or None
-        :raise: ConnectionError if unable to connect to SODAR Taskflow
-        :raise: FlowSubmitException if SODAR Taskflow submission fails
-        """
-        taskflow = get_backend_api('taskflow')
-        if tl_event:
-            tl_event.set_status('SUBMIT')
-        flow_data = {
-            'project_title': project.title,
-            'project_description': project.description,
-            'parent_uuid': str(project.parent.sodar_uuid)
-            if project.parent
-            else '',
-            'public_guest_access': project.public_guest_access,
-            'owner_username': owner.username,
-            'owner_uuid': str(owner.sodar_uuid),
-            'owner_role_pk': Role.objects.get(name=PROJECT_ROLE_OWNER).pk,
-            'settings': project_settings,
-        }
-
-        if action == 'update':
-            old_owner = project.get_owner().user
-            flow_data['old_owner_uuid'] = str(old_owner.sodar_uuid)
-            flow_data['old_owner_username'] = old_owner.username
-            flow_data['project_readme'] = project.readme.raw
-            if old_parent:
-                # Get inherited owners for project and its children to add
-                new_roles = taskflow.get_inherited_users(project)
-                flow_data['roles_add'] = new_roles
-                new_users = set([r['username'] for r in new_roles])
-
-                # Get old inherited owners from previous parent to remove
-                old_roles = taskflow.get_inherited_users(old_parent)
-                flow_data['roles_delete'] = [
-                    r for r in old_roles if r['username'] not in new_users
-                ]
-        else:  # Create
-            flow_data['roles_add'] = [
-                {
-                    'project_uuid': str(project.sodar_uuid),
-                    'username': a.user.username,
-                }
-                for a in project.get_owners(inherited_only=True)
-            ]
-
-        try:
-            taskflow.submit(
-                project_uuid=str(project.sodar_uuid),
-                flow_name='project_{}'.format(action),
-                flow_data=flow_data,
-                request=request,
-            )
-        except (
-            requests.exceptions.ConnectionError,
-            taskflow.FlowSubmitException,
-        ) as ex:
-            # NOTE: No need to update status as project will be deleted
-            if action == 'create':
-                project.delete()
-            elif tl_event:  # Update
-                tl_event.set_status('FAILED', str(ex))
-            raise ex
-    '''
 
     @classmethod
     def _update_owner(cls, project, owner):
@@ -1203,6 +1109,10 @@ class ProjectModifyMixin(ModifyPluginAPIViewMixin):
 
         # Get settings
         project_settings = self._get_app_settings(data, instance)
+        old_settings = None
+        if action == PROJECT_ACTION_UPDATE:
+            old_settings = json.loads(json.dumps(project_settings))  # Copy
+
         # Create timeline event
         tl_event = self._create_timeline_event(
             project, action, owner, old_data, project_settings, request
@@ -1228,6 +1138,7 @@ class ProjectModifyMixin(ModifyPluginAPIViewMixin):
         args = [project, action, owner, project_settings, request]
         if action == PROJECT_ACTION_UPDATE:
             args.append(old_data)
+            args.append(old_settings)
         self.call_modify_plugin_api(
             'perform_project_modify', 'revert_project_modify', args
         )
@@ -1444,6 +1355,7 @@ class ProjectRoleView(
 class RoleAssignmentModifyMixin(ModifyPluginAPIViewMixin):
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
+    @transaction.atomic
     def modify_assignment(
         self, data, request, project, instance=None, sodar_url=None
     ):
@@ -1485,35 +1397,6 @@ class RoleAssignmentModifyMixin(ModifyPluginAPIViewMixin):
             )
             tl_event.add_object(user, 'user', user.username)
 
-        '''
-        # Submit with taskflow
-        if use_taskflow:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
-            flow_data = {
-                'username': user.username,
-                'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk,
-            }
-
-            try:
-                taskflow.submit(
-                    project_uuid=project.sodar_uuid,
-                    flow_name='role_update',
-                    flow_data=flow_data,
-                    request=request,
-                    sodar_url=sodar_url,
-                )
-            except taskflow.FlowSubmitException as ex:
-                if tl_event:
-                    tl_event.set_status('FAILED', str(ex))
-                raise ex
-
-            # Get object
-            role_as = RoleAssignment.objects.get(project=project, user=user)
-
-        # Local save without Taskflow
-        '''
         if action == PROJECT_ACTION_CREATE:
             role_as = RoleAssignment(project=project, user=user, role=role)
             old_role = None
