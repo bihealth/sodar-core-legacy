@@ -1187,29 +1187,22 @@ class ProjectModifyMixin:
         called_plugins = []
         if action == PROJECT_ACTION_UPDATE:
             args.append(old_data)
+        # TODO: Make this a common method, remove repetition
         for p in app_plugins:
             try:
-                logger.info(
-                    'Calling perform_project_modification() for plugin '
-                    '"{}"'.format(p.name)
-                )
-                p.perform_project_modification(*args)
+                p.perform_project_modify(*args)
                 called_plugins.append(p)
             except Exception as ex:
                 logger.error(
-                    'Exception in perform_project_modification() for plugin '
+                    'Exception in perform_project_modify() for plugin '
                     '"{}": {}'.format(p.name, ex)
                 )
                 if len(called_plugins) > 0:
-                    logger.info(
-                        'Calling revert_project_modification() for plugin '
-                        '"{}"'.format(p.name)
-                    )
                     try:
-                        p.revert_project_modification(*args)
+                        p.revert_project_modify(*args)
                     except Exception as ex_revert:
                         logger.error(
-                            'Exception in revert_project_modification for '
+                            'Exception in revert_project_modify() for '
                             'plugin "{}": {}'.format(p.name, ex_revert)
                         )
                 raise ex
@@ -1443,29 +1436,31 @@ class RoleAssignmentModifyMixin:
         :raise: FlowSubmitException if SODAR Taskflow submission fails
         :return: Created or updated RoleAssignment object
         """
-        timeline = get_backend_api('timeline_backend')
-        taskflow = get_backend_api('taskflow')
         app_alerts = get_backend_api('appalerts_backend')
-        action = 'update' if instance else 'create'
+        timeline = get_backend_api('timeline_backend')
         tl_event = None
+        action = PROJECT_ACTION_UPDATE if instance else PROJECT_ACTION_CREATE
         user = data.get('user')
         role = data.get('role')
-        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
         if timeline:
             tl_desc = '{} role {}"{}" for {{{}}}'.format(
-                action, 'to ' if action == 'update' else '', role.name, 'user'
+                action.lower(),
+                'to ' if action == PROJECT_ACTION_UPDATE else '',
+                role.name,
+                'user',
             )
             tl_event = timeline.add_event(
                 project=project,
                 app_name=APP_NAME,
                 user=request.user,
-                event_name='role_{}'.format(action),
+                event_name='role_{}'.format(action.lower()),
                 description=tl_desc,
             )
             tl_event.add_object(user, 'user', user.username)
 
+        '''
         # Submit with taskflow
         if use_taskflow:
             if tl_event:
@@ -1493,26 +1488,58 @@ class RoleAssignmentModifyMixin:
             role_as = RoleAssignment.objects.get(project=project, user=user)
 
         # Local save without Taskflow
-        elif action == 'create':
+        '''
+        if action == PROJECT_ACTION_CREATE:
             role_as = RoleAssignment(project=project, user=user, role=role)
-
+            old_role = None
         else:
             role_as = RoleAssignment.objects.get(project=project, user=user)
+            old_role = role_as.role
             role_as.role = role
-
         role_as.save()
+
+        # Call for additional actions for role creation/update in plugins
+        app_plugins = get_active_plugins('backend') + get_active_plugins(
+            'project_app'
+        )
+        args = [role_as, action, request]
+        called_plugins = []
+        if action == PROJECT_ACTION_UPDATE:
+            args.append(old_role)
+        # TODO: Make this a common method, remove repetition
+        for p in app_plugins:
+            try:
+                p.perform_role_modify(*args)
+                called_plugins.append(p)
+            except Exception as ex:
+                error_msg = (
+                    'Exception in perform_role_modify() for '
+                    'plugin "{}": {}'.format(p.name, ex)
+                )
+                logger.error(error_msg)
+                if len(called_plugins) > 0:
+                    try:
+                        p.revert_role_modify(*args)
+                    except Exception as ex_revert:
+                        logger.error(
+                            'Exception in revert_role_modify() for '
+                            'plugin "{}": {}'.format(p.name, ex_revert)
+                        )
+                tl_event.set_status('FAILED', error_msg)
+                raise ex
+
         if tl_event:
             tl_event.set_status('OK')
 
         if request.user != user:
             if app_alerts:
-                if action == 'create':
+                if action == PROJECT_ACTION_CREATE:
                     alert_msg = ALERT_MSG_ROLE_CREATE
                 else:  # Update
                     alert_msg = ALERT_MSG_ROLE_UPDATE
                 app_alerts.add_alert(
                     app_name=APP_NAME,
-                    alert_name='role_' + action,
+                    alert_name='role_' + action.lower(),
                     user=user,
                     message=alert_msg.format(
                         project=project.title, role=role.name
@@ -1525,7 +1552,7 @@ class RoleAssignmentModifyMixin:
                 )
             if SEND_EMAIL:
                 email.send_role_change_mail(
-                    action, project, user, role, request
+                    action.lower(), project, user, role, request
                 )
 
         return role_as
@@ -1595,14 +1622,12 @@ class RoleAssignmentDeleteMixin:
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     def delete_assignment(self, request, instance):
-        timeline = get_backend_api('timeline_backend')
-        taskflow = get_backend_api('taskflow')
         app_alerts = get_backend_api('appalerts_backend')
+        timeline = get_backend_api('timeline_backend')
         tl_event = None
         project = instance.project
         user = instance.user
         role = instance.role
-        use_taskflow = taskflow.use_taskflow(project) if taskflow else False
 
         # Init Timeline event
         if timeline:
@@ -1618,6 +1643,7 @@ class RoleAssignmentDeleteMixin:
             tl_event.add_object(user, 'user', user.username)
 
         # Submit with taskflow
+        '''
         if use_taskflow:
             if tl_event:
                 tl_event.set_status('SUBMIT')
@@ -1638,10 +1664,37 @@ class RoleAssignmentDeleteMixin:
                 if tl_event:
                     tl_event.set_status('FAILED', str(ex))
                 raise ex
-        # Local save without Taskflow
-        else:
-            instance.delete()
+        '''
 
+        # Call for additional actions for role creation/update in plugins
+        app_plugins = get_active_plugins('backend') + get_active_plugins(
+            'project_app'
+        )
+        called_plugins = []
+        # TODO: Make this a common method, remove repetition
+        for p in app_plugins:
+            try:
+                p.perform_role_delete(instance)
+                called_plugins.append(p)
+            except Exception as ex:
+                error_msg = (
+                    'Exception in perform_role_delete() for '
+                    'plugin "{}": {}'.format(p.name, ex)
+                )
+                logger.error(error_msg)
+                if len(called_plugins) > 0:
+                    try:
+                        p.revert_role_delete(instance)
+                    except Exception as ex_revert:
+                        logger.error(
+                            'Exception in revert_role_delete() for '
+                            'plugin "{}": {}'.format(p.name, ex_revert)
+                        )
+                tl_event.set_status('FAILED', error_msg)
+                raise ex
+
+        # Delete object itself
+        instance.delete()
         # Remove project star from user if it exists
         remove_tag(project=project, user=user)
 

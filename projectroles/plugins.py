@@ -17,10 +17,89 @@ DISABLED = 1
 REMOVED = 2
 
 
-# Plugin points ----------------------------------------------------------------
+# Plugin Point Mixins ----------------------------------------------------------
 
 
-class ProjectAppPluginPoint(PluginPoint):
+class ProjectPluginAPIMixin:
+    """
+    Mixin for project plugin API extensions for additional actions to be
+    performed for project and role modifications. Used if e.g. updating external
+    resources based on SODAR Core projects.
+    """
+
+    def perform_project_modify(
+        self, project, action, owner, project_settings, request, old_data=None
+    ):
+        """
+        Perform additional actions to finalize project creation or update.
+
+        :param project: Current project object (Project)
+        :param action: Action to perform (CREATE or UPDATE)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data in case of an update (dict or None)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def revert_project_modify(
+        self, project, action, owner, project_settings, request, old_data=None
+    ):
+        """
+        Revert project creation or update if errors have occurred in other apps.
+
+        :param project: Current project object (Project)
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param owner: User object of project owner
+        :param project_settings: Dict
+        :param request: Request object for triggering the creation or update
+        :param old_data: Old project data in case of an update (dict or None)
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def perform_role_modify(self, role_as, action, request, old_role=None):
+        """
+        Perform additional actions to finalize role assignment creation or
+        update.
+
+        :param role_as: RoleAssignment object
+        :param action: Action to perform (CREATE or UPDATE)
+        :param request: Request object for triggering the creation or update
+        :param old_role: Role object for previous role in case of an update
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def revert_role_modify(self, role_as, action, request, old_role=None):
+        """
+        Revert role assignment creation or update if errors have occurred in
+        other apps.
+
+        :param role_as: RoleAssignment object
+        :param action: Action which was performed (CREATE or UPDATE)
+        :param request: Request object for triggering the creation or update
+        :param old_role: Role object for previous role in case of an update
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+    def perform_role_delete(self, role_as, request):
+        """
+        Perform additional actions to finalize role assignment deletion.
+
+        :param role_as: RoleAssignment object
+        :param request: Request object for triggering the creation or update
+        """
+        # TODO: Implement this in your app plugin (optional)
+        pass
+
+
+# Plugin Points ----------------------------------------------------------------
+
+
+class ProjectAppPluginPoint(ProjectPluginAPIMixin, PluginPoint):
     """Projectroles plugin point for registering project specific apps"""
 
     #: App URLs (will be included in settings by djangoplugins)
@@ -226,40 +305,8 @@ class ProjectAppPluginPoint(PluginPoint):
         # TODO: Implement this in your app plugin (optional)
         return None
 
-    def perform_project_modification(
-        self, project, action, owner, project_settings, request, old_data=None
-    ):
-        """
-        Perform additional actions to finalize project creation or update.
 
-        :param project: Current project object (Project)
-        :param action: Action to perform (CREATE or UPDATE)
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the creation or update
-        :param old_data: Old project data in case of an update (dict or None)
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
-
-    def revert_project_modification(
-        self, project, action, owner, project_settings, request, old_data=None
-    ):
-        """
-        Revert project creation or update if errors have occurred in other apps.
-
-        :param project: Current project object (Project)
-        :param action: Action which was performed (CREATE or UPDATE)
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the creation or update
-        :param old_data: Old project data in case of an update (dict or None)
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
-
-
-class BackendPluginPoint(PluginPoint):
+class BackendPluginPoint(ProjectPluginAPIMixin, PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
     #: Iconify icon
@@ -330,38 +377,6 @@ class BackendPluginPoint(PluginPoint):
         """Return a link for timeline label starting with 'extra-'"""
         # TODO: Implement this in your app plugin
         return None
-
-    def perform_project_modification(
-        self, project, action, owner, project_settings, request, old_data=None
-    ):
-        """
-        Perform additional actions to finalize project creation or update.
-
-        :param project: Current project object (Project)
-        :param action: Action to perform (CREATE or UPDATE)
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the creation or update
-        :param old_data: Old project data in case of an update (dict or None)
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
-
-    def revert_project_modification(
-        self, project, action, owner, project_settings, request, old_data=None
-    ):
-        """
-        Revert project creation or update if errors have occurred in other apps.
-
-        :param project: Current project object (Project)
-        :param action: Action which was performed (CREATE or UPDATE)
-        :param owner: User object of project owner
-        :param project_settings: Dict
-        :param request: Request object for triggering the creation or update
-        :param old_data: Old project data in case of an update (dict or None)
-        """
-        # TODO: Implement this in your app plugin (optional)
-        pass
 
 
 class SiteAppPluginPoint(PluginPoint):
