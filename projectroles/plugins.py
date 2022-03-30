@@ -17,14 +17,17 @@ DISABLED = 1
 REMOVED = 2
 
 
-# Plugin Point Mixins ----------------------------------------------------------
+# Plugin Mixins ----------------------------------------------------------------
 
 
-class ProjectPluginAPIMixin:
+class ProjectModifyPluginAPIMixin:
     """
     Mixin for project plugin API extensions for additional actions to be
     performed for project and role modifications. Used if e.g. updating external
     resources based on SODAR Core projects.
+
+    Add this into your project app or backend plugin if you want to implement
+    additional modification features. It is not supported on site app plugins.
     """
 
     def perform_project_modify(
@@ -99,7 +102,7 @@ class ProjectPluginAPIMixin:
 # Plugin Points ----------------------------------------------------------------
 
 
-class ProjectAppPluginPoint(ProjectPluginAPIMixin, PluginPoint):
+class ProjectAppPluginPoint(PluginPoint):
     """Projectroles plugin point for registering project specific apps"""
 
     #: App URLs (will be included in settings by djangoplugins)
@@ -306,7 +309,7 @@ class ProjectAppPluginPoint(ProjectPluginAPIMixin, PluginPoint):
         return None
 
 
-class BackendPluginPoint(ProjectPluginAPIMixin, PluginPoint):
+class BackendPluginPoint(PluginPoint):
     """Projectroles plugin point for registering backend apps"""
 
     #: Iconify icon

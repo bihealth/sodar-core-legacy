@@ -450,6 +450,18 @@ class ProjectContextMixin(
         return context
 
 
+class CurrentUserFormMixin:
+    """Mixin for passing current user to form as current_user"""
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs.update({'current_user': self.request.user})
+        return kwargs
+
+
+# Base Project Views -----------------------------------------------------------
+
+
 class ProjectListContextMixin:
     """Mixin for adding context data for displaying the project list."""
 
@@ -490,18 +502,6 @@ class ProjectListContextMixin:
             context['project_custom_cols']
         )
         return context
-
-
-class CurrentUserFormMixin:
-    """Mixin for passing current user to form as current_user"""
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs.update({'current_user': self.request.user})
-        return kwargs
-
-
-# Base Project Views -----------------------------------------------------------
 
 
 class HomeView(
@@ -760,7 +760,52 @@ class ProjectAdvancedSearchView(
 # Project Editing Views --------------------------------------------------------
 
 
-class ProjectModifyMixin:
+class ModifyPluginAPIViewMixin:
+    """Helpers for plugin API for project and role modification"""
+
+    @classmethod
+    def call_modify_plugin_api(cls, method_name, revert_name, method_args):
+        """
+        Call modify plugin API for a specific method and parameters. Will run
+        reversion methods for all plugins if execution for one fails.
+
+        :param method_name: Name of execution method in plugin (string)
+        :param revert_name: Name of revert method in plugin (string)
+        :param method_args: Arguments to be passed for the methods (list)
+        :raise: Exception if execution for a plugin fails.
+        """
+        app_plugins = get_active_plugins('backend') + get_active_plugins(
+            'project_app'
+        )
+        called_plugins = []
+        for p in app_plugins:
+            if not hasattr(p, method_name):
+                continue  # Only there if using ProjectModifyPluginAPIMixin
+            logger.debug(
+                'Calling {}() in plugin "{}"'.format(method_name, p.name)
+            )
+            try:
+                getattr(p, method_name)(*method_args)
+                called_plugins.append(p)
+            except Exception as ex:
+                logger.error(
+                    'Exception in {}() for plugin "{}": {}'.format(
+                        method_name, p.name, ex
+                    )
+                )
+                for cp in called_plugins:
+                    try:
+                        cp.getattr(revert_name)(*method_args)
+                    except Exception as ex_revert:
+                        logger.error(
+                            'Exception in {}() for plugin "{}": {}'.format(
+                                method_name, cp.name, ex_revert
+                            )
+                        )
+                raise ex
+
+
+class ProjectModifyMixin(ModifyPluginAPIViewMixin):
     """Mixin for Project creation/updating in UI and API views"""
 
     @staticmethod
@@ -1180,32 +1225,12 @@ class ProjectModifyMixin:
         project.save()
 
         # Call for additional actions for project creation/update in plugins
-        app_plugins = get_active_plugins('backend') + get_active_plugins(
-            'project_app'
-        )
         args = [project, action, owner, project_settings, request]
-        called_plugins = []
         if action == PROJECT_ACTION_UPDATE:
             args.append(old_data)
-        # TODO: Make this a common method, remove repetition
-        for p in app_plugins:
-            try:
-                p.perform_project_modify(*args)
-                called_plugins.append(p)
-            except Exception as ex:
-                logger.error(
-                    'Exception in perform_project_modify() for plugin '
-                    '"{}": {}'.format(p.name, ex)
-                )
-                if len(called_plugins) > 0:
-                    try:
-                        p.revert_project_modify(*args)
-                    except Exception as ex_revert:
-                        logger.error(
-                            'Exception in revert_project_modify() for '
-                            'plugin "{}": {}'.format(p.name, ex_revert)
-                        )
-                raise ex
+        self.call_modify_plugin_api(
+            'perform_project_modify', 'revert_project_modify', args
+        )
 
         # If public access was updated, update has_public_children for parents
         if (
@@ -1416,7 +1441,7 @@ class ProjectRoleView(
         return context
 
 
-class RoleAssignmentModifyMixin:
+class RoleAssignmentModifyMixin(ModifyPluginAPIViewMixin):
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
     def modify_assignment(
@@ -1499,34 +1524,12 @@ class RoleAssignmentModifyMixin:
         role_as.save()
 
         # Call for additional actions for role creation/update in plugins
-        app_plugins = get_active_plugins('backend') + get_active_plugins(
-            'project_app'
-        )
         args = [role_as, action, request]
-        called_plugins = []
         if action == PROJECT_ACTION_UPDATE:
             args.append(old_role)
-        # TODO: Make this a common method, remove repetition
-        for p in app_plugins:
-            try:
-                p.perform_role_modify(*args)
-                called_plugins.append(p)
-            except Exception as ex:
-                error_msg = (
-                    'Exception in perform_role_modify() for '
-                    'plugin "{}": {}'.format(p.name, ex)
-                )
-                logger.error(error_msg)
-                if len(called_plugins) > 0:
-                    try:
-                        p.revert_role_modify(*args)
-                    except Exception as ex_revert:
-                        logger.error(
-                            'Exception in revert_role_modify() for '
-                            'plugin "{}": {}'.format(p.name, ex_revert)
-                        )
-                tl_event.set_status('FAILED', error_msg)
-                raise ex
+        self.call_modify_plugin_api(
+            'perform_role_modify', 'revert_role_modify', args
+        )
 
         if tl_event:
             tl_event.set_status('OK')
@@ -1618,7 +1621,7 @@ class RoleAssignmentModifyFormMixin(RoleAssignmentModifyMixin, ModelFormMixin):
         )
 
 
-class RoleAssignmentDeleteMixin:
+class RoleAssignmentDeleteMixin(ModifyPluginAPIViewMixin):
     """Mixin for RoleAssignment deletion/destroying in UI and API views"""
 
     def delete_assignment(self, request, instance):
@@ -1667,32 +1670,9 @@ class RoleAssignmentDeleteMixin:
         '''
 
         # Call for additional actions for role creation/update in plugins
-        app_plugins = get_active_plugins('backend') + get_active_plugins(
-            'project_app'
+        self.call_modify_plugin_api(
+            'perform_project_delete', 'revert_project_delete', [instance]
         )
-        called_plugins = []
-        # TODO: Make this a common method, remove repetition
-        for p in app_plugins:
-            try:
-                p.perform_role_delete(instance)
-                called_plugins.append(p)
-            except Exception as ex:
-                error_msg = (
-                    'Exception in perform_role_delete() for '
-                    'plugin "{}": {}'.format(p.name, ex)
-                )
-                logger.error(error_msg)
-                if len(called_plugins) > 0:
-                    try:
-                        p.revert_role_delete(instance)
-                    except Exception as ex_revert:
-                        logger.error(
-                            'Exception in revert_role_delete() for '
-                            'plugin "{}": {}'.format(p.name, ex_revert)
-                        )
-                tl_event.set_status('FAILED', error_msg)
-                raise ex
-
         # Delete object itself
         instance.delete()
         # Remove project star from user if it exists
