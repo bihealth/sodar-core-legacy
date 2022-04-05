@@ -20,6 +20,7 @@ Changed
     - Batch loading for project list columns (#968)
     - Optimize ``ProjectListRoleAjaxView``
     - Refactor sidebar toggling (#970)
+    - Make ``request`` optional for ``send_generic_mail()`` and ``send_mail()``
 
 
 v0.10.11 (2022-03-22)
