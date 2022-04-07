@@ -89,6 +89,7 @@ class TestTimelineAPI(
             'id': event.pk,
             'project': self.project.pk,
             'app': 'projectroles',
+            'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
             'description': 'description',
@@ -133,6 +134,7 @@ class TestTimelineAPI(
             'id': event.pk,
             'project': self.project.pk,
             'app': 'projectroles',
+            'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
             'description': 'description',
@@ -202,6 +204,7 @@ class TestTimelineAPI(
             'id': event.pk,
             'project': self.project.pk,
             'app': 'projectroles',
+            'plugin': None,
             'user': None,
             'event_name': 'test_event',
             'description': 'description',
@@ -452,7 +455,7 @@ class TestTimelineAPI(
         self.assertIn(site.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
 
-    def test_get_event_description_plugin_app(self):
+    def test_get_event_description_app(self):
         """Test getting event description with app plugin"""
         event = self.timeline.add_event(
             project=self.project,
@@ -479,7 +482,7 @@ class TestTimelineAPI(
         self.assertIn(folder.name, desc)
         self.assertIn('sodar-tl-object-link', desc)
 
-    def test_get_event_description_plugin_lookup(self):
+    def test_get_event_description_lookup(self):
         """Test getting event description with app plugin and lookup dict"""
         event = self.timeline.add_event(
             project=self.project,
@@ -528,4 +531,60 @@ class TestTimelineAPI(
             event, request=self.get_request(self.superuser, self.project)
         )
         self.assertNotIn(self.project.title, desc)
+        self.assertIn('sodar-tl-plugin-error', desc)
+
+    def test_get_event_description_specified_plugin(self):
+        """Test getting event description with specified app plugin"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='filesfolders',
+            plugin_name='filesfolders',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        folder = self._make_folder(
+            name='folder',
+            project=self.project,
+            folder=None,
+            description='',
+            owner=self.user_owner,
+        )
+        event.add_object(
+            obj=folder,
+            label='obj',
+            name=folder.name,
+        )
+        desc = self.timeline.get_event_description(
+            event, request=self.get_request(self.superuser, self.project)
+        )
+        self.assertIn(folder.name, desc)
+        self.assertIn('sodar-tl-object-link', desc)
+
+    def test_get_event_description_invalid_plugin(self):
+        """Test description with an invalid specified app plugin"""
+        event = self.timeline.add_event(
+            project=self.project,
+            app_name='filesfolders',
+            plugin_name='NOT_A_REAL_PLUGIN',
+            user=self.user_owner,
+            event_name='test_event',
+            description='event with {obj}',
+        )
+        folder = self._make_folder(
+            name='folder',
+            project=self.project,
+            folder=None,
+            description='',
+            owner=self.user_owner,
+        )
+        event.add_object(
+            obj=folder,
+            label='obj',
+            name=folder.name,
+        )
+        desc = self.timeline.get_event_description(
+            event, request=self.get_request(self.superuser, self.project)
+        )
+        self.assertNotIn(folder.name, desc)
         self.assertIn('sodar-tl-plugin-error', desc)

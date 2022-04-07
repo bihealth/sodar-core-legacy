@@ -65,11 +65,19 @@ class ProjectEvent(models.Model):
         max_length=255, help_text='App from which the event was triggered'
     )
 
+    #: Plugin to which the event is related (optional)
+    plugin = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text='Plugin to which the event is related (optional, if unset '
+        'plugin with the name of the app is assumed)',
+    )
+
     #: User who initiated the event (optional)
     user = models.ForeignKey(
         AUTH_USER_MODEL,
         null=True,
-        # related_name='events',
         help_text='User who initiated the event (optional)',
         on_delete=models.CASCADE,
     )

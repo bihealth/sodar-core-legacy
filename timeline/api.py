@@ -27,6 +27,7 @@ User = get_user_model()
 APP_NAMES = get_app_names()
 LABEL_MAX_WIDTH = 32
 UNKNOWN_LABEL = '(unknown)'
+PLUGIN_NOT_FOUND_MSG = 'Plugin not found: {plugin_name}'
 
 
 class TimelineAPI:
@@ -191,6 +192,7 @@ class TimelineAPI:
         status_type=None,
         status_desc=None,
         status_extra_data=None,
+        plugin_name=None,
     ):
         """
         Create and save a timeline event.
@@ -207,6 +209,8 @@ class TimelineAPI:
         :param status_type: Initial status type (string, optional)
         :param status_desc: Initial status description (string, optional)
         :param status_extra_data: Extra data for initial status (dict, optional)
+        :param plugin_name: Name of plugin to which the event is related
+            (optional, plugin with the name of the app is assumed if unset)
         :return: ProjectEvent object
         :raise: ValueError if app_name or status_type is invalid
         """
@@ -230,6 +234,7 @@ class TimelineAPI:
         event = ProjectEvent()
         event.project = project
         event.app = app_name
+        event.plugin = plugin_name
         event.user = user
         event.event_name = event_name
         event.description = description
@@ -280,12 +285,13 @@ class TimelineAPI:
         app_plugin = None
 
         if event.app != 'projectroles':
+            plugin_name = event.plugin if event.plugin else event.app
             if plugin_lookup:
-                app_plugin = plugin_lookup.get(event.app)
+                app_plugin = plugin_lookup.get(plugin_name)
             else:
-                app_plugin = get_app_plugin(event.app)
+                app_plugin = get_app_plugin(plugin_name)
             if not app_plugin:
-                msg = 'Plugin not found: {}'.format(event.app)
+                msg = PLUGIN_NOT_FOUND_MSG.format(plugin_name=plugin_name)
                 logger.error(msg + ' (UUID={})'.format(event.sodar_uuid))
                 return (
                     '<span class="sodar-tl-plugin-error text-danger">'

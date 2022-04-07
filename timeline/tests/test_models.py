@@ -15,7 +15,7 @@ from timeline.models import (
 )
 
 
-# Global constants from settings
+# SODAR constants
 PROJECT_ROLE_OWNER = SODAR_CONSTANTS['PROJECT_ROLE_OWNER']
 PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_CONTRIBUTOR = SODAR_CONSTANTS['PROJECT_ROLE_CONTRIBUTOR']
@@ -37,6 +37,7 @@ class ProjectEventMixin:
         description='',
         classified=False,
         extra_data=None,
+        plugin=None,
     ):
         values = {
             'project': project,
@@ -46,6 +47,7 @@ class ProjectEventMixin:
             'description': description,
             'classified': classified,
             'extra_data': extra_data or {},
+            'plugin': plugin,
         }
         result = ProjectEvent(**values)
         result.save()
@@ -127,6 +129,7 @@ class TestProjectEvent(
             'id': self.event.pk,
             'project': self.project.pk,
             'app': 'projectroles',
+            'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
             'description': 'description',
@@ -151,6 +154,7 @@ class TestProjectEvent(
             'id': self.event.pk,
             'project': None,
             'app': 'projectroles',
+            'plugin': None,
             'user': self.user_owner.pk,
             'event_name': 'test_event',
             'description': 'description',
@@ -175,7 +179,34 @@ class TestProjectEvent(
             'id': self.event.pk,
             'project': self.project.pk,
             'app': 'projectroles',
+            'plugin': None,
             'user': None,
+            'event_name': 'test_event',
+            'description': 'description',
+            'classified': False,
+            'extra_data': {'test_key': 'test_val'},
+            'sodar_uuid': self.event.sodar_uuid,
+        }
+        self.assertEqual(model_to_dict(self.event), expected)
+
+    def test_initialization_plugin(self):
+        """Test ProjectEvent initialization with specific plugin name"""
+        self.event = self._make_event(
+            project=None,
+            app='projectroles',
+            plugin='plugin_name',
+            user=self.user_owner,
+            event_name='test_event',
+            description='description',
+            classified=False,
+            extra_data={'test_key': 'test_val'},
+        )
+        expected = {
+            'id': self.event.pk,
+            'project': None,
+            'app': 'projectroles',
+            'plugin': 'plugin_name',
+            'user': self.user_owner.pk,
             'event_name': 'test_event',
             'description': 'description',
             'classified': False,
