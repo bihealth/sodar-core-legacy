@@ -1554,7 +1554,7 @@ class RoleAssignmentDeleteMixin(ModifyPluginAPIViewMixin):
 
         # Call for additional actions for role creation/update in plugins
         self.call_modify_plugin_api(
-            'perform_project_delete', 'revert_project_delete', [instance]
+            'perform_role_delete', 'revert_role_delete', [instance]
         )
         # Delete object itself
         instance.delete()
