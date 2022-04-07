@@ -114,6 +114,17 @@ class ProjectModifyPluginAPIMixin:
         # TODO: Implement this in your app plugin
         pass
 
+    def revert_role_delete(self, role_as, request):
+        """
+        Revert role assignment deletion deletion if errors have occurred in
+        other apps.
+
+        :param role_as: RoleAssignment object
+        :param request: Request object for triggering the creation or update
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
 
 # Plugin Points ----------------------------------------------------------------
 
