@@ -24,12 +24,6 @@ COLL_URL = (
 class Command(BaseCommand):
     help = 'Retrieves or updates JSON Iconify icons'
 
-    def __init__(
-        self, stdout=None, stderr=None, no_color=False, sodar_url=None
-    ):
-        self.sodar_url = sodar_url
-        super().__init__(stdout, stderr, no_color)
-
     def _download(self, url, base_path, file_name):
         """
         Download file.

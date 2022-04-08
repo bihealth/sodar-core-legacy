@@ -48,13 +48,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
     update_count = 0
     invite_count = 0
     request = None
-    sodar_url = None
-
-    def __init__(
-        self, stdout=None, stderr=None, no_color=False, sodar_url=None
-    ):
-        self.sodar_url = sodar_url
-        super().__init__(stdout, stderr, no_color)
 
     # Internal helpers ---------------------------------------------------------
 
@@ -95,7 +88,6 @@ class Command(RoleAssignmentModifyMixin, ProjectInviteMixin, BaseCommand):
             request=self.request,
             project=project,
             instance=role_as,
-            sodar_url=self.sodar_url,
         )
         self.update_count += 1
 

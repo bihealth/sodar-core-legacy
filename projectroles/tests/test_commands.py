@@ -239,7 +239,6 @@ class TestBatchUpdateRoles(
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
-    # TODO: Fix
     def test_role_add(self):
         """Test adding role to user already in system"""
         p_uuid = str(self.project.sodar_uuid)
@@ -261,7 +260,6 @@ class TestBatchUpdateRoles(
         self.assertEqual(role_as.role, self.role_guest)
         self.assertEqual(len(mail.outbox), 1)
 
-    # TODO: Fix
     def test_role_update(self):
         """Test updating an existing role for user"""
         p_uuid = str(self.project.sodar_uuid)
@@ -372,7 +370,6 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(len(mail.outbox), 0)
 
-    # TODO: Fix
     def test_invite_and_update(self):
         """Test inviting and updating in one command"""
         p_uuid = str(self.project.sodar_uuid)
