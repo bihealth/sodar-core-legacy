@@ -55,11 +55,6 @@ test: collectstatic
 	$(MANAGE) test -v 2 --parallel --settings=config.settings.test $(arg)
 
 
-.PHONY: test_taskflow
-test_taskflow: test
-	$(MANAGE) test -v 2 --tag=Taskflow --settings=config.settings.test_taskflow $(arg)
-
-
 .PHONY: manage_target
 manage_target:
 ifeq ($(arg),)
@@ -69,11 +64,6 @@ ifeq ($(arg),)
 else
 	$(MANAGE) $(arg) --settings=config.settings.local_target
 endif
-
-
-.PHONY: sync_taskflow
-sync_taskflow:
-	$(MANAGE) synctaskflow --settings=config.settings.local_taskflow
 
 
 .PHONY: usage

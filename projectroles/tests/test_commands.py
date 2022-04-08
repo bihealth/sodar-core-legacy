@@ -93,7 +93,6 @@ class TestBatchUpdateRoles(
         self.cat_owner_as = self._make_assignment(
             self.category, self.user_owner_cat, self.role_owner
         )
-
         self.project = self._make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )
@@ -103,7 +102,6 @@ class TestBatchUpdateRoles(
 
         # Init command class
         self.command = BatchUpdateRolesCommand()
-
         # Init file
         self.file = NamedTemporaryFile(delete=False)
 
@@ -116,8 +114,6 @@ class TestBatchUpdateRoles(
         """Test inviting a single user via email to project"""
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
@@ -125,7 +121,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 1)
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.email, email)
@@ -139,8 +134,6 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         self._make_invite(email, self.project, self.role_guest, self.user_owner)
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 1)
 
         self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
@@ -148,7 +141,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -157,8 +149,6 @@ class TestBatchUpdateRoles(
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
         email2 = 'new2@example.com'
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
@@ -170,7 +160,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 2)
         self.assertEqual(len(mail.outbox), 2)
 
@@ -179,8 +168,6 @@ class TestBatchUpdateRoles(
         c_uuid = str(self.category.sodar_uuid)
         p_uuid = str(self.project.sodar_uuid)
         email = 'new@example.com'
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
@@ -193,7 +180,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner_cat.username}
         )
 
-        # Assert postconditions
         self.assertEqual(
             ProjectInvite.objects.filter(project=self.category).count(), 1
         )
@@ -210,8 +196,6 @@ class TestBatchUpdateRoles(
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
-
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -223,8 +207,6 @@ class TestBatchUpdateRoles(
         self.command.handle(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
-
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 1)
         self.assertEqual(len(mail.outbox), 1)
 
@@ -239,8 +221,6 @@ class TestBatchUpdateRoles(
         self.command.handle(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
-
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -256,10 +236,10 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
+    # TODO: Fix
     def test_role_add(self):
         """Test adding role to user already in system"""
         p_uuid = str(self.project.sodar_uuid)
@@ -267,8 +247,6 @@ class TestBatchUpdateRoles(
         user_new = self.make_user('user_new')
         user_new.email = email
         user_new.save()
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
@@ -276,7 +254,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         role_as = RoleAssignment.objects.get(
             project=self.project, user=user_new
@@ -284,6 +261,7 @@ class TestBatchUpdateRoles(
         self.assertEqual(role_as.role, self.role_guest)
         self.assertEqual(len(mail.outbox), 1)
 
+    # TODO: Fix
     def test_role_update(self):
         """Test updating an existing role for user"""
         p_uuid = str(self.project.sodar_uuid)
@@ -292,8 +270,6 @@ class TestBatchUpdateRoles(
         user_new.email = email
         user_new.save()
         role_as = self._make_assignment(self.project, user_new, self.role_guest)
-
-        # Assert preconditions
         self.assertEqual(
             RoleAssignment.objects.filter(
                 project=self.project, user=user_new
@@ -306,7 +282,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         role_as.refresh_from_db()
         self.assertEqual(role_as.role, self.role_contributor)
@@ -324,7 +299,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.owner_as.refresh_from_db()
         self.assertEqual(self.owner_as.role, self.role_owner)
@@ -353,7 +327,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': user_delegate.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         role_as.refresh_from_db()
         self.assertEqual(role_as.role, self.role_guest)
@@ -375,7 +348,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         role_as.refresh_from_db()
         self.assertEqual(role_as.role, self.role_guest)
@@ -391,7 +363,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(
             RoleAssignment.objects.filter(
@@ -401,6 +372,7 @@ class TestBatchUpdateRoles(
         )
         self.assertEqual(len(mail.outbox), 0)
 
+    # TODO: Fix
     def test_invite_and_update(self):
         """Test inviting and updating in one command"""
         p_uuid = str(self.project.sodar_uuid)
@@ -409,8 +381,6 @@ class TestBatchUpdateRoles(
         user_new.email = email
         user_new.save()
         email2 = 'new2@example.com'
-
-        # Assert preconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
 
         fd = [
@@ -422,7 +392,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': self.user_owner.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 1)
         self.assertIsNotNone(
             RoleAssignment.objects.filter(
@@ -443,7 +412,6 @@ class TestBatchUpdateRoles(
         self._write_file([p_uuid, email, PROJECT_ROLE_GUEST])
         self.command.handle(**{'file': self.file.name, 'issuer': None})
 
-        # Assert postconditions
         invite = ProjectInvite.objects.first()
         self.assertEqual(invite.issuer, admin)
 
@@ -458,7 +426,6 @@ class TestBatchUpdateRoles(
             **{'file': self.file.name, 'issuer': issuer.username}
         )
 
-        # Assert postconditions
         self.assertEqual(ProjectInvite.objects.count(), 0)
         self.assertEqual(len(mail.outbox), 0)
 
@@ -505,7 +472,6 @@ class TestCleanAppSettings(
         self.cat_owner_as = self._make_assignment(
             self.category, self.user_owner, self.role_owner
         )
-
         self.project = self._make_project(
             'sub_project', PROJECT_TYPE_PROJECT, self.category
         )

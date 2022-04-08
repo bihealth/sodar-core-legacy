@@ -677,12 +677,5 @@ ADMINALERTS_PAGINATION = env.int('ADMINALERTS_PAGINATION', 15)
 APPALERTS_STATUS_INTERVAL = env.int('APPALERTS_STATUS_INTERVAL', 5)
 
 
-# Taskflow backend settings
-'''
-TASKFLOW_SODAR_SECRET = env.str('TASKFLOW_SODAR_SECRET', 'CHANGE ME!')
-TASKFLOW_TEST_MODE = False  # Important! Disallow cleanup() command by default
-'''
-
-
 # SODAR constants
 # SODAR_CONSTANTS = get_sodar_constants(default=True)

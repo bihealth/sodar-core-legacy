@@ -225,6 +225,7 @@ class ProjectAppPluginPoint(PluginPoint):
     # TODO: Override this in your app plugin if needed
     info_settings = []
 
+    # TODO: Replace with a non-taskflow-specific method
     # NOTE: For projectroles, this is implemented directly in synctaskflow
     def get_taskflow_sync_data(self):
         """

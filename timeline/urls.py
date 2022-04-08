@@ -2,7 +2,7 @@
 
 from django.conf.urls import url
 
-from timeline import views, views_ajax, views_taskflow
+from timeline import views, views_ajax
 
 
 app_name = 'timeline'
@@ -46,13 +46,4 @@ urls_ajax = [
     ),
 ]
 
-# Taskflow API views
-urls_taskflow = [
-    url(
-        regex=r'^taskflow/status/set$',
-        view=views_taskflow.TaskflowEventStatusSetAPIView.as_view(),
-        name='taskflow_status_set',
-    )
-]
-
-urlpatterns = urls_ui + urls_ajax + urls_taskflow
+urlpatterns = urls_ui + urls_ajax

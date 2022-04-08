@@ -1,4 +1,5 @@
 import html
+import logging
 
 from django import template
 from django.urls import reverse
@@ -10,6 +11,7 @@ from timeline.api import TimelineAPI
 from timeline.models import ProjectEvent
 
 
+logger = logging.getLogger(__name__)
 timeline = TimelineAPI()
 register = template.Library()
 
@@ -53,7 +55,15 @@ def get_details_events(project, view_classified=False):
 @register.simple_tag
 def get_plugin_lookup():
     """Return lookup dict of app plugins with app name as key"""
-    return {p.name: p.get_plugin() for p in Plugin.objects.all()}
+    ret = {}
+    for p in Plugin.objects.all():
+        try:
+            ret[p.name] = p.get_plugin()
+        except Exception as ex:
+            logger.error(
+                'Unable to retrieve plugin "{}": {}'.format(p.name, ex)
+            )
+    return ret
 
 
 @register.simple_tag

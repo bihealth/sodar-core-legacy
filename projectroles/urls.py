@@ -1,6 +1,6 @@
 from django.conf.urls import url
 
-from projectroles import views, views_ajax, views_api, views_taskflow
+from projectroles import views, views_ajax, views_api
 
 app_name = 'projectroles'
 
@@ -255,43 +255,4 @@ urls_api = [
     ),
 ]
 
-# Taskflow API views
-urls_taskflow = [
-    url(
-        regex=r'^taskflow/get$',
-        view=views_taskflow.TaskflowProjectGetAPIView.as_view(),
-        name='taskflow_project_get',
-    ),
-    url(
-        regex=r'^taskflow/update$',
-        view=views_taskflow.TaskflowProjectUpdateAPIView.as_view(),
-        name='taskflow_project_update',
-    ),
-    url(
-        regex=r'^taskflow/role/get$',
-        view=views_taskflow.TaskflowRoleAssignmentGetAPIView.as_view(),
-        name='taskflow_role_get',
-    ),
-    url(
-        regex=r'^taskflow/role/set$',
-        view=views_taskflow.TaskflowRoleAssignmentSetAPIView.as_view(),
-        name='taskflow_role_set',
-    ),
-    url(
-        regex=r'^taskflow/role/delete$',
-        view=views_taskflow.TaskflowRoleAssignmentDeleteAPIView.as_view(),
-        name='taskflow_role_delete',
-    ),
-    url(
-        regex=r'^taskflow/settings/get$',
-        view=views_taskflow.TaskflowProjectSettingsGetAPIView.as_view(),
-        name='taskflow_settings_get',
-    ),
-    url(
-        regex=r'^taskflow/settings/set$',
-        view=views_taskflow.TaskflowProjectSettingsSetAPIView.as_view(),
-        name='taskflow_settings_set',
-    ),
-]
-
-urlpatterns = urls_ui + urls_ajax + urls_api + urls_taskflow
+urlpatterns = urls_ui + urls_ajax + urls_api

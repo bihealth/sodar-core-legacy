@@ -246,7 +246,7 @@ class RoleAssignmentSerializer(
         return attrs
 
     def save(self, **kwargs):
-        """Override save() to handle saving locally or through Taskflow"""
+        """Override save() to handle saving with project modify API"""
         # NOTE: Role not updated in response data unless we set self.instance
         # TODO: Figure out a clean fix
         self.instance = self.post_save(
@@ -490,7 +490,7 @@ class ProjectSerializer(ProjectModifyMixin, SODARModelSerializer):
         return attrs
 
     def save(self, **kwargs):
-        """Override save() to handle saving locally or through Taskflow"""
+        """Override save() to handle saving with project modify API"""
         # NOTE: post_save() not needed here since we do an atomic model.save()
         return self.modify_project(
             data=self.validated_data,

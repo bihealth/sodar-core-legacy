@@ -76,9 +76,6 @@ PROJECT_ROLE_DELEGATE = SODAR_CONSTANTS['PROJECT_ROLE_DELEGATE']
 PROJECT_ROLE_GUEST = SODAR_CONSTANTS['PROJECT_ROLE_GUEST']
 SUBMIT_STATUS_OK = SODAR_CONSTANTS['SUBMIT_STATUS_OK']
 SUBMIT_STATUS_PENDING = SODAR_CONSTANTS['SUBMIT_STATUS_PENDING']
-SUBMIT_STATUS_PENDING_TASKFLOW = SODAR_CONSTANTS[
-    'SUBMIT_STATUS_PENDING_TASKFLOW'
-]
 SITE_MODE_TARGET = SODAR_CONSTANTS['SITE_MODE_TARGET']
 SITE_MODE_SOURCE = SODAR_CONSTANTS['SITE_MODE_SOURCE']
 SITE_MODE_PEER = SODAR_CONSTANTS['SITE_MODE_PEER']
@@ -1356,21 +1353,17 @@ class RoleAssignmentModifyMixin(ModifyPluginAPIViewMixin):
     """Mixin for RoleAssignment creation/updating in UI and API views"""
 
     @transaction.atomic
-    def modify_assignment(
-        self, data, request, project, instance=None, sodar_url=None
-    ):
+    def modify_assignment(self, data, request, project, instance=None):
         """
-        Create or update a RoleAssignment, either locally or using the SODAR
-        Taskflow. This method should be called either in form_valid() in a
-        Django form view or save() in a DRF serializer.
+        Create or update a RoleAssignment. This method should be called either
+        in form_valid() in a Django form view or save() in a DRF serializer.
+        The method calls related ProjectModifyPluginAPIMixin methods if enabled
+        in your plugin.
 
         :param data: Cleaned data from a form or serializer
         :param request: Request initiating the action
         :param project: Project object
         :param instance: Existing RoleAssignment object or None
-        :param sodar_url: SODAR callback URL for taskflow (string, optional)
-        :raise: ConnectionError if unable to connect to SODAR Taskflow
-        :raise: FlowSubmitException if SODAR Taskflow submission fails
         :return: Created or updated RoleAssignment object
         """
         app_alerts = get_backend_api('appalerts_backend')
@@ -1528,31 +1521,7 @@ class RoleAssignmentDeleteMixin(ModifyPluginAPIViewMixin):
             )
             tl_event.add_object(user, 'user', user.username)
 
-        # Submit with taskflow
-        '''
-        if use_taskflow:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
-            flow_data = {
-                'username': user.username,
-                'user_uuid': str(user.sodar_uuid),
-                'role_pk': role.pk,
-            }
-            try:
-                taskflow.submit(
-                    project_uuid=project.sodar_uuid,
-                    flow_name='role_delete',
-                    flow_data=flow_data,
-                    request=request,
-                )
-                instance = None
-            except taskflow.FlowSubmitException as ex:
-                if tl_event:
-                    tl_event.set_status('FAILED', str(ex))
-                raise ex
-        '''
-
-        # Call for additional actions for role creation/update in plugins
+        # Call the project plugin modify API for additional actions
         self.call_modify_plugin_api(
             'perform_role_delete', 'revert_role_delete', [instance, request]
         )
@@ -1674,6 +1643,7 @@ class RoleAssignmentDeleteView(
         )
 
 
+# TODO: Update this for new plugin API
 class RoleAssignmentOwnerTransferMixin:
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
@@ -2136,6 +2106,7 @@ class ProjectInviteProcessMixin:
             return True
         return False
 
+    # TODO: Call project modify API instead
     def create_assignment(self, invite, user, timeline=None):
         """Create role assignment for invited user"""
         taskflow = get_backend_api('taskflow')
