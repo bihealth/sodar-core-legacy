@@ -10,6 +10,12 @@ Note that the issue IDs here refer to ones in the private CUBI GitLab.
 Unreleased
 ==========
 
+Added
+-----
+
+- **Timeline**
+    - Support for specifying plugin for events (#975)
+
 Changed
 -------
 

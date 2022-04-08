@@ -16,7 +16,8 @@ v0.10.12 (WIP)
 Release Highlights
 ==================
 
-TODO
+- Add support for specifying plugin name for Timeline events
+- Minor updates and optimization
 
 Breaking Changes
 ================
