@@ -125,6 +125,36 @@ class ProjectModifyPluginAPIMixin:
         # TODO: Implement this in your app plugin
         pass
 
+    def perform_owner_transfer(
+        self, project, new_owner, old_owner, old_owner_role, request
+    ):
+        """
+        Perform additional actions to finalize project ownership transfer.
+
+        :param project: Project object
+        :param new_owner: SODARUser object for new owner
+        :param old_owner: SODARUser object for previous owner
+        :param old_owner_role: Role object for new role of previous owner
+        :param request: Request object for triggering the transfer
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
+    def revert_owner_transfer(
+        self, project, new_owner, old_owner, old_owner_role, request
+    ):
+        """
+        Revert project ownership transfer if errors have occurred in other apps.
+
+        :param project: Project object
+        :param new_owner: SODARUser object for new owner
+        :param old_owner: SODARUser object for previous owner
+        :param old_owner_role: Role object for new role of previous owner
+        :param request: Request object for triggering the transfer
+        """
+        # TODO: Implement this in your app plugin
+        pass
+
 
 # Plugin Points ----------------------------------------------------------------
 

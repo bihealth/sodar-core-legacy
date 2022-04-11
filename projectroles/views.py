@@ -1643,8 +1643,7 @@ class RoleAssignmentDeleteView(
         )
 
 
-# TODO: Update this for new plugin API
-class RoleAssignmentOwnerTransferMixin:
+class RoleAssignmentOwnerTransferMixin(ModifyPluginAPIViewMixin):
     """Mixin for owner RoleAssignment transfer in UI and API views"""
 
     def _create_timeline_event(self, old_owner, new_owner, project):
@@ -1671,32 +1670,13 @@ class RoleAssignmentOwnerTransferMixin:
         tl_event.add_object(new_owner, 'new_owner', new_owner.username)
         return tl_event
 
+    @transaction.atomic
     def _handle_transfer(
         self, project, old_owner_as, new_owner, old_owner_role
     ):
-        taskflow = get_backend_api('taskflow')
-
-        # Handle inherited owner roles for categories if taskflow is enabled
-        if taskflow and project.type == PROJECT_TYPE_CATEGORY:
-            flow_data = {
-                'roles_add': taskflow.get_inherited_roles(project, new_owner),
-                'roles_delete': taskflow.get_inherited_roles(
-                    project, old_owner_as.user
-                ),
-            }
-            # Submit taskflow (Requires SODAR Taskflow v0.4.0+)
-            # NOTE: Can raise exception
-            taskflow.submit(
-                project_uuid=None,  # Batch flow for multiple projects
-                flow_name='role_update_irods_batch',
-                flow_data=flow_data,
-                request=self.request,
-            )
-
-        # If taskflow submission was successful / skipped, update database
+        # Update roles
         old_owner_as.role = old_owner_role
         old_owner_as.save()
-
         role_as = RoleAssignment.objects.get_assignment(new_owner, project)
         role_owner = Role.objects.get(name=PROJECT_ROLE_OWNER)
 
@@ -1715,6 +1695,17 @@ class RoleAssignmentOwnerTransferMixin:
                 'New owner must have direct or inherited role in project'
             )
 
+        # Call for additional actions for role creation/update in plugins
+        args = [
+            project,
+            new_owner,
+            old_owner_as.user,
+            old_owner_role,
+            self.request,
+        ]
+        self.call_modify_plugin_api(
+            'perform_owner_transfer', 'revert_owner_transfer', args
+        )
         return True
 
     def transfer_owner(self, project, new_owner, old_owner_as, old_owner_role):
