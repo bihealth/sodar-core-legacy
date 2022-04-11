@@ -2011,7 +2011,7 @@ class ProjectInviteCreateView(
         )
 
 
-class ProjectInviteProcessMixin:
+class ProjectInviteProcessMixin(ModifyPluginAPIViewMixin):
     """Mixin for accepting and processing project invites"""
 
     @classmethod
@@ -2030,7 +2030,7 @@ class ProjectInviteProcessMixin:
         return 'error'
 
     @classmethod
-    def revoke_failed_invite(
+    def revoke_invite(
         cls, invite, user=None, failed=True, fail_desc='', timeline=None
     ):
         """Set invite.active to False and save the invite"""
@@ -2073,7 +2073,7 @@ class ProjectInviteProcessMixin:
                     )
                 ),
             )
-            self.revoke_failed_invite(
+            self.revoke_invite(
                 invite,
                 user,
                 failed=True,
@@ -2100,16 +2100,16 @@ class ProjectInviteProcessMixin:
                     self.request,
                     user_name=user.get_full_name() if user else invite.email,
                 )
-            self.revoke_failed_invite(
+            self.revoke_invite(
                 invite, user, failed=True, fail_desc='Invite expired'
             )
             return True
         return False
 
-    # TODO: Call project modify API instead
+    # TODO: Combine with RoleAssignmentModifyMixin.modify_assignment?
+    @transaction.atomic
     def create_assignment(self, invite, user, timeline=None):
         """Create role assignment for invited user"""
-        taskflow = get_backend_api('taskflow')
         app_alerts = get_backend_api('appalerts_backend')
         tl_event = None
         if timeline:
@@ -2123,43 +2123,20 @@ class ProjectInviteProcessMixin:
                 ),
             )
 
-        # Submit with taskflow (only for projects)
-        if taskflow and invite.project.type == PROJECT_TYPE_PROJECT:
-            if tl_event:
-                tl_event.set_status('SUBMIT')
-
-            flow_data = {
-                'username': user.username,
-                'user_uuid': str(user.sodar_uuid),
-                'role_pk': invite.role.pk,
-            }
-            try:
-                taskflow.submit(
-                    project_uuid=str(invite.project.sodar_uuid),
-                    flow_name='role_update',
-                    flow_data=flow_data,
-                    request=self.request,
-                )
-            except taskflow.FlowSubmitException as ex:
-                if tl_event:
-                    tl_event.set_status('FAILED', str(ex))
-                messages.error(self.request, str(ex))
-                return False
-
-            # Get object
-            RoleAssignment.objects.get(project=invite.project, user=user)
+        # Create the assignment
+        role_as = RoleAssignment(
+            user=user, project=invite.project, role=invite.role
+        )
+        # Call for additional actions for role creation/update in plugins
+        args = [role_as, PROJECT_ACTION_CREATE, self.request]
+        self.call_modify_plugin_api(
+            'perform_role_modify', 'revert_role_modify', args
+        )
+        role_as.save()
+        if tl_event:
             tl_event.set_status('OK')
 
-        # Local save without Taskflow
-        else:
-            role_as = RoleAssignment(
-                user=user, project=invite.project, role=invite.role
-            )
-            role_as.save()
-            if tl_event:
-                tl_event.set_status('OK')
-
-        # Notify the issuer by alert and email..
+        # Notify the issuer by alert and email
         if app_alerts:
             app_alerts.add_alert(
                 app_name=APP_NAME,
@@ -2178,8 +2155,8 @@ class ProjectInviteProcessMixin:
         if SEND_EMAIL:
             email.send_accept_note(invite, self.request, user)
 
-        # Deactivate the invite..
-        self.revoke_failed_invite(invite, user, failed=False, timeline=timeline)
+        # Deactivate the invite
+        self.revoke_invite(invite, user, failed=False, timeline=timeline)
 
         # Finally, redirect user to the project front page
         messages.success(
