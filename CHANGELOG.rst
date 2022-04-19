@@ -21,6 +21,7 @@ Changed
 
 - **General**
     - Upgrade to black v22.3.0 (#972)
+    - Upgrade minimum Django version to v3.2.13 (#976)
 - **Projectroles**
     - Update sidebar icon padding on resize (#967)
     - Batch loading for project list columns (#968)

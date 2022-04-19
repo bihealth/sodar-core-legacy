@@ -22,7 +22,10 @@ Release Highlights
 Breaking Changes
 ================
 
-N/A
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.13.
 
 
 v0.10.11 (2022-03-22)
