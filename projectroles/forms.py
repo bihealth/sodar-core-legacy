@@ -875,8 +875,8 @@ class RoleAssignmentOwnerTransferForm(SODARForm):
             not role_as and user not in inh_owners
         ):
             raise forms.ValidationError(
-                'The new owner has no roles in the {}.'.get_display_name(
-                    self.project.type
+                'The new owner has no roles in the {}.'.format(
+                    get_display_name(self.project.type)
                 )
             )
 
