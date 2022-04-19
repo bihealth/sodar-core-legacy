@@ -314,13 +314,13 @@ class ProjectListRoleAjaxView(SODARBaseAjaxView):
             role_as = RoleAssignment.objects.filter(
                 project=project, user=user
             ).first()
-            if project.is_owner(user):
+            if role_as:
+                ret['name'] = role_as.role.name.split(' ')[1].capitalize()
+            elif project.is_owner(user):
                 ret['name'] = 'Owner'
                 if not role_as or role_as.role.name != PROJECT_ROLE_OWNER:
                     ret['class'] = 'text-muted'
                     ret['info'] = INHERITED_OWNER_INFO
-            if role_as:
-                ret['name'] = role_as.role.name.split(' ')[1].capitalize()
         if project.public_guest_access and not role_as:
             ret['name'] = 'Guest'
         if not ret['name']:

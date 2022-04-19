@@ -310,6 +310,12 @@ def get_sidebar_notch_size():
 
 
 @register.simple_tag
+def get_sidebar_padding():
+    """Return sidebar padding"""
+    return ceil(get_sidebar_icon_size() / 4.5)
+
+
+@register.simple_tag
 def get_admin_warning():
     """Return Django admin warning HTML"""
     ret = (

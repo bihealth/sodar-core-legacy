@@ -10,6 +10,24 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.12 (2022-04-19)
+*********************
+
+Release Highlights
+==================
+
+- Add support for specifying plugin name for Timeline events
+- Minor updates and optimization
+
+Breaking Changes
+================
+
+System Prerequisites
+--------------------
+
+The minimum Django version has been bumped to v3.2.13.
+
+
 v0.10.11 (2022-03-22)
 *********************
 

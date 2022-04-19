@@ -596,5 +596,23 @@ class TestProjectrolesTemplateTags(TestTemplateTagsBase):
         PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
     )
     def test_get_sidebar_notch_size_min(self):
-        """Test get_sidebar_notch_size() with minimum notch size"""
+        """Test get_sidebar_notch_size() with minimum icon size"""
         self.assertEqual(tags.get_sidebar_notch_size(), 9)
+
+    def test_get_sidebar_padding(self):
+        """Test get_sidebar_padding()"""
+        self.assertEqual(tags.get_sidebar_padding(), 8)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MAX_SIZE
+    )
+    def test_get_sidebar_padding_max(self):
+        """Test get_sidebar_padding() with maximum icon size"""
+        self.assertEqual(tags.get_sidebar_padding(), 10)
+
+    @override_settings(
+        PROJECTROLES_SIDEBAR_ICON_SIZE=tags.SIDEBAR_ICON_MIN_SIZE
+    )
+    def test_get_sidebar_padding_min(self):
+        """Test get_sidebar_padding() with minimum icon size"""
+        self.assertEqual(tags.get_sidebar_padding(), 4)

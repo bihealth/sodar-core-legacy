@@ -71,14 +71,16 @@ def get_app_icon_html(event, plugin_lookup):
             url = reverse('projectroles:detail', kwargs=url_kwargs)
         title = 'Projectroles'
         icon = ICON_PROJECTROLES
-    elif event.app in plugin_lookup.keys():
-        plugin = plugin_lookup[event.app]
-        entry_point = getattr(plugin, 'entry_point_url_id', None)
-        if entry_point:
-            url = reverse(entry_point, kwargs=url_kwargs)
-        title = plugin.title
-        if getattr(plugin, 'icon', None):
-            icon = plugin.icon
+    else:
+        plugin_name = event.plugin if event.plugin else event.app
+        if plugin_name in plugin_lookup.keys():
+            plugin = plugin_lookup[plugin_name]
+            entry_point = getattr(plugin, 'entry_point_url_id', None)
+            if entry_point:
+                url = reverse(entry_point, kwargs=url_kwargs)
+            title = plugin.title
+            if getattr(plugin, 'icon', None):
+                icon = plugin.icon
 
     return (
         '<a {} title="{}" data-toggle="tooltip" data-placement="top">'

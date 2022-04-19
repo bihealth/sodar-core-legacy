@@ -7,6 +7,29 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+v0.10.12 (2022-04-19)
+=====================
+
+Added
+-----
+
+- **Timeline**
+    - Support for specifying plugin for events (#975)
+
+Changed
+-------
+
+- **General**
+    - Upgrade to black v22.3.0 (#972)
+    - Upgrade minimum Django version to v3.2.13 (#976)
+- **Projectroles**
+    - Update sidebar icon padding on resize (#967)
+    - Batch loading for project list columns (#968)
+    - Optimize ``ProjectListRoleAjaxView``
+    - Refactor sidebar toggling (#970)
+    - Make ``request`` optional for ``send_generic_mail()`` and ``send_mail()``
+
+
 v0.10.11 (2022-03-22)
 =====================
 

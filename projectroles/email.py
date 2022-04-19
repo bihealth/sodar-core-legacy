@@ -374,14 +374,14 @@ def get_user_addr(user):
     return ret
 
 
-def send_mail(subject, message, recipient_list, request, reply_to=None):
+def send_mail(subject, message, recipient_list, request=None, reply_to=None):
     """
     Wrapper for send_mail() with logging and error messaging.
 
     :param subject: Message subject (string)
     :param message: Message body (string)
     :param recipient_list: Recipients of email (list)
-    :param request: Request object
+    :param request: Request object (optional)
     :param reply_to: List of emails for the "reply-to" header (optional)
     :return: Amount of sent email (int)
     """
@@ -406,7 +406,8 @@ def send_mail(subject, message, recipient_list, request, reply_to=None):
         logger.error(error_msg)
         if DEBUG:
             raise ex
-        messages.error(request, error_msg)
+        if request:
+            messages.error(request, error_msg)
         return 0
 
 
@@ -629,7 +630,7 @@ def send_project_move_mail(project, request):
 
 
 def send_generic_mail(
-    subject_body, message_body, recipient_list, request, reply_to=None
+    subject_body, message_body, recipient_list, request=None, reply_to=None
 ):
     """
     Send a notification email to the issuer of an invitation when a user
@@ -639,7 +640,7 @@ def send_generic_mail(
     :param message_body: Message body before header or footer (string)
     :param recipient_list: Recipients (list of User objects or email strings)
     :param reply_to: List of emails for the "reply-to" header (optional)
-    :param request: HTTP request
+    :param request: Request object (optional)
     :return: Amount of mail sent (int)
     """
     subject = SUBJECT_PREFIX + subject_body

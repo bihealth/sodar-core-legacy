@@ -161,8 +161,8 @@ class TestTemplateTags(
         self.assertIn('Projectroles', ret)
         self.assertNotIn('href=', ret)
 
-    def test_get_app_icon_html_app(self):
-        """Test get_app_icon_html() on event from an app"""
+    def test_get_app_icon_html_plugin(self):
+        """Test get_app_icon_html() on event from an app plugin"""
         plugin = get_app_plugin('filesfolders')
         url = reverse(
             plugin.entry_point_url_id,
@@ -180,8 +180,8 @@ class TestTemplateTags(
         self.assertIn(plugin.title, ret)
         self.assertIn(url, ret)
 
-    def test_get_app_icon_html_invalid_app(self):
-        """Test get_app_icon_html() on event from an invalid app"""
+    def test_get_app_icon_html_invalid_plugin(self):
+        """Test get_app_icon_html() on event from an invalid plugin"""
         event = self._make_event(
             project=self.project,
             app=INVALID_APP_NAME,
