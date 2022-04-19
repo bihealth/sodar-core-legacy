@@ -80,13 +80,6 @@ Under ``DATABASES``, the setting below is recommended:
     If this conflicts with your existing set up, you can modify the code in your
     other apps to use e.g. ``@transaction.atomic``.
 
-.. note::
-
-    This setting mostly is used for the ``sodar_taskflow`` transactions
-    supported by projectroles but not commonly used, so having this setting as
-    True *may* cause no issues. However, it is not officially supported at this
-    time.
-
 
 Templates
 =========

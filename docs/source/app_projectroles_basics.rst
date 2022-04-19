@@ -146,8 +146,8 @@ Other features in the projectroles app:
 - **Custom user model**: Additions to the standard Django user model
 - **Multi-domain LDAP/AD support**: Support for LDAP/AD users from multiple
   domains
-- **SODAR Taskflow and Timeline integration**: Included but disabled unless
-  backend apps for Taskflow and Timeline are integrated in the Django site
+- **SODAR Timeline integration**: Included but disabled unless the backend app
+  for Timeline is enabled in your Django site
 
 
 Templates and Styles

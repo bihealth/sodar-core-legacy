@@ -7,6 +7,41 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectroles**
+    - Project modifying API in ``ProjectModifyPluginAPIMixin`` (#387)
+
+Changed
+-------
+
+- **Projectroles**
+    - Replace Taskflow specific code with project modifying API calls (#387)
+    - Rename ``revoke_failed_invite()`` to ``revoke_invite()``
+
+Fixed
+-----
+
+- **Projectroles**
+    - Crash at exception handling in ``clean_new_owner()`` (#981)
+- **Timeline**
+    - Uncaught exceptions in ``get_plugin_lookup()`` (#979)
+
+Removed
+-------
+
+- **Projectroles**
+    - Taskflow specific views, tests and API calls (#387)
+- **Taskflowbackend**
+    - Remove app and implement in SODAR (#387)
+- **Timeline**
+    - Taskflow API views (#387)
+
+
 v0.10.12 (2022-04-19)
 =====================
 

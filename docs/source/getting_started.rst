@@ -41,8 +41,6 @@ The following Django apps will be installed when installing the
   administrators.
 - **sodarcache**: Generic caching and aggregation of data referring to external
   services.
-- **taskflowbackend**: Backend app providing an API for the optional
-  ``sodar_taskflow`` transaction service.
 - **timeline**: Project app for logging and viewing project-related activity.
 - **tokens**: Token management for API access.
 - **userprofile**: Site app for viewing user profiles.
