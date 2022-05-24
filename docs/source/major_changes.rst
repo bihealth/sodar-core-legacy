@@ -10,6 +10,15 @@ older SODAR Core version. For a complete list of changes in current and previous
 releases, see the :ref:`full changelog<changelog>`.
 
 
+v0.10.13 (WIP)
+**************
+
+Release Highlights
+==================
+
+- Add support for Taskflow testing from a different host or Docker network
+
+
 v0.10.12 (2022-04-19)
 *********************
 

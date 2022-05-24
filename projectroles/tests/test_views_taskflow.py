@@ -72,9 +72,30 @@ TASKFLOW_TEST_MODE = getattr(settings, 'TASKFLOW_TEST_MODE', False)
 # Base Classes -----------------------------------------------------------------
 
 
+class TaskflowRequestDataMixin:
+    """
+    Default request data mixin for Taskflow tests. Should be used on a class
+    based on LiveServerTestCase.
+    """
+
+    #: Override live server host for access from Docker
+    host = '0.0.0.0'
+
+    def get_sodar_url(self):
+        """Return SODAR URL for callbacks in testing"""
+        return '{}:{}'.format(
+            settings.TASKFLOW_TEST_SODAR_HOST,
+            self.live_server_url.split(':')[2],
+        )
+
+
 @tag('Taskflow')  # Run tests if iRODS and SODAR Taskflow are enabled
 class TestTaskflowBase(
-    ProjectMixin, RoleAssignmentMixin, LiveServerTestCase, TestCase
+    ProjectMixin,
+    RoleAssignmentMixin,
+    TaskflowRequestDataMixin,
+    LiveServerTestCase,
+    TestCase,
 ):
     """Base class for testing UI views with taskflow"""
 
@@ -156,7 +177,7 @@ class TestTaskflowBase(
             )
 
         # Set up live server URL for requests
-        self.request_data = {'sodar_url': self.live_server_url}
+        self.request_data = {'sodar_url': self.get_sodar_url()}
 
         # Get taskflow plugin (or None if taskflow not enabled)
         change_plugin_status(
@@ -661,7 +682,7 @@ class TestProjectUpdateView(TestTaskflowBase):
         request_data.update(
             app_settings.get_all_settings(project=self.project, post_safe=True)
         )  # Add default settings
-        request_data['sodar_url'] = self.live_server_url  # HACK
+        request_data['sodar_url'] = self.get_sodar_url()
 
         with self.login(self.user):
             response = self.client.post(

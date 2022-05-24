@@ -46,7 +46,7 @@ class TestBatchUpdateRoles(BatchUpdateRolesMixin, TestTaskflowBase):
         )
 
         # Init command class
-        self.command = BatchUpdateRolesCommand(sodar_url=self.live_server_url)
+        self.command = BatchUpdateRolesCommand(sodar_url=self.get_sodar_url())
         # Init file
         self.file = NamedTemporaryFile(delete=False)
 

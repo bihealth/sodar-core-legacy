@@ -17,6 +17,7 @@ from projectroles.plugins import get_backend_api, change_plugin_status
 from projectroles.tests.taskflow_testcase import TestCase
 from projectroles.tests.test_models import ProjectMixin, RoleAssignmentMixin
 from projectroles.tests.test_views_api import SODARAPIViewTestMixin
+from projectroles.tests.test_views_taskflow import TaskflowRequestDataMixin
 from projectroles.views_api import CORE_API_MEDIA_TYPE, CORE_API_DEFAULT_VERSION
 
 
@@ -62,6 +63,7 @@ class TestTaskflowAPIBase(
     ProjectMixin,
     RoleAssignmentMixin,
     SODARAPIViewTestMixin,
+    TaskflowRequestDataMixin,
     APILiveServerTestCase,
     TestCase,
 ):
@@ -123,7 +125,7 @@ class TestTaskflowAPIBase(
             )
 
         # Set up live server URL for requests
-        self.request_data = {'sodar_url': self.live_server_url}
+        self.request_data = {'sodar_url': self.get_sodar_url()}
 
         # Get taskflow plugin (or None if taskflow not enabled)
         change_plugin_status(

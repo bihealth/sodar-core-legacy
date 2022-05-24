@@ -21,7 +21,6 @@ from projectroles.models import (
     ProjectInvite,
     SODAR_CONSTANTS,
 )
-from projectroles.plugins import change_plugin_status, get_backend_api
 from projectroles.remote_projects import RemoteProjectAPI
 from projectroles.tests.test_models import (
     ProjectMixin,
@@ -148,10 +147,8 @@ class SODARAPIViewTestMixin:
         """
         if not media_type:
             media_type = cls.media_type
-
         if not version:
             version = cls.api_version
-
         return {'HTTP_ACCEPT': '{}; version={}'.format(media_type, version)}
 
     @classmethod
@@ -192,24 +189,18 @@ class SODARAPIViewTestMixin:
         """
         if not token:
             token = self.knox_token
-
         req_kwargs = {
             'format': format,
             **self.get_accept_header(media_type, version),
             **self.get_token_header(token),
         }
-
         if data:
             req_kwargs['data'] = data
-
         if header:
             req_kwargs.update(header)
-
         req_method = getattr(self.client, method.lower(), None)
-
         if not req_method:
             raise ValueError('Unsupported method "{}"'.format(method))
-
         return req_method(url, **req_kwargs)
 
 
@@ -221,11 +212,6 @@ class TestAPIViewsBase(
     def setUp(self):
         # Show complete diff in case of failure
         self.maxDiff = None
-        # Force disabling of taskflow plugin if it's available
-        if get_backend_api('taskflow'):
-            change_plugin_status(
-                name='taskflow', status=1, plugin_type='backend'  # 0 = Disabled
-            )
 
         # Init roles
         self.role_owner = Role.objects.get_or_create(name=PROJECT_ROLE_OWNER)[0]

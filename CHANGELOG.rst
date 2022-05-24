@@ -7,6 +7,17 @@ Changelog for the **SODAR Core** Django app package. Loosely follows the
 Note that the issue IDs here refer to ones in the private CUBI GitLab.
 
 
+Unreleased
+==========
+
+Added
+-----
+
+- **Projectoles**
+    - Taskflow access from a different host for tests (#986)
+    - ``TASKFLOW_TEST_LIVE_SERVER_HOST`` to set host name for tests (#986)
+
+
 v0.10.12 (2022-04-19)
 =====================
 

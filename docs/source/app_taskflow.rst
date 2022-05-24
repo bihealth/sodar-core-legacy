@@ -11,6 +11,11 @@ If you have not set up a SODAR Taskflow service for any purpose, this backend
 is not needed and can be ignored.
 
 
+.. note::
+
+    This app will be removed in SODAR Core v0.11.0. Its functionality along with
+    SODAR Taskflow will be integrated into the SODAR project.
+
 Basics
 ======
 
@@ -18,12 +23,6 @@ The ``taskflowbackend`` backend app is used in the main SODAR site to
 communicate with an external SODAR Taskflow service to manage large-scale data
 transactions. It has no views or database models and only provides an API for
 other apps to use.
-
-.. note::
-
-    At the time of writing, SODAR Taskflow is in development and has not been
-    made public.
-
 
 Installation
 ============
@@ -71,6 +70,11 @@ configuration.
         'sodar',
         # ..
     ]
+
+If testing with a SODAR Taskflow instance running on somewhere else than on
+your localhost, e.g. as a Docker container, you should set the value of
+``TASKFLOW_TEST_SODAR_HOST`` to point to the approppriate host accessible from
+SODAR Taskflow.
 
 Register Plugin
 ---------------

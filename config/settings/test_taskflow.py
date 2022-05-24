@@ -12,6 +12,10 @@ TASKFLOW_TARGETS = ['irods', 'sodar']
 TASKFLOW_BACKEND_HOST = env.str('TASKFLOW_BACKEND_HOST', 'http://0.0.0.0')
 TASKFLOW_BACKEND_PORT = env.int('TASKFLOW_BACKEND_PORT', 5005)
 TASKFLOW_TEST_MODE = True  # Important! Make taskflow use a test iRODS server
+# Override this if host is e.g. the host of a Docker Compose network
+TASKFLOW_TEST_SODAR_HOST = env.str(
+    'TASKFLOW_TEST_SODAR_HOST', 'http://127.0.0.1'
+)
 
 # Plugin settings
 ENABLED_BACKEND_PLUGINS = [
