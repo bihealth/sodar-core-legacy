@@ -17,6 +17,7 @@ Release Highlights
 ==================
 
 - Add support for Taskflow testing from a different host or Docker network
+- Bug fixes
 
 
 v0.10.12 (2022-04-19)

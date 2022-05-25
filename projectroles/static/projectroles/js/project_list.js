@@ -258,6 +258,8 @@ $(document).ready(function () {
         if (projectUuids.length > 0) {
             // Update custom columns
             updateCustomColumns(projectUuids);
+        }
+        if (allUuids.length > 0) {
             // Update role column
             if (!data['user']['superuser']) {
                 updateRoleColumn(allUuids);
@@ -266,9 +268,9 @@ $(document).ready(function () {
                     $(this).attr('class', 'text-danger').text('Superuser');
                 });
             }
-            // Update overflow status
-            modifyCellOverflow();
         }
+        // Update overflow status
+        modifyCellOverflow();
     });
 });
 
