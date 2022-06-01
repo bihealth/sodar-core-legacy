@@ -130,7 +130,7 @@ HTML / Javascript / CSS / Bootstrap 4
 
 .. toctree::
     :maxdepth: 2
-    :caption: Project Info
+    :caption: Project Information
     :name: project_info
     :hidden:
     :titlesonly:

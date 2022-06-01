@@ -29,21 +29,25 @@ management as well as linking objects to projects.
     :members:
 
 
+.. _app_projectroles_api_django_settings:
+
 App Settings
 ============
 
-Projectroles provides an API for getting or setting project and user
-specific settings.
+Projectroles provides an API for getting or setting project and user specific
+settings.
 
 .. autoclass:: projectroles.app_settings.AppSettingAPI
     :members:
 
 
+.. _app_projectroles_api_django_tags:
+
 Common Template Tags
 ====================
 
 These tags can be included in templates with
-``{% load 'projectroles_common_tags' %}``.
+``{% load projectroles_common_tags %}``.
 
 .. automodule:: projectroles.templatetags.projectroles_common_tags
     :members:
@@ -57,6 +61,8 @@ General utility functions are stored in ``utils.py``.
 .. automodule:: projectroles.utils
     :members:
 
+
+.. _app_projectroles_api_django_rest:
 
 Base REST API View Classes
 ==========================
@@ -103,6 +109,8 @@ Base API View Mixins
     :members:
 
 
+.. _app_projectroles_api_django_ajax:
+
 Base Ajax API View Classes
 ==========================
 
@@ -123,6 +131,8 @@ Base view classes and mixins for building Ajax API views can be found in
     :members:
     :show-inheritance:
 
+
+.. _app_projectroles_api_django_serial:
 
 Base Serializers
 ================

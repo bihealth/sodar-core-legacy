@@ -17,6 +17,12 @@ Added
     - Taskflow access from a different host for tests (#986)
     - ``TASKFLOW_TEST_LIVE_SERVER_HOST`` to set host name for tests (#986)
 
+Changed
+-------
+
+- **General**
+    - Update development documentation (#988)
+
 Fixed
 -----
 

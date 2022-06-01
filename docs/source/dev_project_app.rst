@@ -1,6 +1,5 @@
 .. _dev_project_app:
 
-
 Project App Development
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -19,22 +18,22 @@ Project App Basics
 
 **Characteristics** of a project app:
 
-- Provides a functionality related to a project
-- Is dynamically included in project views by projectroles using plugins
-- Uses the project-based role and access control provided by projectroles
-- Is included in projectroles search (optionally)
+- Provides a functionality related to a project.
+- Is dynamically included in project views by projectroles using plugins.
+- Uses the project-based role and access control provided by projectroles.
+- Is (optionally) included in projectroles search.
 - Provides a dynamically included element (e.g. content overview) for the
-  project details page
-- Appears in the project menu sidebar in the default projectroles templates
+  project details page.
+- Appears in the project menu sidebar in the default projectroles templates.
 
 **Requirements** for setting up a project app:
 
-- Implement project relations and SODAR UUIDs in the app's Django models
-- Use provided mixins, keyword arguments and conventions in views
-- Extend projectroles base templates in your templates
-- Implement specific templates for dynamic inclusion by Projectroles
-- Implement ``plugins.py`` with definitions and function implementations
-- Implement ``rules.py`` with access rules
+- Implement project relations and SODAR UUIDs in the app's Django models.
+- Use provided mixins, keyword arguments and conventions in views.
+- Extend projectroles base templates in your templates.
+- Implement specific templates for dynamic inclusion by Projectroles.
+- Implement ``plugins.py`` with definitions and function implementations.
+- Implement ``rules.py`` with access rules.
 
 Fulfilling these requirements is detailed further in this document.
 
@@ -42,9 +41,11 @@ Fulfilling these requirements is detailed further in this document.
 Prerequisites
 =============
 
-This documentation assumes you have a Django project with the ``projectroles``
-app set up (see the
-:ref:`projectroles integration document <app_projectroles_integration>`).
+This documentation assumes you have a Django site with the ``projectroles``
+app set up, either started with
+`sodar-django-site <https://github.com/bihealth/sodar-django-site>`_ or by
+integrating SODAR Core on an existing site (see
+:ref:`projectroles integration <app_projectroles_integration>`).
 The instructions can be applied either to modify a previously existing app, or
 to set up a fresh app generated in the standard way with
 ``./manage.py startapp``.
@@ -68,9 +69,9 @@ Add a ``ForeignKey`` field for the ``projectroles.models.Project`` model,
 either called ``project`` or accessible with a ``get_project()`` function
 implemented in your model.
 
-If the project foreign key for your is **not** ``project``, make sure to define
-a ``get_project_filter_key()`` function. It should return the name of the field
-to use as key for filtering your model by project.
+If the project foreign key for your model is **not** ``project``, make sure to
+define a ``get_project_filter_key()`` method. It should return the name of the
+field to use as key for filtering your model by project.
 
 .. note::
 
@@ -135,9 +136,10 @@ Rules File
 ==========
 
 Create a file ``rules.py`` in your app's directory. You should declare at least
-one basic rule for enabling a user to view the app data for the project. This
-can be named e.g. ``{APP_NAME}.view_data``. Predicates for the rules can be
-found in projectroles and they can be extended within your app if needed.
+one basic permission for enabling a user to view the app data for the project.
+This can be named e.g. ``{APP_NAME}.view_data``. Common predicates for the rules
+file can be found in ``projectroles.rules``. They can be extended within your
+app if needed.
 
 .. code-block:: python
 
@@ -182,53 +184,72 @@ member variables and functions as instructed in comments and docstrings.
 
 The following variables and functions are **mandatory**:
 
-- ``name``: App name (**NOTE:** should correspond to the app package name or
-  some functionality may not work as expected)
-- ``title``: Printable app title
-- ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
-- ``entry_point_url_id``: View ID for the app entry point (**NOTE:** The view
-  **must** take the project ``sodar_uuid`` as a kwarg named ``project``)
-- ``description``: Verbose description of app
-- ``app_permission``: Basic permission for viewing app data in project (see
-  above)
-- ``search_enable``: Boolean for enabling/disabling app search
-- ``details_template``: Path to template to be included in the project details
-  page, usually called ``{APP_NAME}/_details_card.html``
-- ``details_title``: Title string to be displayed in the project details page
-  for the app details template
-- ``plugin_ordering``: Number to define the ordering of the app on the project
-  menu sidebar and the details page
+``name``
+    App name. In most cases this should match the app package name.
+``title``
+    Printable app title.
+``urls``
+    Urlpatterns, usually imported from the app's ``urls.py`` file.
+``icon``
+    Iconify collection and icon name (e.g. ``mdi:home``).
+``entry_point_url_id``
+    View ID for the app entry point (**NOTE:** The view **must** take the
+    project ``sodar_uuid`` as a kwarg named ``project``).
+``description``
+    Verbose description of the app.
+``app_permission``
+    Basic permission for viewing app data in the related project (see above).
+``search_enable``
+    Boolean for enabling/disabling app search.
+``details_template``
+    Path to template to be included in the project details page, usually
+    called ``{APP_NAME}/_details_card.html``.
+``details_title``
+    Title string to be displayed in the project details page for the app details
+    template.
+``plugin_ordering``
+    Number to define the ordering of the app on the project menu sidebar and the
+    details page.
 
 Implementing the following is **optional**:
 
-- ``app_settings``: Implement if project, user or project_user (Settings
-  specific to a project and user) specific settings for the app are needed. See
-  the plugin point definition for an example.
-- ``search_types``: Implement if searching the data of the app is enabled
-- ``search_template``: Implement if searching the data of the app is enabled
-- ``project_list_columns``: Optional custom columns do be shown in the project
-  list. See the plugin point definition for an example.
-- ``category_enable``: Whether the app should also be made available for
-  categories. Defaults to ``False`` and should only be overridden when required.
-  For an example of a project app enabled in categories, see
-  :ref:`Timeline <app_timeline>`.
-- ``info_settings``: List of names for app-specific Django settings to be
-  displayed for administrators in the siteinfo app.
-- ``get_taskflow_sync_data()``: Applicable only if working with
-  ``sodar_taskflow`` and iRODS.
-- ``get_object_link()``: Return object link for a Timeline event.
-- ``get_extra_data_link()``: Return extra data link for a Timeline event.
-- ``search()``: Function called when searching for data related to the app if
-  search is enabled.
-- ``get_statistics()``: Return statistics for the siteinfo app. See details in
-  :ref:`the siteinfo documentation <app_siteinfo>`.
-- ``get_project_list_value()``: A function which **must** be implemented if
-  ``project_list_columns`` are defined, to retrieve a column cell value for a
-  specific project.
-- ``handle_project_update()``: A function for enabling carrying out specific
-  tasks within your app when the project is updated in projectroles. This is a
-  work-in-progress functionality to be expanded later.
+``app_settings``
+    Implement if project, user or project_user (Settings specific to a project
+    and user) specific settings for the app are needed. See the plugin point
+    definition for an example.
+``search_types``
+    Implement if searching the data of the app is enabled.
+``search_template``
+    Implement if searching the data of the app is enabled.
+``project_list_columns``
+    Optional custom columns do be shown in the project list. See the plugin
+    point definition for an example.
+``category_enable``
+    Whether the app should also be made available for categories. Defaults to
+    ``False`` and should only be overridden when required. For an example of a
+    project app enabled in categories, see :ref:`Timeline <app_timeline>`.
+``info_settings``
+    List of names for app-specific Django settings to be displayed for
+    administrators in the siteinfo app.
+``get_taskflow_sync_data()``
+    Applicable only if working with ``sodar_taskflow`` and iRODS.
+``get_object_link()``
+    Return object link for a Timeline event.
+``get_extra_data_link()``
+    Return extra data link for a Timeline event.
+``search()``
+    Function called when searching for data related to the app if search is
+    enabled.
+``get_statistics()``
+    Return statistics for the siteinfo app. See details in
+    :ref:`the siteinfo documentation <app_siteinfo>`.
+``get_project_list_value()``
+    A function which **must** be implemented if ``project_list_columns`` are
+    defined, to retrieve a column cell value for a specific project.
+``handle_project_update()``
+    A function for enabling carrying out specific tasks within your app when the
+    project is updated in projectroles. This is a work-in-progress functionality
+    to be expanded later.
 
 Once you have implemented the ``rules.py`` and ``plugins.py`` files and added
 the app and its URL patterns to the Django site configuration, you can create
@@ -245,7 +266,7 @@ registered:
 
     Registering Plugin for {APP_NAME}.plugins.ProjectAppPlugin
 
-For info on how to implement the specific required views/templates, see the end
+For info on how to implement the specific required views/templates, see the rest
 of this document.
 
 
@@ -269,8 +290,8 @@ the following conditions*:
   for a ``Projectroles.models.Project`` object. The kwarg **must** be named
   after the Django model of the referred object (in lowercase).
 - Same as above, but the Django model provides a
-  ``get_project()`` function which returns (you guessed it) a
-  ``Projectroles.models.Project`` object.
+  ``get_project()`` function which returns a ``Projectroles.models.Project``
+  object.
 
 Examples:
 
@@ -300,16 +321,17 @@ your view classes to add projectroles functionality. These can be found in the
 
 The most commonly used mixins:
 
-- ``LoginRequiredMixin``: Override of the standard Django mixin
-  which may also allow anonymous guests if so configured in SODAR Core. If you
-  plan on supporting anonymous users on your site, you **must** use this
-  mixing instead of the original one in Django.
-- ``LoggedInPermissionMixin``: Ensure correct redirection of users on no
-  permissions.
-- ``ProjectPermissionMixin``: Provides a ``Project`` object for permission
-  checking based on URL kwargs.
-- ``ProjectContextMixin``: Provides a ``Project`` object into the view context
-  based on URL kwargs.
+``LoginRequiredMixin``
+    Override of the standard Django mixin which may also allow anonymous guests
+    if so configured in SODAR Core. If you plan on supporting anonymous users on
+    your site, you **must** use this mixing instead of the original one in
+    Django.
+``LoggedInPermissionMixin``
+    Ensure correct redirection of users on no permissions.
+``ProjectPermissionMixin``
+    Provides a ``Project`` object for permission checking based on URL kwargs.
+``ProjectContextMixin``
+    Provides a ``Project`` object into the view context  based on URL kwargs.
 
 See ``example_project_app.views.ExampleView`` for an example.
 
@@ -330,19 +352,26 @@ project app templates. Just start your template with the following line:
 The following **template blocks** are available for overriding or extending when
 applicable:
 
-- ``title``: Page title
-- ``css``: Custom CSS (extend with ``{{ block.super }}``)
-- ``projectroles_extend``: Your app content goes here!
-- ``javascript``: Custom Javascript (extend with ``{{ block.super }}``)
-- ``head_extend``: Optional block if you need to include additional content
-  inside the HTML ``<head>`` element
+``title``
+    Page title.
+``css``
+    Custom CSS (extend with ``{{ block.super }}``).
+``projectroles_extend``
+    Your app content goes here.
+``javascript``
+    Custom Javascript (extend with ``{{ block.super }}``).
+``head_extend``
+    Optional block if you need to include additional content inside the HTML
+    ``<head>`` element.
 
 Within the ``projectroles_extend`` block, it is recommended to use the
 following ``div`` classes, both extending the Bootstrap 4 ``container-fluid``
 class:
 
-- ``sodar-subtitle-container``: Container for the page title
-- ``sodar-content-container``: Container for the actual content of your app
+``sodar-subtitle-container``
+    Container for the page title.
+``sodar-content-container``
+    Container for the actual content of your app.
 
 If you do not want to include the project title header to your project
 templates, you can replace the ``projectroles_extend`` block with a
@@ -358,7 +387,8 @@ templates, you can replace the ``projectroles_extend`` block with a
 Rules
 -----
 
-To control user access within a template, just do it as follows:
+To control user access within a template with permissions introduced in
+``rules.py``, do it as follows:
 
 .. code-block:: django
 
@@ -368,8 +398,8 @@ To control user access within a template, just do it as follows:
 This checks if the current user from the HTTP request has permission for
 ``app.do_something`` in the current project retrieved from the page context.
 
-Template Tags
--------------
+Common Template Tags
+--------------------
 
 General purpose template tags are available in
 ``projectroles/templatetags/projectroles_common_tags.py``. Include them to your
@@ -378,6 +408,9 @@ template as follows:
 .. code-block:: django
 
     {% load projectroles_common_tags %}
+
+See the :ref:`template tag API documentation <app_projectroles_api_django_tags>`
+for detailed instructions on using different tags in your templates.
 
 Example
 -------
@@ -446,8 +479,8 @@ in this section.
 Referring to Project Type
 -------------------------
 
-As of SODAR Core v0.4.3, it is possible to customize the display name for the
-project type from the default "project" or "category". For more information, see
+SODAR Core allows customizing the display name for the project type from the
+default "project" or "category". For more information, see
 :ref:`app_projectroles_custom`.
 
 It is thus recommended that instead of hard coding "project" or "category" in
@@ -474,98 +507,6 @@ In views and other Python code, the similar function can be accessed through
     If not dealing with a ``Project`` object, you can provide the
     ``PROJECT_TYPE_*`` constant from ``SODAR_CONSTANTS``. In templates, it's
     most straightforward to use "CATEGORY" and "PROJECT".
-
-
-Forms
-=====
-
-This section contains guidelines for implementing forms.
-
-SODAR User Selection Field
---------------------------
-
-Projectroles offers a custom field, widget and accompanying Ajax API views
-for autocomplete-enabled selection of SODAR users in Django forms. The field
-will handle providing appropriate choices according to the view context and user
-permissions, also allowing for customization.
-
-The recommended way to use the built-in user form field is by using the
-``SODARUserChoiceField`` class found in ``projectroles.forms``. The field
-extends Django's ``ModelChoiceField`` and takes most of the same keyword
-arguments in its init function, with the exception of ``queryset``,
-``to_field_name``, ``limit_choices_to`` and ``widget`` which will be overridden.
-
-The init function also takes new arguments which are specified below:
-
-- ``scope``: Scope of users to include (string)
-    * ``all``: All users on the site
-    * ``project``: Limit search to users in given project
-    * ``project_exclude`` Exclude existing users of given project
-- ``project``: Project object or project UUID string (optional)
-- ``exclude``: List of User objects or User UUIDs to exclude (optional)
-- ``forward``: Parameters to forward to autocomplete view (optional)
-- ``url``: Autocomplete ajax class override (optional)
-- ``widget_class``: Widget class override (optional)
-
-Below is an example of the classes usage. Note that you can also define the
-field as a form class member, but the ``project`` or ``exclude`` values are
-not definable at that point. The following example assumes you are setting up
-your project app form with an extra ``project`` argument.
-
-.. code-block:: python
-
-    from projectroles.forms import SODARUserChoiceField
-
-    class YourForm(forms.ModelForm):
-        class Meta:
-            # ...
-        def __init__(self, project, *args, **kwargs):
-            # ...
-            self.fields['user'] = SODARUserChoiceField(
-                label='User',
-                help_text='Select user for your thing here',
-                required=True,
-                scope='project',
-                project=project,
-                exclude=[unwanted_user]
-            )
-
-For more examples of usage of this field and its widget, see
-``projectroles.forms``. If the field class does not suit your needs, you can also
-retrieve the related widget to your own field with
-``projectroles.forms.get_user_widget()``.
-
-The following ``django-autocomplete-light`` and ``select2`` CSS and Javascript
-links have to be added to the HTML template that includes the form with your
-user selection field:
-
-.. code-block:: django
-
-    {% block javascript %}
-      {{ block.super }}
-      <!-- DAL for autocomplete widgets -->
-      <script type="text/javascript" src="{% static 'autocomplete_light/jquery.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/autocomplete.init.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/vendor/select2/dist/js/select2.full.js' %}"></script>
-      <script type="text/javascript" src="{% static 'autocomplete_light/select2.js' %}"></script>
-    {% endblock javascript %}
-
-    {% block css %}
-      {{ block.super }}
-      <!-- Select2 theme -->
-      <link href="{% static 'autocomplete_light/vendor/select2/dist/css/select2.min.css' %}" rel="stylesheet" />
-    {% endblock css %}
-
-If using a customized widget with its own Javascript, include the corresponding
-JS file instead of ``autocomplete_light/select2.js``. See the
-``django-autocomplete-light`` documentation for more information on how to
-customize your autocomplete-widget.
-
-Markdown
---------
-
-For fields supporting markdown, it is recommended to use the
-``SODARPagedownWidget`` found in ``projectroles.models``.
 
 
 Specific Views and Templates
@@ -604,11 +545,11 @@ It is expected to have the content in a ``card-body`` container:
    </div>
 
 
-Project Search Function and Template
-====================================
+Project Search API and Template
+===============================
 
 If you want to implement search in your project app, you need to implement the
-``search()`` function in your plugin as well as a template for displaying the
+``search()`` method in your plugin as well as a template for displaying the
 results.
 
 .. hint::
@@ -622,21 +563,21 @@ The search() Function
 See the signature of ``search()`` in
 ``projectroles.plugins.ProjectAppPluginPoint``. The arguments are as follows:
 
-- ``search_terms``
+``search_terms``
     - One or more terms to be searched for (list of strings). Expected to be
       combined with OR operators in your search logic.
     - Multiple search terms or phrases containing whitespaces can be provided
       via the Advanced Search view.
-- ``user``
-    - User object for user initiating search
-- ``search_type``
-    - The type of object to search for (string, optional)
-    - Used to restrict search to specific types of objects
+``user``
+    - User object for user initiating search.
+``search_type``
+    - The type of object to search for (string, optional).
+    - Used to restrict search to specific types of objects.
     - You can specify supported types in the plugin's ``search_types`` list.
     - Examples: ``file``, ``sample``..
-- ``keywords``
-    - Special search keywords, e.g. "exact"
-    - **NOTE:** Currently not implemented
+``keywords``
+    - Special search keywords, e.g. "exact".
+    - **NOTE:** Currently not implemented.
 
 .. note::
 
@@ -708,57 +649,6 @@ Example of a simple results template, in case of a single ``all`` category:
   {% endif %}
 
 
-Tour Help
-=========
-
-SODAR Core uses `Shepherd <https://shipshapecode.github.io/shepherd/docs/welcome/>`_
-to present an optional interactive tour for a rendered page. To enable the tour
-in your template, set it up inside the ``javascript`` template block. Within an
-inline javascript strucure, set the ``tourEnabled`` variable to ``true`` and add
-steps according to the `Shepherd documentation <https://shipshapecode.github.io/shepherd>`_.
-
-Example:
-
-.. code-block:: django
-
-    {% block javascript %}
-      {{ block.super }}
-
-      {# Tour content #}
-      <script type="text/javascript">
-        tourEnabled = true;
-
-        /* Normal step */
-        tour.addStep('id_of_step', {
-            title: 'Step Title',
-            text: 'Description of the step',
-            attachTo: '#some-element top',
-            advanceOn: '.docs-link click',
-            showCancelLink: true
-        });
-
-        /* Conditional step */
-        if ($('.potentially-existing-element').length) {
-            tour.addStep('id_of_another_step', {
-                title: 'Another Title',
-                text: 'Another description here',
-                attachTo: '.potentially-existing-element right',
-                advanceOn: '.docs-link click',
-                showCancelLink: true
-            });
-        }
-
-      </script>
-    {% endblock javascript %}
-
-
-.. warning::
-
-    Make sure you call ``{{ block.super }}`` at the start of the declared
-    ``javascript`` block or you will overwrite the site's default Javascript
-    setup!
-
-
 API Views
 =========
 
@@ -786,8 +676,9 @@ similar to UI view mixins.
 
 Base REST API classes without a project context can also be used in site apps.
 
-API documentation for each available base class and mixin for REST API views can
-be found in :ref:`app_projectroles_api_django`.
+See the
+:ref:`base REST API class documentation <app_projectroles_api_django_rest>` for
+details on the base REST API classes.
 
 An example "hello world" REST API view for SODAR apps is available in
 ``example_project_app.views.HelloExampleProjectAPIView``.
@@ -816,8 +707,9 @@ If you want to enable anonymous access to an Ajax API view when
 ``PROJECTROLES_ALLOW_ANONYMOUS`` is enabled in your site's Django settings, you
 can use the ``allow_anonymous`` property of the view.
 
-API documentation for the base classes Ajax API views can be found in
-:ref:`app_projectroles_api_django`.
+See the
+:ref:`base AJAX API view documentation <app_projectroles_api_django_ajax>` for
+more information on using these base classes.
 
 Example:
 
@@ -841,8 +733,8 @@ Base serializers for SODAR Core based API views are available in
 well as setting default fields such as ``sodar_uuid`` which should be always
 used in place of ``pk``.
 
-API documentation for the base serializers can be found in
-:ref:`app_projectroles_api_django`.
+See the :ref:`serializer API documentation <app_projectroles_api_django_serial>`
+for details on using base serializer classes.
 
 
 Removing a Project App
@@ -928,10 +820,3 @@ App URL patterns in ``config/urls.py``:
 Once you have performed the aforementioned database operations and deployed a
 version of your Django site with the application dependency and URL patterns
 removed, the project app should be cleanly removed from your site.
-
-
-TODO
-====
-
-- Naming conventions
-- Examples of recurring template styles (e.g. forms)

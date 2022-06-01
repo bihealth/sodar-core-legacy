@@ -13,14 +13,14 @@ It is recommended to read :ref:`dev_project_app` before this document.
 Site App Basics
 ===============
 
-Site apps are basically normal Django apps *not* hooked to SODAR projects.
-However, they provide a few nice features to be used in a SODAR-enabled Django
-site:
+Site apps are basically normal Django apps **not** intended to be used with a
+single SODAR project, such as site-level administrator apps. They provide
+certain features to be used in a SODAR-enabled Django site:
 
 - Rules for accessing app data (similar to project apps but without the need for
-  being associated with a project)
-- Dynamic inclusion into the site and default templates via plugins
-- The ability to show site-wide messages to users
+  being associated with a project).
+- Dynamic inclusion into the site and default templates via plugins.
+- The ability to show site-wide messages to users.
 
 
 Prerequisites
@@ -82,27 +82,38 @@ member variables and functions as instructed in comments and docstrings.
 
 The following variables and functions are **mandatory**:
 
-- ``name``: App name (ideally should correspond to the app package name)
-- ``title``: Printable app title
-- ``urls``: Urlpatterns (usually imported from the app's ``urls.py`` file)
-- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
-- ``entry_point_url_id``: View ID for the app entry point
-- ``description``: Verbose description of app
-- ``app_permission``: Basic permission for viewing app data in project (see
-  above)
+``name``
+    App name. In most cases this should match the app package name.
+``title``
+    Printable app title.
+``urls``
+    Urlpatterns, usually imported from the app's ``urls.py`` file.
+``icon``
+    Iconify collection and icon name (e.g. ``mdi:home``).
+``entry_point_url_id``
+    View ID for the app entry point.
+``description``
+    Verbose description of the app.
+``app_permission``
+    Basic permission for viewing app data in project (see above).
 
 Implementing the following is **optional**:
 
-- ``app_settings``: Implement if project or user specific settings for the app
-  are needed. See the plugin point definition for an example.
-- ``info_settings``: List of names for app-specific Django settings to be
-  displayed for administrators in the siteinfo app.
-- ``get_messages()``: Implement if your site app needs to display site-wide
-  messages for users.
-- ``get_statistics()``: Return statistics for the siteinfo app. See details in
-  :ref:`the siteinfo documentation <app_siteinfo>`.
-- ``get_object_link()``: Return object link for a Timeline event.
-- ``get_extra_data_link()``: Return extra data link for a Timeline event.
+``app_settings``
+    Implement if project or user specific settings for the app are needed. See
+    the plugin point definition for an example.
+``info_settings``
+    List of names for app-specific Django settings to be displayed for
+    administrators in the siteinfo app.
+``get_messages()``
+    Implement if your site app needs to display site-wide messages for users.
+``get_statistics()``
+    Return statistics for the siteinfo app. See details in
+    :ref:`the siteinfo documentation <app_siteinfo>`.
+``get_object_link()``
+    Return object link for a Timeline event.
+``get_extra_data_link()``
+    Return extra data link for a Timeline event.
 
 
 Views

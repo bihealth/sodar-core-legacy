@@ -13,9 +13,10 @@ It is recommended to read :ref:`dev_project_app` before this document.
 Backend App Basics
 ==================
 
-Backend apps are intended as apps used by other apps via their plugin, without
-requiring hard-coded imports. These may provide their own views for e.g. Ajax
-API functionality, but mostly they're intended to be internal (hence the name).
+Backend apps are intended to be used by other apps via their plugin without
+requiring hard-coded imports. They may provide their own views for e.g. Ajax API
+functionality, but mostly they're intended to be internal "helper" apps as the
+name suggests.
 
 
 Prerequisites
@@ -58,24 +59,34 @@ member variables and functions as instructed in comments and docstrings.
 
 The following variables and functions are **mandatory**:
 
-- ``name``: App name (ideally should correspond to the app package name)
-- ``title``: Printable app title
-- ``icon``: Iconify collection and icon name (e.g. ``mdi:home``)
-- ``description``: Verbose description of app
-- ``get_api()``: Function for retrieving the API class for the backend, to be
-  implemented
+``name``
+    App name. In most cases this should match the app package name.
+``title``
+    Printable app title.
+``icon``
+    Iconify collection and icon name (e.g. ``mdi:home``).
+``description``
+    Verbose description of the app.
+``get_api()``
+    Method for retrieving the API class for the backend. The user should
+    implement this API class to be retrieved.
 
 Implementing the following is **optional**:
 
-
-- ``javascript_url``: Path to on demand includeable Javascript file
-- ``css_url``: Path to on demand includeable CSS file
-- ``info_settings``: List of names for app-specific Django settings to be
-  displayed for administrators in the siteinfo app.
-- ``get_statistics()``: Return statistics for the siteinfo app. See details in
-  :ref:`the siteinfo documentation <app_siteinfo>`.
-- ``get_object_link()``: Return object link for a Timeline event.
-- ``get_extra_data_link()``: Return extra data link for a Timeline event.
+``javascript_url``
+    Path to on demand includeable Javascript file.
+``css_url``
+    Path to on demand includeable CSS file.
+``info_settings``
+    List of names for app-specific Django settings to be displayed for
+    administrators in the siteinfo app.
+``get_statistics()``
+    Return statistics for the siteinfo app. See details in
+    :ref:`the siteinfo documentation <app_siteinfo>`.
+``get_object_link()``
+    Return object link for a Timeline event.
+``get_extra_data_link()``
+    Return extra data link for a Timeline event.
 
 .. hint::
 

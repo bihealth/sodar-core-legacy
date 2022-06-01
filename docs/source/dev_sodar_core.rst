@@ -1,6 +1,5 @@
 .. _dev_sodar_core:
 
-
 SODAR Core Development
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -14,14 +13,22 @@ Repository Contents
 In addition to the apps which will be installed by the package, the following
 directories are included in the repository for development use and as examples:
 
-- **config**: Example Django site configuration
-- **docs**: Usage and development documentation
-- **example_backend_app**: Example SODAR Core compatible backend app
-- **example_project_app**: Example SODAR Core compatible project app
-- **example_site**: Example SODAR Core based Django site for development
-- **example_site_app**: Example SODAR Core compatible site-wide app
-- **requirements**: Requirements for SODAR Core and development
-- **utility**: Setup scripts for development
+config
+    Example Django site configuration.
+docs
+    Usage and development documentation.
+example_backend_app
+    Example SODAR Core compatible backend app.
+example_project_app
+    Example SODAR Core compatible project app.
+example_site
+    Example SODAR Core based Django site for development.
+example_site_app
+    Example SODAR Core compatible site-wide app.
+requirements
+    Requirements for SODAR Core and development.
+utility
+    Setup scripts for development.
 
 
 Installation
@@ -112,13 +119,79 @@ Create a Django superuser for the example_site:
 
 .. code-block:: console
 
-    $ ./manage.py createsuperuser
+    $ ./manage.py createsuperuser --skip-checks --username admin
 
-Now you should be able to run the server:
+You are now able to run the server:
 
 .. code-block:: console
 
     $ make serve
+
+
+Contributing to SODAR Core
+==========================
+
+This subsection lists the conventions and guidelines for contributing code to
+SODAR Core.
+
+Issue Tracking
+--------------
+
+.. note::
+
+    This section will be updated once the SODAR issue tracker is migrated from
+    a private GitLab repo into the public GitHub one.
+
+Work Branches
+-------------
+
+Base your work branch on the ``dev`` branch. This branch is used for development
+and is always the latest "bleeding edge" version of SODAR Core. The ``main``
+branch is only used for stable releases.
+
+It is recommended to keep your work branch names short but consistent,
+preceeded by the type of change. E.g. ``feature/your-new-feature`` or
+``fix/bug-being-fixed``. Appending the name with the related issue ID is also
+recommended.
+
+Commits
+-------
+
+It is recommended to use short but descriptive commit messages and always
+include the related issue ID(s) in the message. Examples:
+
+- ``add local irods auth api view (#1263)``
+- ``fix ontology column config tooltip hiding (#1379)``
+
+Pull Requests
+-------------
+
+Please add the related issue ID(s) to the title of your pull request and ensure
+the pull request is set against the ``dev`` branch.
+
+Before submitting a pull request for review, ensure the following:
+
+- All tests pass with ``make test``.
+- You have followed code conventions (see below).
+- ``make black`` has been run for the latest commit.
+- ``flake8 .`` produces no errors.
+
+Code Conventions
+----------------
+
+The following conventions should be adhered to in SODAR Core development:
+
+Limit line length to 80 characters.
+    - Exception: Docstrings for REST API endpoint methods.
+    - Exception: Documentation syntax where this can not be avoided, e.g. long
+      references in RST.
+Use single quotes instead of double quotes for variables.
+    - Black does not enforce this, so they have to be ensured manually.
+Do not use RST syntax in docstrings or comments.
+    - Exception: Docstrings for REST API endpoint methods
+No type hints should be used at the moment.
+    - Possibility to expand the entire project into using type hints will be
+      looked into.
 
 
 App Development
@@ -188,8 +261,8 @@ To alter projectroles app settings when developing the app, update the
 Testing
 =======
 
-To run unit tests, you have to install the headless Chrome driver (if not yet
-present on your system), followed by the Python test requirements:
+To run unit tests, you have to install Chrome and Chromedriver followed by the
+Python test requirements:
 
 .. code-block:: console
 
@@ -208,8 +281,8 @@ If you want to only run a certain subset of tests, use e.g.:
 
     $ make test arg=projectroles.tests.test_views
 
-For running tests with SODAR Taskflow (not currently publicly available), you
-can use the supplied make command:
+For running tests with SODAR Taskflow (to be removed in SODAR Core v0.11.0),
+you can use the supplied make command:
 
 .. code-block:: console
 
